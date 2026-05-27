@@ -1,65 +1,142 @@
+// Header.tsx
 "use client";
+
+import { useEffect } from "react";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import {
+  LOGO_FONT_FAMILY,
+  LOGO_FONT_WEIGHT,
+  LOGO_FONT_SIZE,
+  LOGO_LETTER_SPC,
+  LOGO_COLOR,
+  LOGO_GAP,
+  LOGO_ICON_W,
+  LOGO_ICON_H,
+  LOGO_WORD_BOX,
+  LOGO_ICON_SLOT_FULL,
+  HEADER_LOGO_SCALE,
+  IconMark,
+} from "./Preloader";
 
 interface HeaderProps {
   visible: boolean;
 }
 
 export default function Header({ visible }: HeaderProps) {
+  const iconProgress = useMotionValue(1);
+  const iconSlotW    = useTransform(iconProgress, [0, 1], [0, LOGO_ICON_SLOT_FULL]);
+
+  useEffect(() => {
+    if (visible) {
+      iconProgress.set(1);
+    }
+  }, [visible, iconProgress]);
+
+  const WORD_SLOT = LOGO_WORD_BOX + LOGO_GAP;
+
   return (
-    <header style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      zIndex: 100,
-      padding: "16px 24px",
-      display: "flex",
-      alignItems: "center",
-    }}>
-      {/*
-        Outer wrapper keeps the layout slot.
-        id="header-logo" is toggled by React for the final reveal.
-      */}
+    <header
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        padding: "16px 24px",
+        display: "flex",
+        alignItems: "center",
+      }}
+    >
       <div
         id="header-logo"
         style={{
+          visibility: visible ? "visible" : "hidden",
           opacity: visible ? 1 : 0,
+          transition: "none",
         }}
       >
-        {/*
-          id="header-logo-inner" is what the preloader MEASURES.
-          It is rendered at the SAME base size as the preloader logo
-          (svg 36×36, font clamp(28px,5vw,56px)) but scaled down via
-          CSS transform so it visually appears as the small header logo.
-          GSAP reads its getBoundingClientRect() which reflects the
-          post-transform size — so the scale math lands perfectly.
-        */}
         <div
           id="header-logo-inner"
           style={{
-            display: "flex",
+            display: "inline-flex",
             alignItems: "center",
-            gap: "10px",
             whiteSpace: "nowrap",
             transformOrigin: "left center",
-            transform: "scale(0.32)",   // tweak this to set your final header logo size
+            transform: `scale(${HEADER_LOGO_SCALE})`,
+            marginRight: `calc((1 - ${HEADER_LOGO_SCALE}) * -100%)`,
           }}
         >
-          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" style={{ flexShrink: 0 }}>
-            <circle cx="18" cy="18" r="17" stroke="#ffffff" strokeWidth="2" />
-            <path d="M10 22 Q18 10 26 22" stroke="#ffffff" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-            <path d="M10 26 Q18 14 26 26" stroke="rgba(255,255,255,0.45)" strokeWidth="2" fill="none" strokeLinecap="round"/>
-          </svg>
-          <span style={{
-            fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-            fontWeight: 800,
-            fontSize: "clamp(28px, 5vw, 56px)",
-            color: "#ffffff",
-            letterSpacing: "0.15em",
-            textTransform: "uppercase",
-          }}>
-            GRAND POOLS
-          </span>
+          {/* LEFT word slot */}
+          <div
+            style={{
+              width: WORD_SLOT,
+              flexShrink: 0,
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: LOGO_FONT_FAMILY,
+                fontWeight: LOGO_FONT_WEIGHT,
+                fontSize: LOGO_FONT_SIZE,
+                color: LOGO_COLOR,
+                letterSpacing: LOGO_LETTER_SPC,
+                userSelect: "none",
+                whiteSpace: "nowrap",
+                lineHeight: 1,
+                marginRight: LOGO_GAP,
+              }}
+            >
+              GRAND
+            </span>
+          </div>
+
+          {/* ICON slot */}
+          <motion.div
+            style={{
+              width: iconSlotW,
+              flexShrink: 0,
+              overflow: "visible",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <IconMark
+              style={{ width: LOGO_ICON_W, height: LOGO_ICON_H, flexShrink: 0 }}
+            />
+          </motion.div>
+
+          {/* RIGHT word slot */}
+          <div
+            style={{
+              width: WORD_SLOT,
+              flexShrink: 0,
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: LOGO_FONT_FAMILY,
+                fontWeight: LOGO_FONT_WEIGHT,
+                fontSize: LOGO_FONT_SIZE,
+                color: LOGO_COLOR,
+                letterSpacing: LOGO_LETTER_SPC,
+                userSelect: "none",
+                whiteSpace: "nowrap",
+                lineHeight: 1,
+                marginLeft: LOGO_GAP,
+              }}
+            >
+              POOLS
+            </span>
+          </div>
         </div>
       </div>
     </header>
