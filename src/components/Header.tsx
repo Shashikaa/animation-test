@@ -1,8 +1,7 @@
-// Header.tsx
 "use client";
 
 import { useEffect } from "react";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 import {
   LOGO_FONT_FAMILY,
   LOGO_FONT_WEIGHT,
