@@ -7,6 +7,7 @@ import {
   useTransform,
   animate,
 } from "framer-motion";
+import { gsap } from "gsap";
 
 interface PreloaderProps {
   onComplete?: () => void;
@@ -25,8 +26,6 @@ export const LOGO_ICON_SLOT_FULL = 100;
 export const HEADER_LOGO_SCALE   = 0.52;
 
 const PRE_FONT_SIZE      = LOGO_FONT_SIZE;
-const PRE_ICON_W         = LOGO_ICON_W;
-const PRE_ICON_H         = LOGO_ICON_H;
 const PRE_GAP            = LOGO_GAP;
 const PRE_WORD_BOX       = LOGO_WORD_BOX;
 const PRE_ICON_SLOT_FULL = LOGO_ICON_SLOT_FULL;
@@ -43,10 +42,8 @@ export const IconMark = ({ style }: { style?: React.CSSProperties }) => (
       display: "block",
       flexShrink: 0,
       userSelect: "none",
-      transform: "translateZ(0)",
       backfaceVisibility: "hidden",
       WebkitBackfaceVisibility: "hidden",
-      imageRendering: "auto",
       ...style,
     }}
   />
@@ -69,27 +66,16 @@ export default function Preloader({ onComplete }: PreloaderProps) {
   const [mounted, setMounted] = useState(true);
   const [bgFade, setBgFade]   = useState(false);
   const assemblyRef           = useRef<HTMLDivElement>(null);
+  const iconRef               = useRef<HTMLDivElement>(null);   // ← ref for GSAP target
 
   const [flyTarget, setFlyTarget] = useState<{
     x: number; y: number; scale: number;
   } | null>(null);
 
+  // Still used for slot-width expansion and wrapper opacity
   const iconProgress = useMotionValue(0);
-
-  const iconSlotW = useTransform(iconProgress, [0, 1], [0, PRE_ICON_SLOT_FULL]);
-
-  const iconOpacity = useTransform(iconProgress, [0, 0.15, 1], [0, 0, 1]);
-
-  const iconScale = useTransform(iconProgress, [0, 1], [0.7, 1]);
-
-  const iconFilter = useTransform(
-    iconProgress,
-    (v) => {
-      if (v >= 0.88) return "blur(0px)";
-      const blurAmount = (1 - v / 0.88) * 16;
-      return `blur(${blurAmount.toFixed(2)}px)`;
-    }
-  );
+  const iconSlotW    = useTransform(iconProgress, [0, 1], [0, PRE_ICON_SLOT_FULL]);
+  const iconOpacity  = useTransform(iconProgress, [0, 0.15, 1], [0, 0, 1]);
 
   useEffect(() => {
     const run = async () => {
@@ -106,7 +92,36 @@ export default function Preloader({ onComplete }: PreloaderProps) {
 
       setPhase("icon-appear");
       iconProgress.set(0);
+
+      // ── Framer drives slot-width + wrapper opacity ──
       animate(iconProgress, 1, { duration: 2.0, ease: [0.22, 1, 0.36, 1] });
+
+      // ── GSAP drives scale + blur on the icon element ──
+      // Wait one frame so the element is in the DOM and visible
+      requestAnimationFrame(() => {
+        if (iconRef.current) {
+          gsap.fromTo(
+            iconRef.current,
+            {
+              scale: 0.7,
+              filter: "blur(16px)",
+              transformOrigin: "center center",
+            },
+            {
+              scale: 1,
+              filter: "blur(0px)",
+              duration: 2.0,
+              ease: "power3.out",
+              // 88 % of the way through the blur should already be gone,
+              // mirroring the original keyframe feel
+              onUpdate() {
+                // Optionally introspect progress here if needed
+              },
+            }
+          );
+        }
+      });
+
       await wait(2400);
 
       setPhase("hold");
@@ -138,6 +153,13 @@ export default function Preloader({ onComplete }: PreloaderProps) {
 
     run();
   }, [onComplete]);
+
+  // Kill any in-progress GSAP tween when the component unmounts
+  useEffect(() => {
+    return () => {
+      if (iconRef.current) gsap.killTweensOf(iconRef.current);
+    };
+  }, []);
 
   if (!mounted) return null;
 
@@ -248,7 +270,7 @@ export default function Preloader({ onComplete }: PreloaderProps) {
           </motion.span>
         </div>
 
-        {/* ICON slot */}
+        {/* ICON slot — slot width + wrapper opacity driven by Framer */}
         <motion.div
           style={{
             width: iconSlotW,
@@ -260,37 +282,23 @@ export default function Preloader({ onComplete }: PreloaderProps) {
             visibility: iconActive ? "visible" : "hidden",
           }}
         >
-          {/* Outer: scale + opacity only */}
           <motion.div
             style={{
               opacity: iconOpacity,
-              scaleX: iconScale,
-              scaleY: iconScale,
-              transformOrigin: "center center",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              willChange: "transform, opacity",
-              backfaceVisibility: "hidden",
-              WebkitBackfaceVisibility: "hidden",
             }}
           >
-            {/* Inner: blur filter only — isolated GPU layer */}
-            <motion.div
-              style={{
-                filter: iconFilter,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                willChange: "filter",
-                transform: "translateZ(0)",
-                backfaceVisibility: "hidden",
-                WebkitBackfaceVisibility: "hidden",
-                isolation: "isolate",
-              }}
-            >
+            {/*
+             * ref={iconRef} is the GSAP target.
+             * GSAP animates scale + blur; Framer handles opacity above.
+             * Initial state (scale 0.7, blur 16px) is set via gsap.fromTo
+             * so no inline style is needed here.
+             */}
+            <div ref={iconRef}>
               <IconMark />
-            </motion.div>
+            </div>
           </motion.div>
         </motion.div>
 
