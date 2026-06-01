@@ -2,11 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  LOGO_FONT_FAMILY,
-  LOGO_FONT_WEIGHT,
-  LOGO_COLOR,
-} from "./Header";
+import { LOGO_COLOR } from "./Header";
 
 interface NavMenuProps {
   open: boolean;
@@ -22,60 +18,23 @@ const NAV_LINKS = [
 ];
 
 const SOCIAL_LINKS = [
-  { label: "Instagram", href: "https://instagram.com", icon: InstagramIcon },
-  { label: "Facebook",  href: "https://facebook.com",  icon: FacebookIcon  },
-  { label: "LinkedIn",  href: "https://linkedin.com",  icon: LinkedInIcon  },
-  { label: "YouTube",   href: "https://youtube.com",   icon: YouTubeIcon   },
+  { label: "Instagram", href: "https://instagram.com", src: "/ig.svg"       },
+  { label: "Facebook",  href: "https://facebook.com",  src: "/Facebook.svg" },
+  { label: "LinkedIn",  href: "https://linkedin.com",  src: "/linkedin.svg" },
+  { label: "YouTube",   href: "https://youtube.com",   src: "/yt.svg"       },
 ];
-
-function InstagramIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-      <circle cx="12" cy="12" r="4"/>
-      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
-    </svg>
-  );
-}
-
-function FacebookIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
-    </svg>
-  );
-}
-
-function LinkedInIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/>
-      <circle cx="4" cy="4" r="2"/>
-    </svg>
-  );
-}
-
-function YouTubeIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/>
-      <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#000" opacity="0.6"/>
-    </svg>
-  );
-}
 
 function CloseButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
       aria-label="Close menu"
-      className="absolute top-7 left-10 z-10 flex items-center justify-center p-1.5 bg-transparent border-none cursor-pointer transition-[opacity,transform] duration-200 ease-in-out hover:opacity-100 hover:rotate-90"
-      style={{ color: LOGO_COLOR, opacity: 0.85 }}
+      className="absolute top-7 left-10 z-10 flex items-center justify-center p-1.5 bg-transparent border-none cursor-pointer opacity-85 hover:opacity-100 hover:rotate-90 transition-[opacity,transform] duration-200 ease-in-out"
+      style={{ color: LOGO_COLOR }}
     >
-<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M16 1.61716L14.3828 0L7.99997 6.38287L1.61716 0L0 1.61716L6.38287 7.99997L0 14.3828L1.61716 16L7.99997 9.61713L14.3828 16L16 14.3828L9.61713 7.99997L16 1.61716Z" fill="#F4EEDF"/>
-</svg>
-
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 1.61716L14.3828 0L7.99997 6.38287L1.61716 0L0 1.61716L6.38287 7.99997L0 14.3828L1.61716 16L7.99997 9.61713L14.3828 16L16 14.3828L9.61713 7.99997L16 1.61716Z" fill="#F4EEDF"/>
+      </svg>
     </button>
   );
 }
@@ -84,8 +43,8 @@ interface Layer { index: number; key: number }
 
 function ImagePanel({ activeIndex, isReverse }: { activeIndex: number; isReverse: boolean }) {
   const [layers, setLayers] = useState<Layer[]>([{ index: 0, key: 0 }]);
-  const keyRef              = useRef(1);
-  const prevIndexRef        = useRef(0);
+  const keyRef       = useRef(1);
+  const prevIndexRef = useRef(0);
 
   useEffect(() => {
     if (activeIndex === prevIndexRef.current) return;
@@ -145,33 +104,37 @@ const EASE_IN  = [0.16, 1, 0.3, 1] as const;
 const EASE_OUT = [0.76, 0, 0.24, 1] as const;
 
 const containerVariants = {
-  hidden:  { scaleY: 0, opacity: 0, transition: { duration: 0.55, ease: EASE_OUT } },
-  visible: { scaleY: 1, opacity: 1, transition: { duration: 0.72, ease: EASE_IN  } },
+  hidden:  { y: "-100%", opacity: 0, transition: { duration: 0.55, ease: EASE_OUT } },
+  visible: { y: 0,       opacity: 1, transition: { duration: 0.72, ease: EASE_IN  } },
 };
 
 const linkContainerVariants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.07, delayChildren: 0.2 } },
+  visible: {
+    transition: { staggerChildren: 0.07, delayChildren: 0.22 },
+  },
 };
 
 const linkVariants = {
-  hidden:  { y: 48, opacity: 0 },
+  hidden:  { y: 36, opacity: 0 },
   visible: { y: 0,  opacity: 1, transition: { duration: 0.6, ease: EASE_IN } },
 };
 
 const ctaVariants = {
-  hidden:  { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0,  transition: { delay: 0.55, duration: 0.5, ease: "easeOut" as const } },
+  hidden:  { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { delay: 0.55, duration: 0.5, ease: "easeOut" as const } },
 };
 
 const bottomVariants = {
-  hidden:  { opacity: 0 },
-  visible: { opacity: 1, transition: { delay: 0.62, duration: 0.45, ease: "easeOut" as const } },
+  hidden:  { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { delay: 0.62, duration: 0.45, ease: "easeOut" as const } },
 };
 
 export default function NavMenu({ open, onClose }: NavMenuProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [activeIndex,  setActiveIndex]  = useState(0);
+  const [ctaHovered,   setCtaHovered]   = useState(false);
+  const menuRef   = useRef<HTMLDivElement>(null);
   const isHovered = hoveredIndex !== null;
   const isReverse = !isHovered;
 
@@ -192,6 +155,15 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
   }, [onClose]);
 
   useEffect(() => {
+    if (!open) return;
+    const handleMouseDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [open, onClose]);
+
+  useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
@@ -201,11 +173,12 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
       {open && (
         <motion.div
           key="nav-menu"
+          ref={menuRef}
           variants={containerVariants}
           initial="hidden"
           animate="visible"
           exit="hidden"
-          className="fixed z-[2000] p-5 box-border grid  origin-top"
+          className="fixed z-[2000] p-5 grid origin-top"
           style={{
             top: "32px",
             bottom: "32px",
@@ -218,94 +191,133 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
           }}
         >
           {/* ── LEFT PANEL ── */}
-          <div className="relative flex flex-col items-center py-12">
-            {/* Close button — absolute top-left */}
+          <div className="relative flex flex-col" style={{ padding: "48px 0px" }}>
+
             <CloseButton onClick={onClose} />
 
-            {/* Nav + CTA — centered, takes all space */}
-            <div className="flex-1 flex flex-col justify-center">
-              <motion.nav variants={linkContainerVariants} initial="hidden" animate="visible" exit="hidden">
-                {NAV_LINKS.map(({ label, href }, i) => (
-                  <motion.div key={label} variants={linkVariants} className="overflow-hidden">
-                    <NavLink
-                      label={label}
-                      href={href}
-                      onClose={onClose}
-                      onMouseEnter={() => handleMouseEnter(i)}
-                      onMouseLeave={() => handleMouseLeave()}
+            <div
+              className="flex flex-col"
+              style={{ margin: "0 auto", width: "fit-content", height: "100%" }}
+            >
+              {/* ── MIDDLE: nav + CTA ── */}
+              <div className="flex-1 flex flex-col justify-top !pt-25">
+                <motion.nav
+                  variants={linkContainerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="hidden"
+                >
+                  {NAV_LINKS.map(({ label, href }, i) => (
+                    <motion.div key={label} variants={linkVariants} className="overflow-hidden">
+                      <NavLink
+                        label={label}
+                        href={href}
+                        isActive={hoveredIndex === i}
+                        onClose={onClose}
+                        onMouseEnter={() => handleMouseEnter(i)}
+                        onMouseLeave={handleMouseLeave}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.nav>
+
+                {/* CTA */}
+                <motion.div
+                  variants={ctaVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="hidden"
+                >
+                  <a
+                    href="/contact"
+                    onClick={onClose}
+                    onMouseEnter={() => setCtaHovered(true)}
+                    onMouseLeave={() => setCtaHovered(false)}
+                    className="font-body"
+                    style={{
+                      display: "inline-block",
+                      marginTop: "44px",
+                      color: LOGO_COLOR,
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      textTransform: "uppercase",
+                      width: "fit-content",
+                      textDecoration: "none",
+                      cursor: "pointer",
+                      position: "relative",
+                      paddingBottom: "8px",
+                      opacity: ctaHovered ? 0.7 : 1,
+                      transition: "opacity 200ms ease",
+                    }}
+                  >
+                    Get a free consultation
+                    <span
+                      style={{
+                        position: "absolute",
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: "1px",
+                        backgroundColor: LOGO_COLOR,
+                        transform: ctaHovered ? "translateY(-1px)" : "translateY(2px)",
+                        transition: "transform 250ms ease",
+                      }}
                     />
-                  </motion.div>
-                ))}
-              </motion.nav>
+                  </a>
+                </motion.div>
+              </div>
 
-              {/* CTA link */}
-              <motion.a
-                href="/contact"
-                variants={ctaVariants}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-                onClick={onClose}
-                className="inline-block mt-7 pb-1.5 text-[10px] font-medium tracking-[0.22em] uppercase no-underline transition-opacity duration-200 ease-in-out hover:opacity-60"
-                style={{
-                  fontFamily: "'Montserrat', 'Helvetica Neue', sans-serif",
-                  color: LOGO_COLOR,
-                  borderBottom: `1px solid ${LOGO_COLOR}`,
-                  opacity: 0.9,
-                }}
-              >
-                Get a free consultation
-              </motion.a>
-
-              {/* Contact + socials */}
+              {/* ── BOTTOM: contact + socials ── */}
               <motion.div
                 variants={bottomVariants}
                 initial="hidden"
                 animate="visible"
                 exit="hidden"
-                className="mt-8"
+                style={{ paddingBottom: "0px" }}
               >
-                <div className="mb-4 mt-27">
-                  <p
-                    className="text-[11px] tracking-[0.06em] m-0 mb-1"
-                    style={{ fontFamily: "'Montserrat', sans-serif", color: LOGO_COLOR,  }}
-                  >
-                    0422 630 394
+                <div className="font-body !mb-6.5" style={{ color: LOGO_COLOR }}>
+                  <p className="m-0 !mb-1.5 text-[16px]">
+                    <a href="tel:0422630394" style={{ color: LOGO_COLOR, textDecoration: "none" }}
+                      className="hover:opacity-70 transition-opacity duration-200">
+                      0422 630 394
+                    </a>
                   </p>
-                  <p
-                    className="text-[11px] tracking-[0.06em] m-0"
-                    style={{ fontFamily: "'Montserrat', sans-serif", color: LOGO_COLOR,  }}
-                  >
-                    admin@grandpools.com.au
+                  <p className="m-0 text-[16px]">
+                    <a href="mailto:admin@grandpools.com.au" style={{ color: LOGO_COLOR, textDecoration: "none" }}
+                      className="hover:opacity-70 transition-opacity duration-200">
+                      admin@grandpools.com.au
+                    </a>
                   </p>
                 </div>
 
                 <div className="flex items-center gap-4">
-                  {SOCIAL_LINKS.map(({ label, href, icon: Icon }) => (
+                  {SOCIAL_LINKS.map(({ label, href, src }) => (
                     <a
                       key={label}
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={label}
-                      className="flex transition-opacity duration-200 ease-in-out hover:opacity-100"
-                      style={{ color: LOGO_COLOR }}
+                      className="flex opacity-100 hover:opacity-70 transition-opacity duration-200"
                     >
-                      <Icon />
+                      <img
+                        src={src}
+                        alt={label}
+                        className="block w-5 h-5 object-contain"
+                      />
                     </a>
                   ))}
                 </div>
               </motion.div>
             </div>
+
           </div>
 
           {/* ── RIGHT PANEL ── */}
-          <div className="relative overflow-hidden">
+          <div className="relative overflow-hidden !p-[20px]">
             <ImagePanel activeIndex={activeIndex} isReverse={isReverse} />
-            {/* Left-edge gradient overlay */}
             <div
               className="absolute inset-0 z-[1] pointer-events-none"
-              style={{ background: "linear-gradient(to right, rgba(0,0,0,0.12) 0%, transparent 30%)" }}
             />
           </div>
         </motion.div>
@@ -314,39 +326,46 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
   );
 }
 
-function NavLink({ label, href, onClose, onMouseEnter, onMouseLeave }: {
+function NavLink({
+  label,
+  href,
+  isActive,
+  onClose,
+  onMouseEnter,
+  onMouseLeave,
+}: {
   label: string;
   href: string;
+  isActive: boolean;
   onClose: () => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }) {
+  const isCurrentPage = typeof window !== "undefined" && window.location.pathname === href;
+  const highlighted = isActive || isCurrentPage;
+
   return (
     <a
       href={href}
       onClick={onClose}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       onFocus={onMouseEnter}
       onBlur={onMouseLeave}
-      className="block no-underline leading-[1.15] mb-[0.1em] cursor-default"
+      className="block no-underline"
+      style={{ lineHeight: "2.0", cursor: "pointer" }}
     >
       <span
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-        onMouseOver={e => {
-          (e.currentTarget as HTMLSpanElement).style.opacity       = "1";
-          (e.currentTarget as HTMLSpanElement).style.letterSpacing = "0.05em";
-        }}
-        onMouseOut={e => {
-          (e.currentTarget as HTMLSpanElement).style.opacity       = "0.9";
-          (e.currentTarget as HTMLSpanElement).style.letterSpacing = "0.01em";
-        }}
-        className="inline-block text-[32px] transition-[opacity,letter-spacing] duration-[250ms,350ms] ease-in-out cursor-pointer"
+        className="font-display inline-block select-none pb-[0.18em]"
         style={{
-          fontFamily:    LOGO_FONT_FAMILY,
-          fontWeight:    LOGO_FONT_WEIGHT,
-          color:         LOGO_COLOR,
-          letterSpacing: "0.01em",
-          opacity:       0.9,
+          fontWeight: 400,
+          fontStyle: "normal",
+          fontSize: "clamp(26px, 2.5vw, 32px)",
+          lineHeight: "100%",
+          color: highlighted ? "#F4EEDF" : "#a89f8c",
+          transition: "color 250ms ease-in-out, letter-spacing 350ms ease-in-out",
+          letterSpacing: highlighted ? "0.01em" : "0",
+          cursor: "pointer",
         }}
       >
         {label}

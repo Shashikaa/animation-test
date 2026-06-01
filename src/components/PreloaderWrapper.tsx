@@ -7,5 +7,9 @@ export default function PreloaderWrapper() {
 
   if (preloaderDone) return null;
 
-  return <Preloader onComplete={() => setPreloaderDone(true)} />;
+  return (
+    <Preloader
+      onComplete={() => setPreloaderDone(true)}
+    />
+  );
 }
