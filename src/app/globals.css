@@ -24,7 +24,7 @@
   --text-xs:      12px;
 
   --leading-display: 1;
-  --leading-body:    1;
+  --leading-body:    1.2;
 
   /* Spacing scale */
   --space-1:  4px;
@@ -219,4 +219,13 @@ body.preloading .scroll-container {
 
 .transition-fast {
   transition: all var(--duration-fast) var(--ease-out);
+}
+
+.section-continer {
+  width: 100%;
+  max-width: 1920px;
+  margin: 0 auto;
+  padding-inline: 65px;
+  padding-block: 85px;
+
 }

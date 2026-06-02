@@ -329,12 +329,17 @@ await wait(700);
 return (
 <div className="fixed inset-0 z-[9999] min-h-screen ">
 
-  {/* 1. IMAGE */} 
-<div className="absolute inset-0 bg-cover bg-center bg-[linear-gradient(107.15deg,_#162D24_0%,_#094146_100%)]" />
+{/* 1. BG IMAGE — base layer */}
+  <img
+    src="/IntroReveal.webp"
+    alt=""
+    aria-hidden
+    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+    style={{ zIndex: 0, objectPosition: "center 30%" }}
+  />
 
-  {/* 2. WATER CANVAS */}
-  <div className="absolute inset-0 z-10 pointer-events-none background: linear-gradient(107.15deg, #162D24 0%, #094146 100%);
-">
+  {/* 2. WATER CANVAS — blended on top */}
+  <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 10 }}>
     <WaterBackground />
   </div>
 

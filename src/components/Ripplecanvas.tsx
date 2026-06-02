@@ -98,8 +98,8 @@ void main() {
   vec3 tintB = vec3(0.035, 0.255, 0.275);
   vec3 tint  = mix(tintA, tintB, vUv.x * 0.6 + vUv.y * 0.4);
 
-  color.rgb = mix(color.rgb, tint, 0.70);
-  color.rgb *= 0.57;
+  color.rgb = mix(color.rgb, tint, 0.80);
+  color.rgb *= 0.5;
 
   gl_FragColor = vec4(color.rgb, 0.3);
 }

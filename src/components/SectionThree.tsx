@@ -2,18 +2,7 @@
 
 export default function SectionThree() {
   return (
-    <section
-      className="section-3"
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 20,
-        overflow: "hidden",
-        visibility: "hidden",
-        willChange: "clip-path",
-        clipPath: "inset(100% 0% 0% 0%)",
-      }}
-    >
+<section className="section-3 absolute inset-0 z-10 overflow-hidden">
       <img
         src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1800"
         style={{
