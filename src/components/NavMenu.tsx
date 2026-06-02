@@ -18,7 +18,7 @@ const NAV_LINKS = [
 ];
 
 const SOCIAL_LINKS = [
-  { label: "Instagram", href: "https://instagram.com", src: "/ig.svg"       },
+  { label: "Instagram", href: "https://www.instagram.com/grandpools_aus/", src: "/ig.svg"       },
   { label: "Facebook",  href: "https://facebook.com",  src: "/Facebook.svg" },
   { label: "LinkedIn",  href: "https://linkedin.com",  src: "/linkedin.svg" },
   { label: "YouTube",   href: "https://youtube.com",   src: "/yt.svg"       },

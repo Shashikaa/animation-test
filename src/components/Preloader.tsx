@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import RippleCanvas from "./Ripplecanvas";
+
+import WaterBackground from "./Ripplecanvas";
 
 export const LOGO_COLOR        = "#F4EEDF";
 export const LOGO_ICON_W       = 160;
@@ -137,6 +138,7 @@ function center(r: DOMRect) {
 export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   const [phase, setPhase]     = useState<Phase>("idle");
   const [mounted, setMounted] = useState(true);
+  const [loaded, setLoaded]   = useState(false);
 
   const rScale   = useResponsiveScale();
 
@@ -170,6 +172,14 @@ const logoGap = 12; // fixed gap, not scaled
     const u3 = dotOpacityMV.on("change",     v => setDotOp(v));
     return () => { u1(); u2(); u3(); };
   }, [waveProgressMV, circleProgressMV, dotOpacityMV]);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src =
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=80";
+
+    img.onload = () => setLoaded(true);
+  }, []);
 
   // ── Slide amount ─────────────────────────────────────────────────────────────
   // SSR default: 300 (desktop). After mount: 0 on mobile, 300 on desktop.
@@ -316,25 +326,23 @@ await wait(700);
 
   if (!mounted) return null;
 
-  return (
-    <div
-      style={{
-        position:      "fixed",
-        inset:         0,
-        zIndex:        9999,
-        pointerEvents: phase === "fly-out" || phase === "done" ? "none" : "auto",
-      }}
-    >
-      {/* Background */}
-      <div style={{ position: "absolute", inset: 0, zIndex: 0, opacity: bgOp }}>
-        <RippleCanvas
-          style={{ position: "absolute", inset: 0 }}
-          seedRipples={[
-            [0.5,  0.5,  300],
-            [0.28, 0.38, 1100],
-            [0.72, 0.62, 1900],
-          ]}
-        />
+return (
+    <div className="fixed inset-0 z-[9999] overflow-hidden">
+
+      {/* IMAGE LAYER */}
+      <div
+        className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700 ease-out ${
+          loaded ? "blur-0 scale-100" : "blur-2xl scale-110"
+        }`}
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=80')",
+        }}
+      />
+
+      {/* CANVAS LAYER */}
+      <div className="absolute inset-0 z-10 pointer-events-none">
+        <WaterBackground />
       </div>
 
       {/* Logo group */}

@@ -52,7 +52,7 @@ export default function Home() {
   }, [preloaderDone]);
 
 return (
-  <main style={{ backgroundColor: "#000", overflow: "hidden" }}>
+  <main style={{  overflow: "hidden" }}>
     <PreloaderWrapper />
     <div className="scroll-container" style={{ height: "100vh" }}>
       <Hero />
