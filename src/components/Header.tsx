@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
 import { IconMark } from "./IconMark";
 import { HEADER_LOGO_SCALE, LOGO_COLOR, LOGO_ICON_W, LOGO_ICON_H, LOGO_GAP } from "./Preloader";
 
 export { LOGO_COLOR, LOGO_ICON_W, LOGO_ICON_H, LOGO_GAP, HEADER_LOGO_SCALE };
+
 
 // ─── GRAND SVG ────────────────────────────────────────────────────────────────
 function GrandSVG({ width, height }: { width: number; height: number }) {
@@ -34,6 +36,7 @@ function PoolsSVG({ width, height }: { width: number; height: number }) {
   );
 }
 
+
 // ─── Menu icon ────────────────────────────────────────────────────────────────
 function MenuIcon({ onClick }: { onClick?: () => void }) {
   return (
@@ -46,24 +49,24 @@ function MenuIcon({ onClick }: { onClick?: () => void }) {
     >
       <span className="menu-line menu-line-top" />
       <span className="menu-line menu-line-bottom" />
-<style>{`
-  .menu-line {
-    display: block; height: 1px; background: ${LOGO_COLOR}; border-radius: 1px;
-    transition: width 0.48s cubic-bezier(0.76,0,0.24,1), opacity 0.48s cubic-bezier(0.76,0,0.24,1);
-  }
-  .menu-line-top    { width: 20px; opacity: 1; }
-  .menu-line-bottom { width: 14px; opacity: 1; }
-  .menu-icon-btn:hover .menu-line-top    { width: 14px; }
-  .menu-icon-btn:hover .menu-line-bottom { width: 20px; }
+      <style>{`
+        .menu-line {
+          display: block; height: 1px; background: ${LOGO_COLOR}; border-radius: 1px;
+          transition: width 0.48s cubic-bezier(0.76,0,0.24,1), opacity 0.48s cubic-bezier(0.76,0,0.24,1);
+        }
+        .menu-line-top    { width: 20px; opacity: 1; }
+        .menu-line-bottom { width: 14px; opacity: 1; }
+        .menu-icon-btn:hover .menu-line-top    { width: 14px; }
+        .menu-icon-btn:hover .menu-line-bottom { width: 20px; }
 
-  @media (min-width: 768px) {
-    .menu-line        { height: 2px; }
-    .menu-line-top    { width: 32px; }
-    .menu-line-bottom { width: 24px; }
-    .menu-icon-btn:hover .menu-line-top    { width: 24px; }
-    .menu-icon-btn:hover .menu-line-bottom { width: 32px; }
-  }
-`}</style>
+        @media (min-width: 768px) {
+          .menu-line        { height: 2px; }
+          .menu-line-top    { width: 32px; }
+          .menu-line-bottom { width: 24px; }
+          .menu-icon-btn:hover .menu-line-top    { width: 24px; }
+          .menu-icon-btn:hover .menu-line-bottom { width: 32px; }
+        }
+      `}</style>
     </button>
   );
 }
@@ -73,10 +76,12 @@ function Logo({
   onClick,
   href = "/",
   logoVisible = false,
+  isHome = false,
 }: {
   onClick?: () => void;
   href?: string;
   logoVisible?: boolean;
+  isHome?: boolean;
 }) {
   return (
     <a
@@ -88,7 +93,7 @@ function Logo({
         display: "flex", alignItems: "center", gap: LOGO_GAP,
         position: "relative", zIndex: 2, textDecoration: "none",
         cursor: "pointer",
-        opacity: 0,
+        opacity: isHome ? 0 : logoVisible ? 1 : 0,   // ← only change
         transition: "opacity 0.25s ease",
       }}
       onMouseEnter={e => { if (logoVisible) e.currentTarget.style.opacity = "0.72"; }}
@@ -140,6 +145,7 @@ export default function Header({
   const [hovered,  setHovered]  = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const pathname = usePathname();                    // ← add
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -154,7 +160,7 @@ export default function Header({
       return;
     }
     const onScroll = () => setScrolled(window.scrollY > 0);
-    onScroll(); // sync immediately in case page is already scrolled
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [isMobile]);
@@ -181,7 +187,6 @@ export default function Header({
           }
         }
 
-        /* ── Mobile: total logo width = 135px, icon height = 25px ── */
         @media (max-width: 767px) {
           #header-logo-inner {
             width: 135px !important;
@@ -232,7 +237,12 @@ export default function Header({
             boxShadow: "inset -5px -5px 250px 0px rgba(255,255,255,0.02)",
           }}
         />
-        <Logo onClick={onLogoClick} href={logoHref} logoVisible={logoVisible} />
+        <Logo
+          onClick={onLogoClick}
+          href={logoHref}
+          logoVisible={logoVisible}
+          isHome={pathname === "/"}             // ← add
+        />
         <MenuIcon onClick={onMenuClick} />
       </motion.header>
     </>

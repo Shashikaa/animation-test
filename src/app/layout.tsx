@@ -52,8 +52,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="preloading min-h-full flex flex-col">
         <SiteProvider>
+          
           <SmoothScroll>
-            <PreloaderWrapper />
+          
             <HeaderWrapper />
             <NavMenuWrapper />
             {children}

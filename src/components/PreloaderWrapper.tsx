@@ -1,15 +1,16 @@
 "use client";
-import { useSite } from "../app/context/SiteContext";
+import { useEffect } from "react";
 import Preloader from "./Preloader";
+import { useSite } from "../app/context/SiteContext";
 
 export default function PreloaderWrapper() {
-  const { preloaderDone, setPreloaderDone } = useSite();
+  const { setPreloaderDone } = useSite();
 
-  if (preloaderDone) return null;
+  useEffect(() => {
+    document.body.classList.remove("preloading");
+  }, []);
 
   return (
-    <Preloader
-      onComplete={() => setPreloaderDone(true)}
-    />
+    <Preloader onComplete={() => setPreloaderDone(true)} />
   );
 }

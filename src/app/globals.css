@@ -115,6 +115,18 @@ body.preloading {
   height: 100vh;
 }
 
+/* ─── Sections layout ────────────────────────────────────────── */
+.hero,
+.section-1,
+.section-2,
+.section-3 {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
 /* ─── Typography Classes ─────────────────────────────────────── */
 .font-display {
   font-family: var(--font-display);

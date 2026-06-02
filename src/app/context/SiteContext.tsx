@@ -1,6 +1,8 @@
+// app/context/SiteContext.tsx
 "use client";
 
 import { createContext, useContext, useState } from "react";
+import { usePathname } from "next/navigation";
 
 type SiteContextType = {
   preloaderDone:    boolean;
@@ -12,7 +14,11 @@ type SiteContextType = {
 const SiteContext = createContext<SiteContextType>({} as SiteContextType);
 
 export function SiteProvider({ children }: { children: React.ReactNode }) {
-  const [preloaderDone, setPreloaderDone] = useState(false);
+  const pathname   = usePathname();
+  const isHome     = pathname === "/";
+
+  // Non-home pages skip the preloader entirely — logo is immediately visible
+  const [preloaderDone, setPreloaderDone] = useState(!isHome);
   const [menuOpen,      setMenuOpen]      = useState(false);
 
   return (

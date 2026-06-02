@@ -9,6 +9,7 @@ import Hero from "../components/Hero";
 import SectionOne from "../components/SectionOne";
 import SectionTwo from "../components/SectionTwo";
 import SectionThree from "../components/SectionThree";
+import PreloaderWrapper from "../components/PreloaderWrapper";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -50,14 +51,15 @@ export default function Home() {
     };
   }, [preloaderDone]);
 
-  return (
-    <main style={{ backgroundColor: "#000", overflow: "hidden" }}>
-      <div className="scroll-container" style={{ height: "100vh" }}>
-        <Hero />
-        <SectionOne />
-        <SectionTwo />
-        <SectionThree />
-      </div>
-    </main>
-  );
+return (
+  <main style={{ backgroundColor: "#000", overflow: "hidden" }}>
+    <PreloaderWrapper />
+    <div className="scroll-container" style={{ height: "100vh" }}>
+      <Hero />
+      <SectionOne />
+      <SectionTwo />
+      <SectionThree />
+    </div>
+  </main>
+);
 }
