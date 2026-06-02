@@ -27,12 +27,14 @@ export default function WaterBackground() {
     container.appendChild(renderer.domElement);
 
     const video = document.createElement("video");
-    video.src       = "/videos/pool-water-reflect.mp4";
-    video.loop      = true;
-    video.muted     = true;
-    video.playsInline = true;
-    video.autoplay  = true;
-
+    video.src = "/videos/pool-water-reflect.mp4";
+video.load();
+video.preload = "auto";
+video.crossOrigin = "anonymous";
+video.muted = true;
+video.playsInline = true;
+video.loop = true;
+video.autoplay = true;
     const onCanPlay = () => {
       renderer.domElement.style.opacity = "1";
     };
