@@ -7,7 +7,13 @@ export default function PreloaderWrapper() {
   const { setPreloaderDone } = useSite();
 
   useEffect(() => {
-    document.body.classList.remove("preloading");
+    // Wait for preloader to actually paint before revealing content beneath
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.body.classList.remove("preloading");
+      });
+    });
+    return () => cancelAnimationFrame(raf);
   }, []);
 
   return (

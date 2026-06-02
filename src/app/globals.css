@@ -126,7 +126,9 @@ body.preloading {
   height: 100%;
   will-change: transform;
 }
-
+body.preloading .scroll-container {
+  visibility: hidden;
+}
 /* ─── Typography Classes ─────────────────────────────────────── */
 .font-display {
   font-family: var(--font-display);
