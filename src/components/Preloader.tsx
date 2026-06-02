@@ -327,24 +327,21 @@ await wait(700);
   if (!mounted) return null;
 
 return (
-    <div className="fixed inset-0 z-[9999] overflow-hidden">
+<div className="fixed inset-0 z-[9999] min-h-screen ">
 
-      {/* IMAGE LAYER */}
-      <div
-        className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700 ease-out ${
-          loaded ? "blur-0 scale-100" : "blur-2xl scale-110"
-        }`}
-        style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=80')",
-        }}
-      />
+  {/* 1. IMAGE */}
+  <div className="absolute inset-0 bg-cover bg-center"
+    style={{
+      backgroundImage: "url('/pool-water-reflect.jpg')"
+    }}
+  />
 
-      {/* CANVAS LAYER */}
-      <div className="absolute inset-0 z-10 pointer-events-none">
-        <WaterBackground />
-      </div>
+  {/* 2. WATER CANVAS */}
+  <div className="absolute inset-0 z-10 pointer-events-none">
+    <WaterBackground />
+  </div>
 
+  
       {/* Logo group */}
       <div
         style={{
