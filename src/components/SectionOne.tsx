@@ -1,82 +1,96 @@
 "use client";
 
-import { useState } from "react";
-
 export default function SectionOne() {
-  const [ctaHovered, setCtaHovered] = useState(false);
-
   return (
     <section
-      className="section-1 absolute inset-0 z-10 overflow-hidden bg-cover bg-center"
       style={{
-        backgroundImage: "url('/pool-house.webp')",
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
       }}
     >
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/1" />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: "url('/pool-house.webp')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
 
-      {/* Content */}
-      <div className="relative z-10 section-continer min-h-screen flex items-center !pb-[225px]">
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(0,0,0,0.01)",
+        }}
+      />
+
+      <div
+        className="section-continer"
+        style={{
+          position: "relative",
+          zIndex: 1,
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          paddingBottom: "225px",
+        }}
+      >
         <div
-          className="
-            w-full
-            gap-y-[40px]
-            max-w-[572px]
-            h-[264px]
-     
-          
-            backdrop-blur-[42px]
-            bg-[#19211C]/40
-            !pl-[50px]
-            !pr-[80px]
-            flex
-            flex-col
-            justify-center
-            shadow-[-5px_-5px_25px_rgba(255,255,255,0.02)_inset]
-          "
+          style={{
+            width: "100%",
+            maxWidth: 572,
+            height: 264,
+            backdropFilter: "blur(42px)",
+            WebkitBackdropFilter: "blur(42px)",
+            background: "rgba(25, 33, 28, 0.4)",
+            paddingLeft: 50,
+            paddingRight: 80,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            gap: 16,
+            boxShadow: "-5px -5px 25px rgba(255,255,255,0.02) inset",
+          }}
         >
           <p className="text-[#F4EEDF] text-body leading-[1.5] font-light">
-            With expert craftsmanship and attention to detail, we bring
-            your vision to life. Whether you need a backyard retreat or a
-            high-end commercial pool, our team ensures a seamless
-            experience from design to completion.
+            With expert craftsmanship and attention to detail, we bring your
+            vision to life. Whether you need a backyard retreat or a high-end
+            commercial pool, our team ensures a seamless experience from design
+            to completion.
           </p>
 
-<a
-  href="/contact"
-  className="
-    group
-    relative
-    mt-[44px]
-    inline-block
-    w-fit
-    pb-[8px]
-    text-[14px]
-    font-medium
-    uppercase
-    text-[#F4EEDF]
-    transition-opacity
-    duration-200
-    hover:opacity-70
-  "
->
-  Get a free consultation
-
-<span
-  className="
-    absolute
-    left-0
-    right-0
-    bottom-0
-    h-px
-    bg-[#F4EEDF]
-    translate-y-[8px]
-    transition-transform
-    duration-300
-    group-hover:translate-y-[6px]
-  "
-/>
-</a>
+          <a
+            href="/contact"
+            style={{
+              position: "relative",
+              display: "inline-block",
+              width: "fit-content",
+              paddingBottom: 8,
+              fontSize: 14,
+              fontWeight: 500,
+              textTransform: "uppercase",
+              color: "#F4EEDF",
+              textDecoration: "none",
+              marginTop: 44,
+            }}
+            className="group transition-opacity duration-200 hover:opacity-70"
+          >
+            Get a free consultation
+            <span
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 1,
+                background: "#F4EEDF",
+              }}
+            />
+          </a>
         </div>
       </div>
     </section>

@@ -11,13 +11,13 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
   const thumbRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 0.4,
-      wheelMultiplier: 3.1,
-      touchMultiplier: 3.1,
-      smoothWheel: true,
-      easing: (t) => t,
-    });
+const lenis = new Lenis({
+  duration: 1,        // was 0.5
+  wheelMultiplier: 1.5, // was 2.4 — this is the main culprit
+  touchMultiplier: 1.2, // was 2.4
+  smoothWheel: true,
+  easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // expo ease instead of linear
+});
 
     let scrollTimer: ReturnType<typeof setTimeout>;
     let thumbVisible = false;

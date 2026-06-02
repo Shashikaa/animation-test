@@ -9,6 +9,8 @@ import Hero from "../components/Hero";
 import SectionOne from "../components/SectionOne";
 import SectionTwo from "../components/SectionTwo";
 import SectionThree from "../components/SectionThree";
+import SectionFour from "../components/SectionFour";
+import SectionFive from "../components/SectionFive";
 import PreloaderWrapper from "../components/PreloaderWrapper";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -22,23 +24,15 @@ export default function Home() {
     const id = setTimeout(() => {
       ScrollTrigger.getAll().forEach((t) => t.kill());
 
-      // Initial states
+      // ── Initial states ──────────────────────────────────────
       gsap.set(".hero", {
         yPercent: 0,
-        visibility: "visible",
-        zIndex: 30,
+        zIndex: 20,
       });
 
       gsap.set(".section-1", {
         yPercent: 0,
-        visibility: "visible",
-        zIndex: 20,
-      });
-
-      gsap.set(".section-2", {
-        yPercent: 100,
-        visibility: "visible",
-        zIndex: 30,
+        zIndex: 10,
       });
 
       gsap.set(".section-3", {
@@ -47,55 +41,102 @@ export default function Home() {
         zIndex: 40,
       });
 
-      const tl = gsap.timeline({
+      gsap.set(".section-4", {
+        yPercent: 100,
+        visibility: "visible",
+        zIndex: 50,
+      });
+
+      gsap.set(".section-5", {
+        visibility: "hidden",
+        clipPath: "inset(100% 0% 0% 0%)",
+        zIndex: 60,
+      });
+
+      // ── Timeline 1: Hero → Section 1 (pinned) ──────────────
+      const tl1 = gsap.timeline({
         scrollTrigger: {
-          trigger: ".scroll-container",
+          trigger: ".pin-hero-s1",
           start: "top top",
-          end: "+=8000",
-          scrub: 1,
+          end: "+=1500",
+          scrub: true,
           pin: true,
           pinSpacing: true,
         },
       });
 
-      // HERO -> SECTION 1
-      // Hero slides away upward, revealing Section 1 underneath
-      tl.to(".hero", {
+      tl1.to(".hero", {
         yPercent: -100,
         duration: 1,
         ease: "none",
       });
-
-      // Small pause
-      tl.to({}, { duration: 0.1 });
-
-      // SECTION 1 -> SECTION 2
-      // Section 2 slides up from bottom over Section 1
-      tl.to(".section-2", {
-        yPercent: 0,
-        duration: 1,
-        ease: "none",
+tl1.to(".section-1", {
+  filter: "blur(4px)",
+  opacity: 0.9,
+  duration: 0.5,
+  ease: "power2.inOut",
+});
+      // ── Timeline 2: S2 bg → S3 → S4 → S5 (pinned) ─────────
+      const tl2 = gsap.timeline({
+        scrollTrigger: {
+          trigger: ".pin-s3-s5",
+          start: "top top",
+          end: "+=5000",
+          scrub: true,
+          pin: true,
+          pinSpacing: true,
+        },
       });
 
-      // SECTION 2 -> SECTION 3 (UNCHANGED)
-      tl.set(".section-3", {
-        visibility: "visible",
+      // S2 → S3
+      tl2.set(".section-3", { visibility: "visible" });
+
+      tl2.to(".section-3", {
+        clipPath: "inset(0% 0% 0% 0%)",
+        duration: 1.5,
+        ease: "power2.inOut",
       });
 
-      tl.to(
-        ".section-3",
+      tl2.to(
+        ".section-2",
         {
-          clipPath: "inset(0% 0% 0% 0%)",
+          scale: 1.05,
           duration: 1.5,
           ease: "power2.inOut",
         },
         "<"
       );
 
-      tl.to(
-        ".section-2",
+      // S3 → S4
+      tl2.to(".section-4", {
+        yPercent: 0,
+        duration: 1,
+        ease: "none",
+      });
+
+      tl2.to(
+        ".section-3",
         {
           scale: 1.05,
+          duration: 1,
+          ease: "power2.inOut",
+        },
+        "<"
+      );
+
+      // S4 → S5
+      tl2.to(".section-4", {
+        scale: 1.05,
+        duration: 1.5,
+        ease: "power2.inOut",
+      });
+
+      tl2.set(".section-5", { visibility: "visible" });
+
+      tl2.to(
+        ".section-5",
+        {
+          clipPath: "inset(0% 0% 0% 0%)",
           duration: 1.5,
           ease: "power2.inOut",
         },
@@ -112,20 +153,35 @@ export default function Home() {
   }, [preloaderDone]);
 
   return (
-    <main style={{ overflow: "hidden" }}>
+    <main>
       <PreloaderWrapper />
 
+      {/* ── Pin 1: Hero slides up to reveal Section 1 ── */}
       <div
-        className="scroll-container"
-        style={{
-          height: "100vh",
-          position: "relative",
-        }}
+        className="pin-hero-s1"
+        style={{ position: "relative", height: "100vh", overflow: "hidden" }}
       >
-        <Hero />
-        <SectionOne />
-        <SectionTwo />
+        <div className="section-1 absolute inset-0" style={{ zIndex: 10 }}>
+          <SectionOne />
+        </div>
+        <div className="hero absolute inset-0" style={{ zIndex: 20 }}>
+          <Hero />
+        </div>
+      </div>
+
+
+
+      {/* ── Pin 2: S2 bg → S3 → S4 → S5 ── */}
+      <div
+        className="pin-s3-s5"
+        style={{ position: "relative", height: "100vh", overflow: "hidden" }}
+      >
+        <div className="section-2 absolute inset-0" style={{ zIndex: 10 }}>
+          <SectionTwo />
+        </div>
         <SectionThree />
+        <SectionFour />
+        <SectionFive />
       </div>
     </main>
   );

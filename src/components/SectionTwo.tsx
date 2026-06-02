@@ -4,33 +4,66 @@ import WaterBackground from "./Ripplecanvas";
 
 export default function SectionTwo() {
   return (
-    <section className="section-2 absolute inset-0 z-10 overflow-hidden">
-      {/* Layer 1 — static background photo */}
+    <section
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100vh",
+        overflow: "hidden",
+      }}
+    >
       <img
         src="/marvin-van.webp"
         alt=""
         aria-hidden
-        className="absolute inset-0 w-full h-full object-cover"
-        style={{ zIndex: 0 }}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          zIndex: 0,
+        }}
       />
 
-      {/* Layer 2 — Three.js water video overlay */}
       <WaterBackground />
 
-      {/* Content — sits above the canvas (z-index: 1 on canvas, so z-10 here) */}
-      <div className="relative z-10 section-continer min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-[620px] flex flex-col items-center gap-y-[24px]">
+      <div
+        className="section-continer"
+        style={{
+          position: "relative",
+          zIndex: 2,
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            textAlign: "center",
+            maxWidth: 620,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 24,
+          }}
+        >
           <h2
-            className="text-[#F4EEDF] font-light leading-[1.15]"
-            style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)" }}
+            className="font-display text-[#F4EEDF]"
+            style={{ fontSize: 40, lineHeight: 1.15, textAlign: "left" }}
           >
-            Premium Pool Solutions for{" "}
-            <em className="italic font-light">Every Need</em>
+            Premium Pool Solutions for
+            <br />
+            <span className="italic font-cormorant">Every Need</span>
           </h2>
 
-          <p className="text-[#F4EEDF]/70 text-body leading-[1.6] font-light max-w-[480px]">
-            From renovations to new builds, we design and construct pools
-            that combine style, functionality, and durability.
+          <p
+            className="text-[#F4EEDF] text-body"
+            style={{ maxWidth: 320, textAlign: "left", alignSelf: "flex-start" }}
+          >
+            From renovations to new builds, we design and construct pools that
+            combine style, functionality, and durability.
           </p>
         </div>
       </div>
