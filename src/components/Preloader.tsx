@@ -329,15 +329,12 @@ await wait(700);
 return (
 <div className="fixed inset-0 z-[9999] min-h-screen ">
 
-  {/* 1. IMAGE */}
-  <div className="absolute inset-0 bg-cover bg-center"
-    style={{
-      backgroundImage: "url('/pool-water-reflect.jpg')"
-    }}
-  />
+  {/* 1. IMAGE */} 
+<div className="absolute inset-0 bg-cover bg-center bg-[linear-gradient(107.15deg,_#162D24_0%,_#094146_100%)]" />
 
   {/* 2. WATER CANVAS */}
-  <div className="absolute inset-0 z-10 pointer-events-none">
+  <div className="absolute inset-0 z-10 pointer-events-none background: linear-gradient(107.15deg, #162D24 0%, #094146 100%);
+">
     <WaterBackground />
   </div>
 

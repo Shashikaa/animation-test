@@ -31,7 +31,7 @@ export default function WaterBackground() {
     // ---------------- VIDEO ----------------
     const video = document.createElement("video");
 
-    video.src = "/videos/pool-water-reflect.mp4";
+    video.src = "/videos/Pool-Water-Reflect.mp4";
     video.muted = true;
     video.loop = true;
     video.playsInline = true;
