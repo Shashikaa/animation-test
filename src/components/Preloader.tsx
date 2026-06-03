@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import WaterBackground, { type WaterBackgroundHandle } from "./Ripplecanvas";
+import WaterBackground from "./Ripplecanvas";
 
 export const LOGO_COLOR        = "#F4EEDF";
 export const LOGO_ICON_W       = 160;
@@ -112,7 +112,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   const [phase,   setPhase]   = useState<Phase>("idle");
   const [mounted, setMounted] = useState(true);
 
-  const waterRef = useRef<WaterBackgroundHandle>(null);
+
   const rScale   = useResponsiveScale();
 
   const iconW  = LOGO_ICON_W * rScale;
@@ -236,8 +236,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
       const pTx = phCx - (pCx + (pSCx - pCx) * pScale);
       const pTy = phCy - (pCy + (pSCy - pCy) * pScale);
 
-      // Stop WebGL immediately — zero re-render, full frame budget for fly
-      waterRef.current?.stop();
+  
       setPhase("fly-out");
 
       animate(grandX, gTx, { duration: dur, ease });
@@ -305,7 +304,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
 
       {/* 2. WATER CANVAS */}
       <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1, opacity: bgOp }}>
-        <WaterBackground ref={waterRef} />
+        <WaterBackground />
       </div>
 
       {/* 3. LOGO GROUP */}
