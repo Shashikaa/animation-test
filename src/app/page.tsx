@@ -156,46 +156,39 @@ export default function Home() {
     };
   }, [preloaderDone]);
 
-return (
-  <main>
-    <PreloaderWrapper />
+  return (
+    <main>
+      <PreloaderWrapper />
 
-<div
-  id="page-content"
-  style={{
-    visibility: preloaderDone ? "visible" : "hidden",
-    opacity:    preloaderDone ? 1 : 0,
-    transition: preloaderDone ? "none" : undefined,
-  }}
->
-  {/* sections */}
 
-      {/* ── Pin 1: Hero slides up to reveal Section 1 ── */}
-      <div
-        className="pin-hero-s1"
-        style={{ position: "relative", height: "100vh", overflow: "hidden" }}
-      >
-        <div className="section-1 absolute inset-0" style={{ zIndex: 10 }}>
-          <SectionOne />
-        </div>
-        <div className="hero absolute inset-0" style={{ zIndex: 20 }}>
-          <Hero />
-        </div>
-      </div>
 
-      {/* ── Pin 2: S2 bg → S3 → S4 → S5 ── */}
-      <div
-        className="pin-s3-s5"
-        style={{ position: "relative", height: "100vh", overflow: "hidden" }}
-      >
-        <div className="section-2 absolute inset-0" style={{ zIndex: 10 }}>
-          <SectionTwo />
+        {/* ── Pin 1: Hero slides up to reveal Section 1 ── */}
+        <div
+          className="pin-hero-s1"
+          style={{ position: "relative", height: "100vh", overflow: "hidden" }}
+        >
+          <div className="section-1 absolute inset-0" style={{ zIndex: 10 }}>
+            <SectionOne />
+          </div>
+          <div className="hero absolute inset-0" style={{ zIndex: 20 }}>
+            <Hero />
+          </div>
         </div>
-        <SectionThree />
-        <SectionFour />
-        <SectionFive />
-      </div>
-    </div>
-  </main>
-);
+
+        {/* ── Pin 2: S2 bg → S3 → S4 → S5 ── */}
+        <div
+          className="pin-s3-s5"
+          style={{ position: "relative", height: "100vh", overflow: "hidden" }}
+        >
+          <div className="section-2 absolute inset-0" style={{ zIndex: 10 }}>
+            <SectionTwo />
+          </div>
+          <SectionThree />
+          <SectionFour />
+          <SectionFive />
+        </div>
+
+      
+    </main>
+  );
 }

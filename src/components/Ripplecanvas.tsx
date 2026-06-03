@@ -1,8 +1,13 @@
 "use client";
 import { useEffect, useRef } from "react";
 
-export default function WaterBackground() {
+export default function WaterBackground({ paused }: { paused?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const pausedRef = useRef(false);
+
+  useEffect(() => {
+    pausedRef.current = paused ?? false;
+  }, [paused]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -38,13 +43,10 @@ export default function WaterBackground() {
         vec2 uv = vUv;
         float t = uTime * uSpeed;
 
-        // Faster, more visible waves
-// In the fragment shader — lower wave multipliers
-uv.x += sin(uv.y * 20.0 + t * 1.0) * 0.018;
-uv.y += sin(uv.x * 15.0 + t * 0.8) * 0.014;
-uv.x += sin(uv.y * 8.0  + t * 1.3) * 0.009;
+        uv.x += sin(uv.y * 20.0 + t * 1.0) * 0.018;
+        uv.y += sin(uv.x * 15.0 + t * 0.8) * 0.014;
+        uv.x += sin(uv.y * 8.0  + t * 1.3) * 0.009;
 
-        // Primary mouse ripple — much stronger radius + amplitude
         vec2  md1 = uv - uMouse;
         float d1  = length(md1);
         float r1  = sin(d1 * 25.0 - t * 5.0)
@@ -52,13 +54,11 @@ uv.x += sin(uv.y * 8.0  + t * 1.3) * 0.009;
                     * exp(-d1 * 4.0);
         if (d1 > 0.0001) uv += normalize(md1) * r1;
 
-        // Secondary wide ripple ring around mouse
         float r1b = sin(d1 * 12.0 - t * 3.5)
                     * (uRippleStrength * 0.4)
                     * exp(-d1 * 2.5);
         if (d1 > 0.0001) uv += normalize(md1) * r1b;
 
-        // Ambient drifting ripple
         vec2  md2 = uv - uMouse2;
         float d2  = length(md2);
         float r2  = sin(d2 * 20.0 - t * 2.5) * 0.025 * exp(-d2 * 5.0);
@@ -66,16 +66,16 @@ uv.x += sin(uv.y * 8.0  + t * 1.3) * 0.009;
 
         vec4 color = texture2D(uTexture, uv);
 
-        vec3 tintA = vec3(0.04, 0.14, 0.18);
-        vec3 tintB = vec3(0.02, 0.30, 0.28);
-        vec3 tintC = vec3(0.08, 0.06, 0.20);
+        vec3 tintA = vec3(0.10, 0.45, 0.50);
+        vec3 tintB = vec3(0.15, 0.60, 0.55);
+        vec3 tintC = vec3(0.05, 0.25, 0.40);
         float mx   = vUv.x * 0.6 + vUv.y * 0.4;
         float my   = sin(vUv.y * 3.14159 + t * 0.1) * 0.5 + 0.5;
         vec3 tint  = mix(mix(tintA, tintB, mx), tintC, my * 0.3);
-        color.rgb  = mix(color.rgb, tint, 0.75);
-        color.rgb *= 0.45;
+        color.rgb  = mix(color.rgb, tint, 0.55);
+        color.rgb *= 0.4;
 
-        gl_FragColor = vec4(color.rgb, 0.1);
+        gl_FragColor = vec4(color.rgb, 0.15);
       }
     `;
 
@@ -117,6 +117,12 @@ uv.x += sin(uv.y * 8.0  + t * 1.3) * 0.009;
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
+    gl.texImage2D(
+      gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0,
+      gl.RGBA, gl.UNSIGNED_BYTE,
+      new Uint8Array([13, 90, 80, 255])
+    );
+
     const video = document.createElement("video");
     video.src         = "/videos/Pool-Water-Reflect.mp4";
     video.muted       = true;
@@ -129,7 +135,6 @@ uv.x += sin(uv.y * 8.0  + t * 1.3) * 0.009;
 
     let animId: number;
     let angle         = 0;
-    // rippleStrength lerps up when mouse moves, fades when idle
     let rippleCurrent = 0.04;
     let rippleTarget  = 0.04;
     let lastMoveTime  = 0;
@@ -139,13 +144,15 @@ uv.x += sin(uv.y * 8.0  + t * 1.3) * 0.009;
     const start  = performance.now();
 
     const render = () => {
-      animId  = requestAnimationFrame(render);
-      angle  += 0.008;
+      animId = requestAnimationFrame(render);
 
+      // ← Skip all GL work when paused (fly-out animation running)
+      if (pausedRef.current) return;
+
+      angle += 0.008;
       mouse.x += (target.x - mouse.x) * 0.06;
       mouse.y += (target.y - mouse.y) * 0.06;
 
-      // Fade ripple strength back to resting when mouse is idle
       const now = performance.now();
       if (now - lastMoveTime > 300) rippleTarget = 0.04;
       rippleCurrent += (rippleTarget - rippleCurrent) * 0.08;
@@ -167,17 +174,13 @@ uv.x += sin(uv.y * 8.0  + t * 1.3) * 0.009;
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     };
 
-    video.addEventListener("loadeddata", () => {
-      video.play().catch(() => {});
-      render();
-    }, { once: true });
-
+    render();
     video.play().catch(() => {});
 
     const onMouse = (e: MouseEvent) => {
       target.x     = e.clientX / window.innerWidth;
       target.y     = 1 - e.clientY / window.innerHeight;
-      rippleTarget = 0.10;   // spike up on movement
+      rippleTarget = 0.10;
       lastMoveTime = performance.now();
     };
     window.addEventListener("mousemove", onMouse);
@@ -201,6 +204,7 @@ uv.x += sin(uv.y * 8.0  + t * 1.3) * 0.009;
         width:    "100%",
         height:   "100%",
         zIndex:   1,
+        opacity:  1,
       }}
     />
   );

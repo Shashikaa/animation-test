@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-
-import WaterBackground from "./Ripplecanvas";
+import WaterBackground, { type WaterBackgroundHandle } from "./Ripplecanvas";
 
 export const LOGO_COLOR        = "#F4EEDF";
 export const LOGO_ICON_W       = 160;
@@ -10,40 +9,18 @@ export const LOGO_ICON_H       = 138;
 export const LOGO_GAP          = 10;
 export const HEADER_LOGO_SCALE = 0.28;
 
-const GRAND_SVG_W = 212;
-const GRAND_SVG_H = 30;
-const POOLS_SVG_W = 202;
-const POOLS_SVG_H = 30;
+const GRAND_SVG_W  = 212;
+const GRAND_SVG_H  = 30;
+const POOLS_SVG_W  = 202;
+const POOLS_SVG_H  = 30;
 const TOTAL_LOGO_W = GRAND_SVG_W + LOGO_GAP + LOGO_ICON_W + LOGO_GAP + POOLS_SVG_W;
 
-// ─── SSR-safe mobile detection ────────────────────────────────────────────────
-// Always starts false (matches server). Updates after mount on client only.
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false); // SSR default: false
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth <= 768);
-    check(); // set correct value after mount
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-
-  return isMobile;
-}
-
-// ─── SSR-safe responsive scale ────────────────────────────────────────────────
-// Always starts at 1 (matches server). Shrinks only on mobile after mount.
-// ─── SSR-safe responsive scale ────────────────────────────────────────────────
-// Server + first render: always 1 (matches server HTML). Updates after mount.
-// Mobile: fits logo in 72% of viewport — feels intentional, not crammed.
-// Desktop: always 1, no change.
 function useResponsiveScale() {
-  const [scale, setScale] = useState(1); // SSR default: 1
-
+  const [scale, setScale] = useState(1);
   useEffect(() => {
     const calc = () => {
       if (window.innerWidth > 768) {
-        setScale(1); // desktop unchanged
+        setScale(1);
       } else {
         const available = window.innerWidth * 0.72;
         setScale(Math.min(1, available / TOTAL_LOGO_W));
@@ -53,7 +30,6 @@ function useResponsiveScale() {
     window.addEventListener("resize", calc);
     return () => window.removeEventListener("resize", calc);
   }, []);
-
   return scale;
 }
 // ─── Shared SVG components (identical to Header.tsx) ─────────────────────────
@@ -120,6 +96,7 @@ function LogoSVG({
 }
 
 
+
 type Phase =
   | "idle"
   | "wave-draw"
@@ -131,26 +108,20 @@ type Phase =
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-function center(r: DOMRect) {
-  return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-}
-
 export default function Preloader({ onComplete }: { onComplete?: () => void }) {
-  const [phase, setPhase]     = useState<Phase>("idle");
+  const [phase,   setPhase]   = useState<Phase>("idle");
   const [mounted, setMounted] = useState(true);
-  const [loaded, setLoaded]   = useState(false);
 
+  const waterRef = useRef<WaterBackgroundHandle>(null);
   const rScale   = useResponsiveScale();
 
-
-  // Derived sizes — on SSR: rScale=1 so these equal the original constants
-  const iconW   = LOGO_ICON_W * rScale;
-  const iconH   = LOGO_ICON_H * rScale;
-  const grandW  = GRAND_SVG_W * rScale;
-  const grandH  = GRAND_SVG_H * rScale;
-  const poolsW  = POOLS_SVG_W * rScale;
-  const poolsH  = POOLS_SVG_H * rScale;
-const logoGap = 12; // fixed gap, not scaled
+  const iconW  = LOGO_ICON_W * rScale;
+  const iconH  = LOGO_ICON_H * rScale;
+  const grandW = GRAND_SVG_W * rScale;
+  const grandH = GRAND_SVG_H * rScale;
+  const poolsW = POOLS_SVG_W * rScale;
+  const poolsH = POOLS_SVG_H * rScale;
+  const logoGap = 12;
 
   const grandRef    = useRef<HTMLDivElement>(null);
   const iconRef     = useRef<HTMLDivElement>(null);
@@ -173,21 +144,7 @@ const logoGap = 12; // fixed gap, not scaled
     return () => { u1(); u2(); u3(); };
   }, [waveProgressMV, circleProgressMV, dotOpacityMV]);
 
-  useEffect(() => {
-    const img = new Image();
-    img.src =
-      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=80";
-
-    img.onload = () => setLoaded(true);
-  }, []);
-
-  // ── Slide amount ─────────────────────────────────────────────────────────────
-  // SSR default: 300 (desktop). After mount: 0 on mobile, 300 on desktop.
-  // Using isMobile which starts false — SSR renders slideAmt=300 always,
-  // then on mobile client it becomes 0 before animation starts (animation
-  // doesn't start until after the 400ms wait anyway).
-  const slideAmt = 400;
-
+  const slideAmt   = 400;
   const textProgress = useMotionValue(0);
   const textX_left   = useTransform(textProgress, [0, 1], [-slideAmt, 0]);
   const textX_right  = useTransform(textProgress, [0, 1], [slideAmt,  0]);
@@ -216,17 +173,16 @@ const logoGap = 12; // fixed gap, not scaled
       animate(waveProgressMV, 1, { duration: 2.2, ease: [0.16, 1, 0.3, 1] });
       await wait(1800);
 
-setPhase("text-reveal");
-animate(circleProgressMV, 1, { duration: 1.4, ease: [0.16, 1, 0.3, 1] });
-animate(dotOpacityMV,     1, { duration: 1.2, ease: [0.16, 1, 0.3, 1] });
-await wait(1400); // wait for circle + dot to complete
+      setPhase("text-reveal");
+      animate(circleProgressMV, 1, { duration: 1.4, ease: [0.16, 1, 0.3, 1] });
+      animate(dotOpacityMV,     1, { duration: 1.2, ease: [0.16, 1, 0.3, 1] });
+      await wait(1400);
 
-// slide both words in together, right after circle appears
-animate(textProgress, 1, { duration: 1.4, ease: [0.16, 1, 0.3, 1] });
-await wait(1400); // wait for slide to complete
+      animate(textProgress, 1, { duration: 1.4, ease: [0.16, 1, 0.3, 1] });
+      await wait(1400);
 
-setPhase("hold");
-await wait(700);
+      setPhase("hold");
+      await wait(700);
 
       const hGrand = document.getElementById("h-grand-svg");
       const hIcon  = document.getElementById("h-icon-svg");
@@ -261,26 +217,17 @@ await wait(700);
       const iScale = hIR.width / iSR.width;
       const pScale = hPR.width / pSR.width;
 
-      const gCx = gFR.left + gFR.width  / 2;
-      const gCy = gFR.top  + gFR.height / 2;
-      const iCx = iFR.left + iFR.width  / 2;
-      const iCy = iFR.top  + iFR.height / 2;
-      const pCx = pFR.left + pFR.width  / 2;
-      const pCy = pFR.top  + pFR.height / 2;
+      const gCx  = gFR.left + gFR.width  / 2; const gCy  = gFR.top  + gFR.height / 2;
+      const iCx  = iFR.left + iFR.width  / 2; const iCy  = iFR.top  + iFR.height / 2;
+      const pCx  = pFR.left + pFR.width  / 2; const pCy  = pFR.top  + pFR.height / 2;
 
-      const gSCx = gSR.left + gSR.width  / 2;
-      const gSCy = gSR.top  + gSR.height / 2;
-      const iSCx = iSR.left + iSR.width  / 2;
-      const iSCy = iSR.top  + iSR.height / 2;
-      const pSCx = pSR.left + pSR.width  / 2;
-      const pSCy = pSR.top  + pSR.height / 2;
+      const gSCx = gSR.left + gSR.width  / 2; const gSCy = gSR.top  + gSR.height / 2;
+      const iSCx = iSR.left + iSR.width  / 2; const iSCy = iSR.top  + iSR.height / 2;
+      const pSCx = pSR.left + pSR.width  / 2; const pSCy = pSR.top  + pSR.height / 2;
 
-      const ghCx = hGR.left + hGR.width  / 2;
-      const ghCy = hGR.top  + hGR.height / 2;
-      const ihCx = hIR.left + hIR.width  / 2;
-      const ihCy = hIR.top  + hIR.height / 2;
-      const phCx = hPR.left + hPR.width  / 2;
-      const phCy = hPR.top  + hPR.height / 2;
+      const ghCx = hGR.left + hGR.width  / 2; const ghCy = hGR.top  + hGR.height / 2;
+      const ihCx = hIR.left + hIR.width  / 2; const ihCy = hIR.top  + hIR.height / 2;
+      const phCx = hPR.left + hPR.width  / 2; const phCy = hPR.top  + hPR.height / 2;
 
       const gTx = ghCx - (gCx + (gSCx - gCx) * gScale);
       const gTy = ghCy - (gCy + (gSCy - gCy) * gScale);
@@ -289,6 +236,8 @@ await wait(700);
       const pTx = phCx - (pCx + (pSCx - pCx) * pScale);
       const pTy = phCy - (pCy + (pSCy - pCy) * pScale);
 
+      // Stop WebGL immediately — zero re-render, full frame budget for fly
+      waterRef.current?.stop();
       setPhase("fly-out");
 
       animate(grandX, gTx, { duration: dur, ease });
@@ -304,24 +253,29 @@ await wait(700);
       animate(poolsS, pScale, { duration: dur, ease });
 
       animate(bgOpacity, 0, { duration: dur, ease });
-const pageContent = document.getElementById("page-content");
-if (pageContent) {
-  pageContent.style.transition = "none";
-  pageContent.style.visibility = "visible";
-  pageContent.style.opacity = "0";
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      pageContent.style.transition = `opacity ${dur}s cubic-bezier(0.76,0,0.24,1)`;
-      pageContent.style.opacity = "1";
-    });
-  });
-}
+
+      // Reveal page content in sync with bg fade — delayed 1 frame
+      setTimeout(() => {
+        const pageContent = document.getElementById("page-content");
+        if (pageContent) {
+          pageContent.style.transition = "none";
+          pageContent.style.visibility = "visible";
+          pageContent.style.opacity    = "0";
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              pageContent.style.transition = `opacity ${dur}s cubic-bezier(0.76,0,0.24,1)`;
+              pageContent.style.opacity    = "1";
+            });
+          });
+        }
+      }, 80);
+
       await wait(dur * 1000);
 
       const headerLogoEl = document.getElementById("header-logo-inner");
       if (headerLogoEl) {
         headerLogoEl.style.transition = "opacity 0.25s ease";
-        headerLogoEl.style.opacity = "1";
+        headerLogoEl.style.opacity    = "1";
       }
 
       animate(logoOpacity, 0, { duration: 0.25, ease: "easeInOut" });
@@ -337,25 +291,24 @@ if (pageContent) {
 
   if (!mounted) return null;
 
-return (
-<div className="fixed inset-0 z-[9999] min-h-screen ">
+  return (
+    <div className="fixed inset-0 z-[9999] min-h-screen">
 
-{/* 1. BG IMAGE — base layer */}
-  <img
-    src="/IntroReveal.webp"
-    alt=""
-    aria-hidden
-    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-style={{ zIndex: 0,  opacity: bgOp }}
-  />
+      {/* 1. BG IMAGE */}
+      <img
+        src="/IntroReveal.webp"
+        alt=""
+        aria-hidden
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        style={{ zIndex: 0, objectPosition: "center 30%", opacity: bgOp }}
+      />
 
-  {/* 2. WATER CANVAS — blended on top */}
-<div className="absolute inset-0 pointer-events-none" style={{ zIndex: 10, opacity: bgOp }}>
-    <WaterBackground />
-  </div>
+      {/* 2. WATER CANVAS */}
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1, opacity: bgOp }}>
+        <WaterBackground ref={waterRef} />
+      </div>
 
-  
-      {/* Logo group */}
+      {/* 3. LOGO GROUP */}
       <div
         style={{
           position:       "absolute",
@@ -364,7 +317,7 @@ style={{ zIndex: 0,  opacity: bgOp }}
           display:        "flex",
           alignItems:     "center",
           justifyContent: "center",
-          overflow:       "hidden", // clips any residual x-translation during animation
+          overflow:       "hidden",
           opacity:        logoOp,
           pointerEvents:  "none",
         }}
@@ -379,7 +332,6 @@ style={{ zIndex: 0,  opacity: bgOp }}
             maxWidth:       "100vw",
             padding:        "0 24px",
             boxSizing:      "border-box",
-            
           }}
         >
           {/* LEFT: GRAND */}
@@ -389,32 +341,35 @@ style={{ zIndex: 0,  opacity: bgOp }}
               x: grandX, y: grandY, scale: grandS,
               transformOrigin: "center center",
               display: "flex", alignItems: "center",
+              willChange: "transform",
             }}
           >
             <motion.div
               ref={grandSvgRef}
               style={{
-                x:           textX_left,   // 0 on mobile, slides on desktop
+                x:           textX_left,
                 opacity:     textOpacity,
                 marginRight: logoGap,
                 display:     "flex",
                 alignItems:  "center",
+                willChange:  "transform",
               }}
             >
               <GrandSVG width={grandW} height={grandH} />
             </motion.div>
           </motion.div>
 
-          {/* CENTER: Icon */}
+          {/* CENTER: ICON */}
           <motion.div
             ref={iconRef}
             style={{
               x: iconX, y: iconY, scale: iconS,
               transformOrigin: "center center",
-              flexShrink: 0,
-              display:    "flex",
-              alignItems: "center",
+              flexShrink:     0,
+              display:        "flex",
+              alignItems:     "center",
               justifyContent: "center",
+              willChange:     "transform",
             }}
           >
             <div ref={iconSvgRef} style={{ display: "flex" }}>
@@ -435,16 +390,18 @@ style={{ zIndex: 0,  opacity: bgOp }}
               x: poolsX, y: poolsY, scale: poolsS,
               transformOrigin: "center center",
               display: "flex", alignItems: "center",
+              willChange: "transform",
             }}
           >
             <motion.div
               ref={poolsSvgRef}
               style={{
-                x:          textX_right,  // 0 on mobile, slides on desktop
+                x:          textX_right,
                 opacity:    textOpacity,
                 marginLeft: logoGap,
                 display:    "flex",
                 alignItems: "center",
+                willChange: "transform",
               }}
             >
               <PoolsSVG width={poolsW} height={poolsH} />
