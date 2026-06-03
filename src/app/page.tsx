@@ -160,8 +160,7 @@ export default function Home() {
     <main>
       <PreloaderWrapper />
 
-      {/* Both pin wrappers hidden until preloader completes — prevents paint during preload */}
-      <div style={{ visibility: preloaderDone ? "visible" : "hidden" }}>
+
 
         {/* ── Pin 1: Hero slides up to reveal Section 1 ── */}
         <div
@@ -189,7 +188,7 @@ export default function Home() {
           <SectionFive />
         </div>
 
-      </div>
+      
     </main>
   );
 }

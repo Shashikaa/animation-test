@@ -335,11 +335,11 @@ return (
     alt=""
     aria-hidden
     className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-    style={{ zIndex: 0, objectPosition: "center 30%" }}
+style={{ zIndex: 0,  opacity: bgOp }}
   />
 
   {/* 2. WATER CANVAS — blended on top */}
-  <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 10 }}>
+<div className="absolute inset-0 pointer-events-none" style={{ zIndex: 10, opacity: bgOp }}>
     <WaterBackground />
   </div>
 
