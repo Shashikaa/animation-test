@@ -12,14 +12,13 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
-    const lenis = new Lenis({
-      duration:        1,
-      wheelMultiplier: 1.5,
-      touchMultiplier: 1.2,
-      smoothWheel:     true,
-      easing:          (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    });
-
+const lenis = new Lenis({
+  duration:        1.6,       // long momentum tail
+  wheelMultiplier: 0.9,       // heavier, more deliberate
+  touchMultiplier: 1.0,
+  smoothWheel:     true,
+  easing:          (t) => 1 - Math.pow(1 - t, 4), // quartic ease-out — slow, drifting end
+});
     let thumbVisible = false;
 
     lenis.on("scroll", ({ scroll, limit }: { scroll: number; limit: number }) => {
