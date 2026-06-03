@@ -50,11 +50,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} h-full antialiased`}
     >
+      <head>
+        {/*
+          Runs synchronously before the first paint.
+          Sets the attribute so the CSS rule hides page content
+          before React even hydrates — eliminates the flash entirely.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.documentElement.setAttribute('data-preloading', '');`,
+          }}
+        />
+      </head>
       <body className="preloading min-h-full flex flex-col">
         <SiteProvider>
-          
           <SmoothScroll>
-          
             <HeaderWrapper />
             <NavMenuWrapper />
             {children}

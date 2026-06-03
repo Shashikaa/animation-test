@@ -8,18 +8,18 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
-  const thumbRef = useRef<HTMLDivElement>(null);
+  const thumbRef       = useRef<HTMLDivElement>(null);
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
-const lenis = new Lenis({
-  duration: 1,        // was 0.5
-  wheelMultiplier: 1.5, // was 2.4 — this is the main culprit
-  touchMultiplier: 1.2, // was 2.4
-  smoothWheel: true,
-  easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // expo ease instead of linear
-});
+    const lenis = new Lenis({
+      duration:        1,
+      wheelMultiplier: 1.5,
+      touchMultiplier: 1.2,
+      smoothWheel:     true,
+      easing:          (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    });
 
-    let scrollTimer: ReturnType<typeof setTimeout>;
     let thumbVisible = false;
 
     lenis.on("scroll", ({ scroll, limit }: { scroll: number; limit: number }) => {
@@ -30,19 +30,21 @@ const lenis = new Lenis({
         const trackH = window.innerHeight;
         const thumbH = Math.max((trackH / (limit + trackH)) * trackH, 40);
         const maxTop = trackH - thumbH;
-        const top = (scroll / limit) * maxTop;
+        const top    = (scroll / limit) * maxTop;
 
-        thumbRef.current.style.height = `${thumbH}px`;
+        thumbRef.current.style.height    = `${thumbH}px`;
         thumbRef.current.style.transform = `translateY(${top}px)`;
       }
 
-      // Show/hide
+      // Show thumb
       if (!thumbVisible && thumbRef.current) {
         thumbVisible = true;
         thumbRef.current.style.opacity = "1";
       }
-      clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => {
+
+      // Hide thumb after idle — use ref so we don't recreate a closure every scroll
+      clearTimeout(scrollTimerRef.current);
+      scrollTimerRef.current = setTimeout(() => {
         thumbVisible = false;
         if (thumbRef.current) thumbRef.current.style.opacity = "0";
       }, 800);
@@ -53,12 +55,14 @@ const lenis = new Lenis({
     };
 
     gsap.ticker.add(tick);
-    gsap.ticker.lagSmoothing(0);
+    // Allow up to 33 ms before lag smoothing kicks in — prevents jank on slow devices
+    // (lagSmoothing(0) disables this protection entirely, which causes jank instead)
+    gsap.ticker.lagSmoothing(500, 33);
 
     return () => {
       lenis.destroy();
       gsap.ticker.remove(tick);
-      clearTimeout(scrollTimer);
+      clearTimeout(scrollTimerRef.current);
     };
   }, []);
 
@@ -69,27 +73,27 @@ const lenis = new Lenis({
       {/* Custom scrollbar thumb */}
       <div
         style={{
-          position: "fixed",
-          top: 0,
-          right: 0,
-          width: "4px",
-          height: "100vh",
-          zIndex: 99999,
+          position:      "fixed",
+          top:           0,
+          right:         0,
+          width:         "4px",
+          height:        "100vh",
+          zIndex:        99999,
           pointerEvents: "none",
         }}
       >
         <div
           ref={thumbRef}
           style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            width: "4px",
-            background: "rgba(255,255,255,0.35)",
+            position:     "absolute",
+            top:          0,
+            right:        0,
+            width:        "4px",
+            background:   "rgba(255,255,255,0.35)",
             borderRadius: "999px",
-            opacity: 0,
-            transition: "opacity 0.3s ease, background 0.2s ease",
-            willChange: "transform",
+            opacity:      0,
+            transition:   "opacity 0.3s ease, background 0.2s ease",
+            willChange:   "transform",
           }}
         />
       </div>

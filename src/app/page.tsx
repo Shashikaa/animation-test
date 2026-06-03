@@ -21,7 +21,10 @@ export default function Home() {
   useEffect(() => {
     if (!preloaderDone) return;
 
-    const id = setTimeout(() => {
+    const id = setTimeout(async () => {
+      // Wait for fonts so layout is fully stable before ScrollTrigger measures anything
+      await document.fonts.ready;
+
       ScrollTrigger.getAll().forEach((t) => t.kill());
 
       // ── Initial states ──────────────────────────────────────
@@ -70,12 +73,13 @@ export default function Home() {
         duration: 1,
         ease: "none",
       });
-tl1.to(".section-1", {
-  filter: "blur(4px)",
-  opacity: 0.9,
-  duration: 0.5,
-  ease: "power2.inOut",
-});
+      tl1.to(".section-1", {
+        filter: "blur(4px)",
+        opacity: 0.9,
+        duration: 0.5,
+        ease: "power2.inOut",
+      });
+
       // ── Timeline 2: S2 bg → S3 → S4 → S5 (pinned) ─────────
       const tl2 = gsap.timeline({
         scrollTrigger: {
@@ -144,7 +148,7 @@ tl1.to(".section-1", {
       );
 
       ScrollTrigger.refresh();
-    }, 50);
+    }, 100);
 
     return () => {
       clearTimeout(id);
@@ -156,32 +160,35 @@ tl1.to(".section-1", {
     <main>
       <PreloaderWrapper />
 
-      {/* ── Pin 1: Hero slides up to reveal Section 1 ── */}
-      <div
-        className="pin-hero-s1"
-        style={{ position: "relative", height: "100vh", overflow: "hidden" }}
-      >
-        <div className="section-1 absolute inset-0" style={{ zIndex: 10 }}>
-          <SectionOne />
-        </div>
-        <div className="hero absolute inset-0" style={{ zIndex: 20 }}>
-          <Hero />
-        </div>
-      </div>
+      {/* Both pin wrappers hidden until preloader completes — prevents paint during preload */}
+      <div style={{ visibility: preloaderDone ? "visible" : "hidden" }}>
 
-
-
-      {/* ── Pin 2: S2 bg → S3 → S4 → S5 ── */}
-      <div
-        className="pin-s3-s5"
-        style={{ position: "relative", height: "100vh", overflow: "hidden" }}
-      >
-        <div className="section-2 absolute inset-0" style={{ zIndex: 10 }}>
-          <SectionTwo />
+        {/* ── Pin 1: Hero slides up to reveal Section 1 ── */}
+        <div
+          className="pin-hero-s1"
+          style={{ position: "relative", height: "100vh", overflow: "hidden" }}
+        >
+          <div className="section-1 absolute inset-0" style={{ zIndex: 10 }}>
+            <SectionOne />
+          </div>
+          <div className="hero absolute inset-0" style={{ zIndex: 20 }}>
+            <Hero />
+          </div>
         </div>
-        <SectionThree />
-        <SectionFour />
-        <SectionFive />
+
+        {/* ── Pin 2: S2 bg → S3 → S4 → S5 ── */}
+        <div
+          className="pin-s3-s5"
+          style={{ position: "relative", height: "100vh", overflow: "hidden" }}
+        >
+          <div className="section-2 absolute inset-0" style={{ zIndex: 10 }}>
+            <SectionTwo />
+          </div>
+          <SectionThree />
+          <SectionFour />
+          <SectionFive />
+        </div>
+
       </div>
     </main>
   );

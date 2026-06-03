@@ -139,6 +139,19 @@ body.preloading {
 body.preloading .scroll-container {
   visibility: hidden;
 }
+
+/* ─── Performance: isolate pinned wrappers from the rest of the paint tree ── */
+.pin-hero-s1,
+.pin-s3-s5 {
+  contain: layout style;
+}
+
+/* Promote the video/canvas layer inside section-2 to its own compositor layer */
+.section-2 canvas,
+.section-2 video {
+  will-change: transform;
+}
+
 /* ─── Typography Classes ─────────────────────────────────────── */
 .font-display {
   font-family: var(--font-display);
@@ -237,5 +250,4 @@ body.preloading .scroll-container {
   margin: 0 auto;
   padding-inline: 65px;
   padding-block: 85px;
-
 }
