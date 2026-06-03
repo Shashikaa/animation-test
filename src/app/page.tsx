@@ -88,15 +88,22 @@ export default function Home() {
       const FADE = 0.4;
 
       // ── Timeline 2: S2 → S3(×3) → S4 → S5 (scrubbed) ─────
-      // Ends exactly when S5 has fully entered. Card expand is NOT here.
       const tl2 = gsap.timeline({
         scrollTrigger: {
           trigger: ".pin-s2-s5",
           start: "top top",
           end: "+=5000",
-          scrub: true,
+          scrub: 0.8,
           pin: true,
           pinSpacing: true,
+          snap: {
+            snapTo: "labels",
+            duration: { min: 0.2, max: 0.4 },
+            delay: 0.1,
+            ease: "power2.inOut",
+            inertia: false,
+            directional: true,
+          },
         },
       });
 
@@ -114,7 +121,8 @@ export default function Home() {
       );
 
       // Dwell on slide 1
-      tl2.to({}, { duration: 0.8 });
+      tl2.addLabel("s3-slide-1");
+      tl2.to({}, { duration: 0.53 });
 
       // Slide 1 → 2
       tl2.to(".s3-bg-1",   { opacity: 0, duration: FADE, ease: "power1.inOut" });
@@ -125,7 +133,8 @@ export default function Home() {
       tl2.to(".s3-bar-2",  { background: "#F4EEDF", duration: FADE }, "<");
 
       // Dwell on slide 2
-      tl2.to({}, { duration: 0.8 });
+      tl2.addLabel("s3-slide-2");
+      tl2.to({}, { duration: 0.53 });
 
       // Slide 2 → 3
       tl2.to(".s3-bg-2",   { opacity: 0, duration: FADE, ease: "power1.inOut" });
@@ -136,29 +145,28 @@ export default function Home() {
       tl2.to(".s3-bar-3",  { background: "#F4EEDF", duration: FADE }, "<");
 
       // Dwell on slide 3
-      tl2.to({}, { duration: 0.8 });
+      tl2.addLabel("s3-slide-3");
+      tl2.to({}, { duration: 0.53 });
 
       // S4 slides up
       tl2.to(".section-4", { yPercent: 0, duration: 1, ease: "power2.inOut" });
       tl2.to(".section-4", { scale: 1, duration: 0.5, ease: "power2.inOut" });
 
       // S3 + S4 exit up; S5 enters — tl2 ends here
+      tl2.addLabel("s4-in");
       tl2.to(".section-3", { yPercent: -100, duration: 1.5, ease: "power2.inOut" });
       tl2.to(".section-4", { yPercent: -100, duration: 1.5, ease: "power2.inOut" }, "<");
       tl2.to(".section-5", { yPercent: 0,    duration: 1.5, ease: "power2.inOut" }, "<");
+      tl2.addLabel("s5-in");
 
-      // ── Card expand: auto-plays on enter, reverses on leave back ──
-      // Fires as a real tween (not scrubbed) so it always completes
-      // fully regardless of scroll speed. onEnterBack reverses it.
+      // ── Card expand ────────────────────────────────────────
       let cardTween: gsap.core.Tween | null = null;
 
       ScrollTrigger.create({
         trigger: ".pin-s2-s5",
-        // Fires right at the end of tl2's pinned scroll distance
         start: "top top",
         end: "+=5000",
         onLeave: () => {
-          // Kill any in-progress reverse, play forward to fullscreen
           if (cardTween) cardTween.kill();
           cardTween = gsap.to(".s5-card", {
             scaleX,
@@ -168,7 +176,6 @@ export default function Home() {
           });
         },
         onEnterBack: () => {
-          // User scrolled back into the section — collapse the card
           if (cardTween) cardTween.kill();
           cardTween = gsap.to(".s5-card", {
             scaleX: 1,
