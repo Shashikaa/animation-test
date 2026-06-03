@@ -140,10 +140,17 @@ body.preloading .scroll-container {
   visibility: hidden;
 }
 
-/* ─── Performance: isolate pinned wrappers from the rest of the paint tree ── */
+.hero,
+.section-1,
+.section-2,
+.section-3,
+.section-4,
+.section-5,
 .pin-hero-s1,
-.pin-s3-s5 {
-  contain: layout style;
+.pin-s2-s5 {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 /* Promote the video/canvas layer inside section-2 to its own compositor layer */
@@ -251,3 +258,4 @@ body.preloading .scroll-container {
   padding-inline: 65px;
   padding-block: 85px;
 }
+

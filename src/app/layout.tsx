@@ -40,28 +40,17 @@ const canelaText = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Animation test site",
-  description: "A scroll-driven animation test site built with Next.js and GSAP.",
+  title: "Grand Pools",
+  description: "Crafting Custom Swimming Pools with Style, Function, and Quality. Transform Your Outdoor Space with Our Expertly Designed Pools.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
+      data-preloading=""
       className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} h-full antialiased`}
     >
-      <head>
-        {/*
-          Runs synchronously before the first paint.
-          Sets the attribute so the CSS rule hides page content
-          before React even hydrates — eliminates the flash entirely.
-        */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `document.documentElement.setAttribute('data-preloading', '');`,
-          }}
-        />
-      </head>
       <body className="preloading min-h-full flex flex-col">
         <SiteProvider>
           <SmoothScroll>

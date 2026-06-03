@@ -228,42 +228,36 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
                   animate="visible"
                   exit="hidden"
                 >
-                  <a
-                    href="/contact"
-                    onClick={onClose}
-                    onMouseEnter={() => setCtaHovered(true)}
-                    onMouseLeave={() => setCtaHovered(false)}
-                    className="font-body"
-                    style={{
-                      display: "inline-block",
-                      marginTop: "44px",
-                      color: LOGO_COLOR,
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      textTransform: "uppercase",
-                      width: "fit-content",
-                      textDecoration: "none",
-                      cursor: "pointer",
-                      position: "relative",
-                      paddingBottom: "8px",
-                      opacity: ctaHovered ? 0.7 : 1,
-                      transition: "opacity 200ms ease",
-                    }}
-                  >
-                    Get a free consultation
-                    <span
-                      style={{
-                        position: "absolute",
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        height: "1px",
-                        backgroundColor: LOGO_COLOR,
-                        transform: ctaHovered ? "translateY(-1px)" : "translateY(2px)",
-                        transition: "transform 250ms ease",
-                      }}
-                    />
-                  </a>
+<a
+  href="/contact"
+  style={{
+    position: "relative",
+    display: "inline-block",
+    width: "fit-content",
+    paddingBottom: 8,
+    fontSize: 14,
+    fontWeight: 500,
+    textTransform: "uppercase",
+    color: "#F4EEDF",
+    textDecoration: "none",
+    marginTop: 44,
+  }}
+  className="group transition-opacity duration-200 hover:opacity-70"
+>
+  Get a free consultation
+  <span
+    style={{
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: 1,
+      background: "#F4EEDF",
+      transition: "transform 0.2s ease",
+    }}
+    className="group-hover:-translate-y-[2px]"
+  />
+</a>
                 </motion.div>
               </div>
 
