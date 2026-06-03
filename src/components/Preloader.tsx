@@ -304,7 +304,18 @@ await wait(700);
       animate(poolsS, pScale, { duration: dur, ease });
 
       animate(bgOpacity, 0, { duration: dur, ease });
-
+const pageContent = document.getElementById("page-content");
+if (pageContent) {
+  pageContent.style.transition = "none";
+  pageContent.style.visibility = "visible";
+  pageContent.style.opacity = "0";
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      pageContent.style.transition = `opacity ${dur}s cubic-bezier(0.76,0,0.24,1)`;
+      pageContent.style.opacity = "1";
+    });
+  });
+}
       await wait(dur * 1000);
 
       const headerLogoEl = document.getElementById("header-logo-inner");
