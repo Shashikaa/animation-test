@@ -5,6 +5,7 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pausedRef = useRef(false);
 
+  // Keep pausedRef in sync with the prop so the RAF loop reads it immediately
   useEffect(() => {
     pausedRef.current = paused ?? false;
   }, [paused]);
@@ -16,10 +17,15 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
     const gl = canvas.getContext("webgl");
     if (!gl) return;
 
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-    gl.viewport(0, 0, canvas.width, canvas.height);
+    const resize = () => {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    };
+    resize();
+    window.addEventListener("resize", resize);
 
+    // ─── Shaders ────────────────────────────────────────────────────────────
     const vert = `
       attribute vec2 a_position;
       varying vec2 vUv;
@@ -79,6 +85,7 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
       }
     `;
 
+    // ─── Compile helpers ─────────────────────────────────────────────────────
     const compile = (type: number, src: string) => {
       const s = gl.createShader(type)!;
       gl.shaderSource(s, src);
@@ -110,19 +117,21 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
     const uRippleStrength = gl.getUniformLocation(program, "uRippleStrength");
     const uTexture        = gl.getUniformLocation(program, "uTexture");
 
+    // ─── Texture ─────────────────────────────────────────────────────────────
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
+    // Solid teal fallback until video loads
     gl.texImage2D(
       gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0,
       gl.RGBA, gl.UNSIGNED_BYTE,
       new Uint8Array([13, 90, 80, 255])
     );
 
+    // ─── Video ───────────────────────────────────────────────────────────────
     const video = document.createElement("video");
     video.src         = "/videos/Pool-Water-Reflect.mp4";
     video.muted       = true;
@@ -146,7 +155,7 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
     const render = () => {
       animId = requestAnimationFrame(render);
 
-      // ← Skip all GL work when paused (fly-out animation running)
+      // Skip all GL work when paused (fly-out animation is running)
       if (pausedRef.current) return;
 
       angle += 0.008;
@@ -188,6 +197,7 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener("mousemove", onMouse);
+      window.removeEventListener("resize", resize);
       video.pause();
       gl.deleteTexture(texture);
       gl.deleteProgram(program);

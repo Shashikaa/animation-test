@@ -8,7 +8,9 @@ export default function SectionTwo() {
       style={{
         position: "relative",
         width: "100%",
-        height: "100vh",
+        height: "100%",   // ← was "100vh" — inside absolute inset-0 parent
+                          //   100vh creates a double-height layer causing
+                          //   layout reflow + jitter on S1→S2 transition
         overflow: "hidden",
       }}
     >

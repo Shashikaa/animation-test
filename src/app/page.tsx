@@ -12,6 +12,8 @@ import SectionThree from "../components/SectionThree";
 import SectionFour from "../components/SectionFour";
 import SectionFive from "../components/SectionFive";
 import PreloaderWrapper from "../components/PreloaderWrapper";
+import SectionSix from "../components/SectionSix";
+import SectionSeven from "../components/Sectionseven";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -23,17 +25,24 @@ export default function Home() {
 
     const id = setTimeout(async () => {
       await document.fonts.ready;
+      await new Promise<void>((resolve) => {
+        if (document.readyState === "complete") {
+          resolve();
+        } else {
+          window.addEventListener("load", () => resolve(), { once: true });
+        }
+      });
 
       ScrollTrigger.getAll().forEach((t) => t.kill());
 
-      // ── Initial states ──────────────────────────────────────
+      // ── Initial states ─────────────────────────────────────────────────
       gsap.set(".hero",      { yPercent: 0, zIndex: 20 });
       gsap.set(".section-1", { yPercent: 0, zIndex: 10 });
 
       gsap.set(".section-3", {
         visibility: "hidden",
         clipPath: "inset(100% 0% 0% 0%)",
-        zIndex: 40,
+        zIndex: 30,
       });
 
       gsap.set(".s3-bg-1",   { opacity: 1 });
@@ -48,8 +57,11 @@ export default function Home() {
       gsap.set(".s3-bar-2",  { background: "rgba(244,238,223,0.3)" });
       gsap.set(".s3-bar-3",  { background: "rgba(244,238,223,0.3)" });
 
-      gsap.set(".section-4", { yPercent: 100, visibility: "visible", zIndex: 50 });
-      gsap.set(".section-5", { yPercent: 100, visibility: "visible", zIndex: 60 });
+      // S4 starts off-screen below — zIndex 40, slides up over S3
+      gsap.set(".section-4", { yPercent: 100, visibility: "visible", zIndex: 40 });
+
+      // S5 starts off-screen below — zIndex 50, slides up over S4
+      gsap.set(".section-5", { yPercent: 100, visibility: "visible", zIndex: 50 });
 
       gsap.set(".s5-card", {
         scaleX: 1,
@@ -57,15 +69,26 @@ export default function Home() {
         transformOrigin: "center center",
       });
 
-      // ── Timeline 1: Hero → Section 1 ───────────────────────
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const cardW = 577;
+      const cardH = 623;
+      const scaleX = vw / cardW;
+      const scaleY = vh / cardH;
+
+      const FADE = 0.4;
+
+      // ── Timeline 1: Hero → Section 1 ──────────────────────────────────
       const tl1 = gsap.timeline({
         scrollTrigger: {
           trigger: ".pin-hero-s1",
+          scroller: document.documentElement,
           start: "top top",
           end: "+=1500",
-          scrub: true,
+          scrub: 1,
           pin: true,
           pinSpacing: true,
+          anticipatePin: 1,
         },
       });
 
@@ -77,33 +100,17 @@ export default function Home() {
         ease: "power2.inOut",
       });
 
-      // ── Shared card scale values ───────────────────────────
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      const cardW = 577;
-      const cardH = 623;
-      const scaleX = vw / cardW;
-      const scaleY = vh / cardH;
-
-      const FADE = 0.4;
-
-      // ── Timeline 2: S2 → S3(×3) → S4 → S5 (scrubbed) ─────
+      // ── Timeline 2: S2 → S3(×3) → S4 → S5 ────────────────────────────
       const tl2 = gsap.timeline({
         scrollTrigger: {
           trigger: ".pin-s2-s5",
+          scroller: document.documentElement,
           start: "top top",
           end: "+=5000",
-          scrub: 0.8,
+          scrub: 1,
           pin: true,
           pinSpacing: true,
-          snap: {
-            snapTo: "labels",
-            duration: { min: 0.2, max: 0.4 },
-            delay: 0.1,
-            ease: "power2.inOut",
-            inertia: false,
-            directional: true,
-          },
+          anticipatePin: 1,
         },
       });
 
@@ -114,14 +121,9 @@ export default function Home() {
         duration: 1.5,
         ease: "power2.inOut",
       });
-      tl2.to(
-        ".section-2",
-        { scale: 1.05, duration: 1.5, ease: "power2.inOut" },
-        "<"
-      );
+      tl2.to(".section-2", { scale: 1.05, duration: 1.5, ease: "power2.inOut" }, "<");
 
       // Dwell on slide 1
-      tl2.addLabel("s3-slide-1");
       tl2.to({}, { duration: 0.53 });
 
       // Slide 1 → 2
@@ -133,7 +135,6 @@ export default function Home() {
       tl2.to(".s3-bar-2",  { background: "#F4EEDF", duration: FADE }, "<");
 
       // Dwell on slide 2
-      tl2.addLabel("s3-slide-2");
       tl2.to({}, { duration: 0.53 });
 
       // Slide 2 → 3
@@ -145,25 +146,25 @@ export default function Home() {
       tl2.to(".s3-bar-3",  { background: "#F4EEDF", duration: FADE }, "<");
 
       // Dwell on slide 3
-      tl2.addLabel("s3-slide-3");
       tl2.to({}, { duration: 0.53 });
 
-      // S4 slides up
-      tl2.to(".section-4", { yPercent: 0, duration: 1, ease: "power2.inOut" });
-      tl2.to(".section-4", { scale: 1, duration: 0.5, ease: "power2.inOut" });
+      // ── S4 slides UP from below over S3 ───────────────────────────────
+      tl2.to(".section-4", { yPercent: 0, duration: 2.0, ease: "power3.inOut" });
 
-      // S3 + S4 exit up; S5 enters — tl2 ends here
-      tl2.addLabel("s4-in");
+      // Dwell on S4
+      tl2.to({}, { duration: 0.5 });
+
+      // ── S3 + S4 exit UP together; S5 slides UP from below ─────────────
       tl2.to(".section-3", { yPercent: -100, duration: 1.5, ease: "power2.inOut" });
       tl2.to(".section-4", { yPercent: -100, duration: 1.5, ease: "power2.inOut" }, "<");
       tl2.to(".section-5", { yPercent: 0,    duration: 1.5, ease: "power2.inOut" }, "<");
-      tl2.addLabel("s5-in");
 
-      // ── Card expand ────────────────────────────────────────
+      // ── Card expand ───────────────────────────────────────────────────
       let cardTween: gsap.core.Tween | null = null;
 
       ScrollTrigger.create({
         trigger: ".pin-s2-s5",
+        scroller: document.documentElement,
         start: "top top",
         end: "+=5000",
         onLeave: () => {
@@ -199,10 +200,10 @@ export default function Home() {
     <main>
       <PreloaderWrapper />
 
-      {/* ── Pin 1: Hero slides up to reveal Section 1 ── */}
+      {/* Pin 1: Hero (z20) slides up → S1 (z10) revealed */}
       <div
         className="pin-hero-s1"
-        style={{ position: "relative", height: "100vh", overflow: "hidden" }}
+        style={{ position: "relative", height: "100vh" }}
       >
         <div className="section-1 absolute inset-0" style={{ zIndex: 10 }}>
           <SectionOne />
@@ -212,10 +213,18 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Pin 2: S2 → S3(×3) → S4 → S5 → card expand ── */}
+      {/* Pin 2:
+            S2  z10  base layer, always present
+            S3  z30  clips in over S2, shows ×3 slides
+            S4  z40  slides UP from below over S3, then exits up with S3
+            S5  z50  slides UP from below as S3+S4 exit             */}
       <div
         className="pin-s2-s5"
-        style={{ position: "relative", height: "100vh", overflow: "hidden" }}
+        style={{
+          position: "relative",
+          height: "100vh",
+          overflow: "hidden",
+        }}
       >
         <div className="section-2 absolute inset-0" style={{ zIndex: 10 }}>
           <SectionTwo />
@@ -223,6 +232,15 @@ export default function Home() {
         <SectionThree />
         <SectionFour />
         <SectionFive />
+      </div>
+
+      {/* Normal scroll sections — flow naturally below the pinned block */}
+      <div style={{ height: "100vh" }}>
+        <SectionSix />
+      </div>
+
+      <div style={{ height: "100vh" }}>
+        <SectionSeven />
       </div>
     </main>
   );

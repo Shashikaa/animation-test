@@ -86,6 +86,8 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* Prevent browser native smooth-scroll from fighting Lenis */
+  scroll-behavior: auto;
 }
 
 body {
@@ -258,4 +260,3 @@ body.preloading .scroll-container {
   padding-inline: 65px;
   padding-block: 85px;
 }
-

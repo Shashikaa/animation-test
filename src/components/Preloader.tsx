@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion, useMotionValue, useTransform, animate, MotionValue } from "framer-motion";
 import WaterBackground from "./Ripplecanvas";
 
 export const LOGO_COLOR        = "#F4EEDF";
@@ -32,7 +32,8 @@ function useResponsiveScale() {
   }, []);
   return scale;
 }
-// ─── Shared SVG components (identical to Header.tsx) ─────────────────────────
+
+// ─── Shared SVG components ────────────────────────────────────────────────────
 function GrandSVG({ width, height }: { width: number; height: number }) {
   return (
     <svg viewBox="0 0 212 30" width={width} height={height} fill="none"
@@ -59,44 +60,60 @@ function PoolsSVG({ width, height }: { width: number; height: number }) {
   );
 }
 
-// ─── Icon SVG ─────────────────────────────────────────────────────────────────
+// ─── Icon SVG — accepts MotionValues directly, zero setState ─────────────────
 function LogoSVG({
-  waveProgress,
-  circleProgress,
-  dotOpacity,
+  waveProgressMV,
+  circleProgressMV,
+  dotOpacityMV,
   width,
   height,
 }: {
-  waveProgress: number;
-  circleProgress: number;
-  dotOpacity: number;
+  waveProgressMV: MotionValue<number>;
+  circleProgressMV: MotionValue<number>;
+  dotOpacityMV: MotionValue<number>;
   width: number;
   height: number;
 }) {
   const fill = "#F4EEDF";
+  // useTransform is reactive without triggering React re-renders
+  const clipW        = useTransform(waveProgressMV, v => v * 206);
+  const waveOpacity  = useTransform(waveProgressMV, v => Math.min(1, v));
+
   return (
-    <svg viewBox="385 0 206 178.21" width={width} height={height}
-      style={{ display: "block", flexShrink: 0, overflow: "visible" }} aria-hidden>
+    <svg
+      viewBox="385 0 206 178.21"
+      width={width}
+      height={height}
+      style={{ display: "block", flexShrink: 0, overflow: "visible" }}
+      aria-hidden
+    >
       <defs>
         <clipPath id="wave-reveal">
-          <rect x="385" y="0" width={waveProgress * 206} height="178.21" />
+          {/* motion.rect animates width without a React re-render */}
+          <motion.rect x="385" y="0" width={clipW} height="178.21" />
         </clipPath>
       </defs>
-      <g clipPath="url(#wave-reveal)" opacity={waveProgress > 0 ? Math.min(1, waveProgress * 1) : 0}>
+
+      <motion.g clipPath="url(#wave-reveal)" style={{ opacity: waveOpacity }}>
         <path fill={fill} d="M571.87,92.4c-.07,2-.22,3.99-.44,5.96l-5.78,1.33h-.03l-.44.11c-.72.17-1.45.35-2.19.53-3.36.82-6.84,1.67-10.32,1.82-9.97.45-17.17-3.48-21.46-11.64-.6-1.17-1.14-.98-2.21-.49l-.14.07c-3.17,1.46-6.3,3.11-9.3,4.91-6.34,4.01-13.21,7.11-20.43,9.19-6.63,1.89-12.93.55-19.84-4.22-6.1-4.2-9.44-10.49-10.22-19.21-.1-1.21-.18-2.43-.26-3.65-.07-1.2-.15-2.41-.26-3.61-.07-.43-.18-.88-.31-1.33-.5.23-.96.51-1.39.84-.99,1.02-2.04,2.08-3.09,3.15-3.56,3.61-7.25,7.35-10.72,11.17-9.08,10.01-19.09,19.3-29.75,27.62-2.34,1.87-4.86,3.56-7.47,5.04,0,0-.01.01-.04.02-.32.18-2.48,1.39-5.07,2.34-.73-1.69-1.41-3.41-2.02-5.16,2.42-.97,4.73-2.32,5.02-2.49h.01l.02-.02c6.65-3.88,12.79-8.61,18.25-14.04,6.33-6.09,12.56-12.42,18.59-18.53,2.92-2.96,5.84-5.92,8.77-8.86l1.29-1.31c2.78-2.83,5.65-5.76,8.43-8.68.71-.75,1.41-1.09,2.06-1,.62.08,1.16.54,1.59,1.36.53.99.86,2.06.98,3.18.11,1.26.09,2.52.07,3.74-.01.49-.02.98-.02,1.46-.13,7.23.86,12.62,3.19,17.49,3.65,7.6,13.25,11.5,21.84,8.89,7.84-2.5,15.38-5.94,22.41-10.22,2.51-1.39,5.12-2.58,7.79-3.57,3.55-1.45,4.56-1.05,6.34,2.47,1.61,3.54,4.46,6.29,8.03,7.76,4.3,1.63,8.96,2.02,13.48,1.12,3.01-.57,6.16-1.26,9.37-2.06h.02l5.65-1.48h0Z" />
-      </g>
-      <g opacity={circleProgress}>
+      </motion.g>
+
+      <motion.g style={{ opacity: circleProgressMV }}>
         <path fill={fill} d="M487.9,5.01c-46.42,0-84.04,37.63-84.04,84.05,0,9.87,1.7,19.34,4.83,28.13.61,1.75,1.29,3.47,2.02,5.16,12.9,29.86,42.6,50.75,77.19,50.75,43.27,0,78.9-32.71,83.53-74.74.22-1.97.37-3.96.44-5.96.05-1.11.07-2.22.07-3.34,0-46.42-37.63-84.05-84.04-84.05h0ZM565.65,99.69c-5.18,38.3-38.02,67.83-77.75,67.83-32.35,0-60.12-19.57-72.12-47.51-.76-1.74-1.44-3.51-2.06-5.31h-.01c-2.77-8.04-4.28-16.66-4.28-25.64,0-43.34,35.13-78.47,78.47-78.47s78.47,35.13,78.47,78.47c0,1.62-.05,3.22-.15,4.81-.11,1.96-.3,3.9-.57,5.82h0Z" />
         <path fill={fill} d="M410.71,122.35s-.07.03-.1.04c-1.34.48-2.72.87-4.11,1.17-5.63,1.17-10.97-.73-16.32-5.81-3.98-3.78-5.17-8.95-3.55-15.38.29-.92.67-1.77,1.13-2.58.08-.21.18-.42.32-.6.75-1,2.17-1.21,3.18-.46.53.27.89.66,1.04,1.14.21.7-.11,1.42-.44,2.03-1.13,2.15-1.38,4.62-.7,6.96.17.7.4,1.37.68,2.02,2.08,4.79,6.83,7.61,11.75,7.5,1.58-.03,3.14-.44,4.7-1.03l.39-.15c.62,1.74,1.29,3.46,2.03,5.15h0Z" />
         <path fill={fill} d="M589.72,89.97c-.82,1.99-2.38,3.48-4.33,4.16-4.47,1.74-9.13,3.16-13.84,4.2l-.12.03c.22-1.96.37-3.95.44-5.95l.11-.03c1.2-.33,2.38-.66,3.57-.99,2.47-.71,4.92-1.68,7.29-2.61,1.34-.53,2.68-1.06,4.03-1.55.81-.21,1.59-.32,2.37-.35l.44-.02.07.43c.16.89.15,1.79-.03,2.68h0Z" />
-      </g>
-      <path fill={fill} opacity={dotOpacity} d="M591.28,107.71l-1.42-1.6h0c-.97-1.06-2.56-1.27-3.77-.53l-.18.09c-.26.18-.49.4-.68.65-.99,1.3-.74,3.17.55,4.16,1.03.82,2.16,1.53,3.32,2.09.12.07.25.1.4.1.36,0,.81-.21,1.38-.63.06-.04.11-.09.16-.14,1.22-1.09,1.33-2.97.25-4.19,0,0-.01,0-.01,0Z" />
+      </motion.g>
+
+      <motion.path
+        fill={fill}
+        style={{ opacity: dotOpacityMV }}
+        d="M591.28,107.71l-1.42-1.6h0c-.97-1.06-2.56-1.27-3.77-.53l-.18.09c-.26.18-.49.4-.68.65-.99,1.3-.74,3.17.55,4.16,1.03.82,2.16,1.53,3.32,2.09.12.07.25.1.4.1.36,0,.81-.21,1.38-.63.06-.04.11-.09.16-.14,1.22-1.09,1.33-2.97.25-4.19,0,0-.01,0-.01,0Z"
+      />
     </svg>
   );
 }
 
-
-
+// ─── Types & helpers ──────────────────────────────────────────────────────────
 type Phase =
   | "idle"
   | "wave-draw"
@@ -108,21 +125,22 @@ type Phase =
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
+// ─── Preloader ────────────────────────────────────────────────────────────────
 export default function Preloader({ onComplete }: { onComplete?: () => void }) {
-  const [phase,   setPhase]   = useState<Phase>("idle");
-  const [mounted, setMounted] = useState(true);
+  const [phase,        setPhase]        = useState<Phase>("idle");
+  const [mounted,      setMounted]      = useState(true);
+  const [waterPaused,  setWaterPaused]  = useState(false);   // ← Fix ②
 
-
-  const rScale   = useResponsiveScale();
-
-  const iconW  = LOGO_ICON_W * rScale;
-  const iconH  = LOGO_ICON_H * rScale;
-  const grandW = GRAND_SVG_W * rScale;
-  const grandH = GRAND_SVG_H * rScale;
-  const poolsW = POOLS_SVG_W * rScale;
-  const poolsH = POOLS_SVG_H * rScale;
+  const rScale  = useResponsiveScale();
+  const iconW   = LOGO_ICON_W * rScale;
+  const iconH   = LOGO_ICON_H * rScale;
+  const grandW  = GRAND_SVG_W * rScale;
+  const grandH  = GRAND_SVG_H * rScale;
+  const poolsW  = POOLS_SVG_W * rScale;
+  const poolsH  = POOLS_SVG_H * rScale;
   const logoGap = 12;
 
+  // Refs for fly-out rect measurements
   const grandRef    = useRef<HTMLDivElement>(null);
   const iconRef     = useRef<HTMLDivElement>(null);
   const poolsRef    = useRef<HTMLDivElement>(null);
@@ -130,19 +148,11 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   const iconSvgRef  = useRef<HTMLDivElement>(null);
   const poolsSvgRef = useRef<HTMLDivElement>(null);
 
+  // ─── Motion values ─────────────────────────────────────────────────────────
+  // Fix ①: all motion values passed directly — no useState/useEffect listeners
   const waveProgressMV   = useMotionValue(0);
   const circleProgressMV = useMotionValue(0);
   const dotOpacityMV     = useMotionValue(0);
-  const [waveProg,   setWaveProg]   = useState(0);
-  const [circleProg, setCircleProg] = useState(0);
-  const [dotOp,      setDotOp]      = useState(0);
-
-  useEffect(() => {
-    const u1 = waveProgressMV.on("change",   v => setWaveProg(v));
-    const u2 = circleProgressMV.on("change", v => setCircleProg(v));
-    const u3 = dotOpacityMV.on("change",     v => setDotOp(v));
-    return () => { u1(); u2(); u3(); };
-  }, [waveProgressMV, circleProgressMV, dotOpacityMV]);
 
   const slideAmt   = 400;
   const textProgress = useMotionValue(0);
@@ -150,21 +160,16 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   const textX_right  = useTransform(textProgress, [0, 1], [slideAmt,  0]);
   const textOpacity  = useTransform(textProgress, [0, 0.1, 1], [0, 1, 1]);
 
+  // Background + logo overlay opacity — used directly as style props
   const bgOpacity   = useMotionValue(1);
   const logoOpacity = useMotionValue(1);
-  const [bgOp,   setBgOp]   = useState(1);
-  const [logoOp, setLogoOp] = useState(1);
 
-  useEffect(() => {
-    const u4 = bgOpacity.on("change",   v => setBgOp(v));
-    const u5 = logoOpacity.on("change", v => setLogoOp(v));
-    return () => { u4(); u5(); };
-  }, [bgOpacity, logoOpacity]);
-
+  // Per-element fly-out transforms
   const grandX = useMotionValue(0); const grandY = useMotionValue(0); const grandS = useMotionValue(1);
   const iconX  = useMotionValue(0); const iconY  = useMotionValue(0); const iconS  = useMotionValue(1);
   const poolsX = useMotionValue(0); const poolsY = useMotionValue(0); const poolsS = useMotionValue(1);
 
+  // ─── Animation sequence ────────────────────────────────────────────────────
   useEffect(() => {
     const run = async () => {
       await wait(400);
@@ -198,14 +203,13 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
 
       await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
 
+      // Fix ③: batch ALL getBoundingClientRect reads before any writes
       const hGR = hGrand.getBoundingClientRect();
       const hIR = hIcon.getBoundingClientRect();
       const hPR = hPools.getBoundingClientRect();
-
       const gFR = grandRef.current.getBoundingClientRect();
       const iFR = iconRef.current.getBoundingClientRect();
       const pFR = poolsRef.current.getBoundingClientRect();
-
       const gSR = grandSvgRef.current.getBoundingClientRect();
       const iSR = iconSvgRef.current.getBoundingClientRect();
       const pSR = poolsSvgRef.current.getBoundingClientRect();
@@ -217,17 +221,17 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
       const iScale = hIR.width / iSR.width;
       const pScale = hPR.width / pSR.width;
 
-      const gCx  = gFR.left + gFR.width  / 2; const gCy  = gFR.top  + gFR.height / 2;
-      const iCx  = iFR.left + iFR.width  / 2; const iCy  = iFR.top  + iFR.height / 2;
-      const pCx  = pFR.left + pFR.width  / 2; const pCy  = pFR.top  + pFR.height / 2;
+      const gCx = gFR.left + gFR.width  / 2; const gCy = gFR.top + gFR.height / 2;
+      const iCx = iFR.left + iFR.width  / 2; const iCy = iFR.top + iFR.height / 2;
+      const pCx = pFR.left + pFR.width  / 2; const pCy = pFR.top + pFR.height / 2;
 
-      const gSCx = gSR.left + gSR.width  / 2; const gSCy = gSR.top  + gSR.height / 2;
-      const iSCx = iSR.left + iSR.width  / 2; const iSCy = iSR.top  + iSR.height / 2;
-      const pSCx = pSR.left + pSR.width  / 2; const pSCy = pSR.top  + pSR.height / 2;
+      const gSCx = gSR.left + gSR.width  / 2; const gSCy = gSR.top + gSR.height / 2;
+      const iSCx = iSR.left + iSR.width  / 2; const iSCy = iSR.top + iSR.height / 2;
+      const pSCx = pSR.left + pSR.width  / 2; const pSCy = pSR.top + pSR.height / 2;
 
-      const ghCx = hGR.left + hGR.width  / 2; const ghCy = hGR.top  + hGR.height / 2;
-      const ihCx = hIR.left + hIR.width  / 2; const ihCy = hIR.top  + hIR.height / 2;
-      const phCx = hPR.left + hPR.width  / 2; const phCy = hPR.top  + hPR.height / 2;
+      const ghCx = hGR.left + hGR.width  / 2; const ghCy = hGR.top + hGR.height / 2;
+      const ihCx = hIR.left + hIR.width  / 2; const ihCy = hIR.top + hIR.height / 2;
+      const phCx = hPR.left + hPR.width  / 2; const phCy = hPR.top + hPR.height / 2;
 
       const gTx = ghCx - (gCx + (gSCx - gCx) * gScale);
       const gTy = ghCy - (gCy + (gSCy - gCy) * gScale);
@@ -236,9 +240,12 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
       const pTx = phCx - (pCx + (pSCx - pCx) * pScale);
       const pTy = phCy - (pCy + (pSCy - pCy) * pScale);
 
-  
+      // Fix ②: stop WebGL canvas work before kicking off fly-out
+      setWaterPaused(true);
+
       setPhase("fly-out");
 
+      // All writes happen after all reads — no layout thrash
       animate(grandX, gTx, { duration: dur, ease });
       animate(grandY, gTy, { duration: dur, ease });
       animate(grandS, gScale, { duration: dur, ease });
@@ -253,7 +260,6 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
 
       animate(bgOpacity, 0, { duration: dur, ease });
 
-      // Reveal page content in sync with bg fade — delayed 1 frame
       setTimeout(() => {
         const pageContent = document.getElementById("page-content");
         if (pageContent) {
@@ -293,22 +299,25 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   return (
     <div className="fixed inset-0 z-[9999] min-h-screen">
 
-      {/* 1. BG IMAGE */}
-      <img
+      {/* 1. BG IMAGE — opacity driven by motion value directly */}
+      <motion.img
         src="/IntroReveal.webp"
         alt=""
         aria-hidden
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-        style={{ zIndex: 0, objectPosition: "center 30%", opacity: bgOp }}
+        style={{ zIndex: 0, objectPosition: "center 30%", opacity: bgOpacity }}
       />
 
-      {/* 2. WATER CANVAS */}
-      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1, opacity: bgOp }}>
-        <WaterBackground />
-      </div>
+      {/* 2. WATER CANVAS — paused during fly-out so GPU is free */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{ zIndex: 1, opacity: bgOpacity }}
+      >
+        <WaterBackground paused={waterPaused} />
+      </motion.div>
 
       {/* 3. LOGO GROUP */}
-      <div
+      <motion.div
         style={{
           position:       "absolute",
           inset:          0,
@@ -317,7 +326,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
           alignItems:     "center",
           justifyContent: "center",
           overflow:       "hidden",
-          opacity:        logoOp,
+          opacity:        logoOpacity,
           pointerEvents:  "none",
         }}
       >
@@ -372,10 +381,11 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
             }}
           >
             <div ref={iconSvgRef} style={{ display: "flex" }}>
+              {/* Fix ①: motion values passed directly — LogoSVG never re-renders */}
               <LogoSVG
-                waveProgress={waveProg}
-                circleProgress={circleProg}
-                dotOpacity={dotOp}
+                waveProgressMV={waveProgressMV}
+                circleProgressMV={circleProgressMV}
+                dotOpacityMV={dotOpacityMV}
                 width={iconW}
                 height={iconH}
               />
@@ -407,7 +417,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
             </motion.div>
           </motion.div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

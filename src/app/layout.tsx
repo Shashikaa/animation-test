@@ -48,8 +48,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      data-preloading=""
-      className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} h-full antialiased`}
+      data-preloading=""  
+       className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} h-full antialiased`}
     >
       <body className="preloading min-h-full flex flex-col">
         <SiteProvider>
