@@ -1,116 +1,61 @@
 "use client";
 
 const PARTNERS = [
-  { name: "Socure" },
-  { name: "Cedar" },
-  { name: "Airtable" },
-  { name: "Culture Amp" },
-  { name: "Socure" },
-  { name: "Cedar" },
+  { name: "Socure",      logo: "/partners/logo1.svg" },
+  { name: "Cedar",       logo: "/partners/logo2.svg" },
+  { name: "Airtable",    logo: "/partners/logo3.svg" },
+  { name: "Culture Amp", logo: "/partners/logo4.svg" },
+  { name: "Socure",      logo: "/partners/logo5.svg" },
+  { name: "Cedar",       logo: "/partners/logo6.svg" },
 ];
 
-// Duplicate for seamless infinite loop
+// Duplicate for seamless infinite loop — translateX(-50%) snaps back invisibly
 const PARTNERS_LOOP = [...PARTNERS, ...PARTNERS];
 
 export default function SectionSeven() {
   return (
-    <section
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        overflow: "hidden",
-      }}
-    >
+    <section className="relative w-full h-full overflow-hidden">
+
       {/* Background image */}
       <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage: "url('/team-photo.webp')", // ← swap with your image
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('/team-photo.webp')" }}
       />
 
-      {/* Subtle dark overlay */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "rgba(0,0,0,0.08)",
-        }}
-      />
 
-      {/* ─── Glassmorphic card — top 20%, left 40% ─── */}
+      {/* ─── Glassmorphic card ─── */}
       <div
+        className="absolute flex flex-col gap-0.5 !px-[42px] !py-[40px]"
         style={{
-          position: "absolute",
-          top: "20%",
-          left: "40%",
+          top: "16%",
+          left: "50%",
           width: 420,
           backdropFilter: "blur(42px)",
           WebkitBackdropFilter: "blur(42px)",
-          background: "rgba(25, 33, 28, 0.38)",
+          background:
+            "radial-gradient(100% 100% at 0% 0%, rgba(25,33,28,0.64) 0%, rgba(25,33,28,0.24) 100%)",
           boxShadow:
             "-5px -5px 25px rgba(255,255,255,0.02) inset, 0 4px 4px rgba(0,0,0,0.25)",
-          padding: "40px 52px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
         }}
       >
-        {/* Heading */}
-        <p
-          style={{
-            fontFamily: "var(--font-serif, Georgia, serif)",
-            fontSize: 26,
-            fontWeight: 400,
-            lineHeight: 1.3,
-            color: "#F4EEDF",
-            letterSpacing: "0.01em",
-          }}
+        <h2
+          className="text-[#F4EEDF] text-[24px] font-normal leading-[1.2] "
+          style={{ fontFamily: "var(--font-display)" }}
         >
           Meet The Experts of
           <br />
-          <em>Grand Pools</em>
-        </p>
+          <em className="font-cormorant">Grand Pools</em>
+        </h2>
 
-        {/* Name */}
-        <p
-          style={{
-            fontSize: 13,
-            fontWeight: 500,
-            color: "#F4EEDF",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            marginTop: 10,
-          }}
-        >
+        <p className="font-body text-[#F4EEDF] text-base font-normal !mt-6">
           Lachlan Deleeuw
         </p>
 
-        {/* Role */}
-        <p
-          style={{
-            fontSize: 12,
-            color: "rgba(244,238,223,0.60)",
-            letterSpacing: "0.04em",
-          }}
-        >
+        <p className="text-[#F4EEDF] text-sm">
           Founder – Grand Pools
         </p>
 
-        {/* Body */}
-        <p
-          style={{
-            fontSize: 13,
-            fontWeight: 300,
-            color: "rgba(244,238,223,0.85)",
-            lineHeight: 1.7,
-            marginTop: 6,
-          }}
-        >
+        <p className="font-body text-[#F4EBE4] text-sm font-normal leading-snug !mt-6 w-full max-w-[90%]" >
           Grand Pools founder Lachlan Deleeuw brings expert craftsmanship and
           tailored creativity to luxury pool builds, transforming backyards
           across Melbourne and the Bayside Region.
@@ -118,97 +63,46 @@ export default function SectionSeven() {
       </div>
 
       {/* ─── Our Partners — bottom right ─── */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 36,
-          right: 48,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-          gap: 12,
-        }}
-      >
-        {/* Label */}
-        <p
-          style={{
-            fontSize: 11,
-            color: "rgba(244,238,223,0.50)",
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-          }}
-        >
-          Our Partners
-        </p>
+      <div className="absolute bottom-9 right-12 flex flex-col items-end gap-5">
+        <p className="font-body text-[#F4EBE4] text-sm">Our Partners</p>
 
-        {/* Marquee wrapper */}
+        {/* Marquee viewport — fixed width with fade edges */}
         <div
+          className="overflow-hidden w-[520px]"
           style={{
-            width: 420,
-            overflow: "hidden",
             maskImage:
               "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
             WebkitMaskImage:
               "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
           }}
         >
-          <div
-            className="partners-track"
-            style={{
-              display: "flex",
-              gap: 20,
-              animation: "marqueeScroll 14s linear infinite",
-              whiteSpace: "nowrap",
-            }}
-          >
+          {/*
+            KEY FIX: width is max-content so the track is exactly as wide as
+            all items. translateX(-50%) always lands on the seam between the
+            original set and the duplicate → seamless loop, zero reset flash.
+          */}
+          <div className="flex gap-5 w-max animate-marquee">
             {PARTNERS_LOOP.map((p, i) => (
-              <div
-                key={i}
-                style={{
-                  flexShrink: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 7,
-                  background: "rgba(244,238,223,0.07)",
-                  border: "1px solid rgba(244,238,223,0.14)",
-                  borderRadius: 4,
-                  padding: "6px 14px",
-                }}
-              >
-                {/* Placeholder icon — replace with actual SVG logos */}
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  style={{ opacity: 0.55 }}
-                >
-                  <circle cx="7" cy="7" r="6" stroke="#F4EEDF" strokeWidth="1" />
-                  <circle cx="7" cy="7" r="2.5" fill="#F4EEDF" />
-                </svg>
-                <span
-                  style={{
-                    fontSize: 11,
-                    color: "rgba(244,238,223,0.75)",
-                    letterSpacing: "0.07em",
-                    fontWeight: 500,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {p.name}
-                </span>
+              <div key={i} className="flex-shrink-0">
+                <img
+                  src={p.logo}
+                  alt={p.name}
+                  className="block w-[76px] h-[18px] object-contain"
+                  style={{ filter: "brightness(0) invert(1)" }}
+                />
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Keyframe injected via style tag */}
       <style>{`
-        @keyframes marqueeScroll {
+        @keyframes marquee {
           0%   { transform: translateX(0); }
           100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+          animation: marquee 14s linear infinite;
         }
       `}</style>
     </section>

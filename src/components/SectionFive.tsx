@@ -116,23 +116,14 @@ export default function SectionFive() {
               style={{
                 color: "#F4EEDF",
                 fontSize: 24,
-                lineHeight: 1.1,
+                lineHeight: 1.2,
                 margin: 0,
               }}
             >
-              Crafting Stunning Pools
+              Crafting Stunning Pools<br/>
+                      <em className="font-cormorant italic"> With Expertise &amp; Precision</em>
             </h2>
-            <p
-              className="font-cormorant"
-              style={{
-                color: "#F4EEDF",
-                fontSize: 24,
-                fontStyle: "italic",
-                margin: 0,
-              }}
-            >
-              With Expertise &amp; Precision
-            </p>
+
           </div>
 
           <p

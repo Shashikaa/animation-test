@@ -183,7 +183,7 @@ export default function SectionSix() {
                 paddingRight: 80,
                 paddingTop: 40,
                 paddingBottom: 100,
-                gap: 8,
+                gap: 0,
                 pointerEvents: i === active ? "auto" : "none",
               }}
             >
@@ -214,7 +214,7 @@ export default function SectionSix() {
               >
                 {p.tagline}
               </p>
-              <p
+              <p className="font-body !mt-5"
                 ref={(el) => { descRefs.current[i] = el; }}
                 style={{
                   color: "#F4EEDF",
