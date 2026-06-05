@@ -20,10 +20,10 @@ export default function SectionNine() {
       <div className="absolute inset-0 z-10" style={{ background: "#19211C8F" }} />
 
       {/*
-        Title — starts visually centered via CSS.
-        GSAP will clearProps the CSS transform and take over with x/y/scale.
-        Keep position:absolute, top:50%, left:50% so the pre-animation
-        "centered" state matches what visitors see on load.
+        Title starts CENTERED and VISIBLE (no opacity:0 here).
+        S9's section itself starts at opacity:0 in GSAP, so this title
+        is hidden until S9 fades in — at which point it appears centered.
+        After the full scroll (onLeave), FLIP morphs it to bottom-right.
       */}
       <h2
         className="s9-title absolute z-20 text-[#F4EEDF] font-display pointer-events-none"
@@ -41,10 +41,6 @@ export default function SectionNine() {
         Do you feel like diving in?
       </h2>
 
-      {/*
-        Body paragraph — hidden until GSAP fades it in.
-        Anchored bottom-right, same as its final resting place.
-      */}
       <p
         className="s9-para absolute z-20 text-[#F4EEDF] font-body text-[14px] leading-[1.2]"
         style={{
@@ -62,11 +58,9 @@ export default function SectionNine() {
       </p>
 
       {/*
-        Invisible measurement target.
-        Positioned above the para — exact bottom is calculated in GSAP,
-        but we pre-position it here as a sensible default so BCR works
-        even if JS hasn't run yet.
-        right / fontSize / fontFamily must match the title's END state.
+        Invisible target container — FLIP moves the title here.
+        Sized and positioned to match where the title should land.
+        color: transparent so the duplicate text inside isn't visible.
       */}
       <div
         className="s9-title-target"
@@ -74,7 +68,6 @@ export default function SectionNine() {
         style={{
           position: "absolute",
           right: "4rem",
-          /* This bottom is overwritten by JS after measuring para height */
           bottom: "calc(10.5rem + 112px)",
           maxWidth: "276px",
           width: "276px",

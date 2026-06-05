@@ -6,10 +6,15 @@
   --font-cormorant: 'Cormorant Garamond', Georgia, serif;
   --font-body:      'Instrument Sans', sans-serif;
 }
-
+@font-face {
+  font-family: 'Canela Text Trial';
+  src: url('/fonts/Canela-Light-Trial.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
 /* ─── Design Tokens ──────────────────────────────────────────── */
 :root {
-  /* Colors */
   --background: #ffffff;
   --foreground: #171717;
   --muted:      #6b6b6b;
@@ -17,7 +22,6 @@
   --border:     #e5e5e5;
   --accent:     #171717;
 
-  /* Typography sizes */
   --text-display: 40px;
   --text-body:    16px;
   --text-sm:      14px;
@@ -26,7 +30,6 @@
   --leading-display: 1;
   --leading-body:    1.2;
 
-  /* Spacing scale */
   --space-1:  4px;
   --space-2:  8px;
   --space-3:  12px;
@@ -38,18 +41,15 @@
   --space-9:  96px;
   --space-10: 128px;
 
-  /* Layout */
   --container-max: 1280px;
   --container-pad: var(--space-6);
   --section-py:    var(--space-9);
 
-  /* Radius */
   --radius-sm:   4px;
   --radius-md:   8px;
   --radius-lg:   16px;
   --radius-full: 9999px;
 
-  /* Transitions */
   --ease-out:      cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out:   cubic-bezier(0.65, 0, 0.35, 1);
   --duration-fast: 150ms;
@@ -73,11 +73,16 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  scrollbar-width: none;
 }
 
+html, body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
 ::-webkit-scrollbar {
-  display: none;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 html {
@@ -86,8 +91,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  /* Prevent browser native smooth-scroll from fighting Lenis */
-  scroll-behavior: auto;
+  scroll-behavior: auto !important;
 }
 
 body {
@@ -96,28 +100,80 @@ body {
   font-family: var(--font-body);
   font-size:   var(--text-body);
   line-height: var(--leading-body);
+  overflow-x:  hidden;
 }
 
-/* ─── Lenis smooth scroll ────────────────────────────────────── */
+/* ─── Lenis ───────────────────────────────────────────────────── */
 html.lenis,
 html.lenis body {
   height: auto;
 }
-
 .lenis.lenis-smooth {
   scroll-behavior: auto !important;
 }
-
 .lenis.lenis-smooth [data-lenis-prevent] {
   overscroll-behavior: contain;
 }
-
-body.preloading {
+.lenis.lenis-stopped {
   overflow: hidden;
-  height: 100vh;
+}
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
 }
 
-/* ─── Sections layout ────────────────────────────────────────── */
+body.preloading {
+  overflow: hidden !important;
+  height: 100vh !important;
+}
+
+/* ─── GPU Layer Promotion ────────────────────────────────────────
+   RULE: only promote elements that GSAP actually transforms.
+   Blanket will-change on every section forces the browser to
+   maintain a GPU layer for sections that never move — this
+   increases repaint budget and causes jank on Lenis-driven scroll.
+
+   Pinned wrappers:
+   - DO need a compositing hint because GSAP pins them via fixed pos
+   - Do NOT need perspective (creates stacking context that fights Lenis)
+
+   Individual animated sections (hero, s1–s5, s7, s8):
+   - Promoted here so the first GSAP tick doesn't trigger a promotion
+     mid-animation (avoids a single-frame stutter on entrance)
+
+   Static sections (SectionSix / SectionNine):
+   - NO will-change, NO transform — they are plain scroll content.
+     Promoting them would waste compositor memory and cause the
+     "jumpy" scroll you're seeing.
+──────────────────────────────────────────────────────────────── */
+
+/* Pinned scroll wrappers — fixed-position during pin, no perspective */
+.pin-hero-s1,
+.pin-s2-s5,
+.pin-s7-s8 {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  /* ← NO perspective: it creates a new stacking context that
+       breaks Lenis scroll on the siblings above/below the pin */
+}
+
+/* Sections that GSAP actually moves */
+.hero,
+.section-1,
+.section-2,
+.section-3,
+.section-4,
+.section-5,
+.section-7,
+.section-8 {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* section-6 / section-9 are plain scroll — no GPU promotion */
+
+/* ─── Sections Layout ────────────────────────────────────────── */
 .hero,
 .section-1,
 .section-2,
@@ -128,7 +184,6 @@ body.preloading {
   inset: 0;
   width: 100%;
   height: 100%;
-  will-change: transform;
 }
 
 .scroll-container {
@@ -142,49 +197,50 @@ body.preloading .scroll-container {
   visibility: hidden;
 }
 
-.hero,
-.section-1,
-.section-2,
-.section-3,
-.section-4,
-.section-5,
+/* Canvas/video layers inside animated sections still get their own layer */
+.section-2 canvas,
+.section-2 video,
+video,
+canvas {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* ─── Overflow containment for normal-flow screens ───────────── */
+/* Prevents paint bleed from h-screen sections into neighbour repaint budget */
+.section-six-wrapper,
+.section-nine-wrapper {
+  overflow: hidden;
+  contain: layout paint;
+}
 .pin-hero-s1,
-.pin-s2-s5 {
+.pin-s2-s5,
+.pin-s7-s8,
+.pin-s8-s9 {          /* ← add this */
   will-change: transform;
   transform: translateZ(0);
   backface-visibility: hidden;
 }
 
-/* Promote the video/canvas layer inside section-2 to its own compositor layer */
-.section-2 canvas,
-.section-2 video {
-  will-change: transform;
+.s8-split-left,
+.s8-split-right {
+  will-change: clip-path;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
-/* ─── Typography Classes ─────────────────────────────────────── */
-.font-display {
-  font-family: var(--font-display);
-  font-weight: 400;
-}
-
-.font-cormorant {
-  font-family: var(--font-cormorant);
-  font-weight: 400;
-}
-
-.font-body {
-  font-family: var(--font-body);
-  font-weight: 400;
-}
+/* ─── Typography ─────────────────────────────────────────────── */
+.font-display   { font-family: var(--font-display);   font-weight: 400; }
+.font-cormorant { font-family: var(--font-cormorant); font-weight: 400; }
+.font-body      { font-family: var(--font-body);      font-weight: 400; }
 
 .text-display {
   font-family:    var(--font-display);
   font-size:      var(--text-display);
   line-height:    var(--leading-display);
   letter-spacing: 0;
-  font-weight:    400;
+  
 }
-
 .text-cormorant {
   font-family:    var(--font-cormorant);
   font-size:      var(--text-display);
@@ -193,7 +249,6 @@ body.preloading .scroll-container {
   font-weight:    400;
 }
 
-/* Cormorant weight & style variants */
 .text-cormorant-light    { font-family: var(--font-cormorant); font-weight: 300; }
 .text-cormorant-regular  { font-family: var(--font-cormorant); font-weight: 400; }
 .text-cormorant-medium   { font-family: var(--font-cormorant); font-weight: 500; }
@@ -208,10 +263,7 @@ body.preloading .scroll-container {
   letter-spacing: 0;
   font-weight:    400;
 }
-
-.text-muted {
-  color: var(--muted);
-}
+.text-muted { color: var(--muted); }
 
 /* ─── Layout Utilities ───────────────────────────────────────── */
 .container {
@@ -220,20 +272,9 @@ body.preloading .scroll-container {
   margin-inline:  auto;
   padding-inline: var(--container-pad);
 }
-
-.section {
-  padding-block: var(--section-py);
-}
-
-.row {
-  display:     flex;
-  align-items: center;
-}
-
-.stack {
-  display:        flex;
-  flex-direction: column;
-}
+.section { padding-block: var(--section-py); }
+.row   { display: flex; align-items: center; }
+.stack { display: flex; flex-direction: column; }
 
 /* ─── Border & Surface ───────────────────────────────────────── */
 .border       { border: 1px solid var(--border); }
@@ -245,18 +286,13 @@ body.preloading .scroll-container {
 .rounded-full { border-radius: var(--radius-full); }
 
 /* ─── Transitions ────────────────────────────────────────────── */
-.transition {
-  transition: all var(--duration-base) var(--ease-out);
-}
-
-.transition-fast {
-  transition: all var(--duration-fast) var(--ease-out);
-}
+.transition      { transition: all var(--duration-base) var(--ease-out); }
+.transition-fast { transition: all var(--duration-fast) var(--ease-out); }
 
 .section-continer {
   width: 100%;
   max-width: 1920px;
   margin: 0 auto;
   padding-inline: 65px;
-  padding-block: 85px;
+  padding-block:  85px;
 }

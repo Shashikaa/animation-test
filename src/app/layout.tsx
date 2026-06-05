@@ -7,6 +7,8 @@ import SmoothScroll from "../components/SmoothScroll";
 import HeaderWrapper from "../components/HeaderWrapper";
 import NavMenuWrapper from "../components/NavMenuWrapper";
 import PreloaderWrapper from "../components/PreloaderWrapper";
+import Footer from "../components/Footer";
+import SectionCTA from "../components/SectionCTA";
 
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
@@ -21,9 +23,13 @@ const cormorantGaramond = Cormorant_Garamond({
   style: ["normal", "italic"],
   variable: "--font-cormorant",
 });
-
 const canelaText = localFont({
   src: [
+    {
+      path: "../../public/fonts/Canela-Light-Trial.otf",
+      weight: "300",
+      style: "normal",
+    },
     {
       path: "../../public/fonts/CanelaText-Regular-Trial.otf",
       weight: "400",
@@ -38,7 +44,6 @@ const canelaText = localFont({
   variable: "--font-display",
   display: "swap",
 });
-
 export const metadata: Metadata = {
   title: "Grand Pools",
   description: "Crafting Custom Swimming Pools with Style, Function, and Quality. Transform Your Outdoor Space with Our Expertly Designed Pools.",
@@ -48,8 +53,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      data-preloading=""  
-       className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} h-full antialiased`}
+      data-preloading=""
+      className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} h-full antialiased`}
     >
       <body className="preloading min-h-full flex flex-col">
         <SiteProvider>
@@ -58,6 +63,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <NavMenuWrapper />
             {children}
           </SmoothScroll>
+           <SectionCTA />
+          <Footer />
         </SiteProvider>
       </body>
     </html>

@@ -4,9 +4,9 @@ import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { IconMark } from "./IconMark";
 import { HEADER_LOGO_SCALE, LOGO_COLOR, LOGO_ICON_W, LOGO_ICON_H, LOGO_GAP } from "./Preloader";
-
+import SubmitRequestModal from "./SubmitRequestModal";
+ 
 export { LOGO_COLOR, LOGO_ICON_W, LOGO_ICON_H, LOGO_GAP, HEADER_LOGO_SCALE };
-
 
 // ─── GRAND SVG ────────────────────────────────────────────────────────────────
 function GrandSVG({ width, height }: { width: number; height: number }) {
@@ -58,7 +58,7 @@ function MenuIcon({ onClick }: { onClick?: () => void }) {
         .menu-line-bottom { width: 14px; opacity: 1; }
         .menu-icon-btn:hover .menu-line-top    { width: 14px; }
         .menu-icon-btn:hover .menu-line-bottom { width: 20px; }
-
+ 
         @media (min-width: 768px) {
           .menu-line        { height: 2px; }
           .menu-line-top    { width: 32px; }
@@ -70,7 +70,42 @@ function MenuIcon({ onClick }: { onClick?: () => void }) {
     </button>
   );
 }
-
+ 
+// ─── Contact Button ───────────────────────────────────────────────────────────
+function ContactButton({ onClick }: { onClick?: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label="Submit a request"
+      style={{
+        background: "none", border: "none", cursor: "pointer", padding: "0",
+        outline: "none", position: "relative", zIndex: 2,
+        display: "flex", alignItems: "center",
+      }}
+    >
+      <span
+        className="contact-btn-label"
+        style={{
+          fontFamily: "'Instrument Sans'",
+          fontWeight: 400,
+          fontSize: "12px",
+          lineHeight: "100%",
+          marginRight: "34px",
+          color: LOGO_COLOR,
+          textTransform: "uppercase" as const,
+          transition: "opacity 0.3s ease",
+        }}
+      >
+        CONTACT US
+      </span>
+      <style>{`
+        .contact-btn-label { opacity: 1; }
+        .contact-btn-label:hover { opacity: 0.6; }
+      `}</style>
+    </button>
+  );
+}
+ 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 function Logo({
   onClick,
@@ -93,7 +128,7 @@ function Logo({
         display: "flex", alignItems: "center", gap: LOGO_GAP,
         position: "relative", zIndex: 2, textDecoration: "none",
         cursor: "pointer",
-        opacity: isHome ? 0 : logoVisible ? 1 : 0,   // ← only change
+        opacity: isHome ? 0 : logoVisible ? 1 : 0,
         transition: "opacity 0.25s ease",
       }}
       onMouseEnter={e => { if (logoVisible) e.currentTarget.style.opacity = "0.72"; }}
@@ -117,56 +152,62 @@ function Logo({
     </a>
   );
 }
-
+ 
 // ─── Glassmorphic backdrop ────────────────────────────────────────────────────
 const glassVariants = {
   hidden:  { y: "-100%", scaleY: 0.4, opacity: 0, transition: { duration: 0.65, ease: [0.76,0,0.24,1] as const } },
   visible: { y: "0%",   scaleY: 1,   opacity: 1, transition: { duration: 0.85, ease: [0.16,1,0.3,1]  as const } },
 };
-
+ 
 // ─── Header ──────────────────────────────────────────────────────────────────
 interface HeaderProps {
-  onMenuClick?: () => void;
-  onLogoClick?: () => void;
-  logoHref?:    string;
-  visible?:     boolean;
-  menuOpen?:    boolean;
-  logoVisible?: boolean;
+  onMenuClick?:    () => void;
+  onLogoClick?:    () => void;
+  /** @deprecated — modal is now self-contained; kept for back-compat */
+  onContactClick?: () => void;
+  logoHref?:       string;
+  visible?:        boolean;
+  menuOpen?:       boolean;
+  logoVisible?:    boolean;
 }
-
+ 
 export default function Header({
   onMenuClick,
   onLogoClick,
+  onContactClick,
   logoHref    = "/",
   visible     = true,
   menuOpen    = false,
   logoVisible = false,
 }: HeaderProps) {
-  const [hovered,  setHovered]  = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const pathname = usePathname();                    // ← add
-
+  const [hovered,   setHovered]   = useState(false);
+  const [scrolled,  setScrolled]  = useState(false);
+  const [isMobile,  setIsMobile]  = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const pathname = usePathname();
+ 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
-
+ 
   useEffect(() => {
-    if (!isMobile) {
-      setScrolled(false);
-      return;
-    }
+    if (!isMobile) { setScrolled(false); return; }
     const onScroll = () => setScrolled(window.scrollY > 0);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [isMobile]);
-
+ 
   const showGlass = hovered || menuOpen || (isMobile && scrolled);
-
+ 
+  function handleContactClick() {
+    setModalOpen(true);
+    onContactClick?.();
+  }
+ 
   return (
     <>
       <style>{`
@@ -175,42 +216,22 @@ export default function Header({
           padding: 0 20px !important;
         }
         @media (min-width: 768px) {
-          #site-header {
-            height: 66px !important;
-            padding: 0 26px !important;
-          }
+          #site-header { height: 66px !important; padding: 0 26px !important; }
         }
         @media (min-width: 1024px) {
-          #site-header {
-            height: 72px !important;
-            padding: 0 40px !important;
-          }
+          #site-header { height: 72px !important; padding: 0 40px !important; }
         }
-
         @media (max-width: 767px) {
-          #header-logo-inner {
-            width: 135px !important;
-            gap: 4px !important;
-          }
+          #header-logo-inner { width: 135px !important; gap: 4px !important; }
           #header-logo-inner #h-grand,
-          #header-logo-inner #h-pools {
-            flex: 1 1 0;
-            min-width: 0;
-            overflow: hidden;
-          }
+          #header-logo-inner #h-pools { flex: 1 1 0; min-width: 0; overflow: hidden; }
           #header-logo-inner #h-grand svg,
-          #header-logo-inner #h-pools svg {
-            width: 100% !important;
-            height: auto !important;
-          }
-          #header-logo-inner #h-icon-svg svg {
-            height: 25px !important;
-            width: auto !important;
-            flex-shrink: 0;
-          }
+          #header-logo-inner #h-pools svg { width: 100% !important; height: auto !important; }
+          #header-logo-inner #h-icon-svg svg { height: 25px !important; width: auto !important; flex-shrink: 0; }
         }
       `}</style>
-
+ 
+      {/* ── Header bar ── */}
       <motion.header
         id="site-header"
         initial={{ opacity: 0 }}
@@ -241,10 +262,20 @@ export default function Header({
           onClick={onLogoClick}
           href={logoHref}
           logoVisible={logoVisible}
-          isHome={pathname === "/"}             // ← add
+          isHome={pathname === "/"}
         />
-        <MenuIcon onClick={onMenuClick} />
+        <div style={{ display: "flex", alignItems: "center", gap: "24px", position: "relative", zIndex: 2 }}>
+          <ContactButton onClick={handleContactClick} />
+          <MenuIcon onClick={onMenuClick} />
+        </div>
       </motion.header>
+ 
+      {/* ── Submit A Request modal ── */}
+      <SubmitRequestModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+      />
     </>
   );
 }
+ 
