@@ -1,139 +1,158 @@
-// components/SectionFive.tsx
 "use client";
+
+/**
+ * SectionFive.tsx — FIXED
+ * Same paused-prop pattern as SectionTwo.
+ * Canvas stays mounted, skips GL work when offscreen.
+ */
+
+import { useRef, useState, useEffect } from "react";
 import WaterBackground from "./Ripplecanvas";
 
 export default function SectionFive() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [offscreen, setOffscreen] = useState(false);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setOffscreen(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section
+      ref={sectionRef}
       className="section-5"
       style={{
-        position: "absolute",
-        inset: 0,
-        width: "100%",
-        height: "100%",
-        overflow: "hidden",
-        zIndex: 10,
+        position:           "absolute",
+        inset:              0,
+        width:              "100%",
+        height:             "100%",
+        overflow:           "hidden",
+        zIndex:             10,
+        transform:          "translateZ(0)",
+        backfaceVisibility: "hidden",
       }}
     >
-      {/* Full-section background image — blurred */}
+      {/* Blurred bg image */}
       <img
         src="/sec-five.webp"
         alt=""
         aria-hidden
         style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          objectPosition: "center",
-          zIndex: 0,
-          filter: "blur(12px)",
-          transform: "scale(1.08)",
+          position:           "absolute",
+          inset:              0,
+          width:              "100%",
+          height:             "100%",
+          objectFit:          "cover",
+          objectPosition:     "center",
+          zIndex:             0,
+          filter:             "blur(12px)",
+          transform:          "scale(1.08) translateZ(0)",
+          backfaceVisibility: "hidden",
         }}
       />
 
-      {/* Dark overlay on bg */}
+      {/* Dark overlay */}
       <div
         style={{
-          position: "absolute",
-          inset: 0,
-          background: "rgba(10, 20, 15, 0.45)",
-          zIndex: 1,
+          position:  "absolute",
+          inset:     0,
+          background:"rgba(10, 20, 15, 0.45)",
+          zIndex:    1,
+          transform: "translateZ(0)",
         }}
       />
 
-      {/* Center card + text wrapper */}
+      {/* Center card + text */}
       <div
         style={{
-          position: "absolute",
-          inset: 0,
-          zIndex: 10,
-          display: "flex",
-          alignItems: "center",
+          position:       "absolute",
+          inset:          0,
+          zIndex:         10,
+          display:        "flex",
+          alignItems:     "center",
           justifyContent: "center",
         }}
       >
-        {/* Card — only visual layers, this is the one that scales */}
         <div
           className="s5-card"
           style={{
-            position: "relative",
-            width: "100%",
-            maxWidth: 577,
-            height: 623,
-            overflow: "hidden",
-        
+            position:        "relative",
+            width:           "100%",
+            maxWidth:        577,
+            height:          623,
+            overflow:        "hidden",
             transformOrigin: "center center",
           }}
         >
-          {/* IntroReveal image INSIDE the card */}
           <img
             src="/IntroReveal.webp"
             alt=""
             aria-hidden
             style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              objectPosition: "center 30%",
-              zIndex: 0,
+              position:           "absolute",
+              inset:              0,
+              width:              "100%",
+              height:             "100%",
+              objectFit:          "cover",
+              objectPosition:     "center 30%",
+              zIndex:             0,
+              transform:          "translateZ(0)",
+              backfaceVisibility: "hidden",
             }}
           />
 
-          {/* Water canvas ON TOP of image */}
           <div
             style={{
-              position: "absolute",
-              inset: 0,
-              zIndex: 1,
+              position:      "absolute",
+              inset:         0,
+              zIndex:        1,
               pointerEvents: "none",
             }}
           >
-            <WaterBackground />
+            {/* Canvas always mounted, paused when offscreen */}
+            <WaterBackground paused={offscreen} />
           </div>
         </div>
 
-        {/* Text content — sibling of card, NOT a child, so it never scales */}
+        {/* Text — sibling of card, never scales */}
         <div
           style={{
-            position: "absolute",
-            zIndex: 20,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
+            position:       "absolute",
+            zIndex:         20,
+            display:        "flex",
+            flexDirection:  "column",
+            alignItems:     "flex-start",
             justifyContent: "center",
-            gap: 40,
-            pointerEvents: "none",
-            textAlign: "left",
+            gap:            40,
+            pointerEvents:  "none",
+            textAlign:      "left",
           }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <h2
               className="font-display"
-              style={{
-                color: "#F4EEDF",
-                fontSize: 24,
-                lineHeight: 1.2,
-                margin: 0,
-              }}
+              style={{ color: "#F4EEDF", fontSize: 24, lineHeight: 1.2, margin: 0 }}
             >
-              Crafting Stunning Pools<br/>
-                      <em className="font-cormorant italic"> With Expertise &amp; Precision</em>
+              Crafting Stunning Pools<br />
+              <em className="font-cormorant italic"> With Expertise &amp; Precision</em>
             </h2>
-
           </div>
 
           <p
             className="font-body"
             style={{
-              color: "#F4EBE480",
-              fontSize: 16,
-              lineHeight: 1.2,
-              margin: 0,
-              maxWidth: 420,
+              color:     "#F4EBE480",
+              fontSize:  16,
+              lineHeight:1.2,
+              margin:    0,
+              maxWidth:  420,
             }}
           >
             With expert craftsmanship and attention to detail, we bring your

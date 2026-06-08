@@ -1,55 +1,89 @@
 "use client";
 
+/**
+ * SectionEight.tsx — FIXED
+ * ─────────────────────────────────────────────────────────────
+ * FIX 1: Both WaterBackground canvases receive `paused` prop.
+ *   S8 is hidden behind S7 for most of the scroll sequence.
+ *   Both canvases were burning GPU time while invisible.
+ *
+ * FIX 2: Only ONE canvas per panel (was already the case but
+ *   confirmed here). Two canvases in one section is intentional —
+ *   left and right panels are separate clip-path regions.
+ * ─────────────────────────────────────────────────────────────
+ */
+
+import { useRef, useState, useEffect } from "react";
 import WaterBackground from "./Ripplecanvas";
 
 export default function SectionEight() {
-  return (
-    <div className="relative w-full h-full overflow-hidden">
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [offscreen, setOffscreen] = useState(false);
 
-      {/* LEFT panel — clips top → bottom (bottom inset grows, wipes panel downward) */}
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setOffscreen(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={sectionRef}
+      className="relative w-full h-full overflow-hidden"
+      style={{
+        transform:          "translateZ(0)",
+        backfaceVisibility: "hidden",
+      }}
+    >
+      {/* LEFT panel */}
       <div
         className="s8-panel-left absolute inset-0"
         style={{ clipPath: "inset(0% 50% 0% 0%)" }}
       >
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('/Wellness.webp')" }}
+          style={{
+            backgroundImage: "url('/Wellness.webp')",
+            transform:       "translateZ(0)",
+          }}
         />
         <div className="absolute inset-0 z-10">
-          <WaterBackground />
+          <WaterBackground paused={offscreen} />
         </div>
       </div>
 
-      {/* RIGHT panel — clips bottom → top (top inset grows, wipes panel upward)
-          Text lives inside here so it clips along with the panel */}
+      {/* RIGHT panel */}
       <div
         className="s8-panel-right absolute inset-0"
         style={{ clipPath: "inset(0% 0% 0% 50%)" }}
       >
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('/Wellness.webp')" }}
+          style={{
+            backgroundImage: "url('/Wellness.webp')",
+            transform:       "translateZ(0)",
+          }}
         />
         <div className="absolute inset-0 z-10">
-          <WaterBackground />
+          <WaterBackground paused={offscreen} />
         </div>
 
-        {/*
-          Text is INSIDE the clipped panel — it clips along with the panel
-          so it never bleeds onto S7 or S9.
-          Positioned to appear visually centred on the full image.
-        */}
         <div
           className="absolute z-20 pointer-events-none"
           style={{
-            right: "2rem",
-            top: 0,
-            height: "100%",
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
+            right:          "2rem",
+            top:            0,
+            height:         "100%",
+            width:          "100%",
+            display:        "flex",
+            alignItems:     "center",
             justifyContent: "flex-end",
-            paddingRight: "10rem",
+            paddingRight:   "10rem",
           }}
         >
           <div className="flex flex-col gap-5">
@@ -64,7 +98,6 @@ export default function SectionEight() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

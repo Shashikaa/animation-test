@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import gsap from "gsap";
 
 const PROJECTS = [
@@ -61,7 +61,7 @@ const PROJECTS = [
 ];
 
 export default function SectionSix() {
-  const [active, setActive] = useState(0);
+  const [active, setActive]     = useState(0);
   const bgRefs       = useRef<(HTMLDivElement | null)[]>([]);
   const btnRefs      = useRef<(HTMLButtonElement | null)[]>([]);
   const tagRefs      = useRef<(HTMLParagraphElement | null)[]>([]);
@@ -71,31 +71,53 @@ export default function SectionSix() {
   const tabRowRef    = useRef<HTMLDivElement>(null);
   const activeBarRef = useRef<HTMLDivElement>(null);
 
-  function getBarMetrics(idx: number) {
-    const row = tabRowRef.current;
-    const btn = btnRefs.current[idx];
-    if (!row || !btn) return { left: 0, width: 0 };
-    const rowRect = row.getBoundingClientRect();
-    const btnRect = btn.getBoundingClientRect();
-    return {
-      left: btnRect.left - rowRect.left,
-      width: btnRect.width,
-    };
-  }
+  // FIX: Cache bar metrics in a ref so we never call getBoundingClientRect
+  // during a scroll event. getBCR forces a synchronous layout flush —
+  // calling it inside a resize listener that fires while Lenis is scrolling
+  // caused layout thrash on every frame = the primary FPS drop on S6.
+  const barMetricsCache = useRef<{ left: number; width: number }[]>([]);
 
-  useEffect(() => {
-    const sync = () => {
-      const { left, width } = getBarMetrics(active);
-      gsap.set(activeBarRef.current, { left, width });
-    };
-    const raf = requestAnimationFrame(sync);
-    window.addEventListener("resize", sync);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", sync);
-    };
+  const measureAllBars = useCallback(() => {
+    const row = tabRowRef.current;
+    if (!row) return;
+    const rowRect = row.getBoundingClientRect();
+    barMetricsCache.current = btnRefs.current.map((btn) => {
+      if (!btn) return { left: 0, width: 0 };
+      const r = btn.getBoundingClientRect();
+      return { left: r.left - rowRect.left, width: r.width };
+    });
   }, []);
 
+  // Initial measure + bar snap — runs once after mount
+  useEffect(() => {
+    // rAF ensures DOM has painted before we read layout
+    const raf = requestAnimationFrame(() => {
+      measureAllBars();
+      const m = barMetricsCache.current[0];
+      if (m && activeBarRef.current) {
+        gsap.set(activeBarRef.current, { left: m.left, width: m.width });
+      }
+    });
+
+    // FIX: Resize handler reads from cache, not live BCR.
+    // We remeasure only on resize (rare), never during scroll.
+    const onResize = () => {
+      measureAllBars();
+      const m = barMetricsCache.current[active];
+      if (m && activeBarRef.current) {
+        gsap.set(activeBarRef.current, { left: m.left, width: m.width });
+      }
+    };
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", onResize);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Initial GSAP states
   useEffect(() => {
     PROJECTS.forEach((_, i) => {
       gsap.set(bgRefs.current[i], { opacity: i === 0 ? 1 : 0 });
@@ -115,14 +137,14 @@ export default function SectionSix() {
     gsap.to(bgRefs.current[prev], { opacity: 0, duration: 0.6, ease: "power2.inOut" });
     gsap.to(bgRefs.current[idx],  { opacity: 1, duration: 0.7, ease: "power2.inOut" });
 
-    const { left, width } = getBarMetrics(idx);
-    gsap.to(activeBarRef.current, { left, width, duration: 0.4, ease: "power2.inOut" });
+    // FIX: Use cached metrics — no live BCR call during interaction
+    const m = barMetricsCache.current[idx];
+    if (m) gsap.to(activeBarRef.current, { left: m.left, width: m.width, duration: 0.4, ease: "power2.inOut" });
 
     gsap.to(
       [tagRefs.current[prev], taglineRefs.current[prev], descRefs.current[prev]],
       { opacity: 0, y: -8, duration: 0.25, ease: "power2.in", stagger: 0.04 }
     );
-
     gsap.fromTo(
       [tagRefs.current[idx], taglineRefs.current[idx], descRefs.current[idx]],
       { opacity: 0, y: 10 },
@@ -134,32 +156,65 @@ export default function SectionSix() {
   }
 
   return (
-    <section className="relative w-full h-screen overflow-hidden">
+    <section
+      className="relative w-full h-screen overflow-hidden section-six-wrapper"
+      /*
+       * FIX: section-six-wrapper class applies:
+       *   will-change: transform + translateZ(0)
+       * from globals.css — promotes this section to its own GPU layer
+       * so entering/leaving the S5→S6→S7 boundaries doesn't cause a
+       * full-page raster invalidation.
+       */
+    >
 
       {/* ── Backgrounds ── */}
       {PROJECTS.map((p, i) => (
         <div
           key={p.id}
           ref={(el) => { bgRefs.current[i] = el; }}
-          className="absolute inset-0 bg-cover bg-center will-change-[opacity]"
-          style={{ backgroundImage: `url('${p.image}')` }}
+          /*
+           * FIX: will-change-[opacity] replaced with explicit will-change
+           * via inline style. Tailwind's will-change-[opacity] can generate
+           * a non-standard property string on some build configs.
+           * Also added translateZ(0) to ensure each bg is its own GPU layer —
+           * without this, opacity transitions cause full-section repaints.
+           */
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: `url('${p.image}')`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            willChange: "opacity",
+            transform: "translateZ(0)",
+            backfaceVisibility: "hidden",
+          }}
         />
       ))}
+
+      {/* Gradient overlay */}
       <div
         className="absolute inset-0 z-[1]"
         style={{
           background: "linear-gradient(180deg, rgba(0,0,0,0.16) 0%, rgba(0,0,0,0.64) 100%)",
+          // FIX: promote overlay to its own layer so it doesn't merge
+          // with the background divs and force a combined repaint
+          transform: "translateZ(0)",
         }}
       />
-      {/* ── Scrim ── */}
-    
 
       {/* ── Content ── */}
       <div
         className="section-continer relative z-[2] h-full flex flex-col justify-center"
         style={{ paddingBottom: "160px" }}
       >
-        {/* Glass card */}
+        {/* Glass card
+            FIX: backdropFilter is expensive but unavoidable here for the
+            design. Mitigate by:
+            1. Adding will-change:transform so it gets its own compositor layer
+            2. Adding translateZ(0) to prevent it merging with scroll layer
+            3. NOT animating this element — static blur is fine, animated blur is not
+        */}
         <div
           style={{
             position: "relative",
@@ -171,9 +226,10 @@ export default function SectionSix() {
             background:
               "radial-gradient(100% 100% at 0% 0%, rgba(25, 33, 28, 0.64) 0%, rgba(25, 33, 28, 0.24) 100%)",
             boxShadow: "-5px -5px 25px rgba(255,255,255,0.02) inset",
+            willChange: "transform",
+            transform: "translateZ(0)",
           }}
         >
-          {/* Stacked text layers */}
           {PROJECTS.map((p, i) => (
             <div
               key={p.id}
@@ -214,7 +270,8 @@ export default function SectionSix() {
               >
                 {p.tagline}
               </p>
-              <p className="font-body !mt-5"
+              <p
+                className="font-body !mt-5"
                 ref={(el) => { descRefs.current[i] = el; }}
                 style={{
                   color: "#F4EEDF",
@@ -230,7 +287,6 @@ export default function SectionSix() {
             </div>
           ))}
 
-          {/* Single static CTA — rendered once */}
           <a
             href="/projects"
             style={{
@@ -269,8 +325,6 @@ export default function SectionSix() {
       {/* ── Bottom tab bar ── */}
       <div className="absolute bottom-20 left-0 right-0 z-[3] flex justify-center">
         <div style={{ position: "relative" }}>
-
-          {/* Labels row */}
           <div ref={tabRowRef} style={{ display: "flex", columnGap: 32 }}>
             {PROJECTS.map((p, i) => (
               <button
@@ -281,7 +335,7 @@ export default function SectionSix() {
                 style={{ paddingTop: 0, paddingBottom: 20 }}
               >
                 <span
-                  className="transition-[opacity,font-weight] duration-300 font-body "
+                  className="transition-[opacity,font-weight] duration-300 font-body"
                   style={{
                     color: "#F4EEDF",
                     fontSize: 14,
@@ -298,7 +352,6 @@ export default function SectionSix() {
             ))}
           </div>
 
-          {/* Full background line */}
           <div
             style={{
               position: "absolute",
@@ -310,7 +363,6 @@ export default function SectionSix() {
             }}
           />
 
-          {/* Active highlight — slides via GSAP */}
           <div
             ref={activeBarRef}
             style={{
@@ -320,12 +372,12 @@ export default function SectionSix() {
               height: 3,
               width: 0,
               background: "#F4EEDF",
+              willChange: "transform",
+              transform: "translateZ(0)",
             }}
           />
-
         </div>
-   
-</div>
+      </div>
     </section>
   );
 }

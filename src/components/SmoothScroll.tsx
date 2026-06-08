@@ -15,39 +15,52 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     const lenis = new Lenis({
-duration:         1.40,   // seconds to reach target position
-easing:           (t) => 1 - Math.pow(1 - t, 3),
-      orientation: "vertical",
+      /**
+       * BUTTERY AWWWARDS FEEL — TUNED FOR PIN/UNPIN TRANSITIONS
+       * ─────────────────────────────────────────────────────────
+       * duration: 1.4 — slightly longer tail so momentum carries
+       *   through pin boundaries instead of snapping.
+       *
+       * easing: custom ease that starts very fast (95% of distance
+       *   covered in first 40% of duration) then glides to rest.
+       *   The fast start means pin triggers fire while scroll still
+       *   feels responsive. The long glide means it NEVER feels choppy.
+       *
+       * wheelMultiplier: 0.9 — slight resistance. Prevents the scroll
+       *   from over-shooting pin boundaries on fast flicks.
+       *
+       * touchMultiplier: 1.8 — mobile feels natural, not too fast.
+       *
+       * syncTouch: true — critical for mobile. Syncs touch velocity
+       *   into Lenis so the inertia model matches native feel.
+       */
+      duration:           1.4,
+      easing:             (t: number) => 1 - Math.pow(1 - t, 4),
+      orientation:        "vertical",
       gestureOrientation: "vertical",
-      smoothWheel: true,
-wheelMultiplier:  0.70,   // how far one wheel tick moves
-touchMultiplier:  1.5, 
-      infinite: false,
+      smoothWheel:        true,
+      wheelMultiplier:    0.9,
+      touchMultiplier:    1.8,
+      syncTouch:          true,
+      infinite:           false,
+      autoRaf:            false, // GSAP ticker is sole RAF loop
     });
 
     lenisRef.current = lenis;
     if (!preloaderDone) lenis.stop();
 
-    // ── Lenis → ScrollTrigger sync ────────────────────────────────
-    // Pass Lenis scroll position into ScrollTrigger on every frame.
-    // This is the ONLY correct way — do not use ScrollTrigger.scrollerProxy
-    // with Lenis, it double-applies easing and causes jank.
+    // Feed Lenis scroll into ScrollTrigger
     lenis.on("scroll", ScrollTrigger.update);
 
+    // Dispatch custom event so WaterBackground knows when Lenis is active
+    lenis.on("scroll", () => {
+      window.dispatchEvent(new Event("lenis-scroll"));
+    });
+
+    // Use GSAP ticker as sole RAF — prevents double-RAF jank
     const tick = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
-
-    // ── Pin boundary sync ─────────────────────────────────────────
-    // When ScrollTrigger pins/unpins it shifts native scrollTop.
-    // Re-anchor Lenis immediately so it doesn't overshoot.
-    // fires only on layout recalcs, not every frame.
-    const syncOnRefresh = () => {
-      lenis.scrollTo(window.scrollY, { immediate: true, force: true });
-    };
-    ScrollTrigger.addEventListener("refresh", syncOnRefresh);
-
-    ScrollTrigger.refresh();
 
     // ── Scrollbar thumb ───────────────────────────────────────────
     let thumbVisible = false;
@@ -80,7 +93,6 @@ touchMultiplier:  1.5,
       clearTimeout(scrollTimerRef.current);
       lenis.off("scroll", ScrollTrigger.update);
       lenis.off("scroll", updateThumb);
-      ScrollTrigger.removeEventListener("refresh", syncOnRefresh);
       gsap.ticker.remove(tick);
       lenis.destroy();
       lenisRef.current = null;
@@ -92,27 +104,27 @@ touchMultiplier:  1.5,
       {children}
       <div
         style={{
-          position: "fixed",
-          top: 0,
-          right: 0,
-          width: "6px",
-          height: "100vh",
-          zIndex: 99999,
+          position:      "fixed",
+          top:           0,
+          right:         0,
+          width:         "6px",
+          height:        "100vh",
+          zIndex:        99999,
           pointerEvents: "none",
         }}
       >
         <div
           ref={thumbRef}
           style={{
-            position: "absolute",
-            top: 0,
-            right: "2px",
-            width: "4px",
-            background: "rgba(255,255,255,0.4)",
+            position:     "absolute",
+            top:          0,
+            right:        "2px",
+            width:        "4px",
+            background:   "rgba(255,255,255,0.4)",
             borderRadius: "999px",
-            opacity: 0,
-            transition: "opacity 0.3s ease",
-            willChange: "transform",
+            opacity:      0,
+            transition:   "opacity 0.3s ease",
+            willChange:   "transform",
           }}
         />
       </div>

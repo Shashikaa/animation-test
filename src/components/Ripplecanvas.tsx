@@ -1,11 +1,173 @@
 "use client";
+
 import { useEffect, useRef } from "react";
+import gsap from "gsap";
+
+type RenderCallback = (now: number) => void;
+const renderCallbacks = new Set<RenderCallback>();
+let tickerAdded = false;
+
+function sharedTick() {
+  const now = performance.now();
+  renderCallbacks.forEach((cb) => cb(now));
+}
+
+function registerCallback(cb: RenderCallback) {
+  renderCallbacks.add(cb);
+  if (!tickerAdded) {
+    gsap.ticker.add(sharedTick, false, false); // false = not lagSmoothing-aware, runs after GSAP
+    tickerAdded = true;
+  }
+}
+
+function unregisterCallback(cb: RenderCallback) {
+  renderCallbacks.delete(cb);
+  if (renderCallbacks.size === 0 && tickerAdded) {
+    gsap.ticker.remove(sharedTick);
+    tickerAdded = false;
+  }
+}
+
+// ── Shared video singleton ────────────────────────────────────
+let sharedVideo: HTMLVideoElement | null = null;
+let videoReady    = false;
+let videoRefCount = 0;
+
+// ── Shared video texture cache ────────────────────────────────
+// Upload video to an offscreen canvas once per frame, share the
+// ImageBitmap across all GL contexts instead of uploading raw video.
+let sharedBitmap:     ImageBitmap | null = null;
+let bitmapVideoTime   = -1;
+let bitmapRafId:      number | null = null;
+
+function startBitmapLoop() {
+  if (bitmapRafId !== null) return;
+
+  const loop = () => {
+    bitmapRafId = requestAnimationFrame(loop);
+    const v = sharedVideo;
+    if (!v || !videoReady || v.readyState < 2) return;
+    if (v.currentTime === bitmapVideoTime) return;
+
+    bitmapVideoTime = v.currentTime;
+    createImageBitmap(v, { resizeWidth: 512, resizeHeight: 288 }).then((bm) => {
+      if (sharedBitmap) sharedBitmap.close();
+      sharedBitmap = bm;
+    });
+  };
+  bitmapRafId = requestAnimationFrame(loop);
+}
+
+function stopBitmapLoop() {
+  if (bitmapRafId !== null) {
+    cancelAnimationFrame(bitmapRafId);
+    bitmapRafId = null;
+  }
+  if (sharedBitmap) {
+    sharedBitmap.close();
+    sharedBitmap = null;
+  }
+  bitmapVideoTime = -1;
+}
+
+function getSharedVideo(): HTMLVideoElement {
+  if (!sharedVideo) {
+    const v       = document.createElement("video");
+    v.src         = "/videos/Pool-Water-Reflect.mp4";
+    v.muted       = true;
+    v.loop        = true;
+    v.playsInline = true;
+    v.preload     = "auto";
+    v.crossOrigin = "anonymous";
+
+    const onReady = () => {
+      videoReady = true;
+      startBitmapLoop();
+    };
+    v.addEventListener("canplaythrough", onReady, { once: true });
+    v.addEventListener("canplay",        onReady, { once: true });
+
+    const playPromise = v.play();
+    if (playPromise) {
+      playPromise.catch(() => {
+        document.addEventListener("pointerdown", () => v.play().catch(() => {}), { once: true });
+      });
+    }
+    sharedVideo = v;
+  }
+  videoRefCount++;
+  return sharedVideo;
+}
+
+function releaseSharedVideo() {
+  videoRefCount--;
+  if (videoRefCount <= 0 && sharedVideo) {
+    sharedVideo.pause();
+    sharedVideo   = null;
+    videoReady    = false;
+    videoRefCount = 0;
+    stopBitmapLoop();
+  }
+}
+
+// ── Shared scroll velocity tracker ───────────────────────────
+// Reduces canvas resolution while scrolling to save GPU budget.
+let scrollVelocity  = 0;
+let lastScrollY     = 0;
+let scrollRafId:    number | null = null;
+
+function startScrollTracker() {
+  if (scrollRafId !== null) return;
+  const track = () => {
+    scrollRafId   = requestAnimationFrame(track);
+    const delta   = Math.abs(window.scrollY - lastScrollY);
+    lastScrollY   = window.scrollY;
+    scrollVelocity = delta;
+  };
+  scrollRafId = requestAnimationFrame(track);
+}
+
+function stopScrollTracker() {
+  if (scrollRafId !== null) {
+    cancelAnimationFrame(scrollRafId);
+    scrollRafId = null;
+  }
+}
+
+// ── Shared mouse state ────────────────────────────────────────
+const sharedMouse = { x: 0.5, y: 0.5, rippleTarget: 0.04, lastMove: 0 };
+let mouseListenerCount = 0;
+
+function onSharedMouseMove(e: MouseEvent) {
+  sharedMouse.x            = e.clientX / window.innerWidth;
+  sharedMouse.y            = 1 - e.clientY / window.innerHeight;
+  sharedMouse.rippleTarget = 0.10;
+  sharedMouse.lastMove     = performance.now();
+}
+
+function addSharedMouseListener() {
+  if (mouseListenerCount === 0) {
+    window.addEventListener("mousemove", onSharedMouseMove, { passive: true });
+    startScrollTracker();
+  }
+  mouseListenerCount++;
+}
+
+function removeSharedMouseListener() {
+  mouseListenerCount--;
+  if (mouseListenerCount <= 0) {
+    window.removeEventListener("mousemove", onSharedMouseMove);
+    mouseListenerCount = 0;
+    stopScrollTracker();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
 
 export default function WaterBackground({ paused }: { paused?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pausedRef = useRef(false);
 
-  // Keep pausedRef in sync with the prop so the RAF loop reads it immediately
   useEffect(() => {
     pausedRef.current = paused ?? false;
   }, [paused]);
@@ -14,18 +176,18 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const gl = canvas.getContext("webgl");
+    const gl = canvas.getContext("webgl", {
+      alpha:                 true,
+      premultipliedAlpha:    false,
+      antialias:             false,
+      powerPreference:       "high-performance",
+      preserveDrawingBuffer: false,
+    });
     if (!gl) return;
 
-    const resize = () => {
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
-      gl.viewport(0, 0, canvas.width, canvas.height);
-    };
-    resize();
-    window.addEventListener("resize", resize);
+    const SCALE_IDLE    = 0.5;
+    const SCALE_SCROLL  = 0.3; // drop res while scrolling
 
-    // ─── Shaders ────────────────────────────────────────────────────────────
     const vert = `
       attribute vec2 a_position;
       varying vec2 vUv;
@@ -55,14 +217,10 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
 
         vec2  md1 = uv - uMouse;
         float d1  = length(md1);
-        float r1  = sin(d1 * 25.0 - t * 5.0)
-                    * uRippleStrength
-                    * exp(-d1 * 4.0);
+        float r1  = sin(d1 * 25.0 - t * 5.0) * uRippleStrength * exp(-d1 * 4.0);
         if (d1 > 0.0001) uv += normalize(md1) * r1;
 
-        float r1b = sin(d1 * 12.0 - t * 3.5)
-                    * (uRippleStrength * 0.4)
-                    * exp(-d1 * 2.5);
+        float r1b = sin(d1 * 12.0 - t * 3.5) * (uRippleStrength * 0.4) * exp(-d1 * 2.5);
         if (d1 > 0.0001) uv += normalize(md1) * r1b;
 
         vec2  md2 = uv - uMouse2;
@@ -85,7 +243,6 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
       }
     `;
 
-    // ─── Compile helpers ─────────────────────────────────────────────────────
     const compile = (type: number, src: string) => {
       const s = gl.createShader(type)!;
       gl.shaderSource(s, src);
@@ -106,9 +263,9 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
       -1,  1,  1, -1,  1,  1,
     ]), gl.STATIC_DRAW);
 
-    const pos = gl.getAttribLocation(program, "a_position");
-    gl.enableVertexAttribArray(pos);
-    gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+    const posLoc = gl.getAttribLocation(program, "a_position");
+    gl.enableVertexAttribArray(posLoc);
+    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
 
     const uTime           = gl.getUniformLocation(program, "uTime");
     const uMouse          = gl.getUniformLocation(program, "uMouse");
@@ -117,65 +274,79 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
     const uRippleStrength = gl.getUniformLocation(program, "uRippleStrength");
     const uTexture        = gl.getUniformLocation(program, "uTexture");
 
-    // ─── Texture ─────────────────────────────────────────────────────────────
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,     gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,     gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    // Solid teal fallback until video loads
     gl.texImage2D(
       gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0,
       gl.RGBA, gl.UNSIGNED_BYTE,
       new Uint8Array([13, 90, 80, 255])
     );
 
-    // ─── Video ───────────────────────────────────────────────────────────────
-    const video = document.createElement("video");
-    video.src         = "/videos/Pool-Water-Reflect.mp4";
-    video.muted       = true;
-    video.loop        = true;
-    video.playsInline = true;
-    video.preload     = "auto";
+    let lastUploadedBitmap: ImageBitmap | null = null;
 
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    const resize = () => {
+      const scale  = scrollVelocity > 3 ? SCALE_SCROLL : SCALE_IDLE;
+      canvas.width  = Math.floor(window.innerWidth  * scale);
+      canvas.height = Math.floor(window.innerHeight * scale);
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    };
 
-    let animId: number;
+    resize();
+    window.addEventListener("resize", resize, { passive: true });
+
+    getSharedVideo();
+    addSharedMouseListener();
+
+    const mouseSmooth = { x: 0.5, y: 0.5 };
+    const start       = performance.now();
     let angle         = 0;
     let rippleCurrent = 0.04;
-    let rippleTarget  = 0.04;
-    let lastMoveTime  = 0;
+    let lastFrameTime = 0;
 
-    const mouse  = { x: 0.5, y: 0.5 };
-    const target = { x: 0.5, y: 0.5 };
-    const start  = performance.now();
-
-    const render = () => {
-      animId = requestAnimationFrame(render);
-
-      // Skip all GL work when paused (fly-out animation is running)
+    // Drop to 20fps while scrolling fast, 30fps otherwise
+    const render = (now: number) => {
       if (pausedRef.current) return;
 
-      angle += 0.008;
-      mouse.x += (target.x - mouse.x) * 0.06;
-      mouse.y += (target.y - mouse.y) * 0.06;
+      const isScrolling = scrollVelocity > 3;
+      const FRAME_MS    = isScrolling ? 50 : 33; // 20fps vs 30fps
 
-      const now = performance.now();
-      if (now - lastMoveTime > 300) rippleTarget = 0.04;
-      rippleCurrent += (rippleTarget - rippleCurrent) * 0.08;
+      const elapsed = now - lastFrameTime;
+      if (elapsed < FRAME_MS) return;
+      lastFrameTime = now - (elapsed % FRAME_MS);
+
+      // Resize canvas if scroll state changed
+      const scale       = isScrolling ? SCALE_SCROLL : SCALE_IDLE;
+      const targetW     = Math.floor(window.innerWidth  * scale);
+      const targetH     = Math.floor(window.innerHeight * scale);
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width  = targetW;
+        canvas.height = targetH;
+        gl.viewport(0, 0, targetW, targetH);
+      }
+
+      // Upload shared bitmap if new frame available — much cheaper than raw video
+      if (sharedBitmap && sharedBitmap !== lastUploadedBitmap) {
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, sharedBitmap);
+        lastUploadedBitmap = sharedBitmap;
+      }
+
+      angle += 0.008 * (elapsed / 33);
+      mouseSmooth.x += (sharedMouse.x - mouseSmooth.x) * 0.06;
+      mouseSmooth.y += (sharedMouse.y - mouseSmooth.y) * 0.06;
+
+      if (now - sharedMouse.lastMove > 300) sharedMouse.rippleTarget = 0.04;
+      rippleCurrent += (sharedMouse.rippleTarget - rippleCurrent) * 0.08;
 
       const ox = 0.5 + Math.cos(angle)       * 0.3;
       const oy = 0.5 + Math.sin(angle * 0.7) * 0.2;
 
-      if (video.readyState >= video.HAVE_CURRENT_DATA) {
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
-      }
-
-      gl.uniform1f(uTime,           (performance.now() - start) / 1000);
-      gl.uniform2f(uMouse,          mouse.x, mouse.y);
+      gl.uniform1f(uTime,           (now - start) / 1000);
+      gl.uniform2f(uMouse,          mouseSmooth.x, mouseSmooth.y);
       gl.uniform2f(uMouse2,         ox, oy);
       gl.uniform1f(uSpeed,          1.1);
       gl.uniform1f(uRippleStrength, rippleCurrent);
@@ -183,22 +354,13 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     };
 
-    render();
-    video.play().catch(() => {});
-
-    const onMouse = (e: MouseEvent) => {
-      target.x     = e.clientX / window.innerWidth;
-      target.y     = 1 - e.clientY / window.innerHeight;
-      rippleTarget = 0.10;
-      lastMoveTime = performance.now();
-    };
-    window.addEventListener("mousemove", onMouse);
+    registerCallback(render);
 
     return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("mousemove", onMouse);
+      unregisterCallback(render);
       window.removeEventListener("resize", resize);
-      video.pause();
+      releaseSharedVideo();
+      removeSharedMouseListener();
       gl.deleteTexture(texture);
       gl.deleteProgram(program);
       gl.deleteBuffer(buf);

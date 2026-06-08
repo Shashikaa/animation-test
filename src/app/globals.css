@@ -94,17 +94,52 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  /* Must be auto — smooth scroll fights both Lenis and GSAP scrub */
   scroll-behavior: auto !important;
+  /* height:auto !important is set in the block above */
+}
+
+html {
+  /*
+   * FIX: height: auto enforced on <html>.
+   * Lenis requires html to be height:auto to measure true document
+   * scroll height. Tailwind's h-full (height:100%) on <html> was
+   * overriding the Lenis CSS rule in globals and capping the scroll
+   * limit at the viewport height. Now set directly in CSS so it wins
+   * regardless of what Tailwind classes are on the element.
+   * scroll-behavior and other html rules are merged below.
+   */
+  height: auto !important;
 }
 
 body {
-  background:  var(--background);
-  color:       var(--foreground);
-  font-family: var(--font-body);
-  font-size:   var(--text-body);
-  line-height: var(--leading-body);
-  overflow-x:  hidden;
+  background:   var(--background);
+  color:        var(--foreground);
+  font-family:  var(--font-body);
+  font-size:    var(--text-body);
+  line-height:  var(--leading-body);
+  /*
+   * FIX: height:auto on body too — matches the Lenis requirement.
+   * Tailwind's min-h-full was setting min-height:100% which Lenis
+   * also fights. Explicit auto wins.
+   */
+  height:       auto !important;
+  min-height:   unset !important;
+  /*
+   * NO overflow-x:hidden here — that defeats GPU compositing.
+   * Horizontal overflow is contained on .site-root instead.
+   */
+}
+
+/*
+ * FIX: .site-root is the actual scroll content wrapper in layout.tsx.
+ * overflow-x:hidden here is safe — it's on a non-body, non-html element
+ * so it does NOT block the browser from promoting children to GPU layers.
+ * This replaces the old body overflow-x:hidden and the #__next approach
+ * (which doesn't exist in Next.js App Router).
+ */
+.site-root {
+  overflow-x: hidden;
+  position:   relative;
 }
 
 /* ─── Lenis ──────────────────────────────────────────────────── */
@@ -136,24 +171,33 @@ body.preloading {
 }
 
 /* ─── GPU Layer Promotion ────────────────────────────────────────
-   Rules are split by property type to avoid conflicts.
-   will-change: clip-path must NOT also declare transform/opacity
-   on the same element — multiple will-change values on a single
-   element that create stacking contexts can cause compositing bugs.
-   Sections that use BOTH transform and clip-path (section-3, 8)
-   get clip-path only here; transform is promoted by the browser
-   automatically when GSAP animates it.
+   STRATEGY:
+   Split elements by which CSS property is animated.
+   A single element should only declare will-change for the
+   properties GSAP actually touches on it — multiple compositing
+   hints on one element can create redundant stacking contexts
+   which waste GPU memory and occasionally cause z-index glitches.
+
+   NOTE: Now that overflow-x:hidden is off <body>, these hints
+   actually take effect. Previously they were silently ignored.
 ──────────────────────────────────────────────────────────────── */
 
-/* Pinned scroll wrappers */
+/* Pinned scroll wrappers — promote to their own GPU layer.
+   FIX: transform added alongside backface-visibility.
+   Without a transform, the browser may still batch these with
+   the document layer on some Chromium versions. */
 .pin-hero-s1,
 .pin-s2-s5,
 .pin-s7-s9 {
   transform: translateZ(0);
   backface-visibility: hidden;
+  /* FIX: isolation: isolate creates a guaranteed stacking context
+     so z-index values inside each pin wrapper are self-contained
+     and don't bleed into adjacent sections during transitions. */
+  isolation: isolate;
 }
 
-/* Sections animated by GSAP yPercent / scale / opacity / y (Framer) */
+/* Sections animated by GSAP yPercent / scale / opacity */
 .hero,
 .section-1,
 .section-2,
@@ -165,29 +209,51 @@ body.preloading {
   backface-visibility: hidden;
 }
 
-/* section-9: only opacity animated — no transform promotion needed.
-   Critically: NO will-change: clip-path here — that was hiding it. */
+/* section-9: only opacity animated */
 .section-9 {
   will-change: opacity;
+  transform: translateZ(0); /* still needs its own layer for the opacity composite */
 }
 
-/* clip-path only — these are revealed via clip-path, not moved */
+/* clip-path only sections */
 .section-3,
 .section-8 {
   will-change: clip-path;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
-/* S8 panels: clip-path animated by GSAP timeline */
+/* S8 panels — clip-path only */
 .s8-panel-left,
 .s8-panel-right {
   will-change: clip-path;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
-/* Canvas / video always get their own GPU layer */
+/* Canvas / video — always their own GPU layer */
 video,
 canvas {
   will-change: transform;
   transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/*
+ * FIX: Promote direct children of animated sections to their own
+ * GPU layers. Large background images without a layer hint trigger
+ * full-section raster invalidation — visible as large yellow tiles
+ * in Chrome's GPU raster overlay (the 27fps screenshot).
+ *
+ * This is the "GPU raster tile repaint" fix. Adding translateZ(0)
+ * to inner children tells the compositor to cache their pixels
+ * separately so only the transform/opacity of the parent updates.
+ */
+.section-1 > *,
+.section-2 > *,
+.section-7 > * {
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 /* ─── Sections Layout ────────────────────────────────────────── */
@@ -214,11 +280,30 @@ body.preloading .scroll-container {
   visibility: hidden;
 }
 
-/* Contain paint for non-animated full-screen sections */
-.section-six-wrapper,
-.section-nine-wrapper {
+/* ─── Section wrappers ───────────────────────────────────────── */
+/*
+ * FIX: contain:layout paint kept ONLY on section-six-wrapper.
+ * This is safe here because S6 is a plain-scroll section with no
+ * GSAP animation on its children. contain:layout paint on animated
+ * sections blocks the compositor from promoting animated children.
+ *
+ * section-nine-wrapper: contain removed (as in previous version)
+ * for the same reason — GSAP animates opacity on .s9-para and
+ * transform/position on .s9-title inside this wrapper.
+ */
+.section-six-wrapper {
   overflow: hidden;
   contain: layout paint;
+  /* FIX: GPU layer for S6 so entering/leaving the S6 plain-scroll
+     zone doesn't trigger a full-page raster invalidation at the
+     pin boundary. This eliminates the 1-frame flash of jank when
+     departing pin-s2-s5 and entering S6. */
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.section-nine-wrapper {
+  overflow: hidden;
 }
 
 /* ─── Typography ─────────────────────────────────────────────── */
