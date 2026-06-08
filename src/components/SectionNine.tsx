@@ -45,7 +45,7 @@ export default function SectionNine() {
         className="s9-para absolute z-20 text-[#F4EEDF] font-body text-[14px] leading-[1.2]"
         style={{
           right: "4rem",
-          bottom: "10rem",
+          bottom: "11.4rem",
           maxWidth: "376px",
           textAlign: "right",
           opacity: 0,

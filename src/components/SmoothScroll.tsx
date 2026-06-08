@@ -15,13 +15,13 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     const lenis = new Lenis({
-      duration: 0.75,
-      easing: (t: number) => 1 - Math.pow(1 - t, 3),
+duration:         1.40,   // seconds to reach target position
+easing:           (t) => 1 - Math.pow(1 - t, 3),
       orientation: "vertical",
       gestureOrientation: "vertical",
       smoothWheel: true,
-      wheelMultiplier: 1.0,
-      touchMultiplier: 1.5,
+wheelMultiplier:  0.70,   // how far one wheel tick moves
+touchMultiplier:  1.5, 
       infinite: false,
     });
 

@@ -9,7 +9,9 @@
  * desynced from the scrub and killed smooth scrolling.
  *
  * What changed from the original:
- *   - section-9 initial opacity: now set explicitly (was missing)
+ *   - section-9 initial opacity: now set to 0 (was 1 — caused it
+ *     to cover section-7 before the panel split animation)
+ *   - section-9 fades in during the panel split (not before)
  *   - s8-panel z-index stacking: panels must sit ABOVE section-9
  *     so the clip-path reveal actually uncovers it
  *   - No CSS animations on .hero / .section-1 — GSAP only
@@ -80,12 +82,12 @@ export default function Home() {
       // section-7: sits behind section-8 and section-9
       gsap.set(".section-7", { opacity: 1, visibility: "visible", zIndex: 5 });
 
-      // section-9: sits between section-7 and section-8.
-      // Starts invisible — s8 panels cover it, panel split reveals it.
-      // z-index MUST be above section-7 but BELOW section-8 panels.
-      gsap.set(".section-9", { opacity: 1, zIndex: 15 });
+      // FIX: section-9 starts at opacity 0 so it does NOT cover section-7.
+      // It will fade in during the panel split in Timeline 3.
+      // z-index must be above section-7 (5) but below section-8 panels (35).
+      gsap.set(".section-9", { opacity: 0, zIndex: 15 });
 
-      // S8 panels sit on top of everything in pin-s7-s9 (z-index 30+)
+      // S8 panels sit on top of everything in pin-s7-s9 (z-index 35)
       // and clip-path animate to reveal section-9 (z-index 15) beneath.
       gsap.set(".s8-panel-left",  { clipPath: "inset(0% 50% 0% 0%)",  zIndex: 35 });
       gsap.set(".s8-panel-right", { clipPath: "inset(0% 0% 0% 50%)",  zIndex: 35 });
@@ -115,7 +117,7 @@ export default function Home() {
           trigger: ".pin-hero-s1",
           start: "top top",
           end: "+=1500",
-          scrub: 0.3,
+          scrub: 0.50,
           pin: true,
           anticipatePin: 1,
           fastScrollEnd: true,
@@ -131,7 +133,7 @@ export default function Home() {
           trigger: ".pin-s2-s5",
           start: "top top",
           end: "+=6000",
-          scrub: 0.3,
+          scrub: 0.50,
           pin: true,
           anticipatePin: 1,
           fastScrollEnd: true,
@@ -177,7 +179,7 @@ export default function Home() {
           trigger: ".pin-s7-s9",
           start: "top top",
           end: "+=3000",
-          scrub: 0.3,
+          scrub: 0.50,
           pin: true,
           anticipatePin: 1,
           fastScrollEnd: true,
@@ -191,10 +193,11 @@ export default function Home() {
         .to({}, { duration: 0.5 })
         // Phase 2: hide S7 once fully behind S8
         .to(".section-7", { visibility: "hidden", opacity: 0, duration: 0.001 })
-        // Phase 3: S8 panels split open, revealing section-9 beneath
-        // section-9 is already visible (opacity:1) — the panels were covering it.
+        // Phase 3: S8 panels split open AND section-9 fades in simultaneously.
+        // section-9 was opacity:0 — it becomes visible exactly as the panels reveal it.
         .to(".s8-panel-left",  { clipPath: "inset(0% 50% 100% 0%)", duration: 1.5, ease: "power2.inOut" })
         .to(".s8-panel-right", { clipPath: "inset(100% 0% 0% 50%)", duration: 1.5, ease: "power2.inOut" }, "<")
+        .to(".section-9",      { opacity: 1, duration: 1.0, ease: "power2.inOut" }, "<")
         .to({}, { duration: 0.4 })
         // Phase 4: S9 title animates to final position
         .to(".s9-title", {
@@ -249,8 +252,8 @@ export default function Home() {
       {/*
         Pin 3: S7 → S8 → S9
         Z-index stacking order (bottom to top):
-          section-7  z-[5]   — background, scales subtly
-          section-9  z-[15]  — revealed when panels split
+          section-7  z-[5]   — background, scales subtly, visible at start
+          section-9  z-[15]  — starts opacity:0, fades in when panels split
           section-8  z-[30]  — clip-path wipe over S7
           s8 panels  z-[35]  — sit on S8, split to show S9
         section-9 must be ABOVE section-7 but BELOW section-8.
