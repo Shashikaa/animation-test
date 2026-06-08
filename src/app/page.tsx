@@ -17,6 +17,8 @@ import SectionSix from "../components/SectionSix";
 import SectionSeven from "../components/Sectionseven";
 import SectionEight from "../components/Sectioneight";
 import SectionNine from "../components/SectionNine";
+import SectionCTA from "../components/SectionCTA";
+import Footer from "../components/Footer";
 
 gsap.registerPlugin(ScrollTrigger, Flip);
 
@@ -40,9 +42,6 @@ export default function Home() {
       gsap.ticker.lagSmoothing(0);
       ScrollTrigger.config({ ignoreMobileResize: true });
 
-      // Triple rAF: font-ready + Lenis first tick + compositor frame
-      // Prevents ScrollTrigger.refresh() from firing before Lenis has
-      // measured scroll height, which causes wrong pin end positions.
       requestAnimationFrame(() =>
         requestAnimationFrame(() =>
           requestAnimationFrame(() => {
@@ -72,44 +71,53 @@ export default function Home() {
       });
 
       gsap.set(".section-7", { opacity: 1, visibility: "visible", zIndex: 5 });
-
       gsap.set(".section-9", { opacity: 0, zIndex: 15 });
 
       gsap.set(".s8-panel-left",  { clipPath: "inset(0% 50% 0% 0%)",  zIndex: 35 });
       gsap.set(".s8-panel-right", { clipPath: "inset(0% 0% 0% 50%)",  zIndex: 35 });
 
       gsap.set(".s9-title", {
-        position:    "absolute",
-        zIndex:      20,
-        color:       "#F4EEDF",
-        top:         "50%",
-        left:        "50%",
-        xPercent:    -50,
-        yPercent:    -50,
-        fontSize:    "46px",
-        lineHeight:  1.2,
-        whiteSpace:  "nowrap",
-        margin:      0,
-        padding:     0,
+        position:     "absolute",
+        zIndex:       20,
+        color:        "#F4EEDF",
+        top:          "50%",
+        left:         "50%",
+        xPercent:     -50,
+        yPercent:     -50,
+        fontSize:     "46px",
+        lineHeight:   1.2,
+        whiteSpace:   "nowrap",
+        margin:       0,
+        padding:      0,
         pointerEvents: "none",
       });
       gsap.set(".s9-para", { opacity: 0 });
+
+      // ── CTA / Footer initial state ────────────────────────────────
+      // Measure footer height AFTER fonts/images are ready (await above).
+      const footerEl = scopeRef.current?.querySelector<HTMLElement>(".footer");
+      const footerH  = footerEl?.offsetHeight ?? 600;
+
+      // Footer starts exactly footerH px below the wrapper (off-screen).
+      // y:footerH means its top sits at the wrapper bottom = VP bottom.
+      gsap.set(".footer",      { y: footerH, zIndex: 20 });
+      gsap.set(".section-cta", { zIndex: 10 });
 
       const FADE = 0.4;
 
       // ── Timeline 1: Hero → S1 ─────────────────────────────────────
       gsap.timeline({
         scrollTrigger: {
-          trigger:      ".pin-hero-s1",
-          start:        "top top",
-          end:          "+=1500",
-          scrub:        1.5,
-          pin:          true,
+          trigger:       ".pin-hero-s1",
+          start:         "top top",
+          end:           "+=1500",
+          scrub:         1.5,
+          pin:           true,
           anticipatePin: 1,
         },
       })
-      .to(".hero",      { yPercent: -100, duration: 1,   ease: "none" })
-      .to(".section-1", { filter: "blur(4px)", opacity: 0.9, duration: 0.5, ease: "power2.inOut" });
+        .to(".hero",      { yPercent: -100, duration: 1,   ease: "none" })
+        .to(".section-1", { filter: "blur(4px)", opacity: 0.9, duration: 0.5, ease: "power2.inOut" });
 
       // ── Timeline 2: S2 → S3(×3) → S4 → S5 ───────────────────────
       const tl2 = gsap.timeline({
@@ -157,28 +165,11 @@ export default function Home() {
           ease: "power2.inOut",
         });
 
-      // ── Pin S6: slides up into view naturally, then holds for 800px,
-      //   then unpins and scrolls away as normal.
-      //
-      //   KEY CHANGE vs original:
-      //   Previously this was a plain <div className="h-screen"> with no
-      //   pin — S6 just scrolled through. Now we wrap it in .pin-s6 and
-      //   add a ScrollTrigger pin so:
-      //     • start: "top top"   → pin fires the moment S6 reaches the
-      //       viewport top (i.e. it has FULLY entered the screen, because
-      //       S6 is exactly h-screen — its top hitting the viewport top
-      //       means its bottom is at the viewport bottom = fully visible).
-      //     • end: "+=800"       → holds it pinned for 800px of scroll.
-      //     • After end the pin releases and the page scrolls normally
-      //       into S7.
-      //
-      //   preventOverlaps: true ensures this pin doesn't start until the
-      //   tl2 (S2→S5) pin has fully released, eliminating any double-pin
-      //   flash at the S5→S6 boundary.
+      // ── Pin S6 ────────────────────────────────────────────────────
       ScrollTrigger.create({
         trigger:         ".pin-s6",
         start:           "top top",
-        end:             "+=800",
+        end:             "+=500",
         pin:             true,
         preventOverlaps: true,
         anticipatePin:   1,
@@ -207,11 +198,11 @@ export default function Home() {
         .to(".section-9",      { opacity: 1, duration: 1.0, ease: "power2.inOut" }, "<")
         .to({}, { duration: 0.4 })
         .to(".s9-title", {
-          duration: 1.0,
-          ease: "power2.inOut",
-          fontSize: "24px",
-          xPercent: 0,
-          yPercent: 0,
+          duration:  1.0,
+          ease:      "power2.inOut",
+          fontSize:  "24px",
+          xPercent:  0,
+          yPercent:  0,
           top: () => {
             const bottomOffset = 10.5 * 16 + 112 + 29;
             return window.innerHeight - bottomOffset + "px";
@@ -219,6 +210,40 @@ export default function Home() {
           left: () => window.innerWidth - 64 - 276 + "px",
         })
         .to(".s9-para", { opacity: 1, duration: 0.6, ease: "power2.out" }, "<+0.2");
+
+      // ── Timeline 4: CTA pinned → Footer slides up ─────────────────
+      //
+      //  Geometry:
+      //    • wrapper is exactly 100vh tall, overflow-hidden
+      //    • .footer starts at y = footerH  →  its TOP is at wrapper bottom
+      //    • animating to y = 0             →  its BOTTOM lands at wrapper
+      //      bottom = viewport bottom
+      //    • pin end = footerH px of scroll  →  pin releases exactly when
+      //      animation completes; no extra native scroll possible because
+      //      there is no content outside the wrapper.
+      gsap.timeline({
+        scrollTrigger: {
+          trigger:         ".pin-cta-footer",
+          start:           "top top",
+          end:             () => `+=${footerH}`,
+          scrub:           1.5,
+          pin:             true,
+          anticipatePin:   1,
+          preventOverlaps: true,
+        },
+      })
+        .to(".section-cta", {
+          scale:    1.04,
+          filter:   "blur(3px)",
+          opacity:  0.85,
+          duration: 1,
+          ease:     "power2.inOut",
+        })
+        .to(".footer", {
+          y:        0,
+          duration: 1,
+          ease:     "power3.inOut",
+        }, "<");
 
     }, scopeRef);
 
@@ -249,25 +274,12 @@ export default function Home() {
         <SectionFive />
       </div>
 
-      {/*
-        S6: Pin wrapper.
-        — h-screen ensures the section fills the viewport exactly, so
-          "top top" = fully entered (no partial-entry edge case).
-        — overflow-hidden prevents any internal scroll bleed during the pin.
-        — The ScrollTrigger above holds it for 800px then releases.
-      */}
+      {/* Pin S6 */}
       <div className="pin-s6 h-screen overflow-hidden">
         <SectionSix />
       </div>
 
-      {/*
-        Pin 3: S7 → S8 → S9
-        Z-index stacking (bottom to top):
-          section-7  z-[5]   — visible at start, scales behind S8
-          section-9  z-[15]  — opacity:0, fades in during panel split
-          section-8  z-[30]  — clip-path wipe over S7
-          s8 panels  z-[35]  — split open to reveal S9
-      */}
+      {/* Pin 3: S7 → S8 → S9 */}
       <div className="pin-s7-s9 relative h-screen overflow-hidden">
         <div className="section-7 absolute inset-0 z-[5]">
           <SectionSeven />
@@ -280,6 +292,28 @@ export default function Home() {
         </div>
       </div>
 
+      {/*
+        Pin 4: CTA → Footer slide-up
+        ─────────────────────────────
+        • h-screen + overflow-hidden: wrapper is exactly 100vh, anything
+          outside is clipped — no native scroll bleed after pin releases.
+        • section-cta: fills the wrapper (absolute inset-0), z-10.
+        • footer: absolute, anchored to the BOTTOM of the wrapper, starts
+          translated down by its own height (y = footerH set in JS above),
+          slides to y = 0 so its bottom aligns with the wrapper bottom
+          which is exactly the viewport bottom.
+      */}
+      <div className="pin-cta-footer relative h-screen overflow-hidden">
+        <div className="section-cta absolute inset-0 z-10">
+          <SectionCTA />
+        </div>
+        <div
+          className="footer absolute left-0 w-full z-20"
+          style={{ bottom: 0 }}
+        >
+          <Footer />
+        </div>
+      </div>
     </div>
   );
 }

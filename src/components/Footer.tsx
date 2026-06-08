@@ -152,7 +152,7 @@ export default function Footer() {
             alt="Grand Pools"
             style={{
               width: "94%",
-              maxWidth: "100%",
+              maxWidth: "80%",
               height: "auto",
               display: "block",
               verticalAlign: "bottom",

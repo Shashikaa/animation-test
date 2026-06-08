@@ -375,3 +375,4 @@ body.preloading .scroll-container {
 /* ─── Transitions ────────────────────────────────────────────── */
 .transition      { transition: all var(--duration-base) var(--ease-out); }
 .transition-fast { transition: all var(--duration-fast) var(--ease-out); }
+

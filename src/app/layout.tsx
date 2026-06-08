@@ -7,7 +7,6 @@ import SmoothScroll from "../components/SmoothScroll";
 import HeaderWrapper from "../components/HeaderWrapper";
 import NavMenuWrapper from "../components/NavMenuWrapper";
 import Footer from "../components/Footer";
-import SectionCTA from "../components/SectionCTA";
 
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
@@ -105,8 +104,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <HeaderWrapper />
               <NavMenuWrapper />
               {children}
-              <SectionCTA />
-              <Footer />
+             
+       
             </div>
           </SmoothScroll>
         </SiteProvider>

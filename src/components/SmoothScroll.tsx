@@ -15,25 +15,6 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     const lenis = new Lenis({
-      /**
-       * BUTTERY AWWWARDS FEEL — TUNED FOR PIN/UNPIN TRANSITIONS
-       * ─────────────────────────────────────────────────────────
-       * duration: 1.4 — slightly longer tail so momentum carries
-       *   through pin boundaries instead of snapping.
-       *
-       * easing: custom ease that starts very fast (95% of distance
-       *   covered in first 40% of duration) then glides to rest.
-       *   The fast start means pin triggers fire while scroll still
-       *   feels responsive. The long glide means it NEVER feels choppy.
-       *
-       * wheelMultiplier: 0.9 — slight resistance. Prevents the scroll
-       *   from over-shooting pin boundaries on fast flicks.
-       *
-       * touchMultiplier: 1.8 — mobile feels natural, not too fast.
-       *
-       * syncTouch: true — critical for mobile. Syncs touch velocity
-       *   into Lenis so the inertia model matches native feel.
-       */
       duration:           1.4,
       easing:             (t: number) => 1 - Math.pow(1 - t, 4),
       orientation:        "vertical",
@@ -43,21 +24,20 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
       touchMultiplier:    1.8,
       syncTouch:          true,
       infinite:           false,
-      autoRaf:            false, // GSAP ticker is sole RAF loop
+      autoRaf:            false,
     });
 
     lenisRef.current = lenis;
     if (!preloaderDone) lenis.stop();
 
-    // Feed Lenis scroll into ScrollTrigger
     lenis.on("scroll", ScrollTrigger.update);
 
-    // Dispatch custom event so WaterBackground knows when Lenis is active
+    // Dispatch custom event so page.tsx knows Lenis has ticked at least once.
+    // This is consumed by waitForLenisAndIdle() to gate ScrollTrigger.refresh().
     lenis.on("scroll", () => {
       window.dispatchEvent(new Event("lenis-scroll"));
     });
 
-    // Use GSAP ticker as sole RAF — prevents double-RAF jank
     const tick = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);

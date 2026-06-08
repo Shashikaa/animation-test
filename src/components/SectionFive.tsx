@@ -1,11 +1,5 @@
 "use client";
 
-/**
- * SectionFive.tsx — FIXED
- * Same paused-prop pattern as SectionTwo.
- * Canvas stays mounted, skips GL work when offscreen.
- */
-
 import { useRef, useState, useEffect } from "react";
 import WaterBackground from "./Ripplecanvas";
 
@@ -35,6 +29,10 @@ export default function SectionFive() {
         height:             "100%",
         overflow:           "hidden",
         zIndex:             10,
+        // FIX: Promote section to GPU layer. GSAP animates yPercent on
+        // this element; without pre-promotion the first paint happens
+        // on the animation frame, which is visually a 1-frame jump.
+        willChange:         "transform",
         transform:          "translateZ(0)",
         backfaceVisibility: "hidden",
       }}
@@ -89,6 +87,15 @@ export default function SectionFive() {
             height:          623,
             overflow:        "hidden",
             transformOrigin: "center center",
+            // FIX: Pre-promote the card to its own GPU layer.
+            // GSAP will animate scaleX/scaleY on this element; having
+            // will-change:transform here means the compositor already
+            // has the texture cached before the scale tween fires,
+            // eliminating the rasterization stutter at the S4→S5
+            // boundary.
+            willChange:      "transform",
+            transform:       "translateZ(0)",
+            backfaceVisibility: "hidden",
           }}
         >
           <img
@@ -148,11 +155,11 @@ export default function SectionFive() {
           <p
             className="font-body"
             style={{
-              color:     "#F4EBE480",
-              fontSize:  16,
-              lineHeight:1.2,
-              margin:    0,
-              maxWidth:  420,
+              color:      "#F4EBE480",
+              fontSize:   16,
+              lineHeight: 1.2,
+              margin:     0,
+              maxWidth:   420,
             }}
           >
             With expert craftsmanship and attention to detail, we bring your
