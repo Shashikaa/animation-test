@@ -6,7 +6,6 @@ import { SiteProvider } from "../app/context/SiteContext";
 import SmoothScroll from "../components/SmoothScroll";
 import HeaderWrapper from "../components/HeaderWrapper";
 import NavMenuWrapper from "../components/NavMenuWrapper";
-import PreloaderWrapper from "../components/PreloaderWrapper";
 import Footer from "../components/Footer";
 import SectionCTA from "../components/SectionCTA";
 
@@ -23,6 +22,7 @@ const cormorantGaramond = Cormorant_Garamond({
   style: ["normal", "italic"],
   variable: "--font-cormorant",
 });
+
 const canelaText = localFont({
   src: [
     {
@@ -44,9 +44,11 @@ const canelaText = localFont({
   variable: "--font-display",
   display: "swap",
 });
+
 export const metadata: Metadata = {
   title: "Grand Pools",
-  description: "Crafting Custom Swimming Pools with Style, Function, and Quality. Transform Your Outdoor Space with Our Expertly Designed Pools.",
+  description:
+    "Crafting Custom Swimming Pools with Style, Function, and Quality. Transform Your Outdoor Space with Our Expertly Designed Pools.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -62,9 +64,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <HeaderWrapper />
             <NavMenuWrapper />
             {children}
+            <SectionCTA />
+            <Footer />
           </SmoothScroll>
-           <SectionCTA />
-          <Footer />
         </SiteProvider>
       </body>
     </html>

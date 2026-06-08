@@ -9,48 +9,57 @@ import { useSite } from "../app/context/SiteContext";
 gsap.registerPlugin(ScrollTrigger);
 
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
-  const thumbRef = useRef<HTMLDivElement>(null);
+  const thumbRef       = useRef<HTMLDivElement>(null);
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const { lenisRef, preloaderDone } = useSite();
 
   useEffect(() => {
     const lenis = new Lenis({
-      duration: 1.2,           // reduced from 1.6 — less latency
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      duration: 0.75,
+      easing: (t: number) => 1 - Math.pow(1 - t, 3),
       orientation: "vertical",
       gestureOrientation: "vertical",
       smoothWheel: true,
       wheelMultiplier: 1.0,
-      touchMultiplier: 1.2,
+      touchMultiplier: 1.5,
       infinite: false,
     });
 
     lenisRef.current = lenis;
     if (!preloaderDone) lenis.stop();
 
-    // ── Key fix: NO scrollerProxy. Feed Lenis scroll directly into ScrollTrigger.
-    // ScrollTrigger reads document.documentElement.scrollTop natively.
-    // Lenis already syncs that value on every raf tick — no proxy needed.
+    // ── Lenis → ScrollTrigger sync ────────────────────────────────
+    // Pass Lenis scroll position into ScrollTrigger on every frame.
+    // This is the ONLY correct way — do not use ScrollTrigger.scrollerProxy
+    // with Lenis, it double-applies easing and causes jank.
     lenis.on("scroll", ScrollTrigger.update);
 
-    // Drive Lenis on the GSAP ticker (single rAF loop — no double scheduling)
-    const tick = (time: number) => {
-      lenis.raf(time * 1000);
-      updateThumb();
-    };
+    const tick = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
 
+    // ── Pin boundary sync ─────────────────────────────────────────
+    // When ScrollTrigger pins/unpins it shifts native scrollTop.
+    // Re-anchor Lenis immediately so it doesn't overshoot.
+    // fires only on layout recalcs, not every frame.
+    const syncOnRefresh = () => {
+      lenis.scrollTo(window.scrollY, { immediate: true, force: true });
+    };
+    ScrollTrigger.addEventListener("refresh", syncOnRefresh);
+
+    ScrollTrigger.refresh();
+
+    // ── Scrollbar thumb ───────────────────────────────────────────
     let thumbVisible = false;
 
-    function updateThumb() {
+    const updateThumb = () => {
       if (!thumbRef.current) return;
-      const scroll  = lenis.scroll;
-      const limit   = lenis.limit;
-      const trackH  = window.innerHeight;
-      const thumbH  = Math.max((trackH / (limit + trackH)) * trackH, 40);
-      const maxTop  = trackH - thumbH;
-      const top     = limit > 0 ? (scroll / limit) * maxTop : 0;
+      const scroll = lenis.scroll;
+      const limit  = lenis.limit;
+      const trackH = window.innerHeight;
+      const thumbH = Math.max((trackH / (limit + trackH)) * trackH, 40);
+      const maxTop = trackH - thumbH;
+      const top    = limit > 0 ? (scroll / limit) * maxTop : 0;
       thumbRef.current.style.height    = `${thumbH}px`;
       thumbRef.current.style.transform = `translateY(${top}px)`;
 
@@ -63,14 +72,15 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
         thumbVisible = false;
         if (thumbRef.current) thumbRef.current.style.opacity = "0";
       }, 800);
-    }
+    };
 
-    const refreshId = setTimeout(() => ScrollTrigger.refresh(), 300);
+    lenis.on("scroll", updateThumb);
 
     return () => {
-      clearTimeout(refreshId);
       clearTimeout(scrollTimerRef.current);
       lenis.off("scroll", ScrollTrigger.update);
+      lenis.off("scroll", updateThumb);
+      ScrollTrigger.removeEventListener("refresh", syncOnRefresh);
       gsap.ticker.remove(tick);
       lenis.destroy();
       lenisRef.current = null;
@@ -80,7 +90,17 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
   return (
     <>
       {children}
-      <div style={{ position: "fixed", top: 0, right: 0, width: "6px", height: "100vh", zIndex: 99999, pointerEvents: "none" }}>
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          width: "6px",
+          height: "100vh",
+          zIndex: 99999,
+          pointerEvents: "none",
+        }}
+      >
         <div
           ref={thumbRef}
           style={{

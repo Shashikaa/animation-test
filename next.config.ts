@@ -1,19 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  async headers() {
-    return [
-      {
-        source: "/(.*)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "no-store, no-cache, must-revalidate",
-          },
-        ],
-      },
-    ];
-  },
+  // Removed blanket Cache-Control: no-store.
+  // That header was forcing every font, video, image and JS chunk
+  // to re-download on each scroll interaction → network stalls → jank.
+  // Next.js sets correct cache headers per asset type by default.
 };
 
 export default nextConfig;

@@ -6,6 +6,7 @@
   --font-cormorant: 'Cormorant Garamond', Georgia, serif;
   --font-body:      'Instrument Sans', sans-serif;
 }
+
 @font-face {
   font-family: 'Canela Text Trial';
   src: url('/fonts/Canela-Light-Trial.otf') format('opentype');
@@ -13,6 +14,7 @@
   font-style: normal;
   font-display: swap;
 }
+
 /* ─── Design Tokens ──────────────────────────────────────────── */
 :root {
   --background: #ffffff;
@@ -79,6 +81,7 @@ html, body {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
 ::-webkit-scrollbar {
   display: none !important;
   width: 0 !important;
@@ -91,6 +94,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* Must be auto — smooth scroll fights both Lenis and GSAP scrub */
   scroll-behavior: auto !important;
 }
 
@@ -103,75 +107,88 @@ body {
   overflow-x:  hidden;
 }
 
-/* ─── Lenis ───────────────────────────────────────────────────── */
+/* ─── Lenis ──────────────────────────────────────────────────── */
 html.lenis,
 html.lenis body {
   height: auto;
 }
+
 .lenis.lenis-smooth {
   scroll-behavior: auto !important;
 }
+
 .lenis.lenis-smooth [data-lenis-prevent] {
   overscroll-behavior: contain;
 }
+
 .lenis.lenis-stopped {
   overflow: hidden;
 }
+
 .lenis.lenis-scrolling iframe {
   pointer-events: none;
 }
 
+/* ─── Preloader lock ─────────────────────────────────────────── */
 body.preloading {
   overflow: hidden !important;
   height: 100vh !important;
 }
 
 /* ─── GPU Layer Promotion ────────────────────────────────────────
-   RULE: only promote elements that GSAP actually transforms.
-   Blanket will-change on every section forces the browser to
-   maintain a GPU layer for sections that never move — this
-   increases repaint budget and causes jank on Lenis-driven scroll.
-
-   Pinned wrappers:
-   - DO need a compositing hint because GSAP pins them via fixed pos
-   - Do NOT need perspective (creates stacking context that fights Lenis)
-
-   Individual animated sections (hero, s1–s5, s7, s8):
-   - Promoted here so the first GSAP tick doesn't trigger a promotion
-     mid-animation (avoids a single-frame stutter on entrance)
-
-   Static sections (SectionSix / SectionNine):
-   - NO will-change, NO transform — they are plain scroll content.
-     Promoting them would waste compositor memory and cause the
-     "jumpy" scroll you're seeing.
+   Rules are split by property type to avoid conflicts.
+   will-change: clip-path must NOT also declare transform/opacity
+   on the same element — multiple will-change values on a single
+   element that create stacking contexts can cause compositing bugs.
+   Sections that use BOTH transform and clip-path (section-3, 8)
+   get clip-path only here; transform is promoted by the browser
+   automatically when GSAP animates it.
 ──────────────────────────────────────────────────────────────── */
 
-/* Pinned scroll wrappers — fixed-position during pin, no perspective */
+/* Pinned scroll wrappers */
 .pin-hero-s1,
 .pin-s2-s5,
-.pin-s7-s8 {
-  will-change: transform;
+.pin-s7-s9 {
   transform: translateZ(0);
   backface-visibility: hidden;
-  /* ← NO perspective: it creates a new stacking context that
-       breaks Lenis scroll on the siblings above/below the pin */
 }
 
-/* Sections that GSAP actually moves */
+/* Sections animated by GSAP yPercent / scale / opacity / y (Framer) */
 .hero,
 .section-1,
 .section-2,
-.section-3,
 .section-4,
 .section-5,
-.section-7,
-.section-8 {
-  will-change: transform;
+.section-7 {
+  will-change: transform, opacity;
   transform: translateZ(0);
   backface-visibility: hidden;
 }
 
-/* section-6 / section-9 are plain scroll — no GPU promotion */
+/* section-9: only opacity animated — no transform promotion needed.
+   Critically: NO will-change: clip-path here — that was hiding it. */
+.section-9 {
+  will-change: opacity;
+}
+
+/* clip-path only — these are revealed via clip-path, not moved */
+.section-3,
+.section-8 {
+  will-change: clip-path;
+}
+
+/* S8 panels: clip-path animated by GSAP timeline */
+.s8-panel-left,
+.s8-panel-right {
+  will-change: clip-path;
+}
+
+/* Canvas / video always get their own GPU layer */
+video,
+canvas {
+  will-change: transform;
+  transform: translateZ(0);
+}
 
 /* ─── Sections Layout ────────────────────────────────────────── */
 .hero,
@@ -197,36 +214,11 @@ body.preloading .scroll-container {
   visibility: hidden;
 }
 
-/* Canvas/video layers inside animated sections still get their own layer */
-.section-2 canvas,
-.section-2 video,
-video,
-canvas {
-  will-change: transform;
-  transform: translateZ(0);
-}
-
-/* ─── Overflow containment for normal-flow screens ───────────── */
-/* Prevents paint bleed from h-screen sections into neighbour repaint budget */
+/* Contain paint for non-animated full-screen sections */
 .section-six-wrapper,
 .section-nine-wrapper {
   overflow: hidden;
   contain: layout paint;
-}
-.pin-hero-s1,
-.pin-s2-s5,
-.pin-s7-s8,
-.pin-s8-s9 {          /* ← add this */
-  will-change: transform;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-.s8-split-left,
-.s8-split-right {
-  will-change: clip-path;
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
 /* ─── Typography ─────────────────────────────────────────────── */
@@ -239,8 +231,8 @@ canvas {
   font-size:      var(--text-display);
   line-height:    var(--leading-display);
   letter-spacing: 0;
-  
 }
+
 .text-cormorant {
   font-family:    var(--font-cormorant);
   font-size:      var(--text-display);
@@ -263,6 +255,7 @@ canvas {
   letter-spacing: 0;
   font-weight:    400;
 }
+
 .text-muted { color: var(--muted); }
 
 /* ─── Layout Utilities ───────────────────────────────────────── */
@@ -272,9 +265,18 @@ canvas {
   margin-inline:  auto;
   padding-inline: var(--container-pad);
 }
+
 .section { padding-block: var(--section-py); }
-.row   { display: flex; align-items: center; }
-.stack { display: flex; flex-direction: column; }
+.row     { display: flex; align-items: center; }
+.stack   { display: flex; flex-direction: column; }
+
+.section-continer {
+  width: 100%;
+  max-width: 1920px;
+  margin: 0 auto;
+  padding-inline: 65px;
+  padding-block:  85px;
+}
 
 /* ─── Border & Surface ───────────────────────────────────────── */
 .border       { border: 1px solid var(--border); }
@@ -288,11 +290,3 @@ canvas {
 /* ─── Transitions ────────────────────────────────────────────── */
 .transition      { transition: all var(--duration-base) var(--ease-out); }
 .transition-fast { transition: all var(--duration-fast) var(--ease-out); }
-
-.section-continer {
-  width: 100%;
-  max-width: 1920px;
-  margin: 0 auto;
-  padding-inline: 65px;
-  padding-block:  85px;
-}
