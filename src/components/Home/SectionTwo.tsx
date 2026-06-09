@@ -22,7 +22,7 @@
  */
 
 import { useRef, useState, useEffect } from "react";
-import WaterBackground from "./Ripplecanvas";
+import WaterBackground from "../Ripplecanvas";
 
 export default function SectionTwo() {
   const sectionRef = useRef<HTMLElement>(null);

@@ -363,6 +363,22 @@ body.preloading .scroll-container {
   padding-block:  85px;
 }
 
+/* Tablet */
+@media (max-width: 1024px) {
+  .section-continer {
+    padding-inline: 30px;
+    padding-block:  65px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .section-continer {
+    padding-inline: 20px;
+    padding-block:  65px;
+  }
+}
+
 /* ─── Border & Surface ───────────────────────────────────────── */
 .border       { border: 1px solid var(--border); }
 .border-t     { border-top: 1px solid var(--border); }
@@ -376,3 +392,25 @@ body.preloading .scroll-container {
 .transition      { transition: all var(--duration-base) var(--ease-out); }
 .transition-fast { transition: all var(--duration-fast) var(--ease-out); }
 
+/* ─── Responsive h2 & p ──────────────────────────────────────── */
+h2 {
+  font-size: 72px;
+  line-height: 1;
+}
+
+p {
+  font-size: 16px;
+  line-height: var(--leading-body);
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  h2 { font-size: 50px; }
+  p  { font-size: 16px; }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  h2 { font-size: 32px; }
+  p  { font-size: 12px; }
+}

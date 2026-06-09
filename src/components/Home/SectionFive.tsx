@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import WaterBackground from "./Ripplecanvas";
+import WaterBackground from "../Ripplecanvas";
 
 export default function SectionFive() {
   const sectionRef = useRef<HTMLElement>(null);

@@ -6,17 +6,17 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Flip } from "gsap/Flip";
 import { useSite } from "./context/SiteContext";
 
-import Hero from "../components/Hero";
-import SectionOne from "../components/SectionOne";
-import SectionTwo from "../components/SectionTwo";
-import SectionThree from "../components/SectionThree";
-import SectionFour from "../components/SectionFour";
-import SectionFive from "../components/SectionFive";
+import Hero from "../components/Home/Hero";
+import SectionOne from "../components/Home/SectionOne";
+import SectionTwo from "../components/Home/SectionTwo";
+import SectionThree from "../components/Home/SectionThree";
+import SectionFour from "../components/Home/SectionFour";
+import SectionFive from "../components/Home/SectionFive";
 import PreloaderWrapper from "../components/PreloaderWrapper";
-import SectionSix from "../components/SectionSix";
-import SectionSeven from "../components/Sectionseven";
-import SectionEight from "../components/Sectioneight";
-import SectionNine from "../components/SectionNine";
+import SectionSix from "../components/Home/SectionSix";
+import SectionSeven from "../components/Home/Sectionseven";
+import SectionEight from "../components/Home/Sectioneight";
+import SectionNine from "../components/Home/SectionNine";
 import SectionCTA from "../components/SectionCTA";
 import Footer from "../components/Footer";
 
@@ -55,6 +55,10 @@ export default function Home() {
       gsap.set(".hero",      { yPercent: 0, zIndex: 20 });
       gsap.set(".section-1", { yPercent: 0, zIndex: 10 });
 
+      // Section 1 entrance: bg parallaxes up, card fades + rises
+      gsap.set(".s1-bg",   { yPercent: 10,  scale: 1.0 });
+      gsap.set(".s1-card", { yPercent: 80, opacity: 0 });
+
       gsap.set([".s3-bg-2", ".s3-bg-3", ".s3-text-2", ".s3-text-3"], { opacity: 0 });
       gsap.set([".s3-bg-1",  ".s3-text-1"], { opacity: 1 });
       gsap.set([".s3-bar-2", ".s3-bar-3"], { background: "rgba(244,238,223,0.3)" });
@@ -77,29 +81,26 @@ export default function Home() {
       gsap.set(".s8-panel-right", { clipPath: "inset(0% 0% 0% 50%)",  zIndex: 35 });
 
       gsap.set(".s9-title", {
-        position:     "absolute",
-        zIndex:       20,
-        color:        "#F4EEDF",
-        top:          "50%",
-        left:         "50%",
-        xPercent:     -50,
-        yPercent:     -50,
-        fontSize:     "46px",
-        lineHeight:   1.2,
-        whiteSpace:   "nowrap",
-        margin:       0,
-        padding:      0,
+        position:      "absolute",
+        zIndex:        20,
+        color:         "#F4EEDF",
+        top:           "50%",
+        left:          "50%",
+        xPercent:      -50,
+        yPercent:      -50,
+        fontSize:      "46px",
+        lineHeight:    1.2,
+        whiteSpace:    "nowrap",
+        margin:        0,
+        padding:       0,
         pointerEvents: "none",
       });
       gsap.set(".s9-para", { opacity: 0 });
 
       // ── CTA / Footer initial state ────────────────────────────────
-      // Measure footer height AFTER fonts/images are ready (await above).
       const footerEl = scopeRef.current?.querySelector<HTMLElement>(".footer");
       const footerH  = footerEl?.offsetHeight ?? 600;
 
-      // Footer starts exactly footerH px below the wrapper (off-screen).
-      // y:footerH means its top sits at the wrapper bottom = VP bottom.
       gsap.set(".footer",      { y: footerH, zIndex: 20 });
       gsap.set(".section-cta", { zIndex: 10 });
 
@@ -110,14 +111,20 @@ export default function Home() {
         scrollTrigger: {
           trigger:       ".pin-hero-s1",
           start:         "top top",
-          end:           "+=1500",
+          end:           "+=1100",
           scrub:         1.5,
           pin:           true,
           anticipatePin: 1,
         },
       })
-        .to(".hero",      { yPercent: -100, duration: 1,   ease: "none" })
-        .to(".section-1", { filter: "blur(4px)", opacity: 0.9, duration: 0.5, ease: "power2.inOut" });
+        // Hero slides up and out
+        .to(".hero",    { yPercent: -100, duration: 1,   ease: "none" })
+        // BG parallaxes upward + de-scales as hero lifts — runs in sync
+        .to(".s1-bg",   { yPercent: 0, scale: 1, duration: 0.8, ease: "none" }, "<")
+        // Card floats up + fades in during the second half of the scroll
+        .to(".s1-card", { yPercent: 0, opacity: 1, duration: 0.8, ease: "power2.out" }, 0.3)
+        // S1 blurs/fades as we approach S2
+        .to(".section-1", { opacity: 0.9, duration: 0.5, ease: "power2.inOut" });
 
       // ── Timeline 2: S2 → S3(×3) → S4 → S5 ───────────────────────
       const tl2 = gsap.timeline({
@@ -212,15 +219,6 @@ export default function Home() {
         .to(".s9-para", { opacity: 1, duration: 0.6, ease: "power2.out" }, "<+0.2");
 
       // ── Timeline 4: CTA pinned → Footer slides up ─────────────────
-      //
-      //  Geometry:
-      //    • wrapper is exactly 100vh tall, overflow-hidden
-      //    • .footer starts at y = footerH  →  its TOP is at wrapper bottom
-      //    • animating to y = 0             →  its BOTTOM lands at wrapper
-      //      bottom = viewport bottom
-      //    • pin end = footerH px of scroll  →  pin releases exactly when
-      //      animation completes; no extra native scroll possible because
-      //      there is no content outside the wrapper.
       gsap.timeline({
         scrollTrigger: {
           trigger:         ".pin-cta-footer",
@@ -292,17 +290,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/*
-        Pin 4: CTA → Footer slide-up
-        ─────────────────────────────
-        • h-screen + overflow-hidden: wrapper is exactly 100vh, anything
-          outside is clipped — no native scroll bleed after pin releases.
-        • section-cta: fills the wrapper (absolute inset-0), z-10.
-        • footer: absolute, anchored to the BOTTOM of the wrapper, starts
-          translated down by its own height (y = footerH set in JS above),
-          slides to y = 0 so its bottom aligns with the wrapper bottom
-          which is exactly the viewport bottom.
-      */}
+      {/* Pin 4: CTA → Footer slide-up */}
       <div className="pin-cta-footer relative h-screen overflow-hidden">
         <div className="section-cta absolute inset-0 z-10">
           <SectionCTA />
