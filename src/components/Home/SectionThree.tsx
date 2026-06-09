@@ -1,5 +1,8 @@
 "use client";
 
+import { useRef, useState, useCallback } from "react";
+import gsap from "gsap";
+
 const slides = [
   {
     img: "/pool-renovation.webp",
@@ -18,32 +21,121 @@ const slides = [
   },
 ];
 
+const CLIP_DURATION = 1.0;
+const TEXT_DURATION = 0.7;
+
+function animateTextIn(selector: string) {
+  const el = document.querySelector(selector);
+  if (!el) return;
+  const inners = Array.from(
+    el.querySelectorAll(":scope > .s3-line-wrap > .s3-line-inner")
+  ) as HTMLElement[];
+  inners.forEach((inner, idx) => {
+    gsap.killTweensOf(inner);
+    gsap.fromTo(
+      inner,
+      { y: 10, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        duration: TEXT_DURATION,
+        ease: "elastic.out(1, 0.5)",
+        delay: idx * 0.08,
+      }
+    );
+  });
+}
+
+function animateTextOut(selector: string) {
+  const el = document.querySelector(selector);
+  if (!el) return;
+  const inners = Array.from(
+    el.querySelectorAll(":scope > .s3-line-wrap > .s3-line-inner")
+  ) as HTMLElement[];
+  inners.forEach((inner, idx) => {
+    gsap.killTweensOf(inner);
+    gsap.to(inner, {
+      y: -10,
+      opacity: 0,
+      duration: 0.2,
+      ease: "power2.in",
+      delay: idx * 0.03,
+    });
+  });
+}
+
 export default function SectionThree() {
+  const currentRef = useRef<number>(0);
+  const [current, setCurrent] = useState(0);
+  const animating = useRef<boolean>(false);
+
+  const goTo = useCallback((next: number, direction: "next" | "prev") => {
+    const prev = currentRef.current;
+    if (animating.current || next === prev) return;
+    animating.current = true;
+
+    currentRef.current = next;
+    setCurrent(next);
+
+    const incomingClipStart =
+      direction === "next" ? "inset(0 100% 0 0)" : "inset(0 0% 0 100%)";
+    const incomingClipEnd = "inset(0 0% 0 0%)";
+
+    gsap.set(`.s3-bg-${next + 1}`, {
+      clipPath: incomingClipStart,
+      zIndex: 2,
+    });
+    gsap.set(`.s3-bg-${prev + 1}`, {
+      clipPath: "inset(0 0% 0 0)",
+      zIndex: 1,
+    });
+
+    gsap.to(`.s3-bg-${next + 1}`, {
+      clipPath: incomingClipEnd,
+      duration: CLIP_DURATION,
+      ease: "power2.inOut",
+      onComplete: () => {
+        gsap.set(`.s3-bg-${next + 1}`, { zIndex: 1 });
+        gsap.set(`.s3-bg-${prev + 1}`, {
+          zIndex: 1,
+          clipPath: "inset(0 100% 0 0)",
+        });
+      },
+    });
+
+    animateTextOut(`.s3-text-${prev + 1}`);
+    gsap.set(`.s3-text-${next + 1}`, { opacity: 1 });
+    gsap.delayedCall(0.18, () => animateTextIn(`.s3-text-${next + 1}`));
+
+    gsap.to(`.s3-bar-${prev + 1}`, { background: "rgba(244,238,223,0.3)", duration: 0.3 });
+    gsap.to(`.s3-bar-${next + 1}`, { background: "#F4EEDF", duration: 0.3 });
+
+    gsap.delayedCall(CLIP_DURATION + 0.15, () => {
+      animating.current = false;
+    });
+  }, []);
+
+  const handlePrev = () => {
+    goTo((currentRef.current - 1 + slides.length) % slides.length, "prev");
+  };
+
+  const handleNext = () => {
+    goTo((currentRef.current + 1) % slides.length, "next");
+  };
+
   return (
     <section
-      className="section-3 "
       style={{
-        // Must be absolute to sit inside .pin-s3-s5 without pushing layout
         position: "absolute",
         inset: 0,
         width: "100%",
         height: "100%",
         overflow: "hidden",
-        // GSAP sets visibility:hidden + clipPath initially — don't fight it
         zIndex: 30,
+        pointerEvents: "auto", // ← ensures clicks reach buttons
       }}
     >
-      {/* ── Base fill ── */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "#0a0a0a",
-          zIndex: 0,
-        }}
-      />
-
-      {/* ── Background images — opacity driven by GSAP ── */}
+      {/* ── Background images ── */}
       {slides.map((slide, i) => (
         <img
           key={i}
@@ -57,10 +149,9 @@ export default function SectionThree() {
             width: "100%",
             height: "100%",
             objectFit: "cover",
+            opacity: 1,
             zIndex: 1,
-            // Initial opacity set by GSAP in page.tsx — don't set here
-            // to avoid flash before gsap.set() fires
-            opacity: 0,
+            clipPath: i === 0 ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
           }}
         />
       ))}
@@ -71,13 +162,14 @@ export default function SectionThree() {
           position: "absolute",
           inset: 0,
           background:
-            "linear-gradient(2.13deg, #19211C 6.01%, rgba(21, 40, 31, 0) 59.11%)",
+            "linear-gradient(2.13deg, #19211C 3.01%, rgba(21, 40, 31, 0) 59.11%)",
           zIndex: 2,
         }}
       />
 
-      {/* ── Bottom bar ── */}
+      {/* ── Bottom Content ── */}
       <div
+        className="section-continer"
         style={{
           position: "absolute",
           bottom: 0,
@@ -87,18 +179,20 @@ export default function SectionThree() {
           display: "flex",
           alignItems: "flex-end",
           justifyContent: "space-between",
-          padding: "0 65px 85px 65px",
         }}
       >
-        {/* ── Left: indicator bars + text ── */}
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 16 }}>
-          {/* Indicator bars — background driven by GSAP */}
+        {/* ── Left Content ── */}
+        <div style={{ display: "flex", alignItems: "center", gap: 44, flex: 1 }}>
+
+          {/* Indicator Bars */}
           <div
             style={{
               display: "flex",
               flexDirection: "column",
               gap: 6,
-              paddingBottom: 4,
+              alignSelf: "stretch",
+              justifyContent: "center",
+              marginTop: "62px",
             }}
           >
             {slides.map((_, i) => (
@@ -108,14 +202,14 @@ export default function SectionThree() {
                 style={{
                   width: 2,
                   height: 24,
-                  background: "rgba(244,238,223,0.3)",
+                  background: i === 0 ? "#F4EEDF" : "rgba(244,238,223,0.3)",
                 }}
               />
             ))}
           </div>
 
-          {/* Text block — opacity driven by GSAP */}
-          <div style={{ position: "relative", maxWidth: 420 }}>
+          {/* Text Block */}
+          <div style={{ position: "relative", flex: 1 }}>
             {slides.map((slide, i) => (
               <div
                 key={i}
@@ -123,43 +217,70 @@ export default function SectionThree() {
                 style={{
                   position: i === 0 ? "relative" : "absolute",
                   top: 0,
-                  left: 30,
-                  // Initial opacity set by GSAP — start all at 0 to avoid flash
-                  opacity: 0,
+                  left: 0,
+                  opacity: i === 0 ? 1 : 0,
                   display: "flex",
                   flexDirection: "column",
-                  gap: 25,
+                  width: "100%",
                 }}
               >
-                <h2
-                  className="font-display"
-                  style={{
-                    color: "#F4EEDF",
-                    fontSize: "20px",
-                    lineHeight: 1.1,
-                    margin: 0,
-                  }}
-                >
-                  {slide.label}
-                </h2>
+                {/* Number */}
+                <div className="s3-line-wrap" style={{ overflow: "hidden" }}>
+                  <div className="s3-line-inner">
+                    <span className="font-body text-[14px] text-[#F4EEDF] block !mb-2">
+                      ({i + 1})
+                    </span>
+                  </div>
+                </div>
 
-                <p
-                  style={{
-                    color: "#F4EEDF",
-                    fontSize: 16,
-                    lineHeight: 1.2,
-                    margin: 0,
-                    maxWidth: 340,
-                  }}
-                >
-                  {slide.desc}
-                </p>
+                {/* Title */}
+                <div className="s3-line-wrap" style={{ overflow: "hidden" }}>
+                  <div className="s3-line-inner">
+                    <h2 className="font-display text-[#F4EEDF]">{slide.label}</h2>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="s3-line-wrap" style={{ overflow: "hidden" }}>
+                  <div className="s3-line-inner">
+                    <p className="!mt-6 max-w-[340px] text-[#F4EEDF]">{slide.desc}</p>
+                  </div>
+                </div>
               </div>
             ))}
+
+            {/* Prev / Next */}
+            <div className="!mt-10 flex items-center gap-20">
+              <button
+                type="button"
+                onClick={handlePrev}
+                className="group font-body cursor-pointer text-[14px] text-[#F4EEDF] flex items-center gap-2 transition-opacity duration-200 hover:opacity-70"
+              >
+                <img
+                  src="/arrow-right.svg"
+                  alt="Previous"
+                  style={{ width: 16, height: 16, transform: "rotate(180deg)" }}
+                />
+                <span>Previous</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleNext}
+                className="group font-body cursor-pointer text-[14px] text-[#F4EEDF] flex items-center gap-2 transition-opacity duration-200 hover:opacity-70"
+              >
+                <span>Next</span>
+                <img
+                  src="/arrow-right.svg"
+                  alt="Next"
+                  style={{ width: 16, height: 16 }}
+                />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* ── LEARN MORE ── */}
+        {/* ── Learn More ── */}
         <a
           href="/services"
           style={{
@@ -172,6 +293,8 @@ export default function SectionThree() {
             textTransform: "uppercase",
             color: "#F4EEDF",
             textDecoration: "none",
+            flexShrink: 0,
+            marginLeft: 40,
           }}
           className="group transition-opacity duration-200 hover:opacity-70 font-body"
         >

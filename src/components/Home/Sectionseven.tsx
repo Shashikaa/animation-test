@@ -39,7 +39,7 @@ export default function SectionSeven() {
         }}
       >
         <h2
-          className="text-[#F4EEDF] text-[24px] font-normal leading-[1.2] "
+          className="text-[#F4EEDF] !text-[24px] font-normal leading-[1.2] "
           style={{ fontFamily: "var(--font-display)" }}
         >
           Meet The Experts of

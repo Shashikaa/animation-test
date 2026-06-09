@@ -25,6 +25,11 @@ const cormorantGaramond = Cormorant_Garamond({
 const canelaText = localFont({
   src: [
     {
+      path: "../../public/fonts/CanelaText-Thin-Trial.otf",
+      weight: "100",
+      style: "normal",
+    },
+    {
       path: "../../public/fonts/Canela-Light-Trial.otf",
       weight: "300",
       style: "normal",

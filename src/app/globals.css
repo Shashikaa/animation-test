@@ -307,7 +307,7 @@ body.preloading .scroll-container {
 }
 
 /* ─── Typography ─────────────────────────────────────────────── */
-.font-display   { font-family: var(--font-display);   font-weight: 400; }
+.font-display   { font-family: var(--font-display);   font-weight: 100;   }
 .font-cormorant { font-family: var(--font-cormorant); font-weight: 400; }
 .font-body      { font-family: var(--font-body);      font-weight: 400; }
 
@@ -316,6 +316,7 @@ body.preloading .scroll-container {
   font-size:      var(--text-display);
   line-height:    var(--leading-display);
   letter-spacing: 0;
+  
 }
 
 .text-cormorant {

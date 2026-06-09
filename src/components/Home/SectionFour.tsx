@@ -3,110 +3,137 @@
 export default function SectionFour() {
   return (
     <section
-      className="section-4"
       style={{
         position:           "absolute",
         inset:              0,
         width:              "100%",
         height:             "100%",
-        overflow:           "hidden",
+
         zIndex:             40,
-        // NO backdropFilter here — it creates a stacking context that
-        // traps section-5 (zIndex:50) underneath. Move blur to inner div.
         willChange:         "transform",
         transform:          "translateZ(0)",
         backfaceVisibility: "hidden",
       }}
     >
-      {/* Blur layer — isolated inner div, does NOT create a stacking context
-          on the section root so section-5 can stack above freely */}
+
+      {/* ── Layer 0: Full-bleed background image ─────────────────────── */}
+      <div style={{ position: "absolute", inset: 0, overflow: "hidden", zIndex: 0 }}>
+        <div
+          className="s4-bg-img"
+          style={{
+            position:           "absolute",
+            top:                "-10%",
+            left:               0,
+            width:              "100%",
+            height:             "140vh",
+            backgroundImage:    "url('/murray-st-prahran.webp')",
+            backgroundSize:     "cover",
+            backgroundPosition: "center",
+            willChange:         "transform",
+          }}
+        />
+      </div>
+
+      {/* ── Layer 1: Radial gradient overlay ─────────────────────────── */}
+      <div
+        style={{
+          position:   "absolute",
+          inset:      0,
+          zIndex:     1,
+          background: `radial-gradient(
+            ellipse 140% 140% at 50% 50%,
+            rgba(25, 33, 28, 0.72) 0%,
+            rgba(25, 33, 28, 0.30) 100%
+          )`,
+        }}
+      />
+
+      {/* ── Layer 2: Glassmorphism blur ───────────────────────────────── */}
       <div
         style={{
           position:             "absolute",
           inset:                0,
-          backdropFilter:       "blur(5px)",
-          WebkitBackdropFilter: "blur(20px)",
-          background:           "#00000033",
-          zIndex:               0,
+          zIndex:               2,
+          backdropFilter:       "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          boxShadow:            "inset -5px -5px 250px 0px rgba(255,255,255,0.02)",
+          background:           "rgba(25,33,28,0.15)",
         }}
       />
 
-      {/* Dark overlay */}
+      {/* ── Layer 3: Content wrapper ── */}
       <div
+        className="s4-content section-continer "
         style={{
-          position:  "absolute",
-          inset:     0,
-          background:"rgba(0,0,0,0.20)",
-          zIndex:    1,
-        }}
-      />
-
-      {/* Content */}
-      <div
-        style={{
-          position:       "absolute",
-          inset:          0,
-          zIndex:         2,
-          display:        "flex",
-          alignItems:     "center",
-          justifyContent: "center",
+          position:      "absolute",
+          top:           0,
+          left:          0,
+          width:         "100%",
+          height:        "140vh",
+          zIndex:        3,
+          display:       "flex",
+          flexDirection: "column",
+          boxSizing:     "border-box",
+          willChange:    "transform",
         }}
       >
+
+        {/* ROW 1: Title — right aligned */}
+        <div style={{ flexShrink: 0, display: "flex", justifyContent: "flex-end" }}>
+          <h2
+            className="font-display s4-title !mt-24 text-[#F4EEDF]"
+          >
+            Making Memories.
+          </h2>
+        </div>
+
+        {/* ROW 2: Para + CTA */}
         <div
           style={{
-            maxWidth:      567,
-            display:       "flex",
-            flexDirection: "column",
-            alignItems:    "center",
-            gap:           40,
-            textAlign:     "center",
+            flexShrink: 0,
+            marginTop:  100,
+            maxWidth:   400,
           }}
         >
           <p
-            className="font-body"
-            style={{
-              color:      "#F4EEDF",
-              fontSize:   16,
-              lineHeight: 1.2,
-              margin:     0,
-            }}
+            className="font-body s4-para text-[#F4EEDF]"
           >
             At Grand Pools, we build more than just swimming pools — we create
             spaces where families gather, friends connect, and lasting memories
             are made. With expert craftsmanship and a passion for innovation,
             we bring your vision to life.
           </p>
-
-          <a
-            href="/contact"
-            style={{
-              position:       "relative",
-              display:        "inline-block",
-              width:          "fit-content",
-              paddingBottom:  8,
-              fontSize:       14,
-              fontWeight:     500,
-              textTransform:  "uppercase",
-              color:          "#F4EEDF",
-              textDecoration: "none",
-            }}
-            className="group transition-opacity duration-200 hover:opacity-70"
-          >
-            Get a free consultation
-            <span
-              style={{
-                position:   "absolute",
-                left:       0,
-                right:      0,
-                bottom:     0,
-                height:     1,
-                background: "#F4EEDF",
-                transition: "transform 0.2s ease",
-              }}
-              className="group-hover:-translate-y-[2px]"
-            />
-          </a>
         </div>
+
+        {/* ROW 3: Image card — fixed 560px, parallax via .s4-img */}
+        <div
+          style={{
+            flexShrink:   0,
+            position:     "relative",
+            overflow:     "hidden",
+  
+            marginTop:    50,
+            marginBottom: 50,
+            height:       560,
+            width:        "100%",
+          }}
+        >
+          <div
+            className="s4-img"
+            style={{
+              position:           "absolute",
+              top:                "-10%",
+              left:               0,
+              width:              "100%",
+              height:             "630px",
+              backgroundImage:    "url('/parallax-image.webp')",
+              backgroundSize:     "cover",
+              backgroundPosition: "center 60%",
+              willChange:         "transform",
+            }}
+          />
+        </div>
+
       </div>
     </section>
   );

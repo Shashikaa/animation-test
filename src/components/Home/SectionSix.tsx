@@ -64,17 +64,12 @@ export default function SectionSix() {
   const [active, setActive]     = useState(0);
   const bgRefs       = useRef<(HTMLDivElement | null)[]>([]);
   const btnRefs      = useRef<(HTMLButtonElement | null)[]>([]);
-  const tagRefs      = useRef<(HTMLParagraphElement | null)[]>([]);
-  const taglineRefs  = useRef<(HTMLParagraphElement | null)[]>([]);
+  const h2Refs       = useRef<(HTMLHeadingElement | null)[]>([]);
   const descRefs     = useRef<(HTMLParagraphElement | null)[]>([]);
   const prevRef      = useRef(0);
   const tabRowRef    = useRef<HTMLDivElement>(null);
   const activeBarRef = useRef<HTMLDivElement>(null);
 
-  // FIX: Cache bar metrics in a ref so we never call getBoundingClientRect
-  // during a scroll event. getBCR forces a synchronous layout flush —
-  // calling it inside a resize listener that fires while Lenis is scrolling
-  // caused layout thrash on every frame = the primary FPS drop on S6.
   const barMetricsCache = useRef<{ left: number; width: number }[]>([]);
 
   const measureAllBars = useCallback(() => {
@@ -88,9 +83,7 @@ export default function SectionSix() {
     });
   }, []);
 
-  // Initial measure + bar snap — runs once after mount
   useEffect(() => {
-    // rAF ensures DOM has painted before we read layout
     const raf = requestAnimationFrame(() => {
       measureAllBars();
       const m = barMetricsCache.current[0];
@@ -99,8 +92,6 @@ export default function SectionSix() {
       }
     });
 
-    // FIX: Resize handler reads from cache, not live BCR.
-    // We remeasure only on resize (rare), never during scroll.
     const onResize = () => {
       measureAllBars();
       const m = barMetricsCache.current[active];
@@ -123,7 +114,7 @@ export default function SectionSix() {
       gsap.set(bgRefs.current[i], { opacity: i === 0 ? 1 : 0 });
       if (i !== 0) {
         gsap.set(
-          [tagRefs.current[i], taglineRefs.current[i], descRefs.current[i]],
+          [h2Refs.current[i], descRefs.current[i]],
           { opacity: 0, y: 10 }
         );
       }
@@ -137,16 +128,17 @@ export default function SectionSix() {
     gsap.to(bgRefs.current[prev], { opacity: 0, duration: 0.6, ease: "power2.inOut" });
     gsap.to(bgRefs.current[idx],  { opacity: 1, duration: 0.7, ease: "power2.inOut" });
 
-    // FIX: Use cached metrics — no live BCR call during interaction
     const m = barMetricsCache.current[idx];
     if (m) gsap.to(activeBarRef.current, { left: m.left, width: m.width, duration: 0.4, ease: "power2.inOut" });
 
+    // Animate out prev h2 + desc
     gsap.to(
-      [tagRefs.current[prev], taglineRefs.current[prev], descRefs.current[prev]],
+      [h2Refs.current[prev], descRefs.current[prev]],
       { opacity: 0, y: -8, duration: 0.25, ease: "power2.in", stagger: 0.04 }
     );
+    // Animate in next h2 + desc
     gsap.fromTo(
-      [tagRefs.current[idx], taglineRefs.current[idx], descRefs.current[idx]],
+      [h2Refs.current[idx], descRefs.current[idx]],
       { opacity: 0, y: 10 },
       { opacity: 1, y: 0, duration: 0.45, ease: "power2.out", delay: 0.2, stagger: 0.07 }
     );
@@ -156,29 +148,15 @@ export default function SectionSix() {
   }
 
   return (
-    <section
-      className="relative w-full h-screen overflow-hidden section-six-wrapper"
-      /*
-       * FIX: section-six-wrapper class applies:
-       *   will-change: transform + translateZ(0)
-       * from globals.css — promotes this section to its own GPU layer
-       * so entering/leaving the S5→S6→S7 boundaries doesn't cause a
-       * full-page raster invalidation.
-       */
-    >
-
+<section
+  className="relative w-full h-screen overflow-hidden section-six-wrapper"
+  style={{ pointerEvents: "auto" }}
+>
       {/* ── Backgrounds ── */}
       {PROJECTS.map((p, i) => (
         <div
           key={p.id}
           ref={(el) => { bgRefs.current[i] = el; }}
-          /*
-           * FIX: will-change-[opacity] replaced with explicit will-change
-           * via inline style. Tailwind's will-change-[opacity] can generate
-           * a non-standard property string on some build configs.
-           * Also added translateZ(0) to ensure each bg is its own GPU layer —
-           * without this, opacity transitions cause full-section repaints.
-           */
           style={{
             position: "absolute",
             inset: 0,
@@ -197,8 +175,6 @@ export default function SectionSix() {
         className="absolute inset-0 z-[1]"
         style={{
           background: "linear-gradient(180deg, rgba(0,0,0,0.16) 0%, rgba(0,0,0,0.64) 100%)",
-          // FIX: promote overlay to its own layer so it doesn't merge
-          // with the background divs and force a combined repaint
           transform: "translateZ(0)",
         }}
       />
@@ -206,21 +182,36 @@ export default function SectionSix() {
       {/* ── Content ── */}
       <div
         className="section-continer relative z-[2] h-full flex flex-col justify-center"
-        style={{ paddingBottom: "160px" }}
+        style={{ paddingBottom: "160px", gap: 24 }}
       >
-        {/* Glass card
-            FIX: backdropFilter is expensive but unavoidable here for the
-            design. Mitigate by:
-            1. Adding will-change:transform so it gets its own compositor layer
-            2. Adding translateZ(0) to prevent it merging with scroll layer
-            3. NOT animating this element — static blur is fine, animated blur is not
-        */}
+        {/* H2 label — stacked absolutely so they cross-fade */}
+        <div style={{ position: "relative", height: 80 }}>
+          {PROJECTS.map((p, i) => (
+            <h2
+              key={p.id}
+              ref={(el) => { h2Refs.current[i] = el; }}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                margin: 0,
+                color: "#F4EEDF",
+                fontFamily: "var(--font-display, inherit)",
+                fontWeight: 100,
+                pointerEvents: "none",
+                opacity: i === 0 ? 1 : 0,
+              }}
+            >
+              {p.label}
+            </h2>
+          ))}
+        </div>
+
+        {/* Glass card */}
         <div
           style={{
-            position: "relative",
             width: "100%",
-            maxWidth: 455,
-            minHeight: 270,
+            maxWidth: 345,
             backdropFilter: "blur(42px)",
             WebkitBackdropFilter: "blur(42px)",
             background:
@@ -228,80 +219,50 @@ export default function SectionSix() {
             boxShadow: "-5px -5px 25px rgba(255,255,255,0.02) inset",
             willChange: "transform",
             transform: "translateZ(0)",
+            padding: 30,
+            display: "grid",
+            gridTemplateRows: "1fr auto",
+            minHeight: 160,
           }}
         >
-          {PROJECTS.map((p, i) => (
-            <div
-              key={p.id}
-              className="absolute inset-0 flex flex-col justify-center"
-              style={{
-                paddingLeft: 50,
-                paddingRight: 80,
-                paddingTop: 40,
-                paddingBottom: 100,
-                gap: 0,
-                pointerEvents: i === active ? "auto" : "none",
-              }}
-            >
+          {/* Description slot — cross-fading paragraphs, first one is relative to hold height */}
+          <div style={{ position: "relative" }}>
+            {PROJECTS.map((p, i) => (
               <p
-                ref={(el) => { tagRefs.current[i] = el; }}
-                style={{
-                  color: "#F4EEDF",
-                  fontSize: "24px",
-                  fontWeight: 400,
-                  lineHeight: 1.2,
-                  margin: 0,
-                  fontFamily: "var(--font-display, inherit)",
-                }}
-              >
-                {p.tag}
-              </p>
-              <p
-                ref={(el) => { taglineRefs.current[i] = el; }}
-                style={{
-                  color: "#F4EEDF",
-                  fontStyle: "italic",
-                  fontSize: "24px",
-                  fontWeight: 400,
-                  lineHeight: 1.2,
-                  margin: 0,
-                  fontFamily: "var(--font-cormorant)",
-                }}
-              >
-                {p.tagline}
-              </p>
-              <p
-                className="font-body !mt-5"
+                key={p.id}
                 ref={(el) => { descRefs.current[i] = el; }}
+                className="font-body"
                 style={{
+                  position: i === 0 ? "relative" : "absolute",
+                  top: 0,
+                  left: 0,
                   color: "#F4EEDF",
                   fontSize: 14,
                   fontWeight: 400,
-                  lineHeight: 1.2,
-                  margin: "4px 0 0",
-                  fontFamily: "var(--font-body)",
+                  margin: 0,
+                  opacity: i === 0 ? 1 : 0,
+                  pointerEvents: i === active ? "auto" : "none",
                 }}
               >
                 {p.description}
               </p>
-            </div>
-          ))}
+            ))}
+          </div>
 
+          {/* CTA — second grid row, left-aligned */}
           <a
             href="/projects"
             style={{
-              position: "absolute",
-              bottom: 30,
-              left: 50,
               display: "inline-block",
               width: "fit-content",
               paddingBottom: 8,
+              marginTop: 24,
               fontSize: 14,
               fontWeight: 500,
               textTransform: "uppercase",
               color: "#F4EEDF",
               textDecoration: "none",
-              zIndex: 10,
+              position: "relative",
             }}
             className="group transition-opacity duration-200 hover:opacity-70"
           >

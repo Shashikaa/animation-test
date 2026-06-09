@@ -331,7 +331,7 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
         color.rgb  = mix(color.rgb, tint, 0.55);
         color.rgb *= 0.4;
 
-        gl_FragColor = vec4(color.rgb, 0.15);
+        gl_FragColor = vec4(color.rgb, 0.21);
       }
     `;
 

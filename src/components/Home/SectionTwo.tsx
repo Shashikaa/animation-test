@@ -1,26 +1,5 @@
 "use client";
 
-/**
- * SectionTwo.tsx — FIXED
- * ─────────────────────────────────────────────────────────────
- * FIX 1: WaterBackground receives `paused` prop driven by
- *   IntersectionObserver. When section is offscreen, paused=true
- *   and the canvas skips all GL work — no GPU draw calls, no
- *   texture uploads, nothing. This eliminates the biggest source
- *   of scroll lag: 3 WebGL canvases all drawing simultaneously.
- *
- * FIX 2: Instead of unmounting/remounting the canvas on visibility
- *   change (which caused a flash + WebGL context recreation cost),
- *   we keep the canvas mounted and use the paused prop.
- *   Context recreation is expensive (~100ms). Skipping draw calls
- *   is essentially free.
- *
- * FIX 3: GPU layer promotion via translateZ(0) on the section root
- *   and background image. Without this, the section merges into the
- *   scroll layer and forces full-page raster invalidation on scroll.
- * ─────────────────────────────────────────────────────────────
- */
-
 import { useRef, useState, useEffect } from "react";
 import WaterBackground from "../Ripplecanvas";
 
@@ -28,6 +7,7 @@ export default function SectionTwo() {
   const sectionRef = useRef<HTMLElement>(null);
   const [offscreen, setOffscreen] = useState(false);
 
+  // Pause water canvas when off-screen
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
@@ -42,68 +22,34 @@ export default function SectionTwo() {
   return (
     <section
       ref={sectionRef}
-      style={{
-        position:           "relative",
-        width:              "100%",
-        height:             "100%",
-        overflow:           "hidden",
-        transform:          "translateZ(0)",
-        backfaceVisibility: "hidden",
-      }}
+      className="relative w-full h-full overflow-hidden"
+      style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
     >
+      {/* Background image — given class s2-bg so page.tsx can scrub it */}
       <img
         src="/marvin-van.webp"
         alt=""
         aria-hidden
-        style={{
-          position:           "absolute",
-          inset:              0,
-          width:              "100%",
-          height:             "100%",
-          objectFit:          "cover",
-          zIndex:             0,
-          transform:          "translateZ(0)",
-          backfaceVisibility: "hidden",
-        }}
+        className="s2-bg absolute inset-0 w-full h-full object-cover z-0"
+        style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
       />
 
-      {/* Canvas stays mounted, paused when offscreen — no context recreation cost */}
       <WaterBackground paused={offscreen} />
 
-      <div
-        className="section-continer"
-        style={{
-          position:        "relative",
-          zIndex:          2,
-          height:          "100%",
-          display:         "flex",
-          alignItems:      "center",
-          justifyContent:  "center",
-        }}
-      >
-        <div
-          style={{
-            textAlign:      "center",
-            maxWidth:       620,
-            display:        "flex",
-            flexDirection:  "column",
-            alignItems:     "center",
-            gap:            24,
-          }}
-        >
-          <h2
-            className="font-display text-[#F4EEDF]"
-            style={{ fontSize: 40, lineHeight: 1.15, textAlign: "left" }}
-          >
-            Premium Pool Solutions for
-            <br />
-            <span className="italic font-cormorant">Every Need</span>
+      <div className="section-continer relative z-[2] h-full flex flex-col justify-between pb-10 md:pb-14 lg:pb-16">
+        {/* TOP — title + subtitle */}
+        <div className="flex flex-col !mt-44">
+          <h2 className="s2-title font-display text-[#F4EEDF] leading-[1.1] !font-[100]">
+            Premium Pool <br />
           </h2>
+          <p className="s2-title font-body text-[#F4EEDF] text-sm md:text-base !mt-4 md:!mt-6">
+            Solution For Every Need
+          </p>
+        </div>
 
-          <p
-            className="text-[#F4EEDF] text-body"
-            style={{ maxWidth: 320, textAlign: "left", alignSelf: "flex-start" }}
-          >
+        {/* BOTTOM RIGHT — body paragraph */}
+        <div className="flex justify-end">
+          <p className="s2-body font-body text-[#F4EEDF] max-w-[220px] md:max-w-[280px] lg:max-w-[280px]">
             From renovations to new builds, we design and construct pools that
             combine style, functionality, and durability.
           </p>
