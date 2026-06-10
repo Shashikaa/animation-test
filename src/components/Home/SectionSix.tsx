@@ -240,6 +240,7 @@ export default function SectionSix() {
                   fontSize: 14,
                   fontWeight: 400,
                   margin: 0,
+                  marginBottom: 17,
                   opacity: i === 0 ? 1 : 0,
                   pointerEvents: i === active ? "auto" : "none",
                 }}

@@ -8,7 +8,6 @@ export default function SectionFour() {
         inset:              0,
         width:              "100%",
         height:             "100%",
-
         zIndex:             40,
         willChange:         "transform",
         transform:          "translateZ(0)",
@@ -25,7 +24,7 @@ export default function SectionFour() {
             top:                "-10%",
             left:               0,
             width:              "100%",
-            height:             "140vh",
+            height:             "120%",
             backgroundImage:    "url('/murray-st-prahran.webp')",
             backgroundSize:     "cover",
             backgroundPosition: "center",
@@ -63,7 +62,7 @@ export default function SectionFour() {
 
       {/* ── Layer 3: Content wrapper ── */}
       <div
-        className="s4-content section-continer "
+        className="s4-content section-continer"
         style={{
           position:      "absolute",
           top:           0,
@@ -80,9 +79,7 @@ export default function SectionFour() {
 
         {/* ROW 1: Title — right aligned */}
         <div style={{ flexShrink: 0, display: "flex", justifyContent: "flex-end" }}>
-          <h2
-            className="font-display s4-title !mt-24 text-[#F4EEDF]"
-          >
+          <h2 className="font-display s4-title !mt-24 text-[#F4EEDF]">
             Making Memories.
           </h2>
         </div>
@@ -95,9 +92,7 @@ export default function SectionFour() {
             maxWidth:   400,
           }}
         >
-          <p
-            className="font-body s4-para text-[#F4EEDF]"
-          >
+          <p className="font-body s4-para text-[#F4EEDF]">
             At Grand Pools, we build more than just swimming pools — we create
             spaces where families gather, friends connect, and lasting memories
             are made. With expert craftsmanship and a passion for innovation,
@@ -111,7 +106,6 @@ export default function SectionFour() {
             flexShrink:   0,
             position:     "relative",
             overflow:     "hidden",
-  
             marginTop:    50,
             marginBottom: 50,
             height:       560,

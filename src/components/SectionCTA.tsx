@@ -92,21 +92,9 @@ export default function SectionCTA() {
                 margin: 0,
               }}
             >
-              Ready to Build Your
+              Ready to Build Your     Dream Pool?
             </h2>
-            <h2
-              className="font-cormorant"
-              style={{
-                color: "#F4EEDF",
-                fontSize: "40px",
-                fontWeight: 400,
-                fontStyle: "italic",
-                lineHeight: 1.2,
-                margin: 0,
-              }}
-            >
-              Dream Pool?
-            </h2>
+
           </div>
 
           <p

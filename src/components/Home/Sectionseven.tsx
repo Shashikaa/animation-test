@@ -9,64 +9,73 @@ const PARTNERS = [
   { name: "Cedar",       logo: "/partners/logo6.svg" },
 ];
 
-// Duplicate for seamless infinite loop — translateX(-50%) snaps back invisibly
 const PARTNERS_LOOP = [...PARTNERS, ...PARTNERS];
 
 export default function SectionSeven() {
   return (
     <section className="relative w-full h-full overflow-hidden">
 
-      {/* Background image */}
+      {/* Background image — s7-bg-img for parallax, no inline top offset */}
       <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/team-photo.webp')" }}
+        className="s7-bg-img absolute bg-cover bg-center"
+        style={{
+          backgroundImage: "url('/team-photo.webp')",
+          top:    0,
+          left:   0,
+          width:  "100%",
+          height: "120%",
+          willChange: "transform",
+        }}
       />
 
-
-      {/* ─── Glassmorphic card ─── */}
+      {/* ─── Title + Card wrapper ─── */}
       <div
-        className="absolute flex flex-col gap-0.5 !px-[42px] !py-[40px]"
+        className="absolute flex flex-col gap-3"
         style={{
-          top: "16%",
+          top:  "16%",
           left: "50%",
-          width: 420,
-          backdropFilter: "blur(42px)",
-          WebkitBackdropFilter: "blur(42px)",
-          background:
-            "radial-gradient(100% 100% at 0% 0%, rgba(25,33,28,0.64) 0%, rgba(25,33,28,0.24) 100%)",
-          boxShadow:
-            "-5px -5px 25px rgba(255,255,255,0.02) inset, 0 4px 4px rgba(0,0,0,0.25)",
+          width: 620,
         }}
       >
         <h2
-          className="text-[#F4EEDF] !text-[24px] font-normal leading-[1.2] "
+          className="text-[#F4EEDF] !font-[100] s7-title"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Meet The Experts of
-          <br />
-          <em className="font-cormorant">Grand Pools</em>
+          Meet The Experts
         </h2>
 
-        <p className="font-body text-[#F4EEDF] text-base font-normal !mt-6">
-          Lachlan Deleeuw
-        </p>
+        {/* ─── Glassmorphic card ─── */}
+        <div
+          className="flex flex-col gap-0.5 !px-[32px] !py-[30px] !max-w-[330px] !mt-8"
+          style={{
+            backdropFilter:       "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            background:
+              "radial-gradient(100% 100% at 0% 0%, rgba(25,33,28,0.64) 0%, rgba(25,33,28,0.24) 100%)",
+            boxShadow:
+              "-5px -5px 25px rgba(255,255,255,0.02) inset, 0 4px 4px rgba(0,0,0,0.25)",
+          }}
+        >
+          <p className="s7-para font-body text-[#F4EEDF] !text-[14px] font-normal">
+            Lachlan Deleeuw
+          </p>
 
-        <p className="text-[#F4EEDF] text-sm">
-          Founder – Grand Pools
-        </p>
+          <p className="s7-para text-[#F4EEDF] !text-[14px] !mt-2">
+            Founder – Grand Pools
+          </p>
 
-        <p className="font-body text-[#F4EBE4] text-sm font-normal leading-snug !mt-6 w-full max-w-[90%]" >
-          Grand Pools founder Lachlan Deleeuw brings expert craftsmanship and
-          tailored creativity to luxury pool builds, transforming backyards
-          across Melbourne and the Bayside Region.
-        </p>
+          <p className="s7-para font-body text-[#F4EBE4] !text-[14px] font-normal leading-snug !mt-6 w-full">
+            Grand Pools founder Lachlan Deleeuw brings expert craftsmanship and
+            tailored creativity to luxury pool builds, transforming backyards
+            across Melbourne and the Bayside Region.
+          </p>
+        </div>
       </div>
 
       {/* ─── Our Partners — bottom right ─── */}
       <div className="absolute bottom-9 right-12 flex flex-col items-end gap-5">
         <p className="font-body text-[#F4EBE4] text-sm">Our Partners</p>
 
-        {/* Marquee viewport — fixed width with fade edges */}
         <div
           className="overflow-hidden w-[520px]"
           style={{
@@ -76,11 +85,6 @@ export default function SectionSeven() {
               "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
           }}
         >
-          {/*
-            KEY FIX: width is max-content so the track is exactly as wide as
-            all items. translateX(-50%) always lands on the seam between the
-            original set and the duplicate → seamless loop, zero reset flash.
-          */}
           <div className="flex gap-5 w-max animate-marquee">
             {PARTNERS_LOOP.map((p, i) => (
               <div key={i} className="flex-shrink-0">

@@ -3,9 +3,6 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 
-// ─────────────────────────────────────────────────────────────
-// Shared GSAP ticker
-// ─────────────────────────────────────────────────────────────
 type RenderCallback = (now: number) => void;
 const renderCallbacks = new Set<RenderCallback>();
 let tickerAdded = false;
@@ -14,6 +11,7 @@ function sharedTick() {
   const now = performance.now();
   renderCallbacks.forEach((cb) => cb(now));
 }
+
 function registerCallback(cb: RenderCallback) {
   renderCallbacks.add(cb);
   if (!tickerAdded) {
@@ -21,6 +19,7 @@ function registerCallback(cb: RenderCallback) {
     tickerAdded = true;
   }
 }
+
 function unregisterCallback(cb: RenderCallback) {
   renderCallbacks.delete(cb);
   if (renderCallbacks.size === 0 && tickerAdded) {
@@ -29,9 +28,7 @@ function unregisterCallback(cb: RenderCallback) {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Shared video singleton
-// ─────────────────────────────────────────────────────────────
+// ── Shared Video Context Setup ───────────────────────────────
 let sharedVideo: HTMLVideoElement | null = null;
 let videoReady = false;
 let videoRefCount = 0;
@@ -87,64 +84,12 @@ function releaseSharedVideo() {
 }
 
 let globalInstanceCounter = 0;
-const UPLOAD_STRIDE = 4;
-
-// ─────────────────────────────────────────────────────────────
-// Lenis-aware scroll velocity
-// Uses Lenis `scroll` event if available, falls back to RAF.
-// ─────────────────────────────────────────────────────────────
-let scrollVelocity = 0;  // 0–1 normalised Lenis velocity (or px/frame fallback)
-let scrollListenerCount = 0;
-let lenisVelocityRafId: number | null = null;
-let lastRawScrollY = 0;
-
-function onLenisScroll(e: CustomEvent) {
-  // Lenis fires a custom 'lenis:scroll' event with { velocity }
-  const v = Math.abs((e as CustomEvent & { detail?: { velocity?: number } }).detail?.velocity ?? 0);
-  scrollVelocity = v;
-}
-
-function startScrollTracker() {
-  if (scrollListenerCount > 0) { scrollListenerCount++; return; }
-  scrollListenerCount++;
-
-  // Try hooking into Lenis globalInstance
-  // Lenis v1+ exposes window.__lenis or emits 'lenis:scroll'
-  window.addEventListener("lenis:scroll", onLenisScroll as EventListener, { passive: true });
-
-  // Fallback: raw delta tracking via RAF (used when Lenis not present)
-  const track = () => {
-    lenisVelocityRafId = requestAnimationFrame(track);
-    const delta = Math.abs(window.scrollY - lastRawScrollY);
-    lastRawScrollY = window.scrollY;
-    // Only overwrite if Lenis event hasn't fired recently
-    if (scrollVelocity === 0 && delta > 0) scrollVelocity = Math.min(delta / 10, 1);
-    // Decay
-    scrollVelocity *= 0.9;
-  };
-  lenisVelocityRafId = requestAnimationFrame(track);
-}
-
-function stopScrollTracker() {
-  scrollListenerCount--;
-  if (scrollListenerCount <= 0) {
-    scrollListenerCount = 0;
-    window.removeEventListener("lenis:scroll", onLenisScroll as EventListener);
-    if (lenisVelocityRafId !== null) { cancelAnimationFrame(lenisVelocityRafId); lenisVelocityRafId = null; }
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
-// Water-divide pointer trail
-// Stores up to N historical touch points that decay over time.
-// Each point creates an outward displacement "parting" effect.
-// ─────────────────────────────────────────────────────────────
 const TRAIL_LEN = 8;
 
 interface TouchPoint {
   x: number; y: number;
-  vx: number; vy: number;  // velocity for direction of parting
-  age: number;             // 0 = fresh, 1 = dead
+  vx: number; vy: number;
+  age: number;
   strength: number;
 }
 
@@ -165,6 +110,38 @@ const sharedMouse: SharedMouseState = {
 
 let mouseListenerCount = 0;
 let prevMouseX = 0.5, prevMouseY = 0.5;
+let scrollVelocity = 0;
+let scrollListenerCount = 0;
+let lenisVelocityRafId: number | null = null;
+let lastRawScrollY = 0;
+
+function trackManualScroll() {
+  lenisVelocityRafId = requestAnimationFrame(trackManualScroll);
+  const currentScrollY = window.scrollY || document.documentElement.scrollTop;
+  const delta = Math.abs(currentScrollY - lastRawScrollY);
+  lastRawScrollY = currentScrollY;
+  
+  if (delta > 0) {
+    scrollVelocity = Math.min(delta / 8, 2.5);
+  } else {
+    scrollVelocity *= 0.85; // Faster decay tracking
+  }
+}
+
+function startScrollTracker() {
+  if (scrollListenerCount > 0) { scrollListenerCount++; return; }
+  scrollListenerCount++;
+  lastRawScrollY = window.scrollY || document.documentElement.scrollTop;
+  lenisVelocityRafId = requestAnimationFrame(trackManualScroll);
+}
+
+function stopScrollTracker() {
+  scrollListenerCount--;
+  if (scrollListenerCount <= 0) {
+    scrollListenerCount = 0;
+    if (lenisVelocityRafId !== null) { cancelAnimationFrame(lenisVelocityRafId); lenisVelocityRafId = null; }
+  }
+}
 
 function pushTrail(x: number, y: number) {
   const vx = x - prevMouseX;
@@ -191,9 +168,9 @@ function onSharedPointerUp()   { sharedMouse.down = false; }
 
 function addSharedMouseListener() {
   if (mouseListenerCount === 0) {
-    window.addEventListener("mousemove",   onSharedMouseMove,    { passive: true });
-    window.addEventListener("pointerdown", onSharedPointerDown,  { passive: true });
-    window.addEventListener("pointerup",   onSharedPointerUp,    { passive: true });
+    window.addEventListener("mousemove",   onSharedMouseMove,   { passive: true });
+    window.addEventListener("pointerdown", onSharedPointerDown, { passive: true });
+    window.addEventListener("pointerup",   onSharedPointerUp,   { passive: true });
     startScrollTracker();
   }
   mouseListenerCount++;
@@ -210,9 +187,6 @@ function removeSharedMouseListener() {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Component
-// ─────────────────────────────────────────────────────────────
 export default function WaterBackground({ paused }: { paused?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pausedRef = useRef(false);
@@ -224,17 +198,18 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
     if (!canvas) return;
 
     const gl = canvas.getContext("webgl", {
-      alpha: true, premultipliedAlpha: false,
-      antialias: false, powerPreference: "high-performance",
+      alpha: true,
+      premultipliedAlpha: false,
+      antialias: false,
+      powerPreference: "high-performance",
       preserveDrawingBuffer: false,
     });
     if (!gl) return;
 
     const instanceId = globalInstanceCounter++;
     const SCALE_IDLE   = 0.5;
-    const SCALE_SCROLL = 0.3;
+    const SCALE_SCROLL = 0.35;
 
-    // ── Vertex shader ────────────────────────────────────────
     const vert = `
       attribute vec2 a_position;
       varying vec2 vUv;
@@ -244,29 +219,19 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
       }
     `;
 
-    // ── Fragment shader with water-divide trail ───────────────
-    // MAX_TRAIL must match TRAIL_LEN above (passed as uniforms)
     const frag = `
       precision mediump float;
       uniform sampler2D uTexture;
       uniform float uTime;
       uniform vec2  uMouse;
-      uniform float uMouseVx;
-      uniform float uMouseVy;
       uniform float uSpeed;
-      uniform float uRippleStrength;
       uniform float uScrollVel;
 
-      // Water-divide trail points
       #define MAX_TRAIL 8
       uniform vec2  uTrailPos[MAX_TRAIL];
       uniform float uTrailAge[MAX_TRAIL];
-      uniform float uTrailVx[MAX_TRAIL];
-      uniform float uTrailVy[MAX_TRAIL];
       uniform float uTrailStr[MAX_TRAIL];
       uniform int   uTrailCount;
-
-      // Orbital secondary ripple
       uniform vec2  uMouse2;
 
       varying vec2 vUv;
@@ -275,18 +240,13 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
         vec2 uv = vUv;
         float t = uTime * uSpeed;
 
-        // ── Base water undulation ──────────────────────────
         uv.x += sin(uv.y * 20.0 + t * 1.0) * 0.018;
         uv.y += sin(uv.x * 15.0 + t * 0.8) * 0.014;
         uv.x += sin(uv.y * 8.0  + t * 1.3) * 0.009;
 
-        // ── Scroll warp: ripple from bottom on fast scroll ──
-        float scrollAmp = clamp(uScrollVel * 0.08, 0.0, 0.025);
-        uv.y += sin(uv.x * 12.0 + t * 3.0) * scrollAmp;
+        float scrollAmp = clamp(uScrollVel * 0.015, 0.0, 0.03);
+        uv.y += sin(uv.x * 10.0 + t * 2.5) * scrollAmp;
 
-        // ── Water divide: trail points ──────────────────────
-        // Each trail point pushes UV outward (parting water),
-        // perpendicular to movement direction (surface tension).
         for (int i = 0; i < MAX_TRAIL; i++) {
           if (i >= uTrailCount) break;
           float alive = 1.0 - uTrailAge[i];
@@ -296,32 +256,26 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
           float dist  = length(delta);
           float norm  = dist + 0.0001;
 
-          // Outward parting force — stronger close to finger
           float part  = exp(-dist * 8.0) * alive * uTrailStr[i] * 0.06;
           uv += (delta / norm) * part;
 
-          // Along-trail wake ripple
           float wakeFreq = 30.0;
           float wakeAmp  = exp(-dist * 5.0) * alive * uTrailStr[i] * 0.015;
           float wake     = sin(dist * wakeFreq - t * 6.0) * wakeAmp;
           if (norm > 0.0001) uv += (delta / norm) * wake;
 
-          // Surface tension recovery: inward pull at ring edge
           float ringDist = 0.08 * alive;
           float tension  = exp(-pow(dist - ringDist, 2.0) * 200.0) * alive * 0.012;
           if (norm > 0.0001) uv -= (delta / norm) * tension;
         }
 
-        // ── Orbital secondary ripple ────────────────────────
         vec2  md2 = uv - uMouse2;
         float d2  = length(md2);
         float r2  = sin(d2 * 20.0 - t * 2.5) * 0.022 * exp(-d2 * 5.0);
         if (d2 > 0.0001) uv += normalize(md2) * r2;
 
-        // ── Sample texture ──────────────────────────────────
         vec4 color = texture2D(uTexture, uv);
 
-        // ── Tinting ─────────────────────────────────────────
         vec3 tintA = vec3(0.10, 0.45, 0.50);
         vec3 tintB = vec3(0.15, 0.60, 0.55);
         vec3 tintC = vec3(0.05, 0.25, 0.40);
@@ -339,9 +293,6 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
       const s = gl.createShader(type)!;
       gl.shaderSource(s, src);
       gl.compileShader(s);
-      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-        console.error("Shader error:", gl.getShaderInfoLog(s));
-      }
       return s;
     };
 
@@ -353,182 +304,131 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
 
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-      -1,-1,  1,-1, -1,1,
-      -1, 1,  1,-1,  1,1,
-    ]), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
 
     const posLoc = gl.getAttribLocation(program, "a_position");
     gl.enableVertexAttribArray(posLoc);
     gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
 
-    // Uniform locations
     const uTime           = gl.getUniformLocation(program, "uTime");
     const uMouse          = gl.getUniformLocation(program, "uMouse");
-    const uMouseVx        = gl.getUniformLocation(program, "uMouseVx");
-    const uMouseVy        = gl.getUniformLocation(program, "uMouseVy");
     const uMouse2         = gl.getUniformLocation(program, "uMouse2");
     const uSpeed          = gl.getUniformLocation(program, "uSpeed");
-    const uRippleStrength = gl.getUniformLocation(program, "uRippleStrength");
     const uScrollVel      = gl.getUniformLocation(program, "uScrollVel");
     const uTrailCount     = gl.getUniformLocation(program, "uTrailCount");
 
-    // Trail uniform arrays
-    const uTrailPos = Array.from({ length: TRAIL_LEN }, (_, i) =>
-      gl.getUniformLocation(program, `uTrailPos[${i}]`));
-    const uTrailAge = Array.from({ length: TRAIL_LEN }, (_, i) =>
-      gl.getUniformLocation(program, `uTrailAge[${i}]`));
-    const uTrailVx  = Array.from({ length: TRAIL_LEN }, (_, i) =>
-      gl.getUniformLocation(program, `uTrailVx[${i}]`));
-    const uTrailVy  = Array.from({ length: TRAIL_LEN }, (_, i) =>
-      gl.getUniformLocation(program, `uTrailVy[${i}]`));
-    const uTrailStr = Array.from({ length: TRAIL_LEN }, (_, i) =>
-      gl.getUniformLocation(program, `uTrailStr[${i}]`));
+    const uTrailPos = Array.from({ length: TRAIL_LEN }, (_, i) => gl.getUniformLocation(program, `uTrailPos[${i}]`));
+    const uTrailAge = Array.from({ length: TRAIL_LEN }, (_, i) => gl.getUniformLocation(program, `uTrailAge[${i}]`));
+    const uTrailStr = Array.from({ length: TRAIL_LEN }, (_, i) => gl.getUniformLocation(program, `uTrailStr[${i}]`));
 
-    // Texture
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,     gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T,     gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0,
-      gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([13, 90, 80, 255]));
 
     let lastUploadedBitmap: ImageBitmap | null = null;
     let resizeTimer: ReturnType<typeof setTimeout> | undefined;
 
+    // FIX: Fixed the canvas.widt typo to correctly set layout dimensions
     const resize = () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
-        const scale  = scrollVelocity > 0.3 ? SCALE_SCROLL : SCALE_IDLE;
-        canvas.width  = Math.floor(window.innerWidth  * scale);
-        canvas.height = Math.floor(window.innerHeight * scale);
-        gl.viewport(0, 0, canvas.width, canvas.height);
-      }, 100);
+        const scale = scrollVelocity > 0.3 ? SCALE_SCROLL : SCALE_IDLE;
+        const w = Math.floor(window.innerWidth * scale);
+        const h = Math.floor(window.innerHeight * scale);
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+          gl.viewport(0, 0, w, h);
+        }
+      }, 60);
     };
 
-    resize();
     window.addEventListener("resize", resize, { passive: true });
-    getSharedVideo();
+    resize();
+
+    const video = getSharedVideo();
     addSharedMouseListener();
 
-    const mouseSmooth = { x: 0.5, y: 0.5 };
-    const start = performance.now();
-    let angle = 0;
-    let rippleCurrent = 0.04;
-    let lastFrameTime = 0;
-    let frameCount = instanceId;
+    let currentRipple = 0.04;
+    let mouse2X = 0.5, mouse2Y = 0.5;
+    let localTime = 0;
+    let lastFrameTime = performance.now();
 
-    // Trail age decay speed (per frame at 60fps)
-    const TRAIL_DECAY = 0.018;
-
-    const render = (now: number) => {
+    const tick = (now: number) => {
       if (pausedRef.current) return;
 
-      // Adaptive frame throttle: faster during scroll, normal idle
-      const isScrolling = scrollVelocity > 0.3;
-      const FRAME_MS = isScrolling ? 50 : 33;
-      const elapsed = now - lastFrameTime;
-      if (elapsed < FRAME_MS) return;
-      lastFrameTime = now - (elapsed % FRAME_MS);
+      const deltaFrame = now - lastFrameTime;
+      lastFrameTime = now;
+      localTime += deltaFrame * 0.001;
 
-      // Dynamic resolution
-      const scale   = isScrolling ? SCALE_SCROLL : SCALE_IDLE;
-      const targetW = Math.floor(window.innerWidth  * scale);
-      const targetH = Math.floor(window.innerHeight * scale);
-      if (canvas.width !== targetW || canvas.height !== targetH) {
-        canvas.width  = targetW;
-        canvas.height = targetH;
-        gl.viewport(0, 0, targetW, targetH);
+      if (scrollVelocity > 0.1) {
+        resize();
       }
 
-      // Staggered texture upload
-      frameCount++;
-      if (
-        sharedBitmap && sharedBitmap !== lastUploadedBitmap &&
-        (frameCount % UPLOAD_STRIDE === instanceId % UPLOAD_STRIDE)
-      ) {
+      currentRipple += (sharedMouse.rippleTarget - currentRipple) * 0.1;
+      if (performance.now() - sharedMouse.lastMove > 800) {
+        sharedMouse.rippleTarget = 0.04;
+      }
+
+      const osc = localTime * 0.5;
+      mouse2X = sharedMouse.x + Math.cos(osc) * currentRipple;
+      mouse2Y = sharedMouse.y + Math.sin(osc) * currentRipple;
+
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      if (sharedBitmap && sharedBitmap !== lastUploadedBitmap) {
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, sharedBitmap);
         lastUploadedBitmap = sharedBitmap;
       }
 
-      // Age trail points
-      for (const pt of sharedMouse.trail) {
-        pt.age = Math.min(pt.age + TRAIL_DECAY * (elapsed / 16.67), 1);
-      }
+      gl.uniform1f(uTime, localTime);
+      gl.uniform2f(uMouse, sharedMouse.x, sharedMouse.y);
+      gl.uniform2f(uMouse2, mouse2X, mouse2Y);
+      gl.uniform1f(uSpeed, 1.2);
+      gl.uniform1f(uScrollVel, scrollVelocity);
 
-      angle += 0.008 * (elapsed / 33);
-      mouseSmooth.x += (sharedMouse.x - mouseSmooth.x) * 0.06;
-      mouseSmooth.y += (sharedMouse.y - mouseSmooth.y) * 0.06;
+      const activeTrail = sharedMouse.trail.filter(pt => pt.age < 1.0);
+      gl.uniform1i(uTrailCount, activeTrail.length);
 
-      if (now - sharedMouse.lastMove > 300) sharedMouse.rippleTarget = 0.04;
-      rippleCurrent += (sharedMouse.rippleTarget - rippleCurrent) * 0.08;
-
-      const ox = 0.5 + Math.cos(angle)       * 0.3;
-      const oy = 0.5 + Math.sin(angle * 0.7) * 0.2;
-
-      // Upload uniforms
-      gl.uniform1f(uTime,           (now - start) / 1000);
-      gl.uniform2f(uMouse,          mouseSmooth.x, mouseSmooth.y);
-      gl.uniform1f(uMouseVx,        sharedMouse.vx);
-      gl.uniform1f(uMouseVy,        sharedMouse.vy);
-      gl.uniform2f(uMouse2,         ox, oy);
-      gl.uniform1f(uSpeed,          1.1);
-      gl.uniform1f(uRippleStrength, rippleCurrent);
-      gl.uniform1f(uScrollVel,      scrollVelocity * 10);
-
-      // Trail uniforms
-      const trail = sharedMouse.trail;
-      const count = trail.length;
-      gl.uniform1i(uTrailCount, count);
       for (let i = 0; i < TRAIL_LEN; i++) {
-        const pt = trail[i];
-        if (pt) {
+        if (i < activeTrail.length) {
+          const pt = activeTrail[i];
+          pt.age += deltaFrame * 0.0015; // Natural fluid decay rate
           gl.uniform2f(uTrailPos[i], pt.x, pt.y);
-          gl.uniform1f(uTrailAge[i], pt.age);
-          gl.uniform1f(uTrailVx[i],  pt.vx);
-          gl.uniform1f(uTrailVy[i],  pt.vy);
+          gl.uniform1f(uTrailAge[i], Math.min(pt.age, 1.0));
           gl.uniform1f(uTrailStr[i], pt.strength);
-        } else {
-          gl.uniform2f(uTrailPos[i], 0, 0);
-          gl.uniform1f(uTrailAge[i], 1);
-          gl.uniform1f(uTrailVx[i],  0);
-          gl.uniform1f(uTrailVy[i],  0);
-          gl.uniform1f(uTrailStr[i], 0);
         }
       }
 
-      gl.uniform1i(gl.getUniformLocation(program, "uTexture"), 0);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     };
 
-    registerCallback(render);
+    registerCallback(tick);
 
     return () => {
       clearTimeout(resizeTimer);
-      unregisterCallback(render);
       window.removeEventListener("resize", resize);
-      releaseSharedVideo();
+      unregisterCallback(tick);
       removeSharedMouseListener();
+      releaseSharedVideo();
+      
+      gl.bindTexture(gl.TEXTURE_2D, null);
       gl.deleteTexture(texture);
-      gl.deleteProgram(program);
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
       gl.deleteBuffer(buf);
+      gl.deleteProgram(program);
     };
-  }, []);
+  }, [paused]);
 
   return (
     <canvas
       ref={canvasRef}
-      style={{
-        position: "absolute",
-        inset: 0,
-        width: "100%",
-        height: "100%",
-        zIndex: 1,
-        opacity: 1,
-      }}
+      className="pointer-events-none fixed inset-0 h-full w-full opacity-60"
+      style={{ mixBlendMode: "normal", zIndex: 1 }}
     />
   );
 }

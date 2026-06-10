@@ -29,7 +29,10 @@
   --text-sm:      14px;
   --text-xs:      12px;
 
-  --leading-display: 1;
+  /* FIX: was 1 — line-height:1 clips descenders (g,y,p,q,j) at the CSS
+     level because the line box equals cap-height with zero room below.
+     1.15 gives descenders space without visually opening up the tracking. */
+  --leading-display: 1.15;
   --leading-body:    1.2;
 
   --space-1:  4px;
@@ -95,7 +98,6 @@ html {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   scroll-behavior: auto !important;
-  /* height:auto !important is set in the block above */
 }
 
 html {
@@ -104,9 +106,7 @@ html {
    * Lenis requires html to be height:auto to measure true document
    * scroll height. Tailwind's h-full (height:100%) on <html> was
    * overriding the Lenis CSS rule in globals and capping the scroll
-   * limit at the viewport height. Now set directly in CSS so it wins
-   * regardless of what Tailwind classes are on the element.
-   * scroll-behavior and other html rules are merged below.
+   * limit at the viewport height.
    */
   height: auto !important;
 }
@@ -117,26 +117,10 @@ body {
   font-family:  var(--font-body);
   font-size:    var(--text-body);
   line-height:  var(--leading-body);
-  /*
-   * FIX: height:auto on body too — matches the Lenis requirement.
-   * Tailwind's min-h-full was setting min-height:100% which Lenis
-   * also fights. Explicit auto wins.
-   */
   height:       auto !important;
   min-height:   unset !important;
-  /*
-   * NO overflow-x:hidden here — that defeats GPU compositing.
-   * Horizontal overflow is contained on .site-root instead.
-   */
 }
 
-/*
- * FIX: .site-root is the actual scroll content wrapper in layout.tsx.
- * overflow-x:hidden here is safe — it's on a non-body, non-html element
- * so it does NOT block the browser from promoting children to GPU layers.
- * This replaces the old body overflow-x:hidden and the #__next approach
- * (which doesn't exist in Next.js App Router).
- */
 .site-root {
   overflow-x: hidden;
   position:   relative;
@@ -171,29 +155,14 @@ body.preloading {
 }
 
 /* ─── GPU Layer Promotion ────────────────────────────────────────
-   STRATEGY:
    Split elements by which CSS property is animated.
-   A single element should only declare will-change for the
-   properties GSAP actually touches on it — multiple compositing
-   hints on one element can create redundant stacking contexts
-   which waste GPU memory and occasionally cause z-index glitches.
-
-   NOTE: Now that overflow-x:hidden is off <body>, these hints
-   actually take effect. Previously they were silently ignored.
 ──────────────────────────────────────────────────────────────── */
 
-/* Pinned scroll wrappers — promote to their own GPU layer.
-   FIX: transform added alongside backface-visibility.
-   Without a transform, the browser may still batch these with
-   the document layer on some Chromium versions. */
 .pin-hero-s1,
 .pin-s2-s5,
 .pin-s7-s9 {
   transform: translateZ(0);
   backface-visibility: hidden;
-  /* FIX: isolation: isolate creates a guaranteed stacking context
-     so z-index values inside each pin wrapper are self-contained
-     and don't bleed into adjacent sections during transitions. */
   isolation: isolate;
 }
 
@@ -212,7 +181,7 @@ body.preloading {
 /* section-9: only opacity animated */
 .section-9 {
   will-change: opacity;
-  transform: translateZ(0); /* still needs its own layer for the opacity composite */
+  transform: translateZ(0);
 }
 
 /* clip-path only sections */
@@ -239,16 +208,6 @@ canvas {
   backface-visibility: hidden;
 }
 
-/*
- * FIX: Promote direct children of animated sections to their own
- * GPU layers. Large background images without a layer hint trigger
- * full-section raster invalidation — visible as large yellow tiles
- * in Chrome's GPU raster overlay (the 27fps screenshot).
- *
- * This is the "GPU raster tile repaint" fix. Adding translateZ(0)
- * to inner children tells the compositor to cache their pixels
- * separately so only the transform/opacity of the parent updates.
- */
 .section-1 > *,
 .section-2 > *,
 .section-7 > * {
@@ -281,23 +240,9 @@ body.preloading .scroll-container {
 }
 
 /* ─── Section wrappers ───────────────────────────────────────── */
-/*
- * FIX: contain:layout paint kept ONLY on section-six-wrapper.
- * This is safe here because S6 is a plain-scroll section with no
- * GSAP animation on its children. contain:layout paint on animated
- * sections blocks the compositor from promoting animated children.
- *
- * section-nine-wrapper: contain removed (as in previous version)
- * for the same reason — GSAP animates opacity on .s9-para and
- * transform/position on .s9-title inside this wrapper.
- */
 .section-six-wrapper {
   overflow: hidden;
   contain: layout paint;
-  /* FIX: GPU layer for S6 so entering/leaving the S6 plain-scroll
-     zone doesn't trigger a full-page raster invalidation at the
-     pin boundary. This eliminates the 1-frame flash of jank when
-     departing pin-s2-s5 and entering S6. */
   will-change: transform;
   transform: translateZ(0);
 }
@@ -314,14 +259,15 @@ body.preloading .scroll-container {
 .text-display {
   font-family:    var(--font-display);
   font-size:      var(--text-display);
+  /* FIX: use token so it inherits the 1.15 fix */
   line-height:    var(--leading-display);
   letter-spacing: 0;
-  
 }
 
 .text-cormorant {
   font-family:    var(--font-cormorant);
   font-size:      var(--text-display);
+  /* FIX: was hardcoded 1 — now uses token */
   line-height:    var(--leading-display);
   letter-spacing: 0;
   font-weight:    400;
@@ -396,7 +342,9 @@ body.preloading .scroll-container {
 /* ─── Responsive h2 & p ──────────────────────────────────────── */
 h2 {
   font-size: 72px;
-  line-height: 1;
+  /* FIX: was 1 — clips descenders on Cormorant/Canela at display sizes.
+     1.15 gives descenders clearance without visually opening the tracking. */
+  line-height: 1.15;
 }
 
 p {

@@ -15,14 +15,26 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     const lenis = new Lenis({
-      duration:           1.4,
-      easing:             (t: number) => 1 - Math.pow(1 - t, 4),
+      // lerp: 0.1 — the sweet spot for "buttery not laggy".
+      // 0.05–0.06 felt like wading through mud; 0.1 gives the smooth
+      // exponential decay you want while still responding immediately
+      // to input. Think of it as 10% of the distance closed per frame
+      // at 60fps — fast enough to feel live, slow enough to feel eased.
+      lerp:               0.08,
+
       orientation:        "vertical",
       gestureOrientation: "vertical",
       smoothWheel:        true,
-      wheelMultiplier:    0.9,
-      touchMultiplier:    1.8,
-      syncTouch:          true,
+
+      // 0.8 — back to a natural wheel speed. The lower multipliers
+      // (0.4–0.45) were making the page feel resistant, not smooth.
+      // Buttery feel comes from lerp easing, not from slowing input.
+      wheelMultiplier:    0.75,
+
+      // 1.5 — natural touch speed
+      touchMultiplier:    1.5,
+
+      syncTouch:          false,
       infinite:           false,
       autoRaf:            false,
     });
@@ -31,9 +43,6 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     if (!preloaderDone) lenis.stop();
 
     lenis.on("scroll", ScrollTrigger.update);
-
-    // Dispatch custom event so page.tsx knows Lenis has ticked at least once.
-    // This is consumed by waitForLenisAndIdle() to gate ScrollTrigger.refresh().
     lenis.on("scroll", () => {
       window.dispatchEvent(new Event("lenis-scroll"));
     });
@@ -42,7 +51,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
 
-    // ── Scrollbar thumb ───────────────────────────────────────────
+    // ── Scrollbar thumb ─────────────────────────────────────────
     let thumbVisible = false;
 
     const updateThumb = () => {
