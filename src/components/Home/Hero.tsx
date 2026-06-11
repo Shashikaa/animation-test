@@ -14,15 +14,16 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="hero relative w-full h-screen overflow-hidden bg-[url('/hero.webp')] bg-cover bg-center">
-      
+    <section className="hero relative w-full h-screen overflow-hidden bg-cover bg-center bg-[url('/hero-mobile.webp')] md:bg-[url('/hero.webp')]">
+
       {/* Overlay */}
-      <div className="absolute inset-0 z-0 bg-[linear-gradient(107.8deg,rgba(25,33,28,0)_50.32%,rgba(25,33,28,0.72)_78.81%)]" />
+      <div className="absolute inset-0 z-0 bg-[linear-gradient(107.8deg,rgba(25,33,28,0)_50.32%,rgba(25,33,28,0.72)_78.81%)] hidden md:block" />
+
 
       {/* Content */}
       <div className="section-continer relative z-10 h-full flex items-end justify-end !pb-[115px] !lg:pb-[85px]">
         <div>
-          <p className="text-[#F4EEDF] font-body leading-[1.2] font-normal max-w-[330px] md:max-w-[400px] text-right ">
+          <p className="text-[#F4EEDF] font-body leading-[1.2] font-normal max-w-[330px] md:max-w-[400px] text-right">
             At Grand Pools, we create custom swimming pools that blend style,
             function, and quality. Every pool is designed to complement your
             outdoor space, adding value and elegance to your home or business.
@@ -56,4 +57,3 @@ export default function Hero() {
     </section>
   );
 }
-

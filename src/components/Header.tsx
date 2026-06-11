@@ -216,10 +216,10 @@ export default function Header({
           padding: 0 20px !important;
         }
         @media (min-width: 768px) {
-          #site-header { height: 66px !important; padding: 0 26px !important; }
+          #site-header { height: 66px !important; padding: 0 30px !important; }
         }
         @media (min-width: 1024px) {
-          #site-header { height: 72px !important; padding: 0 40px !important; }
+          #site-header { height: 72px !important; padding: 0 55px !important; }
         }
         @media (max-width: 767px) {
           #header-logo-inner { width: 135px !important; gap: 4px !important; }
@@ -264,10 +264,10 @@ export default function Header({
           logoVisible={logoVisible}
           isHome={pathname === "/"}
         />
-        <div style={{ display: "flex", alignItems: "center", gap: "24px", position: "relative", zIndex: 2 }}>
-          <ContactButton onClick={handleContactClick} />
-          <MenuIcon onClick={onMenuClick} />
-        </div>
+<div className="relative z-[2] flex items-center gap-0 md:gap-6">
+  <ContactButton onClick={handleContactClick} />
+  <MenuIcon onClick={onMenuClick} />
+</div>
       </motion.header>
  
       {/* ── Submit A Request modal ── */}

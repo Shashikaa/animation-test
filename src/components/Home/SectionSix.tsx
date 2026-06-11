@@ -60,8 +60,212 @@ const PROJECTS = [
   },
 ];
 
-export default function SectionSix() {
-  const [active, setActive]     = useState(0);
+// ─── Mobile prev/next layout ──────────────────────────────────────────────────
+function SectionSixMobile() {
+  const [active, setActive] = useState(0);
+  const bgRefs   = useRef<(HTMLDivElement | null)[]>([]);
+  const h2Refs   = useRef<(HTMLHeadingElement | null)[]>([]);
+  const numRefs  = useRef<(HTMLSpanElement | null)[]>([]);
+  const descRefs = useRef<(HTMLParagraphElement | null)[]>([]);
+  const prevRef  = useRef(0);
+
+  useEffect(() => {
+    PROJECTS.forEach((_, i) => {
+      gsap.set(bgRefs.current[i], { opacity: i === 0 ? 1 : 0 });
+      if (i !== 0) {
+        gsap.set(
+          [h2Refs.current[i], numRefs.current[i], descRefs.current[i]],
+          { opacity: 0, y: 10 }
+        );
+      }
+    });
+  }, []);
+
+  function go(idx: number) {
+    if (idx === active) return;
+    const prev = prevRef.current;
+
+    gsap.to(bgRefs.current[prev], { opacity: 0, duration: 0.6, ease: "power2.inOut" });
+    gsap.to(bgRefs.current[idx],  { opacity: 1, duration: 0.7, ease: "power2.inOut" });
+
+    gsap.to(
+      [h2Refs.current[prev], numRefs.current[prev], descRefs.current[prev]],
+      { opacity: 0, y: -8, duration: 0.25, ease: "power2.in", stagger: 0.04 }
+    );
+    gsap.fromTo(
+      [h2Refs.current[idx], numRefs.current[idx], descRefs.current[idx]],
+      { opacity: 0, y: 10 },
+      { opacity: 1, y: 0, duration: 0.45, ease: "power2.out", delay: 0.2, stagger: 0.07 }
+    );
+
+    prevRef.current = idx;
+    setActive(idx);
+  }
+
+  function handlePrev() { go((active - 1 + PROJECTS.length) % PROJECTS.length); }
+  function handleNext() { go((active + 1) % PROJECTS.length); }
+
+  return (
+    <section
+      className="relative w-full overflow-hidden section-six-wrapper"
+      style={{ height: "100svh", pointerEvents: "auto" }}
+    >
+      {/* Backgrounds */}
+      {PROJECTS.map((p, i) => (
+        <div
+          key={p.id}
+          ref={(el) => { bgRefs.current[i] = el; }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: `url('${p.image}')`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            willChange: "opacity",
+            transform: "translateZ(0)",
+            backfaceVisibility: "hidden",
+          }}
+        />
+      ))}
+
+      {/* Gradient overlay */}
+      <div
+        className="absolute inset-0 z-[1]"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.60) 45%, rgba(0,0,0,0.72) 100%)",
+          transform: "translateZ(0)",
+        }}
+      />
+
+      {/* Content */}
+      <div className="relative z-[2] h-full flex flex-col justify-end section-continer">
+
+        {/* Number + Title — fixed heights, all absolute to prevent layout flash */}
+        <div style={{ marginBottom: 30 }}>
+          <div style={{ position: "relative", height: 28 }}>
+            {PROJECTS.map((p, i) => (
+              <span
+                key={p.id}
+                ref={(el) => { numRefs.current[i] = el; }}
+                className="font-body"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  color: "#F4EEDF",
+                  fontSize: 14,
+                  fontWeight: 300,
+                  letterSpacing: "0.04em",
+                  opacity: i === 0 ? 1 : 0,
+                  pointerEvents: "none",
+                }}
+              >
+                ({i + 1})
+              </span>
+            ))}
+          </div>
+
+          <div style={{ position: "relative", height: 72 }}>
+            {PROJECTS.map((p, i) => (
+              <h2
+                key={p.id}
+                ref={(el) => { h2Refs.current[i] = el; }}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  margin: 0,
+                  color: "#F4EEDF",
+                  fontFamily: "var(--font-display, inherit)",
+                  fontWeight: 100,
+                  maxWidth: "66%",
+                  opacity: i === 0 ? 1 : 0,
+                  pointerEvents: "none",
+                }}
+              >
+                {p.label}
+              </h2>
+            ))}
+          </div>
+        </div>
+
+        {/* Glass card */}
+        <div
+          style={{
+            alignSelf: "flex-end",
+            width: "72%",
+            backdropFilter: "blur(42px)",
+            WebkitBackdropFilter: "blur(42px)",
+            background:
+              "radial-gradient(100% 100% at 0% 0%, rgba(25,33,28,0.72) 0%, rgba(25,33,28,0.32) 100%)",
+            boxShadow: "-5px -5px 25px rgba(255,255,255,0.02) inset",
+            willChange: "transform",
+            transform: "translateZ(0)",
+            padding: "40px 25px 25px",
+            marginTop: 20,
+          }}
+        >
+          {/* Description — fixed height, all absolute to prevent layout flash */}
+          <div style={{ position: "relative", minHeight: 100 }}>
+            {PROJECTS.map((p, i) => (
+              <p
+                key={p.id}
+                ref={(el) => { descRefs.current[i] = el; }}
+                className="font-body"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  color: "#F4EEDF",
+                  fontSize: 14,
+                  fontWeight: 400,
+                  lineHeight: 1.6,
+                  margin: 0,
+                  opacity: i === 0 ? 1 : 0,
+                  pointerEvents: i === active ? "auto" : "none",
+                }}
+              >
+                {p.description}
+              </p>
+            ))}
+          </div>
+
+          {/* Prev / Next */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginTop: 54,
+            }}
+          >
+            <button
+              type="button"
+              onClick={handlePrev}
+              className="group font-body cursor-pointer text-[14px] text-[#F4EEDF] flex items-center gap-2 transition-opacity duration-200 hover:opacity-70 bg-transparent border-none p-0"
+            >
+              <img src="/arrow-right.svg" alt="Previous" style={{ width: 16, height: 16, transform: "rotate(180deg)" }} />
+              <span>Previous</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleNext}
+              className="group font-body cursor-pointer text-[14px] text-[#F4EEDF] flex items-center gap-2 transition-opacity duration-200 hover:opacity-70 bg-transparent border-none p-0"
+            >
+              <span>Next</span>
+              <img src="/arrow-right.svg" alt="Next" style={{ width: 16, height: 16 }} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Desktop tab-bar layout (original) ───────────────────────────────────────
+function SectionSixDesktop() {
+  const [active, setActive]  = useState(0);
   const bgRefs       = useRef<(HTMLDivElement | null)[]>([]);
   const btnRefs      = useRef<(HTMLButtonElement | null)[]>([]);
   const h2Refs       = useRef<(HTMLHeadingElement | null)[]>([]);
@@ -69,7 +273,6 @@ export default function SectionSix() {
   const prevRef      = useRef(0);
   const tabRowRef    = useRef<HTMLDivElement>(null);
   const activeBarRef = useRef<HTMLDivElement>(null);
-
   const barMetricsCache = useRef<{ left: number; width: number }[]>([]);
 
   const measureAllBars = useCallback(() => {
@@ -100,7 +303,6 @@ export default function SectionSix() {
       }
     };
     window.addEventListener("resize", onResize);
-
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", onResize);
@@ -108,15 +310,11 @@ export default function SectionSix() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Initial GSAP states
   useEffect(() => {
     PROJECTS.forEach((_, i) => {
       gsap.set(bgRefs.current[i], { opacity: i === 0 ? 1 : 0 });
       if (i !== 0) {
-        gsap.set(
-          [h2Refs.current[i], descRefs.current[i]],
-          { opacity: 0, y: 10 }
-        );
+        gsap.set([h2Refs.current[i], descRefs.current[i]], { opacity: 0, y: 10 });
       }
     });
   }, []);
@@ -131,12 +329,10 @@ export default function SectionSix() {
     const m = barMetricsCache.current[idx];
     if (m) gsap.to(activeBarRef.current, { left: m.left, width: m.width, duration: 0.4, ease: "power2.inOut" });
 
-    // Animate out prev h2 + desc
     gsap.to(
       [h2Refs.current[prev], descRefs.current[prev]],
       { opacity: 0, y: -8, duration: 0.25, ease: "power2.in", stagger: 0.04 }
     );
-    // Animate in next h2 + desc
     gsap.fromTo(
       [h2Refs.current[idx], descRefs.current[idx]],
       { opacity: 0, y: 10 },
@@ -148,11 +344,11 @@ export default function SectionSix() {
   }
 
   return (
-<section
-  className="relative w-full h-screen overflow-hidden section-six-wrapper"
-  style={{ pointerEvents: "auto" }}
->
-      {/* ── Backgrounds ── */}
+    <section
+      className="relative w-full h-screen overflow-hidden section-six-wrapper"
+      style={{ pointerEvents: "auto" }}
+    >
+      {/* Backgrounds */}
       {PROJECTS.map((p, i) => (
         <div
           key={p.id}
@@ -179,12 +375,11 @@ export default function SectionSix() {
         }}
       />
 
-      {/* ── Content ── */}
+      {/* Content */}
       <div
         className="section-continer relative z-[2] h-full flex flex-col justify-center"
         style={{ paddingBottom: "160px", gap: 24 }}
       >
-        {/* H2 label — stacked absolutely so they cross-fade */}
         <div style={{ position: "relative", height: 80 }}>
           {PROJECTS.map((p, i) => (
             <h2
@@ -225,7 +420,6 @@ export default function SectionSix() {
             minHeight: 160,
           }}
         >
-          {/* Description slot — cross-fading paragraphs, first one is relative to hold height */}
           <div style={{ position: "relative" }}>
             {PROJECTS.map((p, i) => (
               <p
@@ -250,7 +444,6 @@ export default function SectionSix() {
             ))}
           </div>
 
-          {/* CTA — second grid row, left-aligned */}
           <a
             href="/projects"
             style={{
@@ -284,7 +477,7 @@ export default function SectionSix() {
         </div>
       </div>
 
-      {/* ── Bottom tab bar ── */}
+      {/* Bottom tab bar */}
       <div className="absolute bottom-20 left-0 right-0 z-[3] flex justify-center">
         <div style={{ position: "relative" }}>
           <div ref={tabRowRef} style={{ display: "flex", columnGap: 32 }}>
@@ -324,7 +517,6 @@ export default function SectionSix() {
               background: "rgba(244,238,223,0.24)",
             }}
           />
-
           <div
             ref={activeBarRef}
             style={{
@@ -341,5 +533,20 @@ export default function SectionSix() {
         </div>
       </div>
     </section>
+  );
+}
+
+// ─── Root — CSS breakpoint swap, no DOM bleed ─────────────────────────────────
+export default function SectionSix() {
+  return (
+    <>
+      {/* Shown only on mobile via CSS, desktop component hidden */}
+      <div className="block md:hidden">
+        <SectionSixMobile />
+      </div>
+      <div className="hidden md:block">
+        <SectionSixDesktop />
+      </div>
+    </>
   );
 }

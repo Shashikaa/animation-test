@@ -38,8 +38,6 @@ let sharedBitmap:   ImageBitmap | null = null;
 let bitmapVideoTime = -1;
 let bitmapRafId:    number | null = null;
 
-// Throttle bitmap decode to ~20fps — the GLSL wave animation runs at full
-// frame rate regardless, so sampling the video more than 20fps is wasted work.
 const BITMAP_INTERVAL = 50; // ms
 let lastBitmapMs = 0;
 
@@ -51,11 +49,8 @@ function startBitmapLoop() {
     const v = sharedVideo;
     if (!v || !videoReady || v.readyState < 2) return;
 
-    // Throttle to ~20fps
     const now = performance.now();
     if (now - lastBitmapMs < BITMAP_INTERVAL) return;
-
-    // Skip if video frame hasn't changed
     if (v.currentTime === bitmapVideoTime) return;
 
     lastBitmapMs    = now;
@@ -188,7 +183,6 @@ function removeSharedMouseListener() {
 export default function WaterBackground({ paused }: { paused?: boolean }) {
   const canvasRef  = useRef<HTMLCanvasElement>(null);
   const pausedRef  = useRef(false);
-  // Track whether the canvas has been fully initialised so cleanup is safe
   const activeRef  = useRef(false);
 
   useEffect(() => { pausedRef.current = paused ?? false; }, [paused]);
@@ -343,7 +337,13 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
     let lastUploadedBitmap: ImageBitmap | null = null;
     let resizeTimer: ReturnType<typeof setTimeout> | undefined;
 
-    // ── Resize ───────────────────────────────────────────────────────────────
+    // ── Resize — cover mode on mobile ─────────────────────────────────────────
+    // The canvas pixel buffer is smaller than the viewport (for perf), but the
+    // CSS stretches it to cover. On mobile the video source is landscape (16:9)
+    // while the viewport is portrait, so we must size the buffer to the larger
+    // dimension in each axis so the CSS `object-fit:cover` equivalent works:
+    // we always render into a buffer whose aspect matches the viewport, and let
+    // CSS scale it up uniformly from the center.
     const resize = () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
@@ -419,11 +419,6 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     };
 
-    // ── Delay canvas start by 800ms ───────────────────────────────────────────
-    // The preloader wave-draw phase runs for ~1.8s. Starting the canvas at 800ms
-    // lets the preloader logo animation complete its most GPU-intensive frame
-    // burst before the WebGL canvas competes for resources. This also avoids
-    // starting video decode + bitmap loop on the very first frame of the page.
     let startTimer: ReturnType<typeof setTimeout>;
 
     startTimer = setTimeout(() => {
@@ -438,7 +433,6 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
       clearTimeout(resizeTimer);
       window.removeEventListener("resize", resize);
 
-      // Only clean up WebGL resources if the canvas actually started
       if (activeRef.current) {
         unregisterCallback(tick);
         removeSharedMouseListener();
@@ -457,8 +451,23 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none fixed inset-0 h-full w-full opacity-60"
-      style={{ mixBlendMode: "normal", zIndex: 1 }}
+      className="pointer-events-none fixed opacity-60"
+      style={{
+        mixBlendMode: "normal",
+        zIndex: 1,
+        // Cover + center: the canvas is anchored to the viewport centre.
+        // CSS stretches the pixel buffer to fill whichever axis is larger,
+        // mirroring object-fit:cover so the effect never shows letterboxing
+        // on portrait mobile screens.
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: "100%",
+        height: "100%",
+        minWidth: "100vw",
+        minHeight: "100vh",
+        objectFit: "cover",
+      }}
     />
   );
 }

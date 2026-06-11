@@ -21,79 +21,33 @@ export default function SectionFive() {
   return (
     <section
       ref={sectionRef}
-      className="section-5"
-      style={{
-        position:           "absolute",
-        inset:              0,
-        width:              "100%",
-        height:             "100%",
-        overflow:           "hidden",
-        zIndex:             10,
-        willChange:         "transform",
-        transform:          "translateZ(0)",
-        backfaceVisibility: "hidden",
-      }}
+      className="section-5 absolute inset-0 w-full h-full overflow-hidden z-10 [will-change:transform] [transform:translateZ(0)] [backface-visibility:hidden]"
     >
       {/* Full-section bg image */}
       <img
         src="/IntroReveal.webp"
         alt=""
         aria-hidden
-        style={{
-          position:           "absolute",
-          inset:              0,
-          width:              "100%",
-          height:             "100%",
-          objectFit:          "cover",
-          objectPosition:     "center 30%",
-          zIndex:             0,
-          transform:          "translateZ(0)",
-          backfaceVisibility: "hidden",
-        }}
+        className="absolute inset-0 w-full h-full object-cover object-[center_30%] z-0 [transform:translateZ(0)] [backface-visibility:hidden]"
       />
 
       {/* Water canvas over the full section */}
-      <div
-        style={{
-          position:      "absolute",
-          inset:         0,
-          zIndex:        1,
-          pointerEvents: "none",
-        }}
-      >
+      <div className="absolute inset-0 z-[1] pointer-events-none">
         <WaterBackground paused={offscreen} />
       </div>
 
       {/* Text */}
-      <div
-        style={{
-          position:       "absolute",
-          inset:          0,
-          zIndex:         10,
-          display:        "flex",
-          flexDirection:  "column",
-          alignItems:     "center",
-          justifyContent: "center",
-          gap:            80,
-          pointerEvents:  "none",
-          textAlign:      "center",
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div className="absolute inset-0 z-0 flex flex-col items-center justify-center gap-10 md:gap-20 pointer-events-none text-center">
+        <div className="flex flex-col gap-2">
           <h2
-            className="s5-title font-display !font-[100]"
-            style={{ color: "#F4EEDF" }}
+            className="s5-title font-display !font-[100] text-[#F4EEDF]"
           >
             Crafting Stunning Pools
           </h2>
         </div>
 
         <p
-          className="s5-body font-body"
-          style={{
-            color:    "#F4EBE4",
-            maxWidth: 360,
-          }}
+          className="s5-body font-body text-[#F4EBE4] w-full !w-[400px]  md:!w-[400px] lg:!w-[400px] !text-[14px] md:!text-[16px] md:!text-[16px] "
         >
           With expert craftsmanship and attention to detail, we bring your vision
           to life. Whether you need a backyard retreat or a high-end commercial

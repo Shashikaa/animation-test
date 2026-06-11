@@ -26,13 +26,16 @@ export default function SectionTwo() {
       style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
     >
       {/* Background image — given class s2-bg so page.tsx can scrub it */}
-      <img
-        src="/marvin-van.webp"
-        alt=""
-        aria-hidden
-        className="s2-bg absolute inset-0 w-full h-full object-cover z-0"
-        style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
-      />
+<picture>
+  <source media="(max-width: 767px)" srcSet="/marvin-van-mobile.webp" />
+  <img
+    src="/marvin-van.webp"
+    alt=""
+    aria-hidden
+    className="s2-bg absolute inset-0 w-full h-full object-cover z-0"
+    style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
+  />
+</picture>
 
       <WaterBackground paused={offscreen} />
 
@@ -49,7 +52,7 @@ export default function SectionTwo() {
 
 {/* BOTTOM RIGHT */}
 <div className="flex justify-end">
-  <p className="s2-body font-body text-[#F4EEDF] max-w-[220px] md:max-w-[280px] lg:max-w-[280px]">
+  <p className="s2-body font-body text-[#F4EEDF] text-right max-w-[220px]  md:max-w-[280px] lg:max-w-[280px] !mb-33 md:!mb-80 lg:!mb-0">
     From renovations to new builds, we design and construct pools that
     combine style, functionality, and durability.
   </p>

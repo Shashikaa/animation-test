@@ -14,6 +14,11 @@ export default function SectionFour() {
         backfaceVisibility: "hidden",
       }}
     >
+      <style>{`
+        @media (max-width: 767px) {
+          .s4-img  { background-image: url('/parallax-image-mobile.webp') !important; margin-top: 40px !important; }
+        }
+      `}</style>
 
       {/* ── Layer 0: Full-bleed background image ─────────────────────── */}
       <div style={{ position: "absolute", inset: 0, overflow: "hidden", zIndex: 0 }}>
@@ -84,14 +89,8 @@ export default function SectionFour() {
           </h2>
         </div>
 
-        {/* ROW 2: Para + CTA */}
-        <div
-          style={{
-            flexShrink: 0,
-            marginTop:  100,
-            maxWidth:   400,
-          }}
-        >
+        {/* ROW 2: Para + CTA — mt-[46px] on mobile, mt-[100px] on md+ */}
+        <div className="!mt-[46px] md:!mt-[100px]" style={{ flexShrink: 0, maxWidth: 400 }}>
           <p className="font-body s4-para text-[#F4EEDF]">
             At Grand Pools, we build more than just swimming pools — we create
             spaces where families gather, friends connect, and lasting memories
@@ -113,13 +112,13 @@ export default function SectionFour() {
           }}
         >
           <div
-            className="s4-img"
+            className="s4-img !h-[330px] md:!h-[530px] lg:!h-[630px] "
             style={{
               position:           "absolute",
               top:                "-10%",
               left:               0,
               width:              "100%",
-              height:             "630px",
+           
               backgroundImage:    "url('/parallax-image.webp')",
               backgroundSize:     "cover",
               backgroundPosition: "center 60%",
