@@ -5,66 +5,125 @@ import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSite } from "../app/context/SiteContext";
+import { setScrollVelocity } from "../app/utils/scrollVelocity";
 
 gsap.registerPlugin(ScrollTrigger);
+
+const MAX_SCROLL_PX_PER_FRAME = 190;
+const MAX_PROGRESS_DELTA      = 0.009;
 
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
   const thumbRef       = useRef<HTMLDivElement>(null);
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const { lenisRef, preloaderDone } = useSite();
+  const lastScrollRef  = useRef<number>(-1);
+  const { lenisRef, preloaderDone, setOnScrollReady } = useSite();
 
   useEffect(() => {
-    const lenis = new Lenis({
-      // lerp: 0.1 — the sweet spot for "buttery not laggy".
-      // 0.05–0.06 felt like wading through mud; 0.1 gives the smooth
-      // exponential decay you want while still responding immediately
-      // to input. Think of it as 10% of the distance closed per frame
-      // at 60fps — fast enough to feel live, slow enough to feel eased.
-      lerp:               0.08,
+    const isTouch = ScrollTrigger.isTouch > 0;
 
+    const lenis = new Lenis({
+      lerp:               isTouch ? 0.06 : 0.08,
       orientation:        "vertical",
       gestureOrientation: "vertical",
       smoothWheel:        true,
-
-      // 0.8 — back to a natural wheel speed. The lower multipliers
-      // (0.4–0.45) were making the page feel resistant, not smooth.
-      // Buttery feel comes from lerp easing, not from slowing input.
-      wheelMultiplier:    0.75,
-
-      // 1.5 — natural touch speed
-      touchMultiplier:    1.5,
-
-      syncTouch:          false,
+      wheelMultiplier:    isTouch ? 0.7 : 0.75,
+      syncTouch:          isTouch,
+      syncTouchLerp:      0.075,
+      touchMultiplier:    isTouch ? 0.8 : 1.5,
       infinite:           false,
       autoRaf:            false,
+      prevent: (node: Element) => node.closest("[data-lenis-prevent]") !== null,
     });
 
     lenisRef.current = lenis;
-    if (!preloaderDone) lenis.stop();
+    lenis.stop();
 
-    lenis.on("scroll", ScrollTrigger.update);
-    lenis.on("scroll", () => {
-      window.dispatchEvent(new Event("lenis-scroll"));
-    });
+    const tick = (time: number) => {
+      if (lastScrollRef.current === -1) {
+        lastScrollRef.current = lenis.scroll;
+      }
 
-    const tick = (time: number) => lenis.raf(time * 1000);
+      const target  = (lenis as any).targetScroll ?? lenis.scroll;
+      const current = lenis.scroll;
+      const delta   = target - current;
+      const clamped = Math.sign(delta) * Math.min(Math.abs(delta), MAX_SCROLL_PX_PER_FRAME);
+
+      if (Math.abs(delta) > MAX_SCROLL_PX_PER_FRAME) {
+        (lenis as any).targetScroll = current + clamped;
+      }
+
+      lenis.raf(time * 1000);
+      lastScrollRef.current = lenis.scroll;
+    };
+
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
 
-    // ── Scrollbar thumb ─────────────────────────────────────────
+    let lastProgress = 0;
+
+    const capProgress = () => {
+      const st = ScrollTrigger.getAll().find(t => t.pin);
+      if (!st) return;
+      const raw        = st.progress;
+      const maxAdvance = lastProgress + MAX_PROGRESS_DELTA;
+      const maxRetreat = lastProgress - MAX_PROGRESS_DELTA;
+      if (raw > maxAdvance) {
+        st.scroll(st.start + maxAdvance * (st.end - st.start));
+      } else if (raw < maxRetreat) {
+        st.scroll(st.start + maxRetreat * (st.end - st.start));
+      }
+      lastProgress = st.progress;
+    };
+
+    gsap.ticker.add(capProgress, false);
+
+    const onScroll = (e: { velocity?: number }) => {
+      ScrollTrigger.update();
+      setScrollVelocity(Math.abs(e.velocity ?? 0));
+      window.dispatchEvent(new Event("lenis-scroll"));
+    };
+
+    lenis.on("scroll", onScroll);
+
+    // ── Visibility change handler ─────────────────────────────────────────
+    // DO NOT call ScrollTrigger.refresh() here — it recalculates pin geometry
+    // and can reset scrub progress, causing a dead-scroll window.
+    // ScrollTrigger.update() (no args) re-evaluates position only.
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== "visible") return;
+
+      // Restore pointer events immediately
+      document.documentElement.style.pointerEvents = "";
+      document.body.style.pointerEvents = "";
+
+      // Wake GSAP ticker — browsers pause rAF in background tabs
+      gsap.ticker.wake();
+
+      // Re-sync Lenis internal target to current scroll so it doesn't
+      // jump when resuming after the tab was hidden
+      if (lenisRef.current) {
+        (lenisRef.current as any).targetScroll = lenisRef.current.scroll;
+        lenisRef.current.start();
+      }
+
+      // Light re-evaluation only — no geometry recalculation
+      ScrollTrigger.update();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     let thumbVisible = false;
 
     const updateThumb = () => {
-      if (!thumbRef.current) return;
+      if (isTouch || !thumbRef.current) return;
       const scroll = lenis.scroll;
       const limit  = lenis.limit;
-      const trackH = window.innerHeight;
+      const trackH = visualViewport?.height ?? window.innerHeight;
       const thumbH = Math.max((trackH / (limit + trackH)) * trackH, 40);
       const maxTop = trackH - thumbH;
       const top    = limit > 0 ? (scroll / limit) * maxTop : 0;
       thumbRef.current.style.height    = `${thumbH}px`;
       thumbRef.current.style.transform = `translateY(${top}px)`;
-
       if (scroll > 1 && !thumbVisible) {
         thumbVisible = true;
         thumbRef.current.style.opacity = "1";
@@ -80,13 +139,25 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
     return () => {
       clearTimeout(scrollTimerRef.current);
-      lenis.off("scroll", ScrollTrigger.update);
+      setScrollVelocity(0);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      lenis.off("scroll", onScroll);
       lenis.off("scroll", updateThumb);
       gsap.ticker.remove(tick);
+      gsap.ticker.remove(capProgress);
       lenis.destroy();
       lenisRef.current = null;
     };
-  }, [preloaderDone, lenisRef]);
+  }, [lenisRef]);
+
+  useEffect(() => {
+    setOnScrollReady(() => {
+      if (lenisRef.current) {
+        lastScrollRef.current = lenisRef.current.scroll;
+        lenisRef.current.start();
+      }
+    });
+  }, [setOnScrollReady, lenisRef]);
 
   return (
     <>

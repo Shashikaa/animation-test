@@ -123,7 +123,44 @@ type Phase =
   | "fly-out"
   | "done";
 
-const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+// Visibility-aware wait — pauses countdown while tab is hidden,
+// resumes when visible again. Keeps in sync with Framer Motion's
+// animate() which also pauses its rAF loop when the tab is hidden.
+const wait = (ms: number) =>
+  new Promise<void>((resolve) => {
+    let remaining = ms;
+    let startedAt = Date.now();
+    let timer: ReturnType<typeof setTimeout>;
+    let done = false;
+
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", handler);
+      resolve();
+    };
+
+    const schedule = () => {
+      timer = setTimeout(finish, remaining);
+      startedAt = Date.now();
+    };
+
+    const handler = () => {
+      if (document.visibilityState === "hidden") {
+        clearTimeout(timer);
+        remaining -= Date.now() - startedAt;
+        if (remaining <= 0) { finish(); return; }
+      } else {
+        schedule();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handler);
+
+    if (document.visibilityState !== "hidden") schedule();
+    // If already hidden, handler fires on next visibilitychange → visible
+  });
 
 // ─── Preloader ────────────────────────────────────────────────────────────────
 export default function Preloader({ onComplete }: { onComplete?: () => void }) {
@@ -172,22 +209,36 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   // ─── Animation sequence ────────────────────────────────────────────────────
   useEffect(() => {
     const run = async () => {
-      await wait(400);
+      
+  // If tab is hidden when preloader starts, wait for it to become visible
+  if (document.visibilityState === "hidden") {
+    await new Promise<void>((r) => {
+      const check = () => {
+        if (document.visibilityState === "visible") {
+          document.removeEventListener("visibilitychange", check);
+          r();
+        }
+      };
+      document.addEventListener("visibilitychange", check);
+    });
+  }
 
-      setPhase("wave-draw");
-      animate(waveProgressMV, 1, { duration: 2.2, ease: [0.16, 1, 0.3, 1] });
-      await wait(1800);
+  await wait(400);  // ← only ONE wait(400) here
 
-      setPhase("text-reveal");
-      animate(circleProgressMV, 1, { duration: 1.4, ease: [0.16, 1, 0.3, 1] });
-      animate(dotOpacityMV,     1, { duration: 1.2, ease: [0.16, 1, 0.3, 1] });
-      await wait(1400);
+  setPhase("wave-draw");
+  animate(waveProgressMV, 1, { duration: 2.2, ease: [0.16, 1, 0.3, 1] });
+  await wait(1800);
 
-      animate(textProgress, 1, { duration: 1.4, ease: [0.16, 1, 0.3, 1] });
-      await wait(1400);
+  setPhase("text-reveal");
+  animate(circleProgressMV, 1, { duration: 1.4, ease: [0.16, 1, 0.3, 1] });
+  animate(dotOpacityMV,     1, { duration: 1.2, ease: [0.16, 1, 0.3, 1] });
+  await wait(1400);
 
-      setPhase("hold");
-      await wait(700);
+  animate(textProgress, 1, { duration: 1.4, ease: [0.16, 1, 0.3, 1] });
+  await wait(1400);
+
+  setPhase("hold");
+  await wait(700);
 
       const hGrand = document.getElementById("h-grand-svg");
       const hIcon  = document.getElementById("h-icon-svg");

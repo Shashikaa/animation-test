@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef, useEffect } from "react";
 import gsap from "gsap";
+import { getScrollVelocity } from "../app/utils/scrollVelocity";
 
+// ─── Shared GSAP ticker ───────────────────────────────────────────────────────
 type RenderCallback = (now: number) => void;
 const renderCallbacks = new Set<RenderCallback>();
 let tickerAdded = false;
@@ -28,27 +30,43 @@ function unregisterCallback(cb: RenderCallback) {
   }
 }
 
-// ── Shared Video Context Setup ───────────────────────────────
-let sharedVideo: HTMLVideoElement | null = null;
-let videoReady = false;
-let videoRefCount = 0;
-let sharedBitmap: ImageBitmap | null = null;
+// ─── Shared video + bitmap ────────────────────────────────────────────────────
+let sharedVideo:    HTMLVideoElement | null = null;
+let videoReady      = false;
+let videoRefCount   = 0;
+let sharedBitmap:   ImageBitmap | null = null;
 let bitmapVideoTime = -1;
-let bitmapRafId: number | null = null;
+let bitmapRafId:    number | null = null;
+
+// Throttle bitmap decode to ~20fps — the GLSL wave animation runs at full
+// frame rate regardless, so sampling the video more than 20fps is wasted work.
+const BITMAP_INTERVAL = 50; // ms
+let lastBitmapMs = 0;
 
 function startBitmapLoop() {
   if (bitmapRafId !== null) return;
+
   const loop = () => {
     bitmapRafId = requestAnimationFrame(loop);
     const v = sharedVideo;
     if (!v || !videoReady || v.readyState < 2) return;
+
+    // Throttle to ~20fps
+    const now = performance.now();
+    if (now - lastBitmapMs < BITMAP_INTERVAL) return;
+
+    // Skip if video frame hasn't changed
     if (v.currentTime === bitmapVideoTime) return;
+
+    lastBitmapMs    = now;
     bitmapVideoTime = v.currentTime;
+
     createImageBitmap(v, { resizeWidth: 512, resizeHeight: 288 }).then((bm) => {
       if (sharedBitmap) sharedBitmap.close();
       sharedBitmap = bm;
     });
   };
+
   bitmapRafId = requestAnimationFrame(loop);
 }
 
@@ -56,19 +74,28 @@ function stopBitmapLoop() {
   if (bitmapRafId !== null) { cancelAnimationFrame(bitmapRafId); bitmapRafId = null; }
   if (sharedBitmap) { sharedBitmap.close(); sharedBitmap = null; }
   bitmapVideoTime = -1;
+  lastBitmapMs    = 0;
 }
 
 function getSharedVideo(): HTMLVideoElement {
   if (!sharedVideo) {
     const v = document.createElement("video");
-    v.src = "/videos/Pool-Water-Reflect.mp4";
-    v.muted = true; v.loop = true; v.playsInline = true;
-    v.preload = "auto"; v.crossOrigin = "anonymous";
+    v.src         = "/videos/Pool-Water-Reflect.mp4";
+    v.muted       = true;
+    v.loop        = true;
+    v.playsInline = true;
+    v.preload     = "auto";
+    v.crossOrigin = "anonymous";
+
     const onReady = () => { videoReady = true; startBitmapLoop(); };
     v.addEventListener("canplaythrough", onReady, { once: true });
-    v.addEventListener("canplay", onReady, { once: true });
+    v.addEventListener("canplay",        onReady, { once: true });
+
     const p = v.play();
-    if (p) p.catch(() => document.addEventListener("pointerdown", () => v.play().catch(() => {}), { once: true }));
+    if (p) p.catch(() =>
+      document.addEventListener("pointerdown", () => v.play().catch(() => {}), { once: true })
+    );
+
     sharedVideo = v;
   }
   videoRefCount++;
@@ -78,12 +105,15 @@ function getSharedVideo(): HTMLVideoElement {
 function releaseSharedVideo() {
   videoRefCount--;
   if (videoRefCount <= 0 && sharedVideo) {
-    sharedVideo.pause(); sharedVideo = null; videoReady = false;
-    videoRefCount = 0; stopBitmapLoop();
+    sharedVideo.pause();
+    sharedVideo   = null;
+    videoReady    = false;
+    videoRefCount = 0;
+    stopBitmapLoop();
   }
 }
 
-let globalInstanceCounter = 0;
+// ─── Shared mouse / trail state ───────────────────────────────────────────────
 const TRAIL_LEN = 8;
 
 interface TouchPoint {
@@ -110,38 +140,6 @@ const sharedMouse: SharedMouseState = {
 
 let mouseListenerCount = 0;
 let prevMouseX = 0.5, prevMouseY = 0.5;
-let scrollVelocity = 0;
-let scrollListenerCount = 0;
-let lenisVelocityRafId: number | null = null;
-let lastRawScrollY = 0;
-
-function trackManualScroll() {
-  lenisVelocityRafId = requestAnimationFrame(trackManualScroll);
-  const currentScrollY = window.scrollY || document.documentElement.scrollTop;
-  const delta = Math.abs(currentScrollY - lastRawScrollY);
-  lastRawScrollY = currentScrollY;
-  
-  if (delta > 0) {
-    scrollVelocity = Math.min(delta / 8, 2.5);
-  } else {
-    scrollVelocity *= 0.85; // Faster decay tracking
-  }
-}
-
-function startScrollTracker() {
-  if (scrollListenerCount > 0) { scrollListenerCount++; return; }
-  scrollListenerCount++;
-  lastRawScrollY = window.scrollY || document.documentElement.scrollTop;
-  lenisVelocityRafId = requestAnimationFrame(trackManualScroll);
-}
-
-function stopScrollTracker() {
-  scrollListenerCount--;
-  if (scrollListenerCount <= 0) {
-    scrollListenerCount = 0;
-    if (lenisVelocityRafId !== null) { cancelAnimationFrame(lenisVelocityRafId); lenisVelocityRafId = null; }
-  }
-}
 
 function pushTrail(x: number, y: number) {
   const vx = x - prevMouseX;
@@ -157,13 +155,14 @@ function onSharedMouseMove(e: MouseEvent) {
   const ny = 1 - e.clientY / window.innerHeight;
   sharedMouse.vx = nx - sharedMouse.x;
   sharedMouse.vy = ny - sharedMouse.y;
-  sharedMouse.x = nx; sharedMouse.y = ny;
+  sharedMouse.x  = nx;
+  sharedMouse.y  = ny;
   sharedMouse.rippleTarget = 0.12;
-  sharedMouse.lastMove = performance.now();
+  sharedMouse.lastMove     = performance.now();
   pushTrail(nx, ny);
 }
 
-function onSharedPointerDown() { sharedMouse.down = true; sharedMouse.rippleTarget = 0.18; }
+function onSharedPointerDown() { sharedMouse.down = true;  sharedMouse.rippleTarget = 0.18; }
 function onSharedPointerUp()   { sharedMouse.down = false; }
 
 function addSharedMouseListener() {
@@ -171,7 +170,6 @@ function addSharedMouseListener() {
     window.addEventListener("mousemove",   onSharedMouseMove,   { passive: true });
     window.addEventListener("pointerdown", onSharedPointerDown, { passive: true });
     window.addEventListener("pointerup",   onSharedPointerUp,   { passive: true });
-    startScrollTracker();
   }
   mouseListenerCount++;
 }
@@ -183,13 +181,15 @@ function removeSharedMouseListener() {
     window.removeEventListener("mousemove",   onSharedMouseMove);
     window.removeEventListener("pointerdown", onSharedPointerDown);
     window.removeEventListener("pointerup",   onSharedPointerUp);
-    stopScrollTracker();
   }
 }
 
+// ─── Component ────────────────────────────────────────────────────────────────
 export default function WaterBackground({ paused }: { paused?: boolean }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const pausedRef = useRef(false);
+  const canvasRef  = useRef<HTMLCanvasElement>(null);
+  const pausedRef  = useRef(false);
+  // Track whether the canvas has been fully initialised so cleanup is safe
+  const activeRef  = useRef(false);
 
   useEffect(() => { pausedRef.current = paused ?? false; }, [paused]);
 
@@ -198,18 +198,18 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
     if (!canvas) return;
 
     const gl = canvas.getContext("webgl", {
-      alpha: true,
-      premultipliedAlpha: false,
-      antialias: false,
-      powerPreference: "high-performance",
+      alpha:                 true,
+      premultipliedAlpha:    false,
+      antialias:             false,
+      powerPreference:       "high-performance",
       preserveDrawingBuffer: false,
     });
     if (!gl) return;
 
-    const instanceId = globalInstanceCounter++;
     const SCALE_IDLE   = 0.5;
     const SCALE_SCROLL = 0.35;
 
+    // ── Shaders ──────────────────────────────────────────────────────────────
     const vert = `
       attribute vec2 a_position;
       varying vec2 vUv;
@@ -252,21 +252,20 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
           float alive = 1.0 - uTrailAge[i];
           if (alive <= 0.0) continue;
 
-          vec2 delta = uv - uTrailPos[i];
+          vec2  delta = uv - uTrailPos[i];
           float dist  = length(delta);
           float norm  = dist + 0.0001;
 
           float part  = exp(-dist * 8.0) * alive * uTrailStr[i] * 0.06;
           uv += (delta / norm) * part;
 
-          float wakeFreq = 30.0;
-          float wakeAmp  = exp(-dist * 5.0) * alive * uTrailStr[i] * 0.015;
-          float wake     = sin(dist * wakeFreq - t * 6.0) * wakeAmp;
-          if (norm > 0.0001) uv += (delta / norm) * wake;
+          float wakeAmp = exp(-dist * 5.0) * alive * uTrailStr[i] * 0.015;
+          float wake    = sin(dist * 30.0 - t * 6.0) * wakeAmp;
+          uv += (delta / norm) * wake;
 
           float ringDist = 0.08 * alive;
           float tension  = exp(-pow(dist - ringDist, 2.0) * 200.0) * alive * 0.012;
-          if (norm > 0.0001) uv -= (delta / norm) * tension;
+          uv -= (delta / norm) * tension;
         }
 
         vec2  md2 = uv - uMouse2;
@@ -289,6 +288,7 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
       }
     `;
 
+    // ── Compile & link ────────────────────────────────────────────────────────
     const compile = (type: number, src: string) => {
       const s = gl.createShader(type)!;
       gl.shaderSource(s, src);
@@ -304,23 +304,35 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
 
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]),
+      gl.STATIC_DRAW
+    );
 
     const posLoc = gl.getAttribLocation(program, "a_position");
     gl.enableVertexAttribArray(posLoc);
     gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
 
-    const uTime           = gl.getUniformLocation(program, "uTime");
-    const uMouse          = gl.getUniformLocation(program, "uMouse");
-    const uMouse2         = gl.getUniformLocation(program, "uMouse2");
-    const uSpeed          = gl.getUniformLocation(program, "uSpeed");
-    const uScrollVel      = gl.getUniformLocation(program, "uScrollVel");
-    const uTrailCount     = gl.getUniformLocation(program, "uTrailCount");
+    // ── Uniform locations ────────────────────────────────────────────────────
+    const uTime       = gl.getUniformLocation(program, "uTime");
+    const uMouse      = gl.getUniformLocation(program, "uMouse");
+    const uMouse2     = gl.getUniformLocation(program, "uMouse2");
+    const uSpeed      = gl.getUniformLocation(program, "uSpeed");
+    const uScrollVel  = gl.getUniformLocation(program, "uScrollVel");
+    const uTrailCount = gl.getUniformLocation(program, "uTrailCount");
 
-    const uTrailPos = Array.from({ length: TRAIL_LEN }, (_, i) => gl.getUniformLocation(program, `uTrailPos[${i}]`));
-    const uTrailAge = Array.from({ length: TRAIL_LEN }, (_, i) => gl.getUniformLocation(program, `uTrailAge[${i}]`));
-    const uTrailStr = Array.from({ length: TRAIL_LEN }, (_, i) => gl.getUniformLocation(program, `uTrailStr[${i}]`));
+    const uTrailPos = Array.from({ length: TRAIL_LEN }, (_, i) =>
+      gl.getUniformLocation(program, `uTrailPos[${i}]`)
+    );
+    const uTrailAge = Array.from({ length: TRAIL_LEN }, (_, i) =>
+      gl.getUniformLocation(program, `uTrailAge[${i}]`)
+    );
+    const uTrailStr = Array.from({ length: TRAIL_LEN }, (_, i) =>
+      gl.getUniformLocation(program, `uTrailStr[${i}]`)
+    );
 
+    // ── Texture ───────────────────────────────────────────────────────────────
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S,     gl.CLAMP_TO_EDGE);
@@ -331,15 +343,16 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
     let lastUploadedBitmap: ImageBitmap | null = null;
     let resizeTimer: ReturnType<typeof setTimeout> | undefined;
 
-    // FIX: Fixed the canvas.widt typo to correctly set layout dimensions
+    // ── Resize ───────────────────────────────────────────────────────────────
     const resize = () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
-        const scale = scrollVelocity > 0.3 ? SCALE_SCROLL : SCALE_IDLE;
-        const w = Math.floor(window.innerWidth * scale);
-        const h = Math.floor(window.innerHeight * scale);
+        const sv    = getScrollVelocity();
+        const scale = sv > 0.3 ? SCALE_SCROLL : SCALE_IDLE;
+        const w     = Math.floor(window.innerWidth  * scale);
+        const h     = Math.floor(window.innerHeight * scale);
         if (canvas.width !== w || canvas.height !== h) {
-          canvas.width = w;
+          canvas.width  = w;
           canvas.height = h;
           gl.viewport(0, 0, w, h);
         }
@@ -349,24 +362,23 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
     window.addEventListener("resize", resize, { passive: true });
     resize();
 
-    const video = getSharedVideo();
-    addSharedMouseListener();
+    // ── Per-frame state ───────────────────────────────────────────────────────
+    let currentRipple  = 0.04;
+    let mouse2X        = 0.5;
+    let mouse2Y        = 0.5;
+    let localTime      = 0;
+    let lastFrameTime  = performance.now();
 
-    let currentRipple = 0.04;
-    let mouse2X = 0.5, mouse2Y = 0.5;
-    let localTime = 0;
-    let lastFrameTime = performance.now();
-
+    // ── Render tick ───────────────────────────────────────────────────────────
     const tick = (now: number) => {
       if (pausedRef.current) return;
 
       const deltaFrame = now - lastFrameTime;
-      lastFrameTime = now;
-      localTime += deltaFrame * 0.001;
+      lastFrameTime    = now;
+      localTime       += deltaFrame * 0.001;
 
-      if (scrollVelocity > 0.1) {
-        resize();
-      }
+      const sv = getScrollVelocity();
+      if (sv > 0.1) resize();
 
       currentRipple += (sharedMouse.rippleTarget - currentRipple) * 0.1;
       if (performance.now() - sharedMouse.lastMove > 800) {
@@ -385,19 +397,19 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
         lastUploadedBitmap = sharedBitmap;
       }
 
-      gl.uniform1f(uTime, localTime);
-      gl.uniform2f(uMouse, sharedMouse.x, sharedMouse.y);
-      gl.uniform2f(uMouse2, mouse2X, mouse2Y);
-      gl.uniform1f(uSpeed, 1.2);
-      gl.uniform1f(uScrollVel, scrollVelocity);
+      gl.uniform1f(uTime,      localTime);
+      gl.uniform2f(uMouse,     sharedMouse.x, sharedMouse.y);
+      gl.uniform2f(uMouse2,    mouse2X, mouse2Y);
+      gl.uniform1f(uSpeed,     1.2);
+      gl.uniform1f(uScrollVel, sv);
 
-      const activeTrail = sharedMouse.trail.filter(pt => pt.age < 1.0);
+      const activeTrail = sharedMouse.trail.filter((pt) => pt.age < 1.0);
       gl.uniform1i(uTrailCount, activeTrail.length);
 
       for (let i = 0; i < TRAIL_LEN; i++) {
         if (i < activeTrail.length) {
           const pt = activeTrail[i];
-          pt.age += deltaFrame * 0.0015; // Natural fluid decay rate
+          pt.age += deltaFrame * 0.0015;
           gl.uniform2f(uTrailPos[i], pt.x, pt.y);
           gl.uniform1f(uTrailAge[i], Math.min(pt.age, 1.0));
           gl.uniform1f(uTrailStr[i], pt.strength);
@@ -407,22 +419,40 @@ export default function WaterBackground({ paused }: { paused?: boolean }) {
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     };
 
-    registerCallback(tick);
+    // ── Delay canvas start by 800ms ───────────────────────────────────────────
+    // The preloader wave-draw phase runs for ~1.8s. Starting the canvas at 800ms
+    // lets the preloader logo animation complete its most GPU-intensive frame
+    // burst before the WebGL canvas competes for resources. This also avoids
+    // starting video decode + bitmap loop on the very first frame of the page.
+    let startTimer: ReturnType<typeof setTimeout>;
+
+    startTimer = setTimeout(() => {
+      getSharedVideo();
+      addSharedMouseListener();
+      registerCallback(tick);
+      activeRef.current = true;
+    }, 800);
 
     return () => {
+      clearTimeout(startTimer);
       clearTimeout(resizeTimer);
       window.removeEventListener("resize", resize);
-      unregisterCallback(tick);
-      removeSharedMouseListener();
-      releaseSharedVideo();
-      
+
+      // Only clean up WebGL resources if the canvas actually started
+      if (activeRef.current) {
+        unregisterCallback(tick);
+        removeSharedMouseListener();
+        releaseSharedVideo();
+        activeRef.current = false;
+      }
+
       gl.bindTexture(gl.TEXTURE_2D, null);
       gl.deleteTexture(texture);
       gl.bindBuffer(gl.ARRAY_BUFFER, null);
       gl.deleteBuffer(buf);
       gl.deleteProgram(program);
     };
-  }, [paused]);
+  }, []);
 
   return (
     <canvas

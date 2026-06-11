@@ -6,7 +6,7 @@ export default function SectionNine() {
 
       {/* s9-bg-img — no inline top offset, GSAP owns the transform via yPercent */}
       <div
-        className="s9-bg-img absolute bg-cover bg-center"
+        className=" absolute bg-cover bg-center"
         style={{
           backgroundImage: "url('/murray-st-prahran.webp')",
           top:    0,

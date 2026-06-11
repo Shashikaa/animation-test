@@ -108,7 +108,7 @@ export default function SectionEight() {
           />
 
           <div className="absolute inset-0 z-10">
-            <WaterBackground paused={offscreen} />
+            <WaterBackground  />
           </div>
 
           {/* Person — only this moves with mouse */}
@@ -175,7 +175,7 @@ export default function SectionEight() {
           />
 
           <div className="absolute inset-0 z-10">
-            <WaterBackground paused={offscreen} />
+            <WaterBackground  />
           </div>
 
           {/* Text — static, no movement */}
