@@ -14,11 +14,13 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="hero relative w-full h-screen overflow-hidden bg-cover bg-center bg-[url('/hero-mobile.webp')] md:bg-[url('/hero.webp')]">
+    <section className="hero relative w-full h-screen overflow-hidden">
+
+      {/* Background layer — same position/size as before (inset-0) */}
+      <div className="hero-bg absolute inset-0 bg-cover bg-center bg-[url('/hero-mobile.webp')] md:bg-[url('/hero.webp')] will-change-transform" />
 
       {/* Overlay */}
       <div className="absolute inset-0 z-0 bg-[linear-gradient(107.8deg,rgba(25,33,28,0)_50.32%,rgba(25,33,28,0.72)_78.81%)] hidden md:block" />
-
 
       {/* Content */}
       <div className="section-continer relative z-10 h-full flex items-end justify-end !pb-[115px] !lg:pb-[85px]">
