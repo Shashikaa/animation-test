@@ -368,39 +368,39 @@ export default function HomeMobile() {
           <SectionOne />
         </div>
 
-        <div className="section-2 absolute inset-0 z-[95]" style={{ pointerEvents: "none" }}>
+        <div className="section-2 absolute inset-0 z-[95]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionTwo />
         </div>
 
-        <div className="section-3 absolute inset-0 z-[100]" style={{ pointerEvents: "none" }}>
+        <div className="section-3 absolute inset-0 z-[100]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionThree />
         </div>
 
-        <div className="section-4 absolute inset-0 z-[105]" style={{ overflow: "visible", pointerEvents: "none" }}>
+        <div className="section-4 absolute inset-0 z-[105]" style={{ overflow: "visible", pointerEvents: "none", visibility: "hidden" }}>
           <SectionFour />
         </div>
 
-        <div className="section-5 absolute inset-0 z-[110]" style={{ pointerEvents: "none" }}>
+        <div className="section-5 absolute inset-0 z-[110]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionFive />
         </div>
 
-        <div className="section-10 absolute inset-0 z-[112]" style={{ pointerEvents: "none" }}>
+        <div className="section-10 absolute inset-0 z-[112]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionTen />
         </div>
 
-        <div className="section-6 absolute inset-0 z-[115]" style={{ pointerEvents: "none" }}>
+        <div className="section-6 absolute inset-0 z-[115]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionSix />
         </div>
 
-        <div className="section-9 absolute inset-0 z-[121]" style={{ pointerEvents: "none" }}>
+        <div className="section-9 absolute inset-0 z-[121]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionNine />
         </div>
 
-        <div className="section-8 absolute inset-0 z-[128]" style={{ pointerEvents: "auto" }}>
+        <div className="section-8 absolute inset-0 z-[128]" style={{ pointerEvents: "auto" , visibility: "hidden"}}>
           <SectionEight />
         </div>
 
-        <div className="section-7 absolute inset-0 z-[130]" style={{ pointerEvents: "none" }}>
+   <div className="section-7 absolute inset-0 z-[130]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionSeven />
         </div>
 

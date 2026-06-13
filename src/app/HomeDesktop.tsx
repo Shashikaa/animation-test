@@ -123,7 +123,7 @@ export default function HomeDesktop() {
         opacity:    1,
         zIndex:     79,
       });
-      gsap.set(".s9-bg-img", { yPercent: 20 });
+      gsap.set(".s9-bg-img", { yPercent: 0 });
 
       gsap.set(".s8-panel-left",  { clipPath: "inset(0% 50% 0% 0%)",  zIndex: 85 });
       gsap.set(".s8-panel-right", { clipPath: "inset(0% 0% 0% 50%)",  zIndex: 85 });
