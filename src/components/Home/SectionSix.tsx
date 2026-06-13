@@ -106,22 +106,16 @@ function SectionSixMobile() {
   function handleNext() { go((active + 1) % PROJECTS.length); }
 
   return (
-    <section
-      className="relative w-full overflow-hidden section-six-wrapper"
-      style={{ height: "100svh", pointerEvents: "auto" }}
-    >
+    <section className="!relative !w-full !overflow-hidden section-six-wrapper !h-[100svh] !pointer-events-auto">
+
       {/* Backgrounds */}
       {PROJECTS.map((p, i) => (
         <div
           key={p.id}
           ref={(el) => { bgRefs.current[i] = el; }}
+          className="!absolute !inset-0 !bg-cover !bg-center !will-change-[opacity]"
           style={{
-            position: "absolute",
-            inset: 0,
             backgroundImage: `url('${p.image}')`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            willChange: "opacity",
             transform: "translateZ(0)",
             backfaceVisibility: "hidden",
           }}
@@ -130,7 +124,7 @@ function SectionSixMobile() {
 
       {/* Gradient overlay */}
       <div
-        className="absolute inset-0 z-[1]"
+        className="!absolute !inset-0 !z-[1]"
         style={{
           background:
             "linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.60) 45%, rgba(0,0,0,0.72) 100%)",
@@ -139,49 +133,32 @@ function SectionSixMobile() {
       />
 
       {/* Content */}
-      <div className="relative z-[2] h-full flex flex-col justify-end section-continer">
+      <div className="!relative !z-[2] !h-full !flex !flex-col !justify-end section-continer">
 
-        {/* Number + Title — fixed heights, all absolute to prevent layout flash */}
-        <div style={{ marginBottom: 30 }}>
-          <div style={{ position: "relative", height: 28 }}>
+        {/* Number + Title */}
+        <div className="!mb-[30px]">
+          <div className="!relative !h-7">
             {PROJECTS.map((p, i) => (
               <span
                 key={p.id}
                 ref={(el) => { numRefs.current[i] = el; }}
-                className="font-body"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  color: "#F4EEDF",
-                  fontSize: 14,
-                  fontWeight: 300,
-                  letterSpacing: "0.04em",
-                  opacity: i === 0 ? 1 : 0,
-                  pointerEvents: "none",
-                }}
+                className="font-body !absolute !top-0 !left-0 !text-[#F4EEDF] !text-[14px] !font-light !tracking-[0.04em] !pointer-events-none"
+                style={{ opacity: i === 0 ? 1 : 0 }}
               >
                 ({i + 1})
               </span>
             ))}
           </div>
 
-          <div style={{ position: "relative", height: 72 }}>
+          <div className="!relative !h-[72px]">
             {PROJECTS.map((p, i) => (
               <h2
                 key={p.id}
                 ref={(el) => { h2Refs.current[i] = el; }}
+                className="!absolute !top-0 !left-0 !m-0 !text-[#F4EEDF] !font-thin !max-w-[66%] !pointer-events-none"
                 style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  margin: 0,
-                  color: "#F4EEDF",
                   fontFamily: "var(--font-display, inherit)",
-                  fontWeight: 100,
-                  maxWidth: "66%",
                   opacity: i === 0 ? 1 : 0,
-                  pointerEvents: "none",
                 }}
               >
                 {p.label}
@@ -192,36 +169,24 @@ function SectionSixMobile() {
 
         {/* Glass card */}
         <div
+          className="!self-end !w-[72%]  md:!w-[52%] !will-change-transform !mt-5 !px-[25px] !pb-[25px] !pt-[40px]"
           style={{
-            alignSelf: "flex-end",
-            width: "72%",
             backdropFilter: "blur(42px)",
             WebkitBackdropFilter: "blur(42px)",
             background:
               "radial-gradient(100% 100% at 0% 0%, rgba(25,33,28,0.72) 0%, rgba(25,33,28,0.32) 100%)",
             boxShadow: "-5px -5px 25px rgba(255,255,255,0.02) inset",
-            willChange: "transform",
             transform: "translateZ(0)",
-            padding: "40px 25px 25px",
-            marginTop: 20,
           }}
         >
-          {/* Description — fixed height, all absolute to prevent layout flash */}
-          <div style={{ position: "relative", minHeight: 100 }}>
+          {/* Description */}
+          <div className="!relative !min-h-[100px]">
             {PROJECTS.map((p, i) => (
               <p
                 key={p.id}
                 ref={(el) => { descRefs.current[i] = el; }}
-                className="font-body"
+                className="font-body !absolute !top-0 !left-0 !text-[#F4EEDF] !text-[14px] !font-normal !leading-[1.6] !m-0"
                 style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  color: "#F4EEDF",
-                  fontSize: 14,
-                  fontWeight: 400,
-                  lineHeight: 1.6,
-                  margin: 0,
                   opacity: i === 0 ? 1 : 0,
                   pointerEvents: i === active ? "auto" : "none",
                 }}
@@ -232,29 +197,22 @@ function SectionSixMobile() {
           </div>
 
           {/* Prev / Next */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginTop: 54,
-            }}
-          >
+          <div className="!flex !items-center !justify-between !mt-[54px]">
             <button
               type="button"
               onClick={handlePrev}
-              className="group font-body cursor-pointer text-[14px] text-[#F4EEDF] flex items-center gap-2 transition-opacity duration-200 hover:opacity-70 bg-transparent border-none p-0"
+              className="group font-body !cursor-pointer !text-[14px] !text-[#F4EEDF] !flex !items-center !gap-2 !transition-opacity !duration-200 hover:!opacity-70 !bg-transparent !border-none !p-0"
             >
-              <img src="/arrow-right.svg" alt="Previous" style={{ width: 16, height: 16, transform: "rotate(180deg)" }} />
+              <img src="/arrow-right.svg" alt="Previous" className="!w-4 !h-4 !rotate-180" />
               <span>Previous</span>
             </button>
             <button
               type="button"
               onClick={handleNext}
-              className="group font-body cursor-pointer text-[14px] text-[#F4EEDF] flex items-center gap-2 transition-opacity duration-200 hover:opacity-70 bg-transparent border-none p-0"
+              className="group font-body !cursor-pointer !text-[14px] !text-[#F4EEDF] !flex !items-center !gap-2 !transition-opacity !duration-200 hover:!opacity-70 !bg-transparent !border-none !p-0"
             >
               <span>Next</span>
-              <img src="/arrow-right.svg" alt="Next" style={{ width: 16, height: 16 }} />
+              <img src="/arrow-right.svg" alt="Next" className="!w-4 !h-4" />
             </button>
           </div>
         </div>
@@ -287,24 +245,32 @@ function SectionSixDesktop() {
   }, []);
 
   useEffect(() => {
-    const raf = requestAnimationFrame(() => {
-      measureAllBars();
-      const m = barMetricsCache.current[0];
-      if (m && activeBarRef.current) {
-        gsap.set(activeBarRef.current, { left: m.left, width: m.width });
-      }
+    // Double RAF: first frame triggers layout, second reads correct DOMRects
+    let raf1: number, raf2: number;
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        measureAllBars();
+        const m = barMetricsCache.current[0];
+        if (m && activeBarRef.current) {
+          // Use setProperty with "important" so no stylesheet can override GSAP
+          activeBarRef.current.style.setProperty("left",  `${m.left}px`,  "important");
+          activeBarRef.current.style.setProperty("width", `${m.width}px`, "important");
+        }
+      });
     });
 
     const onResize = () => {
       measureAllBars();
       const m = barMetricsCache.current[active];
       if (m && activeBarRef.current) {
-        gsap.set(activeBarRef.current, { left: m.left, width: m.width });
+        activeBarRef.current.style.setProperty("left",  `${m.left}px`,  "important");
+        activeBarRef.current.style.setProperty("width", `${m.width}px`, "important");
       }
     };
     window.addEventListener("resize", onResize);
     return () => {
-      cancelAnimationFrame(raf);
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
       window.removeEventListener("resize", onResize);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -327,7 +293,21 @@ function SectionSixDesktop() {
     gsap.to(bgRefs.current[idx],  { opacity: 1, duration: 0.7, ease: "power2.inOut" });
 
     const m = barMetricsCache.current[idx];
-    if (m) gsap.to(activeBarRef.current, { left: m.left, width: m.width, duration: 0.4, ease: "power2.inOut" });
+    if (m && activeBarRef.current) {
+      // Animate via GSAP but seed the starting values with setProperty so they can't be overridden
+      gsap.to(activeBarRef.current, {
+        left: m.left,
+        width: m.width,
+        duration: 0.4,
+        ease: "power2.inOut",
+        onUpdate() {
+          const el = activeBarRef.current;
+          if (!el) return;
+          el.style.setProperty("left",  el.style.left,  "important");
+          el.style.setProperty("width", el.style.width, "important");
+        },
+      });
+    }
 
     gsap.to(
       [h2Refs.current[prev], descRefs.current[prev]],
@@ -344,22 +324,16 @@ function SectionSixDesktop() {
   }
 
   return (
-    <section
-      className="relative w-full h-screen overflow-hidden section-six-wrapper"
-      style={{ pointerEvents: "auto" }}
-    >
+    <section className="!relative !w-full !h-screen !overflow-hidden section-six-wrapper !pointer-events-auto">
+
       {/* Backgrounds */}
       {PROJECTS.map((p, i) => (
         <div
           key={p.id}
           ref={(el) => { bgRefs.current[i] = el; }}
+          className="!absolute !inset-0 !bg-cover !bg-center !will-change-[opacity]"
           style={{
-            position: "absolute",
-            inset: 0,
             backgroundImage: `url('${p.image}')`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            willChange: "opacity",
             transform: "translateZ(0)",
             backfaceVisibility: "hidden",
           }}
@@ -368,7 +342,7 @@ function SectionSixDesktop() {
 
       {/* Gradient overlay */}
       <div
-        className="absolute inset-0 z-[1]"
+        className="!absolute !inset-0 !z-[1]"
         style={{
           background: "linear-gradient(180deg, rgba(0,0,0,0.16) 0%, rgba(0,0,0,0.64) 100%)",
           transform: "translateZ(0)",
@@ -376,24 +350,15 @@ function SectionSixDesktop() {
       />
 
       {/* Content */}
-      <div
-        className="section-continer relative z-[2] h-full flex flex-col justify-center"
-        style={{ paddingBottom: "160px", gap: 24 }}
-      >
-        <div style={{ position: "relative", height: 80 }}>
+      <div className="section-continer !relative !z-[2] !h-full !flex !flex-col !justify-center !pb-40 !gap-6">
+        <div className="!relative !h-20">
           {PROJECTS.map((p, i) => (
             <h2
               key={p.id}
               ref={(el) => { h2Refs.current[i] = el; }}
+              className="!absolute !top-0 !left-0 !m-0 !text-[#F4EEDF] !font-thin !pointer-events-none"
               style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                margin: 0,
-                color: "#F4EEDF",
                 fontFamily: "var(--font-display, inherit)",
-                fontWeight: 100,
-                pointerEvents: "none",
                 opacity: i === 0 ? 1 : 0,
               }}
             >
@@ -404,37 +369,24 @@ function SectionSixDesktop() {
 
         {/* Glass card */}
         <div
+          className="!w-full !max-w-[345px] !will-change-transform !p-[30px] !grid !grid-rows-[1fr_auto] !min-h-[160px]"
           style={{
-            width: "100%",
-            maxWidth: 345,
             backdropFilter: "blur(42px)",
             WebkitBackdropFilter: "blur(42px)",
             background:
               "radial-gradient(100% 100% at 0% 0%, rgba(25, 33, 28, 0.64) 0%, rgba(25, 33, 28, 0.24) 100%)",
             boxShadow: "-5px -5px 25px rgba(255,255,255,0.02) inset",
-            willChange: "transform",
             transform: "translateZ(0)",
-            padding: 30,
-            display: "grid",
-            gridTemplateRows: "1fr auto",
-            minHeight: 160,
           }}
         >
-          <div style={{ position: "relative" }}>
+          <div className="!relative">
             {PROJECTS.map((p, i) => (
               <p
                 key={p.id}
                 ref={(el) => { descRefs.current[i] = el; }}
-                className="font-body"
+                className="font-body !top-0 !left-0 !text-[#F4EEDF] !text-[14px] !font-normal !m-0 !mb-[17px]"
                 style={{
                   position: i === 0 ? "relative" : "absolute",
-                  top: 0,
-                  left: 0,
-                  color: "#F4EEDF",
-                  fontSize: 14,
-                  fontWeight: 400,
-                  margin: 0,
-                  marginBottom: 17,
                   opacity: i === 0 ? 1 : 0,
                   pointerEvents: i === active ? "auto" : "none",
                 }}
@@ -446,59 +398,30 @@ function SectionSixDesktop() {
 
           <a
             href="/projects"
-            style={{
-              display: "inline-block",
-              width: "fit-content",
-              paddingBottom: 8,
-              marginTop: 24,
-              fontSize: 14,
-              fontWeight: 500,
-              textTransform: "uppercase",
-              color: "#F4EEDF",
-              textDecoration: "none",
-              position: "relative",
-            }}
-            className="group transition-opacity duration-200 hover:opacity-70"
+            className="group !inline-block !w-fit !pb-2 !mt-6 !text-[14px] !font-medium !uppercase !text-[#F4EEDF] !no-underline !relative !transition-opacity !duration-200 hover:!opacity-70"
           >
             VIEW OUR PROJECTS
-            <span
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: 1,
-                background: "#F4EEDF",
-                transition: "transform 0.2s ease",
-              }}
-              className="group-hover:-translate-y-[2px]"
-            />
+            <span className="!absolute !left-0 !right-0 !bottom-0 !h-px !bg-[#F4EEDF] !transition-transform !duration-200 !ease-in-out group-hover:!-translate-y-[2px]" />
           </a>
         </div>
       </div>
 
       {/* Bottom tab bar */}
-      <div className="absolute bottom-20 left-0 right-0 z-[3] flex justify-center">
-        <div style={{ position: "relative" }}>
-          <div ref={tabRowRef} style={{ display: "flex", columnGap: 32 }}>
+      <div className="!absolute !bottom-20 !left-0 !right-0 !z-[3] !flex !justify-center">
+        <div className="!relative">
+          <div ref={tabRowRef} className="!flex !gap-8">
             {PROJECTS.map((p, i) => (
               <button
                 key={p.id}
                 ref={(el) => { btnRefs.current[i] = el; }}
                 onClick={() => handleSelect(i)}
-                className="bg-transparent border-none cursor-pointer px-0"
-                style={{ paddingTop: 0, paddingBottom: 20 }}
+                className="!bg-transparent !border-none !cursor-pointer !px-0 !pt-0 !pb-5"
               >
                 <span
-                  className="transition-[opacity,font-weight] duration-300 font-body"
+                  className="!transition-[opacity,font-weight] !duration-300 font-body !text-[#F4EEDF] !text-[14px] !tracking-[0.04em] !whitespace-nowrap !block"
                   style={{
-                    color: "#F4EEDF",
-                    fontSize: 14,
                     fontWeight: active === i ? 500 : 300,
-                    letterSpacing: "0.04em",
                     opacity: active === i ? 1 : 0.55,
-                    whiteSpace: "nowrap",
-                    display: "block",
                   }}
                 >
                   {p.label}
@@ -507,28 +430,14 @@ function SectionSixDesktop() {
             ))}
           </div>
 
-          <div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 3,
-              background: "rgba(244,238,223,0.24)",
-            }}
-          />
+          {/* Track */}
+          <div className="!absolute !bottom-0 !left-0 !right-0 !h-[3px] !bg-[rgba(244,238,223,0.24)]" />
+
+          {/* Active indicator */}
           <div
             ref={activeBarRef}
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              height: 3,
-              width: 0,
-              background: "#F4EEDF",
-              willChange: "transform",
-              transform: "translateZ(0)",
-            }}
+            className="!absolute !bottom-0 !h-[3px] !bg-[#F4EEDF] !will-change-transform"
+            style={{ width: 0, left: 0, transform: "translateZ(0)" }}
           />
         </div>
       </div>
@@ -540,11 +449,10 @@ function SectionSixDesktop() {
 export default function SectionSix() {
   return (
     <>
-      {/* Shown only on mobile via CSS, desktop component hidden */}
-      <div className="block md:hidden">
+      <div className="!block lg:!hidden">
         <SectionSixMobile />
       </div>
-      <div className="hidden md:block">
+      <div className="!hidden lg:!block">
         <SectionSixDesktop />
       </div>
     </>

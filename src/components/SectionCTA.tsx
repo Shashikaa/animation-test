@@ -25,22 +25,22 @@ export default function SectionCTA() {
       `}</style>
 
       {/* ── Background image ── */}
-<img
-  src="/CTA-FORM.webp"
-  alt=""
-  aria-hidden
-  style={{
-    position: "absolute",
-    inset: 0,
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    objectPosition: "top 20%",
-    transform: "scale(1.08)",
-    filter: "blur(4px)",
-    zIndex: 0,
-  }}
-/>
+      <img
+        src="/CTA-FORM.webp"
+        alt=""
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "top 20%",
+          transform: "scale(1.08)",
+          filter: "blur(4px)",
+          zIndex: 0,
+        }}
+      />
 
       {/* ── Water canvas ── */}
       <div style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}>
@@ -48,10 +48,10 @@ export default function SectionCTA() {
       </div>
 
       {/* ══════════════════════════════════════════
-          DESKTOP layout — unchanged
+          DESKTOP layout — unchanged, now starts at lg
       ══════════════════════════════════════════ */}
       <div
-        className="hidden md:flex section-continer"
+        className="hidden lg:flex section-continer"
         style={{
           position: "relative",
           zIndex: 10,
@@ -108,11 +108,12 @@ export default function SectionCTA() {
       </div>
 
       {/* ══════════════════════════════════════════
-          MOBILE layout — matches Figma
+          MOBILE + TABLET layout — matches Figma
           Vertical stack: title → para → form fields (single col) → submit
+          Now applies up to lg breakpoint (covers tablets too)
       ══════════════════════════════════════════ */}
       <div
-        className="flex md:hidden"
+        className="flex lg:hidden"
         style={{
           position: "relative",
           zIndex: 10,
@@ -120,13 +121,13 @@ export default function SectionCTA() {
           justifyContent: "center",
           height: "100%",
           padding: "0 24px",
-          margin:0,
+          margin: 0,
           gap: 0,
         }}
       >
         {/* Title */}
         <h2
-          className="font-display"
+          className="font-display max-w-[400px] "
           style={{
             color: "#F4EEDF",
             fontSize: "clamp(28px, 8vw, 36px)",
@@ -141,7 +142,7 @@ export default function SectionCTA() {
 
         {/* Para */}
         <p
-          className="font-body"
+          className="font-body max-w-[500px]"
           style={{
             color: "#F4EEDF",
             fontSize: 14,
@@ -155,14 +156,14 @@ export default function SectionCTA() {
         </p>
 
         {/* Form — single column full width */}
-<div
-  style={{
-    display: "flex",
-    flexDirection: "column",
-    gap: 8,
-    width: "80%",
-  }}
->
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            width: "80%",
+          }}
+        >
           <CtaInput placeholder="Full Name" />
           <CtaInput placeholder="Email" type="email" />
           <CtaInput placeholder="Phone No" type="tel" />
@@ -265,7 +266,7 @@ function CtaSelect({ placeholder, options }: { placeholder: string; options: str
           outline: "none",
           width: "100%",
           fontFamily: "inherit",
-         
+
           cursor: "pointer",
           transition: "border-color 0.25s",
         }}

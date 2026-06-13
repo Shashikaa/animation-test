@@ -6,7 +6,7 @@ export default function SectionNine() {
 
       {/* Desktop bg */}
       <div
-        className="s9-bg-img absolute bg-cover bg-center hidden md:block"
+        className="s9-bg-img absolute bg-cover bg-center hidden lg:block"
         style={{
           backgroundImage: "url('/murray-st-prahran.webp')",
           top:        0,
@@ -19,7 +19,7 @@ export default function SectionNine() {
 
       {/* Mobile bg */}
       <div
-        className="s9-bg-img absolute bg-cover bg-center block md:hidden"
+        className="s9-bg-img absolute bg-cover bg-center block lg:hidden"
         style={{
           backgroundImage: "url('/murray-st-prahran-mobile.webp')",
           top:        0,
@@ -32,16 +32,16 @@ export default function SectionNine() {
 
       {/* Desktop overlays — unchanged */}
       <div
-        className="absolute inset-0 hidden md:block"
+        className="absolute inset-0 hidden lg:block"
         style={{
           background: "radial-gradient(100% 100% at 0% 0%, rgba(25,33,28,0.9) 0%, rgba(25,33,28,0) 100%)",
         }}
       />
-      <div className="absolute inset-0 z-10 hidden md:block" style={{ background: "#19211C8F" }} />
+      <div className="absolute inset-0 z-10 hidden lg:block" style={{ background: "#19211C8F" }} />
 
       {/* Desktop title — unchanged */}
       <h2
-        className="s9-title absolute z-20 text-[#F4EEDF] font-display pointer-events-none hidden md:block"
+        className="s9-title absolute z-20 text-[#F4EEDF] font-display pointer-events-none hidden lg:block"
         style={{
           top:        "50%",
           left:       "50%",
@@ -59,7 +59,7 @@ export default function SectionNine() {
 
       {/* Desktop para — unchanged */}
       <p
-        className="s9-para absolute z-20 text-[#F4EEDF] font-body pointer-events-none hidden md:block"
+        className="s9-para absolute z-20 text-[#F4EEDF] font-body pointer-events-none hidden lg:block"
         style={{
           right:     "4rem",
           bottom:    "8rem",
@@ -76,7 +76,7 @@ export default function SectionNine() {
 
       {/* Mobile title */}
       <h2
-        className="s9-title absolute z-20 text-[#F4EEDF] font-display pointer-events-none block md:hidden"
+        className="s9-title absolute z-20 text-[#F4EEDF] font-display pointer-events-none block lg:hidden"
         style={{
           top:        "8rem",
           right:      "1.5rem",
@@ -93,7 +93,7 @@ export default function SectionNine() {
 
       {/* Mobile para */}
       <p
-        className="s9-para absolute z-20 text-[#F4EEDF] font-body pointer-events-none block md:hidden"
+        className="s9-para absolute z-20 text-[#F4EEDF] font-body pointer-events-none block lg:hidden md:!mt-10"
         style={{
           top:        "calc(8rem + 90px)",
           right:      "1.5rem",

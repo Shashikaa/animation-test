@@ -92,7 +92,7 @@ export default function SectionTen() {
       {/* ══════════════════════════════════════════
           CARD — gradient box with text inside
           Desktop: bottom-left, 42vw × 417px
-          Mobile:  bottom-left, ~80% wide
+          Tablet/Mobile:  bottom-left, ~80% wide
                    clip-path starts inset(100% 0% 0% 0%)
                    — GSAP reveals bottom→top
       ══════════════════════════════════════════ */}
@@ -120,7 +120,7 @@ export default function SectionTen() {
       {/* ══════════════════════════════════════════
           VIDEO
           Desktop: beside card (left: calc(42vw + 100px))
-          Mobile:  sits above card. GSAP starts it below
+          Tablet/Mobile:  sits above card. GSAP starts it below
                    its CSS slot via y translation and scrolls
                    it upward naturally — no clipPath on entry.
                    Exits via clipPath wipe after card reveals.
@@ -145,9 +145,9 @@ export default function SectionTen() {
       <style>{`
 
         /* ════════════════════════════════════════
-           DESKTOP  ≥ 768px  — original, untouched
+           DESKTOP  ≥ 1025px  — original, untouched
         ════════════════════════════════════════ */
-        @media (min-width: 768px) {
+        @media (min-width: 1025px) {
 
           .s10-title {
             top:       clamp(280px, 42vh, 300px);
@@ -197,45 +197,88 @@ export default function SectionTen() {
         }
 
         /* ════════════════════════════════════════
-           MOBILE  < 768px
+           TABLET  768px – 1024px  — own independent layout
+           (separate from mobile so each can be tuned on its own)
 
-           Layout phases:
-           Phase A (section enters):
-           ┌──────────────────────────────┐
-           │  Title + subtitle  (top-left)│
-           │                              │
-           │              Para (right)    │
-           │                              │
-           │                              │
-           │  [card hidden at bottom]     │
-           └──────────────────────────────┘
+           Layout phases mirror mobile structurally:
+           Title + subtitle top-left, para on the right,
+           video centred, card pinned bottom full-width
+           with clip-path reveal — but sizes/positions are
+           tuned for tablet viewport widths.
+        ════════════════════════════════════════ */
+        @media (min-width: 768px) and (max-width: 1024px) {
 
-           Phase B (video scrolls up from below naturally):
-           ┌──────────────────────────────┐
-           │  Title + subtitle  (top-left)│
-           │                              │
-           │              Para (right)    │
-           │                              │
-           │  [video rises into view —    │
-           │   pure y translation,        │
-           │   no clip reveal]            │
-           └──────────────────────────────┘
+          /* Title — top-left */
+          .s10-title {
+            top:       clamp(80px, 16vh, 140px);
+            left:      40px;
+            right:     auto;
+            bottom:    auto;
+            max-width: 60vw;
+            font-size: clamp(36px, 6vw, 56px);
+          }
 
-           Phase C (text exits upward, card reveals):
-           ┌──────────────────────────────┐
-           │                              │
-           │  [video — centre-right area] │
-           │                              │
-           │  Card reveals ↑↑↑ (bottom,  │
-           │   full width)                │
-           └──────────────────────────────┘
+          /* Subtitle — just below title */
+          .s10-title-sub {
+            top:       clamp(160px, 26vh, 210px);
+            left:      40px;
+            right:     auto;
+            bottom:    auto;
+            font-size: clamp(12px, 1.6vw, 15px);
+          }
 
-           Phase D (video exits via clipPath wipe,
-                    card scrolls up, bg image covers):
-           ┌──────────────────────────────┐
-           │  [card scrolling up]         │
-           │  [bg image rising]           │
-           └──────────────────────────────┘
+          /* Para — right side, vertically ~55% */
+          .s10-para-top {
+            top:       52%;
+            right:     40px;
+            left:      auto;
+            bottom:    auto;
+            max-width: 32vw;
+            font-size: clamp(13px, 1.6vw, 16px);
+            transform: translateY(-50%);
+          }
+
+          /*
+           * VIDEO — centred in viewport.
+           * GSAP pushes it below viewport on init, scrolls y→0 to land here.
+           */
+          .s10-video-wrap {
+            top:       50%;
+            right:     40px;
+            left:      auto;
+            transform: translateY(-50%);
+            width:     46vw;
+            height:    30vw;
+            z-index:   12;
+            overflow:  hidden;
+          }
+
+          /*
+           * CARD — pinned to bottom, full width.
+           * GSAP reveals via clipPath inset(100%→0%) bottom→up.
+           */
+          .s10-card {
+            bottom:         0;
+            left:           40px;
+            top:            auto;
+            transform:      none;
+            width:          70%;
+            height:         340px;
+            min-height:     46vw;
+            padding-top:    28px;
+            padding-bottom: 28px;
+            padding-left:   32px;
+            padding-right:  32px;
+          }
+
+          .s10-card-para {
+            font-size:   16px;
+            line-height: 1.4;
+          }
+        }
+
+        /* ════════════════════════════════════════
+           MOBILE  < 768px  — original, untouched
         ════════════════════════════════════════ */
         @media (max-width: 767px) {
 
@@ -291,7 +334,7 @@ export default function SectionTen() {
    */
   .s10-card {
     bottom:         0;
-    left:           20px;
+   
     top:            auto;
     transform:      none;
     width:          80%;

@@ -17,7 +17,7 @@ export default function SectionSeven() {
 
       {/* ── Desktop BG ── */}
       <div
-        className="s7-bg-img absolute bg-cover bg-center hidden md:block"
+        className="s7-bg-img absolute bg-cover bg-center hidden lg:block"
         style={{
           backgroundImage: "url('/team-photo.webp')",
           top: 0, left: 0, width: "100%", height: "120%",
@@ -25,18 +25,19 @@ export default function SectionSeven() {
         }}
       />
 
-      {/* ── Mobile BG ── */}
+      {/* ── Mobile/Tablet BG — s7-mob-bg receives scale zoom-out from GSAP ── */}
       <div
-        className="absolute bg-cover bg-center block md:hidden"
+        className="s7-mob-bg absolute bg-cover bg-center block lg:hidden"
         style={{
           backgroundImage: "url('/team-photo-mobile.webp')",
           top: 0, left: 0, width: "100%", height: "100%",
+          willChange: "transform",
         }}
       />
 
       {/* ── Desktop: Title + Card ── */}
       <div
-        className="hidden md:flex absolute flex-col gap-3"
+        className="hidden lg:flex absolute flex-col gap-3"
         style={{ top: "16%", left: "50%", width: 620 }}
       >
         <h2
@@ -64,7 +65,7 @@ export default function SectionSeven() {
       </div>
 
       {/* ── Desktop: Partners ── */}
-      <div className="hidden md:flex absolute bottom-9 right-12 flex-col items-end gap-5">
+      <div className="hidden lg:flex absolute bottom-9 right-12 flex-col items-end gap-5">
         <p className="font-body text-[#F4EBE4] text-sm">Our Partners</p>
         <div
           className="overflow-hidden w-[520px]"
@@ -86,21 +87,21 @@ export default function SectionSeven() {
       </div>
 
       {/* ════════════════════
-          MOBILE LAYOUT
+          MOBILE + TABLET LAYOUT
       ════════════════════ */}
-      <div className="md:!hidden !flex !absolute !inset-0 !flex-col !justify-between !py-[72px] !px-5 !m-0 !max-w-none !w-full">
+      <div className="lg:!hidden !flex !absolute !inset-0 !flex-col !justify-between !py-[72px] !px-5 !m-0 !max-w-none !w-full">
 
         {/* Title + Glass card — right-aligned */}
         <div className="!flex !flex-col !items-end !gap-4">
           <h2
-            className="!text-[#F4EEDF] !font-[100] !text-right !text-[clamp(1.8rem,9vw,2.8rem)] !m-0"
+            className="!text-[#F4EEDF] !font-[100] !text-right !text-[clamp(1.8rem,9vw,2.8rem)] !m-0  md:!mt-24"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Meet The Expert
           </h2>
 
           <div
-            className="!w-[76%] !flex !flex-col !px-6 !py-6 !mt-2"
+            className="!w-[76%] !max-w-[340px] !flex !flex-col !px-6 !py-6 !mt-2 "
             style={{
               backdropFilter: "blur(12px)",
               WebkitBackdropFilter: "blur(12px)",

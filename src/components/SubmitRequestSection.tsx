@@ -14,7 +14,6 @@ export default function SubmitRequestSection({ onClose }: { onClose?: () => void
           content: '';
           position: absolute;
           inset: 0;
-
           pointer-events: none;
           z-index: 0;
         }
@@ -23,8 +22,8 @@ export default function SubmitRequestSection({ onClose }: { onClose?: () => void
           font-weight: 300 !important;
           font-variation-settings: 'wght' 300;
           margin: 0;
-       
         }
+
         /* Layout */
         .sar-section {
           display: grid;
@@ -43,11 +42,6 @@ export default function SubmitRequestSection({ onClose }: { onClose?: () => void
           flex-direction: column;
           padding: 52px 72px 64px 48px;
           min-height: 100svh;
-        }
-        @media (max-width: 900px) {
-          .sar-section { grid-template-columns: 1fr; grid-template-rows: auto auto; }
-          .sar-left { min-height: 0; padding: 60px 32px 40px; justify-content: flex-start; }
-          .sar-right { min-height: 0; padding: 0 32px 60px; }
         }
 
         /* Tab pill indicator */
@@ -95,17 +89,14 @@ export default function SubmitRequestSection({ onClose }: { onClose?: () => void
           text-align: center;
         }
         .sar-tab.active { color: #F4EEDF; }
-/* Left tab (Request) — gradient flows left to right */
 
-.sar-tab:first-child:hover {
-  background: linear-gradient(90deg, rgba(244,238,223,0.24) 0%, rgba(244,238,223,0.00) 100%);
-}
+        .sar-tab:first-child:hover {
+          background: linear-gradient(90deg, rgba(244,238,223,0.24) 0%, rgba(244,238,223,0.00) 100%);
+        }
+        .sar-tab:last-child:hover {
+          background: linear-gradient(270deg, rgba(244,238,223,0.24) 0%, rgba(244,238,223,0.00) 100%);
+        }
 
-/* Right tab (Call Back) — gradient flows right to left */
-
-.sar-tab:last-child:hover {
-  background: linear-gradient(270deg, rgba(244,238,223,0.24) 0%, rgba(244,238,223,0.00) 100%);
-}
         /* Close button */
         .sar-close {
           width: 44px; height: 44px;
@@ -215,8 +206,49 @@ export default function SubmitRequestSection({ onClose }: { onClose?: () => void
         .sar-select:focus { outline: none; border-bottom-color: rgba(244,238,223,0.65); }
         .sar-select option { background: #163e3e; color: #F4EEDF; }
 
+        /* ── MOBILE LAYOUT ── */
+        @media (max-width: 10240px) {
+          .sar-section {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto auto;
+          }
+.sar-left {
+  display: none;
+}
+  .sar-right {
+    min-height: 100svh;  /* ← add this */
+    padding: 0 32px 60px;
+  }
+
+          /* Top row: tabs left, close button right — one line */
+          .sar-top-row {
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            width: 100%;
+            padding-top: 32px;
+            margin-bottom: 0 !important;
+          }
+
+          /* Form collapses to single column */
+          .sar-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .sar-field {
+            padding-bottom: 24px;
+          }
+
+          /* Privacy text: right-aligned */
+          .sar-bottom-row {
+            justify-content: flex-end !important;
+            align-items: flex-end !important;
+          }
+          .sar-bottom-row p {
+            text-align: right !important;
+          }
+        }
+
         @media (max-width: 580px) {
-          .sar-grid { grid-template-columns: 1fr; }
           .sar-field.span-2 { grid-column: 1 / -1; }
         }
       `}</style>
@@ -248,8 +280,8 @@ export default function SubmitRequestSection({ onClose }: { onClose?: () => void
         {/* RIGHT */}
         <div className="sar-right relative z-10">
 
-          {/* Top row */}
-          <div className="flex items-center justify-between mb-auto">
+          {/* Top row — tabs + close button */}
+          <div className="sar-top-row flex items-center justify-between mb-auto">
             <div className="sar-tabs" data-active={activeTab}>
               <button
                 className={`sar-tab ${activeTab === "request" ? "active" : ""}`}
@@ -309,7 +341,7 @@ export default function SubmitRequestSection({ onClose }: { onClose?: () => void
               </div>
             )}
 
-            {/* Submit button — directly below the form */}
+            {/* Submit button */}
             <div className="mt-2">
               <button type="button" className="sar-submit-btn">
                 <span className="btn-label">Submit A Request</span>
@@ -318,8 +350,8 @@ export default function SubmitRequestSection({ onClose }: { onClose?: () => void
             </div>
           </div>
 
-          {/* Bottom row — privacy text only */}
-          <div className="flex items-end justify-end">
+          {/* Bottom row — privacy text */}
+          <div className="sar-bottom-row flex items-end justify-end">
             <p className="text-[12px] text-[#F4EEDFB2] uppercase leading-[1.65] text-right">
               By clicking the button you agree<br />
               to our <span className="text-[#F4EEDF] cursor-pointer font-bold">Privacy Policy</span>

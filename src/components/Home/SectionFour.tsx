@@ -15,14 +15,17 @@ export default function SectionFour() {
       }}
     >
       <style>{`
-        @media (max-width: 767px) {
-          .s4-img       { background-image: url('/parallax-image-mobile.webp') !important; }
-          .s4-content   { height: 100vh !important; overflow: hidden !important; }
-          .s4-img-outer { height: 320px !important; flex-shrink: 0 !important; }
+        @media (max-width: 1024px) {
+          .s4-mobile-layout  { display: flex !important; }
+          .s4-desktop-layout { display: none !important; }
+        }
+        @media (min-width: 1025px) {
+          .s4-mobile-layout  { display: none !important; }
+          .s4-desktop-layout { display: flex !important; }
         }
       `}</style>
 
-      {/* ── Layer 0: Full-bleed background image ─────────────────────── */}
+      {/* ── Layer 0: background ── */}
       <div style={{ position: "absolute", inset: 0, overflow: "hidden", zIndex: 0 }}>
         <div
           className="s4-bg-img"
@@ -40,7 +43,7 @@ export default function SectionFour() {
         />
       </div>
 
-      {/* ── Layer 1: Radial gradient overlay ─────────────────────────── */}
+      {/* ── Layer 1: gradient overlay ── */}
       <div
         style={{
           position:   "absolute",
@@ -54,7 +57,7 @@ export default function SectionFour() {
         }}
       />
 
-      {/* ── Layer 2: Glassmorphism blur ───────────────────────────────── */}
+      {/* ── Layer 2: blur ── */}
       <div
         style={{
           position:             "absolute",
@@ -67,9 +70,73 @@ export default function SectionFour() {
         }}
       />
 
-      {/* ── Layer 3: Content wrapper ── */}
+      {/* ── MOBILE + TABLET layout (≤ 1024px) ── */}
       <div
-        className="s4-content section-continer"
+        className="s4-mobile-layout section-continer"
+        style={{
+          display:       "none",
+          position:      "absolute",
+          inset:         0,
+          width:         "100%",
+          height:        "100%",
+          zIndex:        3,
+          flexDirection: "column",
+          boxSizing:     "border-box",
+          overflow:      "hidden",
+          /* section-continer supplies padding-inline + padding-block */
+          paddingBlock:  undefined,
+        }}
+      >
+        {/* Title */}
+        <div style={{ display: "flex", justifyContent: "flex-end", flexShrink: 0 }}>
+          <h2 className="font-display s4-title text-[#F4EEDF] text-right !mt-22 md:!mt-16">
+            Making Memories.
+          </h2>
+        </div>
+
+        {/* Para */}
+        <div style={{ marginTop: 32, maxWidth: 480, flexShrink: 0 }}>
+          <p className="font-body s4-para text-[#F4EEDF] md:!mt-8">
+            At Grand Pools, we build more than just swimming pools — we create
+            spaces where families gather, friends connect, and lasting memories
+            are made. With expert craftsmanship and a passion for innovation,
+            we bring your vision to life.
+          </p>
+        </div>
+
+        {/* ── Parallax image ── */}
+        <div
+          className="s4-img-outer-mob md:!mt-18"
+          style={{
+            marginTop:  32,
+            width:      "100%",
+            flexGrow:   1,
+            flexShrink: 0,
+            maxHeight:  "45vh",
+            overflow:   "hidden",
+            position:   "relative",
+          }}
+        >
+          <div
+            className="s4-img-mob"
+            style={{
+              position:           "absolute",
+              top:                "-30%",
+              left:               0,
+              width:              "100%",
+              height:             "160%",
+              backgroundImage:    "url('/parallax-image-mobile.webp')",
+              backgroundSize:     "cover",
+              backgroundPosition: "center",
+              willChange:         "transform",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* ── DESKTOP layout (≥ 1025px) ── */}
+      <div
+        className="s4-content s4-desktop-layout section-continer"
         style={{
           position:      "absolute",
           top:           0,
@@ -81,18 +148,16 @@ export default function SectionFour() {
           flexDirection: "column",
           boxSizing:     "border-box",
           willChange:    "transform",
+          /* section-continer supplies padding-inline + padding-block */
         }}
       >
-
-        {/* ROW 1: Title — right aligned */}
         <div style={{ flexShrink: 0, display: "flex", justifyContent: "flex-end" }}>
-          <h2 className="font-display s4-title !mt-24 text-[#F4EEDF]">
+          <h2 className="font-display s4-title text-[#F4EEDF]">
             Making Memories.
           </h2>
         </div>
 
-        {/* ROW 2: Para + CTA — mt-[46px] on mobile, mt-[100px] on md+ */}
-        <div className="!mt-[64px] md:!mt-[100px]" style={{ flexShrink: 0, maxWidth: 400 }}>
+        <div style={{ marginTop: 100, flexShrink: 0, maxWidth: 400 }}>
           <p className="font-body s4-para text-[#F4EEDF]">
             At Grand Pools, we build more than just swimming pools — we create
             spaces where families gather, friends connect, and lasting memories
@@ -101,7 +166,6 @@ export default function SectionFour() {
           </p>
         </div>
 
-        {/* ROW 3: Image card — fixed-height outer container, only inner image parallaxes */}
         <div
           className="s4-img-outer"
           style={{
@@ -109,7 +173,7 @@ export default function SectionFour() {
             overflow:     "hidden",
             marginTop:    64,
             marginBottom: 50,
-            height:       560,        // desktop — mobile overridden via .s4-img-outer CSS
+            height:       490,
             width:        "100%",
             flexShrink:   0,
           }}
@@ -118,10 +182,10 @@ export default function SectionFour() {
             className="s4-img"
             style={{
               position:           "absolute",
-              top:                "-20%",   // extra headroom so upward parallax never shows a gap
+              top:                "-20%",
               left:               0,
               width:              "100%",
-              height:             "140%",   // taller than wrapper — room to travel
+              height:             "140%",
               backgroundImage:    "url('/parallax-image.webp')",
               backgroundSize:     "cover",
               backgroundPosition: "center 60%",
@@ -129,8 +193,8 @@ export default function SectionFour() {
             }}
           />
         </div>
-
       </div>
+
     </section>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import PreloaderWrapper from "../components/PreloaderWrapper"; // ← normal static import
 
 const HomeDesktop = dynamic(() => import("./HomeDesktop"), { ssr: false });
 const HomeMobile  = dynamic(() => import("./HomeMobile"),  { ssr: false });
@@ -10,12 +11,14 @@ export default function Home() {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   useEffect(() => {
-    import("gsap/ScrollTrigger").then(({ ScrollTrigger }) => {
-      setIsMobile(ScrollTrigger.isTouch === 1);
-    });
+    const check = () => setIsMobile(window.innerWidth < 1025);
+    check();
   }, []);
 
-  if (isMobile === null) return null;
-
-  return isMobile ? <HomeMobile /> : <HomeDesktop />;
+  return (
+    <>
+      <PreloaderWrapper />
+      {isMobile !== null && (isMobile ? <HomeMobile /> : <HomeDesktop />)}
+    </>
+  );
 }

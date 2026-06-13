@@ -29,7 +29,7 @@ function CloseButton({ onClick }: { onClick: () => void }) {
     <button
       onClick={onClick}
       aria-label="Close menu"
-      className="absolute top-7 left-10 z-10 flex items-center justify-center p-1.5 bg-transparent border-none cursor-pointer opacity-85 hover:opacity-100 hover:rotate-90 transition-[opacity,transform] duration-200 ease-in-out"
+      className="!absolute !top-7 !left-10 !z-10 !flex !items-center !justify-center !p-1.5 !bg-transparent !border-none !cursor-pointer !opacity-85 hover:!opacity-100 hover:!rotate-90 !transition-[opacity,transform] !duration-200 !ease-in-out"
       style={{ color: LOGO_COLOR }}
     >
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -62,7 +62,7 @@ function ImagePanel({ activeIndex, isReverse }: { activeIndex: number; isReverse
   const incomingClipInitial = isReverse ? "inset(0% 0% 100% 0%)" : "inset(100% 0% 0% 0%)";
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
+    <div className="!relative !w-full !h-full !overflow-hidden">
       {layers.map((layer, i) => {
         const isIncoming = i === layers.length - 1 && layers.length > 1;
         return isIncoming ? (
@@ -72,7 +72,7 @@ function ImagePanel({ activeIndex, isReverse }: { activeIndex: number; isReverse
             animate={{ clipPath: "inset(0% 0% 0% 0%)" }}
             transition={{ duration: DURATION, ease: EASE }}
             onAnimationComplete={() => setLayers(prev => prev.slice(-1))}
-            className="absolute inset-0"
+            className="!absolute !inset-0"
           >
             <motion.img
               src={NAV_LINKS[layer.index].image}
@@ -80,18 +80,18 @@ function ImagePanel({ activeIndex, isReverse }: { activeIndex: number; isReverse
               initial={{ scale: 1.12 }}
               animate={{ scale: 1 }}
               transition={{ duration: DURATION, ease: EASE }}
-              className="w-full h-full object-cover block"
+              className="!w-full !h-full !object-cover !block"
             />
           </motion.div>
         ) : (
-          <div key={layer.key} className="absolute inset-0 overflow-hidden">
+          <div key={layer.key} className="!absolute !inset-0 !overflow-hidden">
             <motion.img
               src={NAV_LINKS[layer.index].image}
               alt={NAV_LINKS[layer.index].label}
               initial={{ scale: 1 }}
               animate={{ scale: layers.length > 1 ? 1.08 : 1 }}
               transition={{ duration: DURATION, ease: EASE }}
-              className="w-full h-full object-cover block"
+              className="!w-full !h-full !object-cover !block"
             />
           </div>
         );
@@ -130,10 +130,120 @@ const bottomVariants = {
   visible: { opacity: 1, y: 0, transition: { delay: 0.62, duration: 0.45, ease: "easeOut" as const } },
 };
 
-export default function NavMenu({ open, onClose }: NavMenuProps) {
+// ── MOBILE MENU ──────────────────────────────────────────────────────────────
+function MobileMenu({ open, onClose }: NavMenuProps) {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          key="nav-menu-mobile"
+          ref={menuRef}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
+          className="!fixed !z-[2000] !flex !flex-col !w-[100dvw] !h-[100dvh] !top-0 !left-0"
+          style={{
+            backdropFilter:       "blur(38.55px) brightness(0.72) saturate(1.6)",
+            WebkitBackdropFilter: "blur(38.55px) brightness(0.72) saturate(1.6)",
+            background: "radial-gradient(circle, rgba(244,238,223,0.08) 0%, rgba(244,238,223,0) 100%)",
+          }}
+        >
+          <CloseButton onClick={onClose} />
+
+          {/* Nav links */}
+          <div className="!flex-1 !flex !flex-col !px-12 !pt-[126px]">
+            <motion.nav
+              variants={linkContainerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+            >
+              {NAV_LINKS.map(({ label, href }) => (
+                <motion.div key={label} variants={linkVariants} className="!overflow-hidden">
+                  <a
+                    href={href}
+                    onClick={onClose}
+                    className="!block !no-underline !leading-[2.5] !cursor-pointer"
+                  >
+                    <span
+                      className="font-display !inline-block !select-none !font-normal !not-italic !text-[28px] !leading-none !text-[#F4EEDF]"
+                    >
+                      {label}
+                    </span>
+                  </a>
+                </motion.div>
+              ))}
+            </motion.nav>
+          </div>
+
+          {/* Bottom: contact + socials */}
+          <motion.div
+            variants={bottomVariants}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            className="!px-10 !pb-[68px]"
+          >
+            <div className="font-body !mb-6" style={{ color: LOGO_COLOR }}>
+              <p className="!m-0 !mb-3 !text-sm">
+                <a
+                  href="tel:0422630394"
+                  className="!no-underline hover:!opacity-70 !transition-opacity !duration-200"
+                  style={{ color: LOGO_COLOR }}
+                >
+                  0422 630 394
+                </a>
+              </p>
+              <p className="!m-0 !text-sm">
+                <a
+                  href="mailto:admin@grandpools.com.au"
+                  className="!no-underline hover:!opacity-70 !transition-opacity !duration-200"
+                  style={{ color: LOGO_COLOR }}
+                >
+                  admin@grandpools.com.au
+                </a>
+              </p>
+            </div>
+
+            <div className="!flex !items-center !gap-4">
+              {SOCIAL_LINKS.map(({ label, href, src }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="!flex !opacity-100 hover:!opacity-70 !transition-opacity !duration-200"
+                >
+                  <img src={src} alt={label} className="!block !w-5 !h-5 !object-contain" />
+                </a>
+              ))}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ── DESKTOP/TABLET MENU ───────────────────────────────────────────────────────
+function DesktopMenu({ open, onClose }: NavMenuProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [activeIndex,  setActiveIndex]  = useState(0);
-  const [ctaHovered,   setCtaHovered]   = useState(false);
   const menuRef   = useRef<HTMLDivElement>(null);
   const isHovered = hoveredIndex !== null;
   const isReverse = !isHovered;
@@ -178,29 +288,30 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
           initial="hidden"
           animate="visible"
           exit="hidden"
-          className="fixed z-[2000] p-5 grid origin-top"
+          className={[
+            "!fixed !z-[2000] !origin-top",
+            // Mobile + tablet: full screen cover
+            // Desktop (lg+): inset with gaps, side-by-side grid
+            "!top-0 lg:!top-8",
+            "!bottom-0 lg:!bottom-8",
+            "!left-0 lg:!left-16",
+            "!right-0 lg:!right-16",
+            "!grid",
+            "!grid-cols-1 lg:!grid-cols-[50%_1fr]",
+            "!p-5",
+          ].join(" ")}
           style={{
-            top: "32px",
-            bottom: "32px",
-            left: "64px",
-            right: "64px",
-            gridTemplateColumns: "50% 1fr",
             backdropFilter:       "blur(48px) brightness(0.72) saturate(1.6)",
             WebkitBackdropFilter: "blur(48px) brightness(0.72) saturate(1.6)",
             background: "rgba(255, 255, 255, 0.04)",
           }}
         >
           {/* ── LEFT PANEL ── */}
-          <div className="relative flex flex-col" style={{ padding: "48px 0px" }}>
-
+          <div className="!relative !flex !flex-col !py-12 !px-0 !w-full !h-full">
             <CloseButton onClick={onClose} />
-
-            <div
-              className="flex flex-col"
-              style={{ margin: "0 auto", width: "fit-content", height: "100%" }}
-            >
-              {/* ── MIDDLE: nav + CTA ── */}
-              <div className="flex-1 flex flex-col justify-top !pt-25">
+            <div className="!flex !flex-col !h-full !px-12 lg:!px-0 lg:!mx-auto lg:!w-fit">
+              {/* Nav links */}
+              <div className="!flex-1 !flex !flex-col !justify-start !pt-[126px] lg:!pt-24">
                 <motion.nav
                   variants={linkContainerVariants}
                   initial="hidden"
@@ -208,7 +319,7 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
                   exit="hidden"
                 >
                   {NAV_LINKS.map(({ label, href }, i) => (
-                    <motion.div key={label} variants={linkVariants} className="overflow-hidden">
+                    <motion.div key={label} variants={linkVariants} className="!overflow-hidden">
                       <NavLink
                         label={label}
                         href={href}
@@ -221,70 +332,45 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
                   ))}
                 </motion.nav>
 
-                {/* CTA */}
-                <motion.div
-                  variants={ctaVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="hidden"
-                >
-<a
-  href="/contact"
-  style={{
-    position: "relative",
-    display: "inline-block",
-    width: "fit-content",
-    paddingBottom: 8,
-    fontSize: 14,
-    fontWeight: 500,
-    textTransform: "uppercase",
-    color: "#F4EEDF",
-    textDecoration: "none",
-    marginTop: 44,
-  }}
-  className="group transition-opacity duration-200 hover:opacity-70"
->
-  Get a free consultation
-  <span
-    style={{
-      position: "absolute",
-      left: 0,
-      right: 0,
-      bottom: 0,
-      height: 1,
-      background: "#F4EEDF",
-      transition: "transform 0.2s ease",
-    }}
-    className="group-hover:-translate-y-[2px]"
-  />
-</a>
+                <motion.div variants={ctaVariants} initial="hidden" animate="visible" exit="hidden">
+                  <a
+                    href="/contact"
+                    className="!relative !inline-block !w-fit !pb-2 !text-sm !font-medium !uppercase !text-[#F4EEDF] !no-underline !mt-11 group !transition-opacity !duration-200 hover:!opacity-70"
+                  >
+                    Get a free consultation
+                    <span className="!absolute !left-0 !right-0 !bottom-0 !h-px !bg-[#F4EEDF] !transition-transform !duration-200 group-hover:!-translate-y-0.5" />
+                  </a>
                 </motion.div>
               </div>
 
-              {/* ── BOTTOM: contact + socials ── */}
+              {/* Bottom contact + socials */}
               <motion.div
                 variants={bottomVariants}
                 initial="hidden"
                 animate="visible"
                 exit="hidden"
-                style={{ paddingBottom: "0px" }}
               >
-                <div className="font-body !mb-6.5" style={{ color: LOGO_COLOR }}>
-                  <p className="m-0 !mb-1.5 text-[16px]">
-                    <a href="tel:0422630394" style={{ color: LOGO_COLOR, textDecoration: "none" }}
-                      className="hover:opacity-70 transition-opacity duration-200">
+                <div className="font-body !mb-6" style={{ color: LOGO_COLOR }}>
+                  <p className="!m-0 !mb-1.5 !text-base">
+                    <a
+                      href="tel:0422630394"
+                      className="!no-underline hover:!opacity-70 !transition-opacity !duration-200"
+                      style={{ color: LOGO_COLOR }}
+                    >
                       0422 630 394
                     </a>
                   </p>
-                  <p className="m-0 text-[16px]">
-                    <a href="mailto:admin@grandpools.com.au" style={{ color: LOGO_COLOR, textDecoration: "none" }}
-                      className="hover:opacity-70 transition-opacity duration-200">
+                  <p className="!m-0 !text-base">
+                    <a
+                      href="mailto:admin@grandpools.com.au"
+                      className="!no-underline hover:!opacity-70 !transition-opacity !duration-200"
+                      style={{ color: LOGO_COLOR }}
+                    >
                       admin@grandpools.com.au
                     </a>
                   </p>
                 </div>
-
-                <div className="flex items-center gap-4">
+                <div className="!flex !items-center !gap-4">
                   {SOCIAL_LINKS.map(({ label, href, src }) => (
                     <a
                       key={label}
@@ -292,27 +378,20 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={label}
-                      className="flex opacity-100 hover:opacity-70 transition-opacity duration-200"
+                      className="!flex !opacity-100 hover:!opacity-70 !transition-opacity !duration-200"
                     >
-                      <img
-                        src={src}
-                        alt={label}
-                        className="block w-5 h-5 object-contain"
-                      />
+                      <img src={src} alt={label} className="!block !w-5 !h-5 !object-contain" />
                     </a>
                   ))}
                 </div>
               </motion.div>
             </div>
-
           </div>
 
-          {/* ── RIGHT PANEL ── */}
-          <div className="relative overflow-hidden !p-[20px]">
+          {/* ── RIGHT PANEL — hidden on tablet, visible on desktop ── */}
+          <div className="!hidden lg:!block !relative !overflow-hidden !p-5">
             <ImagePanel activeIndex={activeIndex} isReverse={isReverse} />
-            <div
-              className="absolute inset-0 z-[1] pointer-events-none"
-            />
+            <div className="!absolute !inset-0 !z-[1] !pointer-events-none" />
           </div>
         </motion.div>
       )}
@@ -320,20 +399,29 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
   );
 }
 
+// ── ROOT EXPORT: picks mobile or desktop/tablet ───────────────────────────────
+export default function NavMenu({ open, onClose }: NavMenuProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  return isMobile
+    ? <MobileMenu open={open} onClose={onClose} />
+    : <DesktopMenu open={open} onClose={onClose} />;
+}
+
+// ── NAV LINK (desktop/tablet only) ───────────────────────────────────────────
 function NavLink({
-  label,
-  href,
-  isActive,
-  onClose,
-  onMouseEnter,
-  onMouseLeave,
+  label, href, isActive, onClose, onMouseEnter, onMouseLeave,
 }: {
-  label: string;
-  href: string;
-  isActive: boolean;
-  onClose: () => void;
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
+  label: string; href: string; isActive: boolean; onClose: () => void;
+  onMouseEnter: () => void; onMouseLeave: () => void;
 }) {
   const isCurrentPage = typeof window !== "undefined" && window.location.pathname === href;
   const highlighted = isActive || isCurrentPage;
@@ -346,20 +434,14 @@ function NavLink({
       onMouseLeave={onMouseLeave}
       onFocus={onMouseEnter}
       onBlur={onMouseLeave}
-      className="block no-underline"
-      style={{ lineHeight: "2.0", cursor: "pointer" }}
+      className="!block !no-underline !leading-[2.0] !cursor-pointer"
     >
       <span
-        className="font-display inline-block select-none pb-[0.18em]"
+        className="font-display !inline-block !select-none !pb-[0.18em] !font-normal !not-italic !leading-none !transition-[color,letter-spacing] !duration-[250ms,350ms] !ease-in-out"
         style={{
-          fontWeight: 400,
-          fontStyle: "normal",
           fontSize: "clamp(26px, 2.5vw, 32px)",
-          lineHeight: "100%",
           color: highlighted ? "#F4EEDF" : "#a89f8c",
-          transition: "color 250ms ease-in-out, letter-spacing 350ms ease-in-out",
           letterSpacing: highlighted ? "0.01em" : "0",
-          cursor: "pointer",
         }}
       >
         {label}

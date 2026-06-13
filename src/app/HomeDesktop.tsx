@@ -332,7 +332,7 @@ export default function HomeDesktop() {
 
   return (
     <div ref={scopeRef}>
-      <PreloaderWrapper />
+
 
       <div className="pin-all relative h-screen overflow-hidden">
 

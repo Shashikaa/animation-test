@@ -73,27 +73,26 @@ export default function SectionEight() {
       style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
     >
       {/* ══════════════════════════════════════
-          MOBILE LAYOUT
+          MOBILE + TABLET LAYOUT
       ══════════════════════════════════════ */}
-      <div className="md:!hidden !absolute !inset-0 !overflow-hidden">
-        {/* Single BG */}
+      <div className="lg:!hidden !absolute !inset-0 !overflow-hidden section-container">
+        {/* BG — s8-mob-bg receives scale zoom-out from GSAP */}
         <div
-          className="!absolute !inset-0 !bg-cover !bg-center"
-          style={{ backgroundImage: "url('/ForestMob.webp')" }}
+          className="s8-mob-bg !absolute !inset-0 !bg-cover !bg-center"
+          style={{
+            backgroundImage: "url('/ForestMob.webp')",
+            willChange: "transform",
+          }}
         />
-        {/* Dark overlay */}
 
-        {/* Gradient overlay */}
+        <div className="absolute inset-0 z-10">
+          <WaterBackground />
+        </div>
 
-
-
-         <div className="absolute inset-0 z-10">
-            <WaterBackground />
-          </div>
         {/* Text — top right */}
         <div className="!absolute !top-0 !right-0 !z-20 !flex !flex-col !items-end !gap-4 !pt-[27vh] !px-5">
           <h2
-            className="!text-[#F4EEDF] !text-right  font-display"
+            className="!text-[#F4EEDF] !text-right font-display"
           >
             Water as Sanctuary.
           </h2>
@@ -107,7 +106,7 @@ export default function SectionEight() {
       {/* ══════════════════════════════════════
           DESKTOP LAYOUT — unchanged
       ══════════════════════════════════════ */}
-      <div ref={containerRef} className="hidden md:block absolute inset-0" style={{ overflow: "hidden" }}>
+      <div ref={containerRef} className="hidden lg:block absolute inset-0" style={{ overflow: "hidden" }}>
 
         {/* ══ LEFT panel ══ */}
         <div
@@ -171,30 +170,29 @@ export default function SectionEight() {
           <div className="absolute inset-0 z-10">
             <WaterBackground />
           </div>
-   <div
-  className="absolute z-20 pointer-events-none"
-  style={{
-    left: 0,
-    top: 0,
-    height: "100%",
-    width: "100%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    paddingLeft: "50%",
-  }}
->
-  <div className="flex flex-col gap-5 text-left">
-    <h2 className="s8-heading text-[#F4EEDF] font-display">
-      Water as Sanctuary.
-    </h2>
-
-    <p className="s8-para text-[#F4EEDF] max-w-[300px] font-body">
-      Designed to disappear into the landscape, not announce itself.
-      The result isn't a pool. It's a quiet room you walk outside to find.
-    </p>
-  </div>
-</div>
+          <div
+            className="absolute z-20 pointer-events-none"
+            style={{
+              left: 0,
+              top: 0,
+              height: "100%",
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              paddingLeft: "50%",
+            }}
+          >
+            <div className="flex flex-col gap-5 text-left">
+              <h2 className="s8-heading text-[#F4EEDF] font-display">
+                Water as Sanctuary.
+              </h2>
+              <p className="s8-para text-[#F4EEDF] max-w-[300px] font-body">
+                Designed to disappear into the landscape, not announce itself.
+                The result isn't a pool. It's a quiet room you walk outside to find.
+              </p>
+            </div>
+          </div>
         </div>
 
       </div>
