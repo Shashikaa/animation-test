@@ -29,8 +29,6 @@
   --text-sm:      14px;
   --text-xs:      12px;
 
-  /* 1.15 gives descenders (g, y, p, q, j) space without visually opening
-     up the tracking. Was 1, which clips descenders at display sizes. */
   --leading-display: 1.15;
   --leading-body:    1.2;
 
@@ -97,8 +95,6 @@ html {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   scroll-behavior: auto !important;
-  /* Lenis requires html to be height:auto to measure true document scroll
-     height. height:100% caps the scroll limit at the viewport height. */
   height: auto !important;
 }
 
@@ -110,11 +106,34 @@ body {
   line-height:  var(--leading-body);
   height:       auto !important;
   min-height:   unset !important;
+  /* Ensures no gap shows through during address bar transitions */
+  background-color: var(--background);
 }
 
 .site-root {
   overflow-x: hidden;
   position:   relative;
+}
+
+/* ─── Gap fill during mobile address bar animation ──────────────
+   When the address bar hides/shows, GSAP's pinned element has a
+   fixed pixel height that hasn't caught up yet. This pseudo-element
+   covers that momentary gap with the page background color so the
+   user never sees a flash of white/black underneath.
+──────────────────────────────────────────────────────────────── */
+.site-root::after {
+  content:    '';
+  display:    block;
+  position:   fixed;
+  bottom:     0;
+  left:       0;
+  right:      0;
+  /* 120px covers the address bar height on any device (Chrome ~56px,
+     Safari ~80px with tab bar). We go a bit higher to be safe. */
+  height:     120px;
+  background: var(--background);
+  z-index:    -1;
+  pointer-events: none;
 }
 
 /* ─── Lenis ──────────────────────────────────────────────────── */
@@ -145,25 +164,7 @@ body.preloading {
   height: 100vh !important;
 }
 
-/* ─── GPU Layer Promotion ────────────────────────────────────────
-   Rules are split by WHICH CSS property is animated so the browser
-   can allocate the narrowest possible compositing budget per layer.
-
-   Strategy:
-   • transform + opacity  → promotes to compositor thread (cheap)
-   • clip-path alone      → rasterises on main thread but avoids
-                            triggering layout; still worth isolating
-   • will-change: auto    → browser decides; used for sections that
-                            are currently hidden and shouldn't hold
-                            a permanent GPU layer
-
-   Do NOT add will-change to every element — excess promoted layers
-   exhaust GPU memory on low-end mobile devices.
-──────────────────────────────────────────────────────────────── */
-
-/* Sections animated by GSAP yPercent / scale / opacity.
-   transform3d(0,0,0) forces an immediate compositing layer so the
-   first animation frame doesn't cause a layer-promotion reflow. */
+/* ─── GPU Layer Promotion ────────────────────────────────────── */
 .hero,
 .section-1,
 .section-2,
@@ -175,16 +176,12 @@ body.preloading {
   backface-visibility:  hidden;
 }
 
-/* section-9: only scale + opacity animated */
 .section-9 {
   will-change:          transform, opacity;
   transform:            translate3d(0, 0, 0);
   backface-visibility:  hidden;
 }
 
-/* Sections animated by clip-path only.
-   clip-path causes a repaint but not a layout reflow; keeping it
-   isolated to its own layer avoids invalidating sibling layers. */
 .section-3,
 .section-6,
 .section-8,
@@ -194,7 +191,6 @@ body.preloading {
   backface-visibility:  hidden;
 }
 
-/* S8 panels — clip-path only, each is their own layer */
 .s8-panel-left,
 .s8-panel-right {
   will-change:          clip-path;
@@ -202,7 +198,6 @@ body.preloading {
   backface-visibility:  hidden;
 }
 
-/* Canvas / video — always their own GPU layer */
 video,
 canvas {
   will-change:         transform;
@@ -210,8 +205,6 @@ canvas {
   backface-visibility: hidden;
 }
 
-/* First-level children of heavily-animated sections get their own
-   sublayers so parent transforms don't force child repaints. */
 .section-1 > *,
 .section-2 > *,
 .section-7 > * {
@@ -219,7 +212,6 @@ canvas {
   backface-visibility: hidden;
 }
 
-/* Background parallax images — transform only */
 .s1-bg,
 .s2-bg,
 .s4-bg-img,
@@ -329,7 +321,6 @@ body.preloading .scroll-container {
   padding-block:  85px;
 }
 
-/* Tablet */
 @media (max-width: 1025px) {
   .section-continer {
     padding-inline: 30px;
@@ -337,7 +328,6 @@ body.preloading .scroll-container {
   }
 }
 
-/* Mobile */
 @media (max-width: 767px) {
   .section-continer {
     padding-inline: 20px;
@@ -361,7 +351,7 @@ body.preloading .scroll-container {
 /* ─── Responsive h2 & p ──────────────────────────────────────── */
 h2 {
   font-size:   72px;
-  line-height: 1.15; /* was 1 — clips descenders on Cormorant/Canela */
+  line-height: 1.15;
 }
 
 p {
@@ -369,35 +359,27 @@ p {
   line-height: var(--leading-body);
 }
 
-/* Tablet */
 @media (max-width: 1024px) {
   h2 { font-size: 50px; }
   p  { font-size: 16px; }
 }
 
-/* Mobile */
 @media (max-width: 767px) {
   h2 { font-size: 32px; }
   p  { font-size: 12px; }
 }
 
-/* ─── Reduced motion ─────────────────────────────────────────────
-   Respect the OS accessibility setting. Disable all GSAP-driven
-   transforms so users who are sensitive to motion see a static page.
-   GSAP reads this via ScrollTrigger.normalizeScroll and the
-   prefersReducedMotion media query automatically.
-──────────────────────────────────────────────────────────────── */
+/* ─── Reduced motion ─────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation-duration:   0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration:  0.01ms !important;
-    scroll-behavior:      auto !important;
+    animation-duration:        0.01ms !important;
+    animation-iteration-count: 1      !important;
+    transition-duration:       0.01ms !important;
+    scroll-behavior:           auto   !important;
   }
 
-  /* Make all sections immediately visible so content is accessible */
   .hero,
   .section-1,
   .section-2,
@@ -411,22 +393,29 @@ p {
   .section-10,
   .section-cta,
   .footer {
-    transform:   none !important;
-    opacity:     1 !important;
-    visibility:  visible !important;
-    clip-path:   none !important;
-    will-change: auto !important;
+    transform:   none       !important;
+    opacity:     1          !important;
+    visibility:  visible    !important;
+    clip-path:   none       !important;
+    will-change: auto       !important;
   }
 }
 
-/* ─── Mobile viewport fix for .pin-all ──────────────────────────
-   JS (setPinHeight) writes the exact pixel height via inline style
-   using visualViewport.height, so the CSS value here is just the
-   initial fallback for SSR / first paint before JS fires.
-   100dvh = dynamic viewport height (excludes browser chrome natively
-   in modern browsers). Falls back to 100vh for older browsers.
+/* ─── Mobile viewport / pin-all ─────────────────────────────────
+   --vh is set by JS (SmoothScroll) using visualViewport.height so it
+   always matches the *visible* viewport (excludes address bar).
+
+   Priority:
+   1. JS inline style  →  exact px from visualViewport (set by setPinHeight)
+   2. calc(var(--vh))  →  CSS custom prop updated by the same JS
+   3. 100dvh           →  native dynamic viewport (modern browsers)
+   4. 100vh            →  oldest fallback
+
+   The cascade means whichever value JS has written last wins, and CSS
+   covers the SSR / first-paint moment before JS fires.
 ──────────────────────────────────────────────────────────────── */
 .pin-all {
-  height: 100vh;       /* oldest fallback */
-  height: 100dvh;      /* modern: excludes chrome natively */
+  height: 100vh;
+  height: 100dvh;
+  height: calc(var(--vh, 1dvh) * 100);
 }

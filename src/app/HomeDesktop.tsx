@@ -4,15 +4,18 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSite } from "./context/SiteContext";
 import dynamic from "next/dynamic";
 
-import Hero        from "../components/Home/Hero";
-import SectionOne  from "../components/Home/SectionOne";
-import SectionTwo  from "../components/Home/SectionTwo";
+import Hero         from "../components/Home/Hero";
+import SectionOne   from "../components/Home/SectionOne";
+import SectionTwo   from "../components/Home/SectionTwo";
 import SectionThree from "../components/Home/SectionThree";
-import SectionFour from "../components/Home/SectionFour";
-import SectionFive from "../components/Home/SectionFive";
-import SectionSix  from "../components/Home/SectionSix";
-import SectionCTA  from "../components/SectionCTA";
-import Footer      from "../components/Footer";
+import SectionFour  from "../components/Home/SectionFour";
+import SectionFive  from "../components/Home/SectionFive";
+import SectionSix   from "../components/Home/SectionSix";
+import SectionCTA   from "../components/SectionCTA";
+import Footer       from "../components/Footer";
+
+// Import shared helpers so every caller uses the same logic.
+import { syncVh, getVvHeight } from "../components/SmoothScroll";
 
 const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { ssr: false });
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
@@ -25,33 +28,21 @@ gsap.registerPlugin(ScrollTrigger);
 
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
-const vvHeight = () =>
-  (typeof visualViewport !== "undefined" && visualViewport != null
-    ? visualViewport.height
-    : null) ?? window.innerHeight;
-
-// Only resizes the DOM element to match the visible viewport.
-// Never calls ScrollTrigger.refresh() — ignoreMobileResize handles that.
-const setPinHeight = () => {
-  const el = document.querySelector<HTMLElement>(".pin-all");
-  if (el) el.style.height = `${vvHeight()}px`;
-};
-
 export default function HomeDesktop() {
   const { preloaderDone, lenisRef, onScrollReady } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
 
-  // Keep .pin-all sized to the visible viewport on address-bar changes.
-  // "resize" only (not "scroll") — "scroll" fires every pixel during the
-  // bar animation and is too noisy. No ScrollTrigger.refresh() here.
+  // ── Keep .pin-all sized to the visible viewport ─────────────────────────
+  // SmoothScroll is the primary owner of these listeners, but we add them
+  // here too as a safety net (e.g. HMR, component mount order differences).
   useEffect(() => {
-    setPinHeight();
+    syncVh();
     const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
-    vv?.addEventListener("resize", setPinHeight);
-    window.addEventListener("resize", setPinHeight);
+    vv?.addEventListener("resize", syncVh);
+    window.addEventListener("resize", syncVh);
     return () => {
-      vv?.removeEventListener("resize", setPinHeight);
-      window.removeEventListener("resize", setPinHeight);
+      vv?.removeEventListener("resize", syncVh);
+      window.removeEventListener("resize", syncVh);
     };
   }, []);
 
@@ -68,10 +59,6 @@ export default function HomeDesktop() {
 
       gsap.ticker.lagSmoothing(0);
 
-      // ignoreMobileResize: true — prevents ScrollTrigger from recalculating
-      // pin positions when the address bar shows/hides. This is the correct
-      // GSAP fix. Calling ScrollTrigger.refresh() manually in a resize handler
-      // bypasses this protection and causes the jump — so we don't do that.
       ScrollTrigger.config({
         ignoreMobileResize: true,
         autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
@@ -157,17 +144,12 @@ export default function HomeDesktop() {
 
       const buildTimeline = () => {
         requestAnimationFrame(() => {
-          // Size the element once before building the timeline.
-          // This is the only place we legitimately need the correct height
-          // before GSAP measures positions.
-          setPinHeight();
+          // Sync --vh and .pin-all height before GSAP measures anything.
+          syncVh();
 
-          // After this point, do NOT call ScrollTrigger.refresh() from any
-          // resize handler. ignoreMobileResize manages that automatically.
           const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
           if (vv) {
-            // Only resize the container element. No ScrollTrigger.refresh().
-            const onVVResize = () => setPinHeight();
+            const onVVResize = () => syncVh();
             vv.addEventListener("resize", onVVResize);
             vvCleanup = () => vv.removeEventListener("resize", onVVResize);
           }
@@ -208,7 +190,7 @@ export default function HomeDesktop() {
 
             .to(".section-4",  { yPercent: 0, duration: 2.8, ease: "power2.out" })
             .to(".s4-content", {
-              y: () => vvHeight() * -0.45,
+              y: () => getVvHeight() * -0.45,
               duration: 3.0,
               ease: "power1.inOut",
             }, "<+1.8")
@@ -241,7 +223,7 @@ export default function HomeDesktop() {
             .to(".s10-card", {
               y: () => {
                 const card = document.querySelector(".s10-card") as HTMLElement;
-                if (!card) return -vvHeight() * 0.7;
+                if (!card) return -getVvHeight() * 0.7;
                 return -card.getBoundingClientRect().top;
               },
               duration: 2.5, ease: "power2.inOut",
@@ -361,12 +343,6 @@ export default function HomeDesktop() {
 
   return (
     <div ref={scopeRef}>
-      {/*
-        CHANGED: removed Tailwind "h-screen" class (= 100vh, never updates).
-        Height is now set by setPinHeight() via inline style using
-        visualViewport.height, so it always matches the visible area.
-        CSS fallback "100dvh" covers SSR / first paint before JS fires.
-      */}
       <div className="pin-all relative overflow-hidden" style={{ height: "100dvh" }}>
 
         <div className="section-1 absolute inset-0 z-20">

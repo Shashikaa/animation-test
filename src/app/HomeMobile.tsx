@@ -6,15 +6,20 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSite } from "./context/SiteContext";
 import dynamic from "next/dynamic";
 
-import Hero        from "../components/Home/Hero";
-import SectionOne  from "../components/Home/SectionOne";
-import SectionTwo  from "../components/Home/SectionTwo";
+import Hero         from "../components/Home/Hero";
+import SectionOne   from "../components/Home/SectionOne";
+import SectionTwo   from "../components/Home/SectionTwo";
 import SectionThree from "../components/Home/SectionThree";
-import SectionFour from "../components/Home/SectionFour";
-import SectionFive from "../components/Home/SectionFive";
-import SectionSix  from "../components/Home/SectionSix";
-import SectionCTA  from "../components/SectionCTA";
-import Footer      from "../components/Footer";
+import SectionFour  from "../components/Home/SectionFour";
+import SectionFive  from "../components/Home/SectionFive";
+import SectionSix   from "../components/Home/SectionSix";
+import SectionCTA   from "../components/SectionCTA";
+import Footer       from "../components/Footer";
+
+// Import the shared helpers so every caller uses the same logic.
+// SmoothScroll already calls syncVh on mount and on vv "resize", so
+// here we only need to call it before GSAP builds its timeline.
+import { syncVh, getVvHeight } from "../components/SmoothScroll";
 
 const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { ssr: false });
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
@@ -22,18 +27,6 @@ const SectionNine  = dynamic(() => import("../components/Home/SectionNine"),  { 
 const SectionTen   = dynamic(() => import("../components/Home/SectionTen"),   { ssr: false });
 
 gsap.registerPlugin(ScrollTrigger);
-
-const vvHeight = () =>
-  (typeof visualViewport !== "undefined" && visualViewport != null
-    ? visualViewport.height
-    : null) ?? window.innerHeight;
-
-// Only resizes the DOM element — never triggers ScrollTrigger.refresh()
-// so ignoreMobileResize can do its job unobstructed.
-const setPinHeight = () => {
-  const el = document.querySelector<HTMLElement>(".pin-all");
-  if (el) el.style.height = `${vvHeight()}px`;
-};
 
 export default function HomeMobile() {
   const { preloaderDone, lenisRef, onScrollReady } = useSite();
@@ -43,20 +36,18 @@ export default function HomeMobile() {
     gsap.set(".section-1", { yPercent: 100, zIndex: 90 });
   }, []);
 
-  // Keeps the container sized to the visible viewport when the address
-  // bar appears/hides. We listen to visualViewport "resize" only — NOT
-  // "scroll" — because "scroll" fires on every pixel of the bar
-  // transition and would fire setPinHeight 60fps during the animation.
-  // Crucially we do NOT call ScrollTrigger.refresh() here; that's what
-  // ignoreMobileResize is for.
+  // ── Keep .pin-all sized to the visible viewport ─────────────────────────
+  // SmoothScroll handles the primary listener, but we add a secondary one
+  // here as a safety net in case this component mounts before SmoothScroll
+  // or outlives it during HMR.
   useEffect(() => {
-    setPinHeight();
+    syncVh();
     const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
-    vv?.addEventListener("resize", setPinHeight);
-    window.addEventListener("resize", setPinHeight);
+    vv?.addEventListener("resize", syncVh);
+    window.addEventListener("resize", syncVh);
     return () => {
-      vv?.removeEventListener("resize", setPinHeight);
-      window.removeEventListener("resize", setPinHeight);
+      vv?.removeEventListener("resize", syncVh);
+      window.removeEventListener("resize", syncVh);
     };
   }, []);
 
@@ -69,10 +60,6 @@ export default function HomeMobile() {
 
       gsap.ticker.lagSmoothing(0);
 
-      // ignoreMobileResize: true is the key GSAP setting.
-      // It prevents ScrollTrigger from recalculating start/end positions
-      // when the mobile address bar shows/hides (which is what causes the jump).
-      // autoRefreshEvents intentionally excludes "resize" for the same reason.
       ScrollTrigger.config({
         ignoreMobileResize: true,
         autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
@@ -166,20 +153,15 @@ export default function HomeMobile() {
 
         waitForMobBgs(() => {
           requestAnimationFrame(() => {
-            // Size the element once before building the timeline.
-            // No ScrollTrigger.refresh() here — the timeline hasn't been
-            // created yet so there's nothing to refresh, and calling it
-            // after creation would fight ignoreMobileResize.
-            setPinHeight();
+            // Sync --vh and .pin-all height before GSAP measures anything.
+            // This is the single correct place to do it — after fonts are
+            // ready but before the ScrollTrigger pin is created.
+            syncVh();
 
             const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
             if (vv) {
-              // Only listen to "resize" (address bar fully shown/hidden),
-              // not "scroll" (fires on every pixel during the transition).
-              // Never call ScrollTrigger.refresh() in this handler —
-              // ignoreMobileResize already manages whether GSAP should
-              // recalculate, and calling it manually overrides that protection.
-              const onVVResize = () => setPinHeight();
+              // Only "resize", never "scroll". Never call ScrollTrigger.refresh().
+              const onVVResize = () => syncVh();
               vv.addEventListener("resize", onVVResize);
               vvCleanup = () => vv.removeEventListener("resize", onVVResize);
             }
@@ -189,7 +171,7 @@ export default function HomeMobile() {
 
             gsap.set(".s10-video-wrap", {
               y: () => {
-                const vvH = vvHeight();
+                const vvH = getVvHeight();
                 const el  = document.querySelector(".s10-video-wrap") as HTMLElement;
                 if (!el) return 500;
                 return vvH - el.getBoundingClientRect().top + 20;
@@ -265,7 +247,7 @@ export default function HomeMobile() {
               .to(".s10-video-wrap", {
                 y: () => {
                   const el = document.querySelector(".s10-video-wrap") as HTMLElement;
-                  if (!el) return -vvHeight() * 0.55;
+                  if (!el) return -getVvHeight() * 0.55;
                   return -(el.getBoundingClientRect().top - 80);
                 },
                 duration: 1.8, ease: "none",
@@ -275,7 +257,7 @@ export default function HomeMobile() {
               .to(".s10-card", {
                 y: () => {
                   const card = document.querySelector(".s10-card") as HTMLElement;
-                  if (!card) return -vvHeight() * 0.7;
+                  if (!card) return -getVvHeight() * 0.7;
                   return -card.getBoundingClientRect().top;
                 },
                 duration: 2.5, ease: "none",
