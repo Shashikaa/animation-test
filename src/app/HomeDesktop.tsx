@@ -30,9 +30,30 @@ const vvHeight = () =>
     ? visualViewport.height
     : null) ?? window.innerHeight;
 
+// Only resizes the DOM element to match the visible viewport.
+// Never calls ScrollTrigger.refresh() — ignoreMobileResize handles that.
+const setPinHeight = () => {
+  const el = document.querySelector<HTMLElement>(".pin-all");
+  if (el) el.style.height = `${vvHeight()}px`;
+};
+
 export default function HomeDesktop() {
   const { preloaderDone, lenisRef, onScrollReady } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
+
+  // Keep .pin-all sized to the visible viewport on address-bar changes.
+  // "resize" only (not "scroll") — "scroll" fires every pixel during the
+  // bar animation and is too noisy. No ScrollTrigger.refresh() here.
+  useEffect(() => {
+    setPinHeight();
+    const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
+    vv?.addEventListener("resize", setPinHeight);
+    window.addEventListener("resize", setPinHeight);
+    return () => {
+      vv?.removeEventListener("resize", setPinHeight);
+      window.removeEventListener("resize", setPinHeight);
+    };
+  }, []);
 
   useEffect(() => {
     if (!preloaderDone) return;
@@ -47,15 +68,16 @@ export default function HomeDesktop() {
 
       gsap.ticker.lagSmoothing(0);
 
+      // ignoreMobileResize: true — prevents ScrollTrigger from recalculating
+      // pin positions when the address bar shows/hides. This is the correct
+      // GSAP fix. Calling ScrollTrigger.refresh() manually in a resize handler
+      // bypasses this protection and causes the jump — so we don't do that.
       ScrollTrigger.config({
         ignoreMobileResize: true,
         autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
       });
 
-      // scrub: the playhead lerps toward the scroll-driven target over this
-      // many seconds. 0.5–0.8 tracks the input closely while still
-      // smoothing out jitter — pairs well with Lenis lerp:0.1.
-  const scrubValue = isTouchOnly() ? 0.3 : 0.9;
+      const scrubValue = isTouchOnly() ? 0.3 : 0.9;
 
       const footerEl = scopeRef.current?.querySelector<HTMLElement>(".footer");
       const footerH  = footerEl?.offsetHeight ?? 600;
@@ -135,11 +157,17 @@ export default function HomeDesktop() {
 
       const buildTimeline = () => {
         requestAnimationFrame(() => {
-          ScrollTrigger.refresh();
+          // Size the element once before building the timeline.
+          // This is the only place we legitimately need the correct height
+          // before GSAP measures positions.
+          setPinHeight();
 
+          // After this point, do NOT call ScrollTrigger.refresh() from any
+          // resize handler. ignoreMobileResize manages that automatically.
           const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
           if (vv) {
-            const onVVResize = () => ScrollTrigger.refresh(true);
+            // Only resize the container element. No ScrollTrigger.refresh().
+            const onVVResize = () => setPinHeight();
             vv.addEventListener("resize", onVVResize);
             vvCleanup = () => vv.removeEventListener("resize", onVVResize);
           }
@@ -333,7 +361,13 @@ export default function HomeDesktop() {
 
   return (
     <div ref={scopeRef}>
-      <div className="pin-all relative h-screen overflow-hidden">
+      {/*
+        CHANGED: removed Tailwind "h-screen" class (= 100vh, never updates).
+        Height is now set by setPinHeight() via inline style using
+        visualViewport.height, so it always matches the visible area.
+        CSS fallback "100dvh" covers SSR / first paint before JS fires.
+      */}
+      <div className="pin-all relative overflow-hidden" style={{ height: "100dvh" }}>
 
         <div className="section-1 absolute inset-0 z-20">
           <SectionOne />
