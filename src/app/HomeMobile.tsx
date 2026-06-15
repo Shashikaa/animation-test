@@ -28,12 +28,6 @@ const vvHeight = () =>
     ? visualViewport.height
     : null) ?? window.innerHeight;
 
-// ── NEW: writes --vh so CSS can use calc(var(--vh) * 100) ──────
-const setVH = () => {
-  const vh = vvHeight();
-  document.documentElement.style.setProperty("--vh", `${vh * 0.01}px`);
-};
-
 const setPinHeight = () => {
   const h  = vvHeight();
   const el = document.querySelector<HTMLElement>(".pin-all");
@@ -46,20 +40,6 @@ export default function HomeMobile() {
 
   useLayoutEffect(() => {
     gsap.set(".section-1", { yPercent: 100, zIndex: 90 });
-  }, []);
-
-  // ── NEW: keep --vh in sync whenever the browser chrome appears/hides
-  useEffect(() => {
-    setVH();                                                   // run once immediately
-    window.addEventListener("resize", setVH);
-    window.visualViewport?.addEventListener("resize", setVH);
-    window.visualViewport?.addEventListener("scroll",  setVH); // iOS URL-bar collapse
-
-    return () => {
-      window.removeEventListener("resize", setVH);
-      window.visualViewport?.removeEventListener("resize", setVH);
-      window.visualViewport?.removeEventListener("scroll",  setVH);
-    };
   }, []);
 
   useEffect(() => {
@@ -167,18 +147,12 @@ export default function HomeMobile() {
 
         waitForMobBgs(() => {
           requestAnimationFrame(() => {
-            // ── sync both CSS var and GSAP pin height before building ──
-            setVH();
             setPinHeight();
             ScrollTrigger.refresh();
 
             const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
             if (vv) {
-              const onVVResize = () => {
-                setVH();           // keep CSS var in sync too
-                setPinHeight();
-                ScrollTrigger.refresh();
-              };
+              const onVVResize = () => setPinHeight();
               vv.addEventListener("resize", onVVResize);
               vvCleanup = () => vv.removeEventListener("resize", onVVResize);
             }
@@ -342,16 +316,7 @@ export default function HomeMobile() {
 
   return (
     <div ref={scopeRef}>
-      {/*
-        ── CHANGED: removed style={{ height: "100svh" }}
-           Height is now set by:
-             1. CSS: .pin-all { height: calc(var(--vh, 1vh) * 100) }
-             2. JS:  setPinHeight() keeps it pixel-perfect after
-                     the browser chrome appears / disappears.
-           This prevents the 100svh jump that fires when the iOS
-           address bar collapses mid-scroll.
-      */}
-      <div className="pin-all relative overflow-hidden">
+      <div className="pin-all relative overflow-hidden" style={{ height: "100svh" }}>
 
         <div className="section-1 absolute inset-0 z-[90]">
           <SectionOne />
