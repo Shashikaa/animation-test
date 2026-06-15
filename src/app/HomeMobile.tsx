@@ -150,12 +150,27 @@ export default function HomeMobile() {
             setPinHeight();
             ScrollTrigger.refresh();
 
+            // Keep the pin container's height in sync as the mobile
+            // browser chrome (URL bar) collapses/expands, and re-measure
+            // ScrollTrigger so the timeline math stays correct.
             const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
-            if (vv) {
-              const onVVResize = () => setPinHeight();
-              vv.addEventListener("resize", onVVResize);
-              vvCleanup = () => vv.removeEventListener("resize", onVVResize);
-            }
+
+            const refresh = () => {
+              requestAnimationFrame(() => {
+                setPinHeight();
+                ScrollTrigger.refresh();
+              });
+            };
+
+            vv?.addEventListener("resize", refresh);
+            window.addEventListener("resize", refresh);
+            window.addEventListener("orientationchange", refresh);
+
+            vvCleanup = () => {
+              vv?.removeEventListener("resize", refresh);
+              window.removeEventListener("resize", refresh);
+              window.removeEventListener("orientationchange", refresh);
+            };
 
             gsap.set(".s7-mob-bg", { scale: 1.15, transformOrigin: "center center" });
             gsap.set(".s8-mob-bg", { scale: 1.15, transformOrigin: "center center" });
@@ -316,7 +331,7 @@ export default function HomeMobile() {
 
   return (
     <div ref={scopeRef}>
-      <div className="pin-all relative overflow-hidden" style={{ height: "100svh" }}>
+      <div className="pin-all">
 
         <div className="section-1 absolute inset-0 z-[90]">
           <SectionOne />
