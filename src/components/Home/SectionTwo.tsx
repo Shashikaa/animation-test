@@ -42,10 +42,10 @@ export default function SectionTwo() {
       <div className="section-continer relative z-[2] h-full flex flex-col justify-between pb-10 md:pb-14 lg:pb-16">
 {/* TOP */}
 <div className="flex flex-col !mt-44">
-  <h2 className="s2-title-main font-display text-[#F4EEDF] leading-[1.1] !font-[100]">
+  <h2 className="s2-title-main font-display text-[#F4EEDF] leading-[1.2] !font-[100]">
     Premium Pool <br />
   </h2>
-  <p className="s2-title-sub font-body text-[#F4EEDF] text-sm md:text-base">
+  <p className="s2-title-sub font-body text-[#F4EEDF] text-sm md:text-base !mt-1">
     Solution For Every Need
   </p>
 </div>

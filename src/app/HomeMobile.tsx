@@ -22,14 +22,27 @@ const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { 
 const SectionNine  = dynamic(() => import("../components/Home/SectionNine"),  { ssr: false });
 const SectionTen   = dynamic(() => import("../components/Home/SectionTen"),   { ssr: false });
 
-import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
-
 gsap.registerPlugin(ScrollTrigger);
 
+// ─── Stable viewport height ───────────────────────────────────────────────────
+// visualViewport.height is the *layout* viewport — it does NOT change when the
+// mobile browser bar slides in/out. window.innerHeight DOES change, which is
+// what causes the scroll animation to jump. Always use vvHeight() for any
+// pixel measurement that must stay stable during scroll.
 const vvHeight = () =>
   (typeof visualViewport !== "undefined" && visualViewport != null
     ? visualViewport.height
     : null) ?? window.innerHeight;
+
+// Keep .pin-all physically sized to the stable viewport height.
+// Called once before ScrollTrigger.refresh() and again on visualViewport
+// resize — but we NEVER call ScrollTrigger.refresh() inside that handler,
+// which would reset scrub progress.
+const setPinHeight = () => {
+  const h = vvHeight();
+  const el = document.querySelector<HTMLElement>(".pin-all");
+  if (el) el.style.height = `${h}px`;
+};
 
 export default function HomeMobile() {
   const { preloaderDone, lenisRef, onScrollReady } = useSite();
@@ -42,8 +55,6 @@ export default function HomeMobile() {
   useEffect(() => {
     if (!preloaderDone) return;
 
-    ScrollTrigger.normalizeScroll(true);
-
     let vvCleanup: (() => void) | null = null;
 
     const ctx = gsap.context(() => {
@@ -55,12 +66,15 @@ export default function HomeMobile() {
         autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
       });
 
-      const scrubValue = 0.3;
+      const TRANSITION = 2.0;
+      const EASE       = "power2.inOut";
+      const PAUSE      = 0.8;
+      const scrubValue = 0.6;
 
       const footerEl = scopeRef.current?.querySelector<HTMLElement>(".footer");
       const footerH  = footerEl?.offsetHeight ?? 600;
 
-      // ── Initial states ───────────────────────────────────────────
+      // ── Initial states ────────────────────────────────────────────────────
 
       gsap.set(".hero",    { yPercent: 0, zIndex: 5 });
       gsap.set(".hero-bg", { yPercent: 0 });
@@ -84,10 +98,8 @@ export default function HomeMobile() {
 
       gsap.set(".section-4", { yPercent: 100, visibility: "visible", zIndex: 105 });
       gsap.set(".s5-card",   { scale: 1, transformOrigin: "center center" });
-
       gsap.set(".s4-content", { y: 0 });
       gsap.set(".s4-bg-img",  { yPercent: 8 });
-
       gsap.set(".s4-img-mob", { y: 60 });
 
       gsap.set(".section-5", {
@@ -131,7 +143,6 @@ export default function HomeMobile() {
       gsap.set(".footer",      { y: footerH,    zIndex: 151, visibility: "hidden" });
 
       const buildTimeline = () => {
-        // Poll until dynamic-imported mob bg elements are in the DOM
         const waitForMobBgs = (cb: () => void) => {
           const check = () => {
             if (document.querySelector(".s7-mob-bg") && document.querySelector(".s8-mob-bg")) {
@@ -145,16 +156,16 @@ export default function HomeMobile() {
 
         waitForMobBgs(() => {
           requestAnimationFrame(() => {
+            setPinHeight();
             ScrollTrigger.refresh();
 
             const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
             if (vv) {
-              const onVVResize = () => ScrollTrigger.refresh(true);
+              const onVVResize = () => setPinHeight();
               vv.addEventListener("resize", onVVResize);
               vvCleanup = () => vv.removeEventListener("resize", onVVResize);
             }
 
-            // Mob bg initial states — set here so elements are guaranteed mounted
             gsap.set(".s7-mob-bg", { scale: 1.15, transformOrigin: "center center" });
             gsap.set(".s8-mob-bg", { scale: 1.15, transformOrigin: "center center" });
 
@@ -186,49 +197,50 @@ export default function HomeMobile() {
               },
             });
 
-            // ── Sections 1 → 2 ────────────────────────────────────────
+            // ── Hero → S1 ────────────────────────────────────────────────
             tl
               .to(".section-1", { yPercent: 0,   duration: 2.0, ease: "none" })
               .to(".hero-bg",   { yPercent: -20, duration: 2.0, ease: "none" }, "<")
               .to(".s1-bg",     { yPercent: 0, scale: 1, duration: 1.8, ease: "none" }, "<")
               .to(".s1-card",   { yPercent: 0, opacity: 1, duration: 1.8, ease: "power2.out" }, 0.3)
-              .to({}, { duration: 0.8 })
+              .to({}, { duration: PAUSE })
 
+            // ── S1 → S2 (clipPath wipe from bottom) ─────────────────────
               .set(".section-1", { zIndex: 20 })
-              .to(".section-2", { clipPath: "inset(0% 0% 0% 0%)", duration: 2.0, ease: "power2.inOut" })
-              .to(".section-1", { scale: 1.05, duration: 2.0, ease: "power2.inOut" }, "<")
-              .to(".s2-bg",     { yPercent: 0, scale: 1, duration: 2.0, ease: "power2.out" }, "<")
-              .to({}, { duration: 0.6 })
+              .to(".section-2", { clipPath: "inset(0% 0% 0% 0%)", duration: TRANSITION, ease: EASE })
+              .to(".section-1", { scale: 1.05,                     duration: TRANSITION, ease: EASE }, "<")
+              .to(".s2-bg",     { yPercent: 0, scale: 1,           duration: TRANSITION, ease: "power2.out" }, "<")
+              .to({}, { duration: PAUSE })
 
-            // ── Section 2 → 3 ─────────────────────────────────────────
+            // ── S2 → S3 (S3 slides up from below) ───────────────────────
               .set(".section-3", { visibility: "visible" })
-              .to(".section-3", { yPercent: 0,  duration: 2.0, ease: "power2.out" })
-              .to(".section-2", { scale: 1.05,  duration: 2.0, ease: "power2.inOut" }, "<")
-              .to({}, { duration: 1.0 })
+              .to(".section-3", { yPercent: 0,  duration: TRANSITION, ease: EASE })
+              .to(".section-2", { scale: 1.05,  duration: TRANSITION, ease: EASE }, "<")
+              .to({}, { duration: PAUSE })
 
-            // ── Section 3 → 4 ─────────────────────────────────────────
-              .to(".section-4",  { yPercent: 0,    duration: 2.8, ease: "power2.out" })
-              .to(".section-3",  { yPercent: -100, duration: 3.0, ease: "power2.inOut" }, "-=1.2")
-              .to(".s4-img-mob", { y: -60,          duration: 2.8, ease: "none" }, "<")
-              .to({}, { duration: 0.8 })
+            // ── S3 → S4 (S4 slides up, S3 exits up) ─────────────────────
+              .to(".section-4",  { yPercent: 0,    duration: TRANSITION, ease: EASE })
+              .to(".section-3",  { yPercent: -100, duration: TRANSITION, ease: EASE }, "-=1.2")
+              .to(".s4-img-mob", { y: -60,          duration: TRANSITION, ease: "none" }, "<")
+              .to({}, { duration: PAUSE })
 
-            // ── Section 4 → 5 ─────────────────────────────────────────
-              .to(".section-5", { clipPath: "inset(0% 0% 0% 0%)", duration: 2.0, ease: "power2.inOut" })
-              .to(".section-4", {                      duration: 2.0, ease: "power2.inOut" }, "<")
-              .to({}, { duration: 0.8 })
+            // ── S4 → S5 (clipPath wipe from bottom) ─────────────────────
+              .to(".section-5", { clipPath: "inset(0% 0% 0% 0%)", duration: TRANSITION, ease: EASE })
+              .to(".section-4", { scale: 1.05,                     duration: TRANSITION, ease: EASE }, "<")
+              .to({}, { duration: PAUSE })
 
-            // ── Section 5 → 6 ─────────────────────────────────────────
-              .to(".section-6", { yPercent: 0,  duration: 2.0, ease: "power2.out" })
-              .to(".section-5", { scale: 1.05,  duration: 2.0, ease: "power2.inOut" }, "<")
+            // ── S5 → S6 (S6 slides up from below) ───────────────────────
+              .to(".section-6", { yPercent: 0,  duration: TRANSITION, ease: EASE })
+              .to(".section-5", { scale: 1.05,  duration: TRANSITION, ease: EASE }, "<")
               .to({}, { duration: 0.6 })
 
-            // ── Section 6 → 10 ────────────────────────────────────────
+            // ── S6 → S10 (S6 slides off up, S10 fades/enters) ───────────
               .set(".section-10", { visibility: "visible" })
-              .to(".section-6",     { yPercent: -100, duration: 2.0, ease: "power2.inOut" })
-              .to(".s10-static-bg", { yPercent: 0,    duration: 2.0, ease: "power2.out"  }, "<")
-              .to({}, { duration: 0.8 })
+              .to(".section-6",     { yPercent: -100, duration: TRANSITION, ease: EASE })
+              .to(".s10-static-bg", { yPercent: 0,    duration: TRANSITION, ease: "power2.out" }, "<")
+              .to({}, { duration: PAUSE })
 
-            // ── Section 10 inner (mobile) ──────────────────────────────
+            // ── S10 inner ────────────────────────────────────────────────
               .set(".s10-title",     { opacity: 1, y: 0 })
               .set(".s10-title-sub", { opacity: 1, y: 0 })
               .set(".s10-para-top",  { opacity: 1, y: 0 })
@@ -262,64 +274,44 @@ export default function HomeMobile() {
               .to(".s10-bg-img",    { y: "0%", duration: 2.5, ease: "none" }, "<")
               .to({}, { duration: 0.6 })
 
-            // ── Section 10 → 7 — S7 slides up, S8 behind it
-            // S7 mob bg zooms out 1.15 → 1 synced with slide-in
+            // ── S10 → S7 (S7 slides up, mob bg zooms out) ───────────────
               .set(".section-8", { visibility: "visible" })
-              .to(".section-7",  { yPercent: 0, duration: 2.4, ease: "power3.out" })
-              .to(".section-8",  { yPercent: 0, duration: 2.4, ease: "power3.out" }, "<")
-              .to(".section-10", { scale: 1.05, duration: 2.4, ease: "power2.inOut" }, "<")
-              .to(".s7-bg-img",  { yPercent: 0, duration: 2.4, ease: "power2.out"  }, "<")
-              .to(".s8-bg-img",  { yPercent: 0, duration: 2.4, ease: "power2.out"  }, "<")
-              .to(".s7-mob-bg",  { scale: 1,    duration: 2.4, ease: "power2.out"  }, "<")
-              .to({}, { duration: 0.8 })
+              .to(".section-7",  { yPercent: 0, duration: TRANSITION, ease: "power3.out" })
+              .to(".section-8",  { yPercent: 0, duration: TRANSITION, ease: "power3.out" }, "<")
+              .to(".section-10", { scale: 1.05, duration: TRANSITION, ease: EASE }, "<")
+              .to(".s7-bg-img",  { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
+              .to(".s8-bg-img",  { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
+              .to(".s7-mob-bg",  { scale: 1,    duration: TRANSITION, ease: "power2.out" }, "<")
+              .to({}, { duration: PAUSE })
 
-            // ── Section 7 → 8 — S7 slides off up, S8 mob bg zooms out as exposed
-              .to(".section-7", { yPercent: -100, duration: 2.0, ease: "power2.inOut" })
-              .to(".s8-mob-bg", { scale: 1,       duration: 2.0, ease: "power2.out"  }, "<")
+            // ── S7 → S8 (S7 slides off up, S8 mob bg zooms out) ─────────
+              .to(".section-7", { yPercent: -100, duration: TRANSITION, ease: EASE })
+              .to(".s8-mob-bg", { scale: 1,       duration: TRANSITION, ease: "power2.out" }, "<")
               .set(".section-8", { clipPath: "inset(0% 0% 0% 0%)" })
-              .to({}, { duration: 0.8 })
+              .to({}, { duration: PAUSE })
 
               .set(".section-7", { visibility: "hidden" })
 
-            // ── Section 8 → 9 ─────────────────────────────────────────
+            // ── S8 → S9 (S8 clips up, S9 revealed behind) ───────────────
               .set(".section-9", { visibility: "visible" })
-              .to(".section-8", { clipPath: "inset(0% 0% 100% 0%)", duration: 2.0, ease: "power2.inOut" })
-              .to(".s9-bg-img", { yPercent: 0, duration: 2.0, ease: "power2.out" }, "<")
+              .to(".section-8", { clipPath: "inset(0% 0% 100% 0%)", duration: TRANSITION, ease: EASE })
+              .to(".s9-bg-img", { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
               .to(".s9-title",  { opacity: 1,  duration: 1.2, ease: "power2.out" }, "<+1.0")
               .to(".s9-para",   { opacity: 1,  duration: 1.2, ease: "power3.out" }, "<")
-              .to({}, { duration: 0.8 })
+              .to({}, { duration: PAUSE })
 
-            // ── CTA + Footer ───────────────────────────────────────────
+            // ── CTA + Footer ─────────────────────────────────────────────
               .set(".section-cta", { visibility: "visible" })
               .to(".section-cta", { yPercent: 0,   duration: 3.5, ease: "power3.out" })
-              .to(".section-9",   { scale: 1.05,   duration: 3.5, ease: "power2.inOut" }, "<")
+              .to(".section-9",   { scale: 1.05,   duration: 3.5, ease: EASE }, "<")
               .to(".s9-bg-img",   { yPercent: -10, duration: 3.5, ease: "none" }, "<")
               .to({}, { duration: 0.5 })
 
               .set(".footer", { visibility: "visible" })
               .to(".footer",    { y: 0,          duration: 2.5, ease: "power3.out" })
-              .to(".section-9", { scale: 1.05,   duration: 2.5, ease: "power2.inOut" }, "<")
+              .to(".section-9", { scale: 1.05,   duration: 2.5, ease: EASE }, "<")
               .to(".s9-bg-img", { yPercent: -20, duration: 2.5, ease: "none" }, "<")
               .to({}, { duration: 1.0 });
-
-            // ── Text reveals ──────────────────────────────────────────
-            useTextReveal(scopeRef, ".s2-title-main", { tl, position: "4",    duration: 0.35, stagger: 0.04 });
-            useTextReveal(scopeRef, ".s2-title-sub",  { tl, position: "4",    duration: 0.3,  stagger: 0.03 });
-            useTextReveal(scopeRef, ".s2-body",        { tl, position: "3.8",  duration: 0.35, stagger: 0.04 });
-
-            useTextReveal(scopeRef, ".s5-title", { tl, position: "13", duration: 0.35, stagger: 0.04 });
-            useTextReveal(scopeRef, ".s5-body",  { tl, position: "13", duration: 0.35, stagger: 0.04 });
-
-            useTextReveal(scopeRef, ".s10-title",     { tl, position: "18.6", duration: 0.35, stagger: 0.04 });
-            useTextReveal(scopeRef, ".s10-title-sub", { tl, position: "18.6", duration: 0.3,  stagger: 0.03 });
-            useTextReveal(scopeRef, ".s10-para-top",  { tl, position: "18.6", duration: 0.3,  stagger: 0.03 });
-            useTextReveal(scopeRef, ".s10-card-para", { tl, position: "21.6", duration: 0.4,  stagger: 0.05 });
-
-            useTextReveal(scopeRef, ".s7-title", { tl, position: "28.9", duration: 0.35, stagger: 0.04 });
-            useTextReveal(scopeRef, ".s7-para",  { tl, position: "28.9", duration: 0.35, stagger: 0.04 });
-
-            useTextReveal(scopeRef, ".s8-heading", { tl, position: "32.5", duration: 0.35, stagger: 0.04 });
-            useTextReveal(scopeRef, ".s8-para",    { tl, position: "32.5", duration: 0.35, stagger: 0.04 });
 
             onScrollReady();
           });
@@ -339,30 +331,15 @@ export default function HomeMobile() {
 
     return () => {
       vvCleanup?.();
-      ScrollTrigger.normalizeScroll(false);
-
-      if (scopeRef.current) {
-        restoreTextReveal(
-          scopeRef.current,
-          [
-            ".s2-title-main", ".s2-title-sub", ".s2-body",
-            ".s4-title",      ".s4-para",      ".s4-cta",
-            ".s5-title",      ".s5-body",
-            ".s10-title",     ".s10-title-sub", ".s10-para-top", ".s10-card-para",
-            ".s7-title",      ".s7-para",
-            ".s8-heading",    ".s8-para",
-          ].join(",")
-        );
-      }
       ctx.revert();
     };
   }, [preloaderDone]);
 
   return (
     <div ref={scopeRef}>
-
-
-      <div className="pin-all relative h-screen overflow-hidden">
+      {/* 100svh = stable small viewport height (excludes browser bar).
+          JS setPinHeight() keeps it in sync for older browsers. */}
+      <div className="pin-all relative overflow-hidden" style={{ height: "100svh" }}>
 
         <div className="section-1 absolute inset-0 z-[90]">
           <SectionOne />
@@ -396,11 +373,11 @@ export default function HomeMobile() {
           <SectionNine />
         </div>
 
-        <div className="section-8 absolute inset-0 z-[128]" style={{ pointerEvents: "auto" , visibility: "hidden"}}>
+        <div className="section-8 absolute inset-0 z-[128]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionEight />
         </div>
 
-   <div className="section-7 absolute inset-0 z-[130]" style={{ pointerEvents: "none", visibility: "hidden" }}>
+        <div className="section-7 absolute inset-0 z-[130]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionSeven />
         </div>
 

@@ -71,6 +71,9 @@ function SectionSixMobile() {
 
   useEffect(() => {
     PROJECTS.forEach((_, i) => {
+      // All images start hidden except the active one.
+      // Index 0 starts visible; the permanent base layer (index 0 div)
+      // is always behind everything so there is never a transparent gap.
       gsap.set(bgRefs.current[i], { opacity: i === 0 ? 1 : 0 });
       if (i !== 0) {
         gsap.set(
@@ -85,8 +88,11 @@ function SectionSixMobile() {
     if (idx === active) return;
     const prev = prevRef.current;
 
-    gsap.to(bgRefs.current[prev], { opacity: 0, duration: 0.6, ease: "power2.inOut" });
-    gsap.to(bgRefs.current[idx],  { opacity: 1, duration: 0.7, ease: "power2.inOut" });
+    // Bring the next image in first, THEN fade the old one out.
+    // This means there is always at least one fully-opaque bg visible —
+    // no gap where S5 can bleed through.
+    gsap.to(bgRefs.current[idx],  { opacity: 1, duration: 0.5, ease: "power2.inOut" });
+    gsap.to(bgRefs.current[prev], { opacity: 0, duration: 0.6, ease: "power2.inOut", delay: 0.1 });
 
     gsap.to(
       [h2Refs.current[prev], numRefs.current[prev], descRefs.current[prev]],
@@ -108,7 +114,18 @@ function SectionSixMobile() {
   return (
     <section className="!relative !w-full !overflow-hidden section-six-wrapper !h-[100svh] !pointer-events-auto">
 
-      {/* Backgrounds */}
+      {/* ── Permanent base backdrop — always opaque, blocks S5 completely ── */}
+      <div
+        className="!absolute !inset-0 !bg-cover !bg-center"
+        style={{
+          backgroundImage: `url('${PROJECTS[0].image}')`,
+          transform: "translateZ(0)",
+          backfaceVisibility: "hidden",
+          zIndex: 0,
+        }}
+      />
+
+      {/* Crossfade layers — sit above the base */}
       {PROJECTS.map((p, i) => (
         <div
           key={p.id}
@@ -118,13 +135,14 @@ function SectionSixMobile() {
             backgroundImage: `url('${p.image}')`,
             transform: "translateZ(0)",
             backfaceVisibility: "hidden",
+            zIndex: 1,
           }}
         />
       ))}
 
       {/* Gradient overlay */}
       <div
-        className="!absolute !inset-0 !z-[1]"
+        className="!absolute !inset-0 !z-[2]"
         style={{
           background:
             "linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.60) 45%, rgba(0,0,0,0.72) 100%)",
@@ -133,7 +151,7 @@ function SectionSixMobile() {
       />
 
       {/* Content */}
-      <div className="!relative !z-[2] !h-full !flex !flex-col !justify-end section-continer">
+      <div className="!relative !z-[3] !h-full !flex !flex-col !justify-end section-continer">
 
         {/* Number + Title */}
         <div className="!mb-[30px]">
@@ -169,7 +187,7 @@ function SectionSixMobile() {
 
         {/* Glass card */}
         <div
-          className="!self-end !w-[72%]  md:!w-[52%] !will-change-transform !mt-5 !px-[25px] !pb-[25px] !pt-[40px]"
+          className="!self-end !w-[72%] md:!w-[52%] !will-change-transform !mt-5 !px-[25px] !pb-[25px] !pt-[40px]"
           style={{
             backdropFilter: "blur(42px)",
             WebkitBackdropFilter: "blur(42px)",
@@ -245,14 +263,12 @@ function SectionSixDesktop() {
   }, []);
 
   useEffect(() => {
-    // Double RAF: first frame triggers layout, second reads correct DOMRects
     let raf1: number, raf2: number;
     raf1 = requestAnimationFrame(() => {
       raf2 = requestAnimationFrame(() => {
         measureAllBars();
         const m = barMetricsCache.current[0];
         if (m && activeBarRef.current) {
-          // Use setProperty with "important" so no stylesheet can override GSAP
           activeBarRef.current.style.setProperty("left",  `${m.left}px`,  "important");
           activeBarRef.current.style.setProperty("width", `${m.width}px`, "important");
         }
@@ -289,12 +305,12 @@ function SectionSixDesktop() {
     if (idx === active) return;
     const prev = prevRef.current;
 
-    gsap.to(bgRefs.current[prev], { opacity: 0, duration: 0.6, ease: "power2.inOut" });
-    gsap.to(bgRefs.current[idx],  { opacity: 1, duration: 0.7, ease: "power2.inOut" });
+    // Bring next image in first, then fade old one out — keeps bg always opaque.
+    gsap.to(bgRefs.current[idx],  { opacity: 1, duration: 0.5, ease: "power2.inOut" });
+    gsap.to(bgRefs.current[prev], { opacity: 0, duration: 0.6, ease: "power2.inOut", delay: 0.1 });
 
     const m = barMetricsCache.current[idx];
     if (m && activeBarRef.current) {
-      // Animate via GSAP but seed the starting values with setProperty so they can't be overridden
       gsap.to(activeBarRef.current, {
         left: m.left,
         width: m.width,
@@ -326,7 +342,18 @@ function SectionSixDesktop() {
   return (
     <section className="!relative !w-full !h-screen !overflow-hidden section-six-wrapper !pointer-events-auto">
 
-      {/* Backgrounds */}
+      {/* ── Permanent base backdrop — always opaque, blocks S5 completely ── */}
+      <div
+        className="!absolute !inset-0 !bg-cover !bg-center"
+        style={{
+          backgroundImage: `url('${PROJECTS[0].image}')`,
+          transform: "translateZ(0)",
+          backfaceVisibility: "hidden",
+          zIndex: 0,
+        }}
+      />
+
+      {/* Crossfade layers — sit above the base */}
       {PROJECTS.map((p, i) => (
         <div
           key={p.id}
@@ -336,13 +363,14 @@ function SectionSixDesktop() {
             backgroundImage: `url('${p.image}')`,
             transform: "translateZ(0)",
             backfaceVisibility: "hidden",
+            zIndex: 1,
           }}
         />
       ))}
 
       {/* Gradient overlay */}
       <div
-        className="!absolute !inset-0 !z-[1]"
+        className="!absolute !inset-0 !z-[2]"
         style={{
           background: "linear-gradient(180deg, rgba(0,0,0,0.16) 0%, rgba(0,0,0,0.64) 100%)",
           transform: "translateZ(0)",
@@ -350,7 +378,7 @@ function SectionSixDesktop() {
       />
 
       {/* Content */}
-      <div className="section-continer !relative !z-[2] !h-full !flex !flex-col !justify-center !pb-40 !gap-6">
+      <div className="section-continer !relative !z-[3] !h-full !flex !flex-col !justify-center !pb-40 !gap-6">
         <div className="!relative !h-20">
           {PROJECTS.map((p, i) => (
             <h2

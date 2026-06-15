@@ -6,13 +6,9 @@
  *   - translateY: 30px → 0
  *   - opacity:    0    → 1
  *
- * FIX: Before splitting, any inline opacity/transform on the parent
- * element is cleared. This prevents scrubbed line animations from
- * fighting an outer gsap.set() that left opacity:0 or translateY on
- * the container.
- *
- * FIX: padding-bottom / margin-bottom on gs-line so descenders
- * (g, y, p, q) are never clipped by overflow:hidden.
+ * Pass `static: true` (mobile) to skip splitting entirely and just
+ * make the element visible at the timeline position — text stays
+ * static, arriving with its section.
  */
 
 import gsap from "gsap";
@@ -22,44 +18,34 @@ import { RefObject } from "react";
 gsap.registerPlugin(ScrollTrigger);
 
 export interface TextRevealOptions {
-  /** Pixels to slide up from (default: 30 — reduced from 40 for snappier feel) */
+  /** Pixels to slide up from (default: 30) */
   yOffset?: number;
   /** Stagger between lines in seconds (default: 0.04) */
   stagger?: number;
   /** Ease for each line (default: "power2.out") */
   ease?: string;
-  /**
-   * Duration per line in timeline units (default: 0.35).
-   * Kept intentionally short — on a scrubbed timeline each unit
-   * maps to real scroll distance, so 0.35 feels crisp without
-   * the lines lagging noticeably behind the scroll.
-   * The per-line stagger is what gives the cascade feeling.
-   */
+  /** Duration per line in timeline units (default: 0.35) */
   duration?: number;
-  /**
-   * If provided, lines are appended to this timeline instead of
-   * creating a standalone ScrollTrigger animation.
-   */
+  /** If provided, lines are appended to this timeline */
   tl?: gsap.core.Timeline;
   /** Position in the parent timeline (default: ">") */
   position?: gsap.Position;
+  /**
+   * When true: skip the line-split animation entirely.
+   * The element is hidden until the timeline reaches `position`,
+   * then made visible instantly — text arrives with its section.
+   * Use this on mobile where section slides are the reveal.
+   */
+  static?: boolean;
 }
 
-/**
- * Splits text nodes inside `el` into line-level <span>s.
- * Returns an array of those spans so GSAP can target them.
- */
 function splitIntoLines(el: HTMLElement): HTMLElement[] {
   el.dataset.originalHtml = el.innerHTML;
+  el.style.transform = "none";
 
-el.style.transform = "none";
-
-  // Step 1: wrap every word
   el.innerHTML = el.innerHTML.replace(/(\S+)/g, '<span class="gs-word">$1</span>');
-
   const words = Array.from(el.querySelectorAll<HTMLElement>(".gs-word"));
 
-  // Step 2: group words by vertical position (= same line)
   const lineMap = new Map<number, HTMLElement[]>();
   words.forEach((w) => {
     const top = Math.round(w.getBoundingClientRect().top);
@@ -67,7 +53,6 @@ el.style.transform = "none";
     lineMap.get(top)!.push(w);
   });
 
-  // Step 3: rebuild as line wrappers
   const lines = Array.from(lineMap.values());
   el.innerHTML = "";
 
@@ -76,8 +61,6 @@ el.style.transform = "none";
   lines.forEach((group) => {
     const lineOuter = document.createElement("span");
     lineOuter.className = "gs-line";
-    // padding-bottom gives room for descenders (g, y, p, q, j).
-    // negative margin-bottom cancels the extra space visually.
     lineOuter.style.cssText =
       "display:block; overflow:hidden; padding-bottom:0.25em; margin-bottom:-0.25em;";
 
@@ -101,15 +84,18 @@ el.style.transform = "none";
   return lineInners;
 }
 
-/** Restore original HTML (call in GSAP ctx.revert or component cleanup) */
 export function restoreTextReveal(scope: HTMLElement, selector: string) {
   scope.querySelectorAll<HTMLElement>(selector).forEach((el) => {
     if (el.dataset.originalHtml !== undefined) {
+      // Animated mode: restore split DOM and clear inline styles
       el.innerHTML = el.dataset.originalHtml;
       delete el.dataset.originalHtml;
       el.style.opacity = "";
       el.style.transform = "";
-      el.style.visibility = ""; 
+      el.style.visibility = "";
+    } else {
+      // Static mode: element was never split, just clear the visibility lock
+      el.style.visibility = "";
     }
   });
 }
@@ -126,6 +112,7 @@ export function useTextReveal(
     duration = 0.35,
     tl,
     position = ">",
+    static: isStatic = false,
   } = options;
 
   const scope = scopeRef.current;
@@ -135,7 +122,19 @@ export function useTextReveal(
   if (!elements.length) return;
 
   elements.forEach((el) => {
-    // ── Keep parent invisible until reveal fires ──────────────
+    // ── Static mode (mobile): no split, just hide then reveal with section ──
+    if (isStatic) {
+      el.style.visibility = "hidden";
+      if (tl) {
+        tl.set(el, { visibility: "visible" }, position);
+      } else {
+        // Standalone fallback: reveal immediately (section controls timing)
+        el.style.visibility = "visible";
+      }
+      return;
+    }
+
+    // ── Animated mode (desktop): split into lines, animate per line ─────────
     el.style.visibility = "hidden";
 
     const lineInners = splitIntoLines(el);
@@ -143,12 +142,11 @@ export function useTextReveal(
 
     if (tl) {
       tl
-        // Unhide the parent exactly when the reveal position is reached
         .set(el, { visibility: "visible" }, position)
         .to(
           lineInners,
           { y: 0, opacity: 1, duration, ease, stagger },
-          position   // same position — fires together
+          position
         );
     } else {
       gsap.to(lineInners, {

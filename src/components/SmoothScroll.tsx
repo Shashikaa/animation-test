@@ -22,14 +22,18 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     const isTouch = ScrollTrigger.isTouch > 0;
 
     const lenis = new Lenis({
-      lerp:               isTouch ? 0.06 : 0.08,
+      lerp: isTouch ? 0.08 : 0.08,
       orientation:        "vertical",
       gestureOrientation: "vertical",
       smoothWheel:        true,
       wheelMultiplier:    isTouch ? 0.7 : 0.75,
-      syncTouch:          isTouch,
-      syncTouchLerp:      0.075,
-      touchMultiplier:    isTouch ? 0.8 : 1.5,
+      // FIX: syncTouch: false — when true, Lenis on touch devices syncs
+      // directly to native scroll position instead of interpolating, which
+      // disables the smooth lerp entirely on mobile. false keeps the lerp
+      // active so touch scrolling feels as smooth as desktop wheel.
+      syncTouch:          false,
+      syncTouchLerp:      0.08,
+      touchMultiplier:    isTouch ? 1.2 : 1.5,
       infinite:           false,
       autoRaf:            false,
       prevent: (node: Element) => node.closest("[data-lenis-prevent]") !== null,
@@ -85,28 +89,19 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
     lenis.on("scroll", onScroll);
 
-    // ── Visibility change handler ─────────────────────────────────────────
-    // DO NOT call ScrollTrigger.refresh() here — it recalculates pin geometry
-    // and can reset scrub progress, causing a dead-scroll window.
-    // ScrollTrigger.update() (no args) re-evaluates position only.
     const handleVisibilityChange = () => {
       if (document.visibilityState !== "visible") return;
 
-      // Restore pointer events immediately
       document.documentElement.style.pointerEvents = "";
       document.body.style.pointerEvents = "";
 
-      // Wake GSAP ticker — browsers pause rAF in background tabs
       gsap.ticker.wake();
 
-      // Re-sync Lenis internal target to current scroll so it doesn't
-      // jump when resuming after the tab was hidden
       if (lenisRef.current) {
         (lenisRef.current as any).targetScroll = lenisRef.current.scroll;
         lenisRef.current.start();
       }
 
-      // Light re-evaluation only — no geometry recalculation
       ScrollTrigger.update();
     };
 
