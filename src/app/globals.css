@@ -419,15 +419,14 @@ p {
   }
 }
 
+/* ─── Mobile viewport fix for .pin-all ──────────────────────────
+   JS (setPinHeight) writes the exact pixel height via inline style
+   using visualViewport.height, so the CSS value here is just the
+   initial fallback for SSR / first paint before JS fires.
+   100dvh = dynamic viewport height (excludes browser chrome natively
+   in modern browsers). Falls back to 100vh for older browsers.
+──────────────────────────────────────────────────────────────── */
 .pin-all {
-  /* Fallback: 100svh for SSR / first paint before JS fires */
-  height: 100svh;
- 
-  /* JS overrides both once visualViewport is available */
-  height: var(--vvh, 100svh);
-  top:    var(--vvt, 0px);
- 
-  /* pin-all must be positioned so top: var(--vvt) takes effect */
-  position: relative;
+  height: 100vh;       /* oldest fallback */
+  height: 100dvh;      /* modern: excludes chrome natively */
 }
- 
