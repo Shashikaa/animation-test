@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
 import { Instrument_Sans, Cormorant_Garamond } from "next/font/google";
 import localFont from "next/font/local";
-import dynamic from "next/dynamic";
 import "./globals.css";
 import { SiteProvider } from "../app/context/SiteContext";
+import SmoothScroll from "../components/SmoothScroll";
 import HeaderWrapper from "../components/HeaderWrapper";
 import NavMenuWrapper from "../components/NavMenuWrapper";
-
-const SmoothScroll = dynamic(() => import("../components/SmoothScroll"), {
-  ssr: false,
-});
 
 const instrumentSans = Instrument_Sans({
   subsets:  ["latin"],

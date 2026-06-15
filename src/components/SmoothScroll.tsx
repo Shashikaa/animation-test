@@ -8,7 +8,12 @@ import { usePathname } from "next/navigation";
 import { useSite } from "../app/context/SiteContext";
 import { setScrollVelocity } from "../app/utils/scrollVelocity";
 
-gsap.registerPlugin(ScrollTrigger);
+// Guard: this module is imported by the root layout, which is server-
+// rendered for every route (including /_not-found). gsap.registerPlugin
+// touches `document` immediately, so it must never run on the server.
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
   const thumbRef       = useRef<HTMLDivElement>(null);
@@ -21,17 +26,13 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     const isTouch = ScrollTrigger.isTouch > 0;
 
     const lenis = new Lenis({
-      // lerp controls how "buttery" the scroll feels — lower = smoother
-      // glide, higher = snappier/more direct. 0.1 is a good buttery default.
       lerp: isTouch ? 0.1 : 0.085,
 
       orientation:        "vertical",
       gestureOrientation: "vertical",
       smoothWheel:        true,
 
-      // Keep close to 1 so wheel input feels natural; let lerp do the
-      // smoothing rather than scaling input down.
-      wheelMultiplier: isTouch ? 1.0 : 1.0,
+      wheelMultiplier: isTouch ? 1.0 : 0.85,
 
       syncTouch:       false,
       touchMultiplier: isTouch ? 1.5 : 1.5,
@@ -44,7 +45,6 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     lenisRef.current = lenis;
     lenis.stop();
 
-    // ── RAF tick ─────────────────────────────────────────────────────────
     const tick = (time: number) => {
       lenis.raf(time * 1000);
     };
@@ -52,7 +52,6 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
 
-    // ── Scroll event ─────────────────────────────────────────────────────
     const onScroll = (e: { velocity?: number }) => {
       ScrollTrigger.update();
       setScrollVelocity(Math.abs(e.velocity ?? 0));
@@ -61,7 +60,6 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
     lenis.on("scroll", onScroll);
 
-    // ── Visibility change recovery ──────────────────────────────────────
     const handleVisibilityChange = () => {
       if (document.visibilityState !== "visible") return;
 
@@ -79,7 +77,6 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // ── Custom scrollbar thumb ──────────────────────────────────────────
     let thumbVisible = false;
 
     const updateThumb = () => {
