@@ -316,7 +316,7 @@ export default function HomeMobile() {
 
   return (
     <div ref={scopeRef}>
-      <div className="pin-all relative overflow-hidden" style={{ height: "100svh" }}>
+      <div className="pin-all relative overflow-hidden" style={{ height: "var(--vh)" }}>
 
         <div className="section-1 absolute inset-0 z-[90]">
           <SectionOne />

@@ -17,7 +17,7 @@
 
 /* ─── Design Tokens ──────────────────────────────────────────── */
 :root {
-    --vh: 100svh;
+     --vh: 100svh; 
   --background: #ffffff;
   --foreground: #171717;
   --muted:      #6b6b6b;
@@ -143,7 +143,7 @@ html.lenis body {
 /* ─── Preloader lock ─────────────────────────────────────────── */
 body.preloading {
   overflow: hidden !important;
-  height: 100vh !important;
+  height: var(--vh) !important;  /* ← was 100vh */
 }
 
 /* ─── GPU Layer Promotion ────────────────────────────────────────
@@ -253,7 +253,7 @@ canvas {
 .scroll-container {
   position: relative;
   width: 100%;
-  height: 100vh;
+  height: var(--vh);  /* ← was 100vh */
   overflow: hidden;
 }
 

@@ -10,18 +10,12 @@ const HomeMobile  = dynamic(() => import("./HomeMobile"),  { ssr: false });
 export default function Home() {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 1025);
-    check();
-  }, []);
-
 useEffect(() => {
   const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
   const h = vv ? vv.height : window.innerHeight;
   document.documentElement.style.setProperty("--vh", `${h}px`);
 
-  const check = () => setIsMobile(window.innerWidth < 1025);
-  check();
+  setIsMobile(window.innerWidth < 1025);
 }, []);
 
   return (
