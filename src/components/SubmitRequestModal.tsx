@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import gsap from "gsap";
 import SubmitRequestSection from "./SubmitRequestSection";
@@ -12,6 +12,11 @@ interface SubmitRequestModalProps {
 export default function SubmitRequestModal({ open, onClose }: SubmitRequestModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Lock body scroll
   useEffect(() => {
@@ -52,6 +57,8 @@ export default function SubmitRequestModal({ open, onClose }: SubmitRequestModal
       });
     }
   }, [open]);
+
+  if (!mounted) return null;
 
   return createPortal(
     <div
