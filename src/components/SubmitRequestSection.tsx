@@ -207,18 +207,21 @@ export default function SubmitRequestSection({ onClose }: { onClose?: () => void
         .sar-select option { background: #163e3e; color: #F4EEDF; }
 
         /* ── MOBILE LAYOUT ── */
-        @media (max-width: 10240px) {
+        @media (max-width: 900px) {
           .sar-section {
             grid-template-columns: 1fr;
-            grid-template-rows: auto auto;
+            grid-template-rows: auto;
           }
-.sar-left {
-  display: none;
-}
-  .sar-right {
-    min-height: 100svh;  /* ← add this */
-    padding: 0 32px 60px;
-  }
+
+          /* Hide the left "Submit a request" panel on mobile */
+          .sar-left {
+            display: none;
+          }
+
+          .sar-right {
+            min-height: 100svh;
+            padding: 0 32px 60px;
+          }
 
           /* Top row: tabs left, close button right — one line */
           .sar-top-row {

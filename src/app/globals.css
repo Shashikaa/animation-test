@@ -29,9 +29,8 @@
   --text-sm:      14px;
   --text-xs:      12px;
 
-  /* FIX: was 1 — line-height:1 clips descenders (g,y,p,q,j) at the CSS
-     level because the line box equals cap-height with zero room below.
-     1.15 gives descenders space without visually opening up the tracking. */
+  /* 1.15 gives descenders (g, y, p, q, j) space without visually opening
+     up the tracking. Was 1, which clips descenders at display sizes. */
   --leading-display: 1.15;
   --leading-body:    1.2;
 
@@ -98,16 +97,8 @@ html {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   scroll-behavior: auto !important;
-}
-
-html {
-  /*
-   * FIX: height: auto enforced on <html>.
-   * Lenis requires html to be height:auto to measure true document
-   * scroll height. Tailwind's h-full (height:100%) on <html> was
-   * overriding the Lenis CSS rule in globals and capping the scroll
-   * limit at the viewport height.
-   */
+  /* Lenis requires html to be height:auto to measure true document scroll
+     height. height:100% caps the scroll limit at the viewport height. */
   height: auto !important;
 }
 
@@ -155,64 +146,94 @@ body.preloading {
 }
 
 /* ─── GPU Layer Promotion ────────────────────────────────────────
-   Split elements by which CSS property is animated.
+   Rules are split by WHICH CSS property is animated so the browser
+   can allocate the narrowest possible compositing budget per layer.
+
+   Strategy:
+   • transform + opacity  → promotes to compositor thread (cheap)
+   • clip-path alone      → rasterises on main thread but avoids
+                            triggering layout; still worth isolating
+   • will-change: auto    → browser decides; used for sections that
+                            are currently hidden and shouldn't hold
+                            a permanent GPU layer
+
+   Do NOT add will-change to every element — excess promoted layers
+   exhaust GPU memory on low-end mobile devices.
 ──────────────────────────────────────────────────────────────── */
 
-.pin-hero-s1,
-.pin-s2-s5,
-.pin-s7-s9 {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  isolation: isolate;
-}
-
-/* Sections animated by GSAP yPercent / scale / opacity */
+/* Sections animated by GSAP yPercent / scale / opacity.
+   transform3d(0,0,0) forces an immediate compositing layer so the
+   first animation frame doesn't cause a layer-promotion reflow. */
 .hero,
 .section-1,
 .section-2,
 .section-4,
 .section-5,
 .section-7 {
-  will-change: transform, opacity;
-  transform: translateZ(0);
-  backface-visibility: hidden;
+  will-change:          transform, opacity;
+  transform:            translate3d(0, 0, 0);
+  backface-visibility:  hidden;
 }
 
-/* section-9: only opacity animated */
+/* section-9: only scale + opacity animated */
 .section-9 {
-  will-change: opacity;
-  transform: translateZ(0);
+  will-change:          transform, opacity;
+  transform:            translate3d(0, 0, 0);
+  backface-visibility:  hidden;
 }
 
-/* clip-path only sections */
+/* Sections animated by clip-path only.
+   clip-path causes a repaint but not a layout reflow; keeping it
+   isolated to its own layer avoids invalidating sibling layers. */
 .section-3,
-.section-8 {
-  will-change: clip-path;
-  transform: translateZ(0);
-  backface-visibility: hidden;
+.section-6,
+.section-8,
+.section-10 {
+  will-change:          transform, clip-path;
+  transform:            translate3d(0, 0, 0);
+  backface-visibility:  hidden;
 }
 
-/* S8 panels — clip-path only */
+/* S8 panels — clip-path only, each is their own layer */
 .s8-panel-left,
 .s8-panel-right {
-  will-change: clip-path;
-  transform: translateZ(0);
-  backface-visibility: hidden;
+  will-change:          clip-path;
+  transform:            translate3d(0, 0, 0);
+  backface-visibility:  hidden;
 }
 
 /* Canvas / video — always their own GPU layer */
 video,
 canvas {
-  will-change: transform;
-  transform: translateZ(0);
+  will-change:         transform;
+  transform:           translate3d(0, 0, 0);
   backface-visibility: hidden;
 }
 
+/* First-level children of heavily-animated sections get their own
+   sublayers so parent transforms don't force child repaints. */
 .section-1 > *,
 .section-2 > *,
 .section-7 > * {
-  transform: translateZ(0);
+  transform:           translate3d(0, 0, 0);
   backface-visibility: hidden;
+}
+
+/* Background parallax images — transform only */
+.s1-bg,
+.s2-bg,
+.s4-bg-img,
+.s4-img,
+.s4-img-mob,
+.s7-bg-img,
+.s8-bg-img,
+.s9-bg-img,
+.s10-bg-img,
+.s10-static-bg,
+.hero-bg {
+  will-change:          transform;
+  transform:            translate3d(0, 0, 0);
+  backface-visibility:  hidden;
 }
 
 /* ─── Sections Layout ────────────────────────────────────────── */
@@ -241,10 +262,10 @@ body.preloading .scroll-container {
 
 /* ─── Section wrappers ───────────────────────────────────────── */
 .section-six-wrapper {
-  overflow: hidden;
-  contain: layout paint;
+  overflow:    hidden;
+  contain:     layout paint;
   will-change: transform;
-  transform: translateZ(0);
+  transform:   translate3d(0, 0, 0);
 }
 
 .section-nine-wrapper {
@@ -252,14 +273,13 @@ body.preloading .scroll-container {
 }
 
 /* ─── Typography ─────────────────────────────────────────────── */
-.font-display   { font-family: var(--font-display);   font-weight: 100;   }
+.font-display   { font-family: var(--font-display);   font-weight: 100; }
 .font-cormorant { font-family: var(--font-cormorant); font-weight: 400; }
 .font-body      { font-family: var(--font-body);      font-weight: 400; }
 
 .text-display {
   font-family:    var(--font-display);
   font-size:      var(--text-display);
-  /* FIX: use token so it inherits the 1.15 fix */
   line-height:    var(--leading-display);
   letter-spacing: 0;
 }
@@ -267,7 +287,6 @@ body.preloading .scroll-container {
 .text-cormorant {
   font-family:    var(--font-cormorant);
   font-size:      var(--text-display);
-  /* FIX: was hardcoded 1 — now uses token */
   line-height:    var(--leading-display);
   letter-spacing: 0;
   font-weight:    400;
@@ -341,14 +360,12 @@ body.preloading .scroll-container {
 
 /* ─── Responsive h2 & p ──────────────────────────────────────── */
 h2 {
-  font-size: 72px;
-  /* FIX: was 1 — clips descenders on Cormorant/Canela at display sizes.
-     1.15 gives descenders clearance without visually opening the tracking. */
-  line-height: 1.15;
+  font-size:   72px;
+  line-height: 1.15; /* was 1 — clips descenders on Cormorant/Canela */
 }
 
 p {
-  font-size: 16px;
+  font-size:   16px;
   line-height: var(--leading-body);
 }
 
@@ -362,4 +379,42 @@ p {
 @media (max-width: 767px) {
   h2 { font-size: 32px; }
   p  { font-size: 12px; }
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────
+   Respect the OS accessibility setting. Disable all GSAP-driven
+   transforms so users who are sensitive to motion see a static page.
+   GSAP reads this via ScrollTrigger.normalizeScroll and the
+   prefersReducedMotion media query automatically.
+──────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration:   0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration:  0.01ms !important;
+    scroll-behavior:      auto !important;
+  }
+
+  /* Make all sections immediately visible so content is accessible */
+  .hero,
+  .section-1,
+  .section-2,
+  .section-3,
+  .section-4,
+  .section-5,
+  .section-6,
+  .section-7,
+  .section-8,
+  .section-9,
+  .section-10,
+  .section-cta,
+  .footer {
+    transform:   none !important;
+    opacity:     1 !important;
+    visibility:  visible !important;
+    clip-path:   none !important;
+    will-change: auto !important;
+  }
 }

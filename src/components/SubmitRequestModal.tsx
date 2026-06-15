@@ -1,6 +1,7 @@
 "use client";
-import { useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import gsap from "gsap";
 import SubmitRequestSection from "./SubmitRequestSection";
 
 interface SubmitRequestModalProps {
@@ -9,11 +10,16 @@ interface SubmitRequestModalProps {
 }
 
 export default function SubmitRequestModal({ open, onClose }: SubmitRequestModalProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const tweenRef = useRef<gsap.core.Tween | null>(null);
+
+  // Lock body scroll
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
+  // Escape key
   useEffect(() => {
     if (!open) return;
     const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -21,20 +27,47 @@ export default function SubmitRequestModal({ open, onClose }: SubmitRequestModal
     return () => window.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
 
-  return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          key="submit-request-modal"
-          initial={{ x: "100%" }}
-          animate={{ x: 0 }}
-          exit={{ x: "100%" }}
-          transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-          style={{ position: "fixed", inset: 0, zIndex: 9999, overflowY: "auto" }}
-        >
-          <SubmitRequestSection onClose={onClose} />
-        </motion.div>
-      )}
-    </AnimatePresence>
+  // GSAP slide in/out
+  useEffect(() => {
+    const el = panelRef.current;
+    if (!el) return;
+
+    tweenRef.current?.kill();
+
+    if (open) {
+      gsap.set(el, { display: "block", xPercent: 100 });
+      tweenRef.current = gsap.to(el, {
+        xPercent: 0,
+        duration: 0.65,
+        ease: "expo.out",
+        force3D: true,
+      });
+    } else {
+      tweenRef.current = gsap.to(el, {
+        xPercent: 100,
+        duration: 0.65,
+        ease: "expo.out",
+        force3D: true,
+        onComplete: () => gsap.set(el, { display: "none" }),
+      });
+    }
+  }, [open]);
+
+  return createPortal(
+    <div
+      ref={panelRef}
+      style={{
+        display:             "none",
+        position:            "fixed",
+        inset:               0,
+        zIndex:              9999,
+        overflowY:           "auto",
+        willChange:          "transform",
+        backfaceVisibility:  "hidden",
+      }}
+    >
+      <SubmitRequestSection onClose={onClose} />
+    </div>,
+    document.body
   );
 }

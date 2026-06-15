@@ -48,7 +48,7 @@ export default function SectionSeven() {
         </h2>
 
         <div
-          className="flex flex-col gap-0.5 !px-[32px] !py-[30px] max-w-[340px] !mt-2"
+          className="flex flex-col gap-0.5 !px-[32px] !py-[30px] max-w-[340px] !mt-2 "
           style={{
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",

@@ -6,40 +6,32 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSite } from "./context/SiteContext";
 import dynamic from "next/dynamic";
 
-import Hero from "../components/Home/Hero";
-import SectionOne from "../components/Home/SectionOne";
-import SectionTwo from "../components/Home/SectionTwo";
+import Hero        from "../components/Home/Hero";
+import SectionOne  from "../components/Home/SectionOne";
+import SectionTwo  from "../components/Home/SectionTwo";
 import SectionThree from "../components/Home/SectionThree";
 import SectionFour from "../components/Home/SectionFour";
 import SectionFive from "../components/Home/SectionFive";
-import PreloaderWrapper from "../components/PreloaderWrapper";
-import SectionSix from "../components/Home/SectionSix";
-import SectionCTA from "../components/SectionCTA";
-import Footer from "../components/Footer";
+import SectionSix  from "../components/Home/SectionSix";
+import SectionCTA  from "../components/SectionCTA";
+import Footer      from "../components/Footer";
 
 const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { ssr: false });
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
 const SectionNine  = dynamic(() => import("../components/Home/SectionNine"),  { ssr: false });
 const SectionTen   = dynamic(() => import("../components/Home/SectionTen"),   { ssr: false });
 
+import { attachSpeedController } from "./utils/timelineSpeedController";
+
 gsap.registerPlugin(ScrollTrigger);
 
-// ─── Stable viewport height ───────────────────────────────────────────────────
-// visualViewport.height is the *layout* viewport — it does NOT change when the
-// mobile browser bar slides in/out. window.innerHeight DOES change, which is
-// what causes the scroll animation to jump. Always use vvHeight() for any
-// pixel measurement that must stay stable during scroll.
 const vvHeight = () =>
   (typeof visualViewport !== "undefined" && visualViewport != null
     ? visualViewport.height
     : null) ?? window.innerHeight;
 
-// Keep .pin-all physically sized to the stable viewport height.
-// Called once before ScrollTrigger.refresh() and again on visualViewport
-// resize — but we NEVER call ScrollTrigger.refresh() inside that handler,
-// which would reset scrub progress.
 const setPinHeight = () => {
-  const h = vvHeight();
+  const h  = vvHeight();
   const el = document.querySelector<HTMLElement>(".pin-all");
   if (el) el.style.height = `${h}px`;
 };
@@ -55,7 +47,8 @@ export default function HomeMobile() {
   useEffect(() => {
     if (!preloaderDone) return;
 
-    let vvCleanup: (() => void) | null = null;
+    let vvCleanup:    (() => void) | null = null;
+    let speedCleanup: (() => void) | null = null;
 
     const ctx = gsap.context(() => {
 
@@ -74,14 +67,12 @@ export default function HomeMobile() {
       const footerEl = scopeRef.current?.querySelector<HTMLElement>(".footer");
       const footerH  = footerEl?.offsetHeight ?? 600;
 
-      // ── Initial states ────────────────────────────────────────────────────
-
       gsap.set(".hero",    { yPercent: 0, zIndex: 5 });
       gsap.set(".hero-bg", { yPercent: 0 });
 
       gsap.set(".section-1", { yPercent: 100, zIndex: 90 });
-      gsap.set(".s1-bg",     { yPercent: 10, scale: 1.0 });
-      gsap.set(".s1-card",   { yPercent: 80, opacity: 0 });
+      gsap.set(".s1-bg",     { yPercent: 10,  scale: 1.0 });
+      gsap.set(".s1-card",   { yPercent: 80,  opacity: 0 });
 
       gsap.set(".section-2", {
         visibility: "visible",
@@ -197,50 +188,50 @@ export default function HomeMobile() {
               },
             });
 
-            // ── Hero → S1 ────────────────────────────────────────────────
             tl
+              // ── Hero → S1 ────────────────────────────────────────────
               .to(".section-1", { yPercent: 0,   duration: 2.0, ease: "none" })
               .to(".hero-bg",   { yPercent: -20, duration: 2.0, ease: "none" }, "<")
               .to(".s1-bg",     { yPercent: 0, scale: 1, duration: 1.8, ease: "none" }, "<")
               .to(".s1-card",   { yPercent: 0, opacity: 1, duration: 1.8, ease: "power2.out" }, 0.3)
               .to({}, { duration: PAUSE })
 
-            // ── S1 → S2 (clipPath wipe from bottom) ─────────────────────
+              // ── S1 → S2 ──────────────────────────────────────────────
               .set(".section-1", { zIndex: 20 })
               .to(".section-2", { clipPath: "inset(0% 0% 0% 0%)", duration: TRANSITION, ease: EASE })
               .to(".section-1", { scale: 1.05,                     duration: TRANSITION, ease: EASE }, "<")
               .to(".s2-bg",     { yPercent: 0, scale: 1,           duration: TRANSITION, ease: "power2.out" }, "<")
               .to({}, { duration: PAUSE })
 
-            // ── S2 → S3 (S3 slides up from below) ───────────────────────
+              // ── S2 → S3 ──────────────────────────────────────────────
               .set(".section-3", { visibility: "visible" })
               .to(".section-3", { yPercent: 0,  duration: TRANSITION, ease: EASE })
               .to(".section-2", { scale: 1.05,  duration: TRANSITION, ease: EASE }, "<")
               .to({}, { duration: PAUSE })
 
-            // ── S3 → S4 (S4 slides up, S3 exits up) ─────────────────────
+              // ── S3 → S4 ──────────────────────────────────────────────
               .to(".section-4",  { yPercent: 0,    duration: TRANSITION, ease: EASE })
               .to(".section-3",  { yPercent: -100, duration: TRANSITION, ease: EASE }, "-=1.2")
               .to(".s4-img-mob", { y: -60,          duration: TRANSITION, ease: "none" }, "<")
               .to({}, { duration: PAUSE })
 
-            // ── S4 → S5 (clipPath wipe from bottom) ─────────────────────
+              // ── S4 → S5 ──────────────────────────────────────────────
               .to(".section-5", { clipPath: "inset(0% 0% 0% 0%)", duration: TRANSITION, ease: EASE })
               .to(".section-4", { scale: 1.05,                     duration: TRANSITION, ease: EASE }, "<")
               .to({}, { duration: PAUSE })
 
-            // ── S5 → S6 (S6 slides up from below) ───────────────────────
+              // ── S5 → S6 ──────────────────────────────────────────────
               .to(".section-6", { yPercent: 0,  duration: TRANSITION, ease: EASE })
               .to(".section-5", { scale: 1.05,  duration: TRANSITION, ease: EASE }, "<")
               .to({}, { duration: 0.6 })
 
-            // ── S6 → S10 (S6 slides off up, S10 fades/enters) ───────────
+              // ── S6 → S10 ─────────────────────────────────────────────
               .set(".section-10", { visibility: "visible" })
               .to(".section-6",     { yPercent: -100, duration: TRANSITION, ease: EASE })
               .to(".s10-static-bg", { yPercent: 0,    duration: TRANSITION, ease: "power2.out" }, "<")
               .to({}, { duration: PAUSE })
 
-            // ── S10 inner ────────────────────────────────────────────────
+              // ── S10 inner ────────────────────────────────────────────
               .set(".s10-title",     { opacity: 1, y: 0 })
               .set(".s10-title-sub", { opacity: 1, y: 0 })
               .set(".s10-para-top",  { opacity: 1, y: 0 })
@@ -274,7 +265,7 @@ export default function HomeMobile() {
               .to(".s10-bg-img",    { y: "0%", duration: 2.5, ease: "none" }, "<")
               .to({}, { duration: 0.6 })
 
-            // ── S10 → S7 (S7 slides up, mob bg zooms out) ───────────────
+              // ── S10 → S7 + S8 ────────────────────────────────────────
               .set(".section-8", { visibility: "visible" })
               .to(".section-7",  { yPercent: 0, duration: TRANSITION, ease: "power3.out" })
               .to(".section-8",  { yPercent: 0, duration: TRANSITION, ease: "power3.out" }, "<")
@@ -284,7 +275,7 @@ export default function HomeMobile() {
               .to(".s7-mob-bg",  { scale: 1,    duration: TRANSITION, ease: "power2.out" }, "<")
               .to({}, { duration: PAUSE })
 
-            // ── S7 → S8 (S7 slides off up, S8 mob bg zooms out) ─────────
+              // ── S7 → S8 ──────────────────────────────────────────────
               .to(".section-7", { yPercent: -100, duration: TRANSITION, ease: EASE })
               .to(".s8-mob-bg", { scale: 1,       duration: TRANSITION, ease: "power2.out" }, "<")
               .set(".section-8", { clipPath: "inset(0% 0% 0% 0%)" })
@@ -292,15 +283,15 @@ export default function HomeMobile() {
 
               .set(".section-7", { visibility: "hidden" })
 
-            // ── S8 → S9 (S8 clips up, S9 revealed behind) ───────────────
+              // ── S8 → S9 ──────────────────────────────────────────────
               .set(".section-9", { visibility: "visible" })
               .to(".section-8", { clipPath: "inset(0% 0% 100% 0%)", duration: TRANSITION, ease: EASE })
-              .to(".s9-bg-img", { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
-              .to(".s9-title",  { opacity: 1,  duration: 1.2, ease: "power2.out" }, "<+1.0")
-              .to(".s9-para",   { opacity: 1,  duration: 1.2, ease: "power3.out" }, "<")
+              .to(".s9-bg-img", { yPercent: 0,  duration: TRANSITION, ease: "power2.out" }, "<")
+              .to(".s9-title",  { opacity: 1,   duration: 1.2, ease: "power2.out" }, "<+1.0")
+              .to(".s9-para",   { opacity: 1,   duration: 1.2, ease: "power3.out" }, "<")
               .to({}, { duration: PAUSE })
 
-            // ── CTA + Footer ─────────────────────────────────────────────
+              // ── CTA + Footer ──────────────────────────────────────────
               .set(".section-cta", { visibility: "visible" })
               .to(".section-cta", { yPercent: 0,   duration: 3.5, ease: "power3.out" })
               .to(".section-9",   { scale: 1.05,   duration: 3.5, ease: EASE }, "<")
@@ -312,6 +303,18 @@ export default function HomeMobile() {
               .to(".section-9", { scale: 1.05,   duration: 2.5, ease: EASE }, "<")
               .to(".s9-bg-img", { yPercent: -20, duration: 2.5, ease: "none" }, "<")
               .to({}, { duration: 1.0 });
+
+            // ── Animation speed controller ──────────────────────────────
+            // Touch gets a slightly higher cap (0.26) because momentum
+            // flicks travel faster than wheel events. Both values ensure
+            // no single animation frame jumps more than ~4% of the full
+            // timeline, keeping yPercent slides and clipPath reveals smooth.
+            if (tl.scrollTrigger) {
+              speedCleanup = attachSpeedController(tl.scrollTrigger, {
+                maxProgressPerSecond: 0.26,
+                throttleReverse:      true,
+              });
+            }
 
             onScrollReady();
           });
@@ -331,67 +334,54 @@ export default function HomeMobile() {
 
     return () => {
       vvCleanup?.();
+      speedCleanup?.();
       ctx.revert();
     };
   }, [preloaderDone]);
 
   return (
     <div ref={scopeRef}>
-      {/* 100svh = stable small viewport height (excludes browser bar).
-          JS setPinHeight() keeps it in sync for older browsers. */}
       <div className="pin-all relative overflow-hidden" style={{ height: "100svh" }}>
 
         <div className="section-1 absolute inset-0 z-[90]">
           <SectionOne />
         </div>
-
         <div className="section-2 absolute inset-0 z-[95]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionTwo />
         </div>
-
         <div className="section-3 absolute inset-0 z-[100]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionThree />
         </div>
-
         <div className="section-4 absolute inset-0 z-[105]" style={{ overflow: "visible", pointerEvents: "none", visibility: "hidden" }}>
           <SectionFour />
         </div>
-
         <div className="section-5 absolute inset-0 z-[110]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionFive />
         </div>
-
         <div className="section-10 absolute inset-0 z-[112]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionTen />
         </div>
-
         <div className="section-6 absolute inset-0 z-[115]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionSix />
         </div>
-
         <div className="section-9 absolute inset-0 z-[121]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionNine />
         </div>
-
         <div className="section-8 absolute inset-0 z-[128]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionEight />
         </div>
-
         <div className="section-7 absolute inset-0 z-[130]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionSeven />
         </div>
-
         <div className="hero absolute inset-0 z-[5]" style={{ pointerEvents: "none" }}>
           <Hero />
         </div>
-
         <div
           className="section-cta absolute inset-0 z-[150]"
           style={{ pointerEvents: "none", visibility: "hidden" }}
         >
           <SectionCTA />
         </div>
-
         <div
           className="footer absolute left-0 w-full z-[151]"
           style={{ bottom: 0, pointerEvents: "none", visibility: "hidden" }}

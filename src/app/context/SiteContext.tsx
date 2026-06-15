@@ -20,10 +20,6 @@ export const PRELOADER_KEY = "gp_preloader_done";
 
 function getInitialPreloaderDone(isHome: boolean): boolean {
   if (!isHome) return true;
-  // useState initializer runs on client only when using "use client" —
-  // but Next.js SSR also calls it. Guard with typeof check here only,
-  // inside a function called exclusively from useState(() => ...) so the
-  // return value is never serialised into the HTML stream.
   if (typeof window === "undefined") return false;
   try {
     return sessionStorage.getItem(PRELOADER_KEY) === "1";
@@ -45,6 +41,7 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
 
   const scrollReadyCallbackRef = useRef<(() => void) | null>(null);
 
+  // Accepts any fn, including a no-op () => {} for cleanup
   const setOnScrollReady = useCallback((fn: () => void) => {
     scrollReadyCallbackRef.current = fn;
   }, []);

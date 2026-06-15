@@ -180,7 +180,7 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
                     className="!block !no-underline !leading-[2.5] !cursor-pointer"
                   >
                     <span
-                      className="font-display !inline-block !select-none !font-normal !not-italic !text-[28px] !leading-none !text-[#F4EEDF]"
+                      className="font-display !inline-block !select-none !font-normal!text-[28px] !leading-none !text-[#F4EEDF]"
                     >
                       {label}
                     </span>
@@ -440,7 +440,7 @@ function NavLink({
         className="font-display !inline-block !select-none !pb-[0.18em] !font-normal !not-italic !leading-none !transition-[color,letter-spacing] !duration-[250ms,350ms] !ease-in-out"
         style={{
           fontSize: "clamp(26px, 2.5vw, 32px)",
-          color: highlighted ? "#F4EEDF" : "#a89f8c",
+          color: highlighted ? "#F4EEDF" : "#c4c4c4",
           letterSpacing: highlighted ? "0.01em" : "0",
         }}
       >

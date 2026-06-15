@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import gsap from "gsap";
 
 const slides = [
@@ -72,6 +72,18 @@ export default function SectionThree() {
   const [current, setCurrent] = useState(0);
   const animating = useRef<boolean>(false);
 
+  // FIX: On mount, register all line-inners with GSAP so the first click
+  // has a clean known state. Slide 0 inners = visible, all others = hidden.
+  useEffect(() => {
+    slides.forEach((_, i) => {
+      document
+        .querySelectorAll(`.s3-text-${i + 1} > .s3-line-wrap > .s3-line-inner`)
+        .forEach((el) => {
+          gsap.set(el, i === 0 ? { y: 0, opacity: 1 } : { y: 10, opacity: 0 });
+        });
+    });
+  }, []);
+
   const goTo = useCallback((next: number, direction: "next" | "prev") => {
     const prev = currentRef.current;
     if (animating.current || next === prev) return;
@@ -106,9 +118,28 @@ export default function SectionThree() {
       },
     });
 
+    // FIX: Snap outgoing inners to fully visible before animating them out,
+    // so the out-tween always starts from a known clean state.
+    document
+      .querySelectorAll(`.s3-text-${prev + 1} > .s3-line-wrap > .s3-line-inner`)
+      .forEach((el) => {
+        gsap.killTweensOf(el);
+        gsap.set(el, { y: 0, opacity: 1 });
+      });
     animateTextOut(`.s3-text-${prev + 1}`);
+
+    // FIX: Snap incoming inners to fully hidden before animating them in,
+    // so they never bleed through while outgoing is still animating out.
     gsap.set(`.s3-text-${next + 1}`, { opacity: 1 });
-    gsap.delayedCall(0.18, () => animateTextIn(`.s3-text-${next + 1}`));
+    document
+      .querySelectorAll(`.s3-text-${next + 1} > .s3-line-wrap > .s3-line-inner`)
+      .forEach((el) => {
+        gsap.killTweensOf(el);
+        gsap.set(el, { y: 10, opacity: 0 });
+      });
+
+    // FIX: Delay incoming until outgoing is fully gone (0.2s + ~0.06s stagger = ~0.28s).
+    gsap.delayedCall(0.32, () => animateTextIn(`.s3-text-${next + 1}`));
 
     gsap.to(`.s3-bar-${prev + 1}`, { background: "rgba(244,238,223,0.3)", duration: 0.3 });
     gsap.to(`.s3-bar-${next + 1}`, { background: "#F4EEDF", duration: 0.3 });
@@ -343,8 +374,8 @@ export default function SectionThree() {
           style={{
             position: "relative",
             width: "100%",
-            flex: "1 1 65%",
-            maxHeight: "65%",
+            flex: "1 1 62%",
+            maxHeight: "62%",
             overflow: "hidden",
             border: "none",
             outline: "none",

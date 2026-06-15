@@ -6,16 +6,15 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSite } from "./context/SiteContext";
 import dynamic from "next/dynamic";
 
-import Hero from "../components/Home/Hero";
-import SectionOne from "../components/Home/SectionOne";
-import SectionTwo from "../components/Home/SectionTwo";
+import Hero        from "../components/Home/Hero";
+import SectionOne  from "../components/Home/SectionOne";
+import SectionTwo  from "../components/Home/SectionTwo";
 import SectionThree from "../components/Home/SectionThree";
 import SectionFour from "../components/Home/SectionFour";
 import SectionFive from "../components/Home/SectionFive";
-import PreloaderWrapper from "../components/PreloaderWrapper";
-import SectionSix from "../components/Home/SectionSix";
-import SectionCTA from "../components/SectionCTA";
-import Footer from "../components/Footer";
+import SectionSix  from "../components/Home/SectionSix";
+import SectionCTA  from "../components/SectionCTA";
+import Footer      from "../components/Footer";
 
 const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { ssr: false });
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
@@ -23,6 +22,7 @@ const SectionNine  = dynamic(() => import("../components/Home/SectionNine"),  { 
 const SectionTen   = dynamic(() => import("../components/Home/SectionTen"),   { ssr: false });
 
 import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
+import { attachSpeedController } from "./utils/timelineSpeedController";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -44,7 +44,8 @@ export default function HomeDesktop() {
       ScrollTrigger.normalizeScroll(true);
     }
 
-    let vvCleanup: (() => void) | null = null;
+    let vvCleanup:    (() => void) | null = null;
+    let speedCleanup: (() => void) | null = null;
 
     const ctx = gsap.context(() => {
 
@@ -55,7 +56,17 @@ export default function HomeDesktop() {
         autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
       });
 
-      const scrubValue = isTouchOnly() ? 0.3 : 0.8;
+      // ── scrub ───────────────────────────────────────────────────────────
+      // Desktop raised from 0.8 → 2.0. scrub is the number of seconds GSAP
+      // takes to lerp the timeline playhead to its scroll-driven target.
+      // 0.8 caught up very fast — any scroll input immediately pulled the
+      // playhead forward, making transitions feel snappy rather than cinematic.
+      // 2.0 gives the playhead a long, lazy tail: the timeline eases into and
+      // out of each transition over ~2 s of real time even after the user
+      // stops scrolling, producing the buttery "floating" feel.
+      // Touch stays at 0.4 — lower scrub on touch prevents the playhead from
+      // lagging behind fast momentum swipes, which feels unresponsive.
+      const scrubValue = isTouchOnly() ? 0.4 : 2.0;
 
       const footerEl = scopeRef.current?.querySelector<HTMLElement>(".footer");
       const footerH  = footerEl?.offsetHeight ?? 600;
@@ -83,9 +94,9 @@ export default function HomeDesktop() {
       gsap.set(".section-5", { yPercent: 100, visibility: "visible", zIndex: 50 });
       gsap.set(".s5-card",   { scale: 1, transformOrigin: "center center" });
 
-      gsap.set(".s4-content", { y: 0 });
-      gsap.set(".s4-img",     { yPercent: 15 });
-      gsap.set(".s4-bg-img",  { yPercent: 8 });
+      gsap.set(".s4-scroll-body", { y: 0 });
+      gsap.set(".s4-img",         { yPercent: 15 });
+      gsap.set(".s4-bg-img",      { yPercent: 8 });
 
       gsap.set(".section-6", {
         visibility: "visible",
@@ -123,15 +134,15 @@ export default function HomeDesktop() {
         opacity:    1,
         zIndex:     79,
       });
-      gsap.set(".s9-bg-img", { yPercent: 0 });
+      gsap.set(".s9-bg-img", { yPercent: 0, scale: 1.15 });
 
       gsap.set(".s8-panel-left",  { clipPath: "inset(0% 50% 0% 0%)",  zIndex: 85 });
       gsap.set(".s8-panel-right", { clipPath: "inset(0% 0% 0% 50%)",  zIndex: 85 });
       gsap.set(".s9-title", { opacity: 0, x: 0, y: 4 });
       gsap.set(".s9-para",  { opacity: 0, y: 5 });
 
-      gsap.set(".section-cta", { yPercent: 100, zIndex: 95, visibility: "hidden" });
-      gsap.set(".footer",      { y: footerH,    zIndex: 96, visibility: "hidden" });
+      gsap.set(".section-cta", { yPercent: 100, zIndex: 95,  visibility: "hidden" });
+      gsap.set(".footer",      { y: footerH,    zIndex: 96,  visibility: "hidden" });
 
       const buildTimeline = () => {
         requestAnimationFrame(() => {
@@ -183,9 +194,9 @@ export default function HomeDesktop() {
               y: () => vvHeight() * -0.45,
               duration: 3.0,
               ease: "power1.inOut",
-            }, "<+0.8")
-            .to(".s4-img",     { yPercent: -15, duration: 3.0, ease: "none" }, "<")
-            .to(".s4-bg-img",  { yPercent: 0,   duration: 3.0, ease: "none" }, "<")
+            }, "<+1.8")
+            .to(".s4-img",    { yPercent: -15, duration: 3.0, ease: "none" }, "<")
+            .to(".s4-bg-img", { yPercent: 0,   duration: 3.0, ease: "none" }, "<")
 
             .to(".section-3", { yPercent: -100, duration: 3.0, ease: "power2.inOut" }, "-=1.2")
             .to(".section-5", { yPercent: 0,    duration: 3.0, ease: "power2.inOut" }, "<")
@@ -218,11 +229,11 @@ export default function HomeDesktop() {
               },
               duration: 2.5, ease: "power2.inOut",
             }, "<+0.1")
-            .to(".s10-card-body", { y: 50,   duration: 2.5, ease: "power2.inOut" }, "<")
-            .to(".s10-bg-img",    { y: "0%", duration: 2.5, ease: "power2.inOut" }, "<")
+            .to(".s10-card-body", { y: 50,    duration: 2.5, ease: "power2.inOut" }, "<")
+            .to(".s10-bg-img",    { y: "0%",  duration: 2.5, ease: "power2.inOut" }, "<")
             .to({}, { duration: 0.6 })
 
-            .to(".section-7", { yPercent: 0, duration: 2.4, ease: "power3.out" })
+            .to(".section-7",  { yPercent: 0, duration: 2.4, ease: "power3.out" })
             .to(".section-10", { scale: 1.05, duration: 2.4, ease: "power2.inOut" }, "<")
             .to(".s7-bg-img",  { yPercent: 0, duration: 2.4, ease: "power2.out" }, "<")
             .to({}, { duration: 0.8 })
@@ -237,7 +248,8 @@ export default function HomeDesktop() {
             .set(".section-9", { visibility: "visible" })
             .to(".s8-panel-left",  { clipPath: "inset(0% 50% 100% 0%)", duration: 2.0, ease: "power2.inOut" })
             .to(".s8-panel-right", { clipPath: "inset(100% 0% 0% 50%)", duration: 2.0, ease: "power2.inOut" }, "<")
-            .to(".s9-bg-img",      { yPercent: 0, duration: 2.0, ease: "power2.out" }, "<")
+            .to(".s9-bg-img",      { yPercent: 0, scale: 1, duration: 2.0, ease: "power2.out" }, "<")
+
             .to(".s9-title", { opacity: 1, duration: 1.2, ease: "power2.out" }, "<+1.0")
             .to({}, { duration: 0.8 })
             .to(".s9-title", {
@@ -254,7 +266,7 @@ export default function HomeDesktop() {
                 return para.getBoundingClientRect().top - el.offsetHeight - 12 - el.getBoundingClientRect().top;
               },
               duration: 1.8,
-              ease: "power2.inOut",
+              ease:     "power2.inOut",
             })
             .to(".s9-para", { opacity: 1, y: 0, duration: 1.2, ease: "power3.out" }, "<+1.2")
             .to({}, { duration: 0.8 })
@@ -265,31 +277,59 @@ export default function HomeDesktop() {
             .to({}, { duration: 0.5 })
 
             .set(".footer", { visibility: "visible" })
-            .to(".footer", { y: 0, duration: 2.5, ease: "power3.out" })
+            .to(".footer",    { y: 0,    duration: 2.5, ease: "power3.out" })
             .to(".section-9", { scale: 1.05, duration: 2.5, ease: "power2.inOut" }, "<")
             .to({}, { duration: 1.0 });
 
-          useTextReveal(scopeRef, ".s2-title-main", { tl, position: "4",    duration: 0.35, stagger: 0.04 });
-          useTextReveal(scopeRef, ".s2-title-sub",  { tl, position: "4",    duration: 0.3,  stagger: 0.03 });
+          useTextReveal(scopeRef, ".s2-title-main", { tl, position: "4",     duration: 0.35, stagger: 0.04 });
+          useTextReveal(scopeRef, ".s2-title-sub",  { tl, position: "4",     duration: 0.3,  stagger: 0.03 });
           useTextReveal(scopeRef, ".s2-body",        { tl, position: "3.8",  duration: 0.35, stagger: 0.04 });
 
           useTextReveal(scopeRef, ".s4-title", { tl, position: "9.0",    duration: 0.35, stagger: 0.04 });
-          useTextReveal(scopeRef, ".s4-para",  { tl, position: ">+0.15", duration: 0.35, stagger: 0.04 });
+          useTextReveal(scopeRef, ".s4-para",  { tl, position: "9.0",    duration: 0.35, stagger: 0.04 });
           useTextReveal(scopeRef, ".s4-cta",   { tl, position: ">+0.15", duration: 0.3,  stagger: 0.03 });
 
-          useTextReveal(scopeRef, ".s5-title", { tl, position: "13", duration: 0.35, stagger: 0.04 });
-          useTextReveal(scopeRef, ".s5-body",  { tl, position: "13", duration: 0.35, stagger: 0.04 });
+          useTextReveal(scopeRef, ".s5-title", { tl, position: "14", duration: 0.35, stagger: 0.04 });
+          useTextReveal(scopeRef, ".s5-body",  { tl, position: "14", duration: 0.35, stagger: 0.04 });
 
-          useTextReveal(scopeRef, ".s10-title",     { tl, position: "18.6", duration: 0.35, stagger: 0.04 });
-          useTextReveal(scopeRef, ".s10-title-sub", { tl, position: "18.6", duration: 0.3,  stagger: 0.03 });
-          useTextReveal(scopeRef, ".s10-para-top",  { tl, position: "18.2", duration: 0.3,  stagger: 0.03 });
-          useTextReveal(scopeRef, ".s10-card-para", { tl, position: "21.6", duration: 0.4,  stagger: 0.05 });
+          useTextReveal(scopeRef, ".s10-title",     { tl, position: "19.6", duration: 0.35, stagger: 0.04 });
+          useTextReveal(scopeRef, ".s10-title-sub", { tl, position: "19.6", duration: 0.3,  stagger: 0.03 });
+          useTextReveal(scopeRef, ".s10-para-top",  { tl, position: "19.2", duration: 0.3,  stagger: 0.03 });
+          useTextReveal(scopeRef, ".s10-card-para", { tl, position: "22.6", duration: 0.4,  stagger: 0.05 });
 
-          useTextReveal(scopeRef, ".s7-title", { tl, position: "28.9", duration: 0.35, stagger: 0.04 });
-          useTextReveal(scopeRef, ".s7-para",  { tl, position: "28.9", duration: 0.35, stagger: 0.04 });
+          useTextReveal(scopeRef, ".s7-title", { tl, position: "31.5", duration: 0.35, stagger: 0.04, yOffset: -10 });
+          useTextReveal(scopeRef, ".s7-para",  { tl, position: "31.5", duration: 0.35, stagger: 0.04, yOffset: -10 });
 
-          useTextReveal(scopeRef, ".s8-heading", { tl, position: "32.5",  duration: 0.35, stagger: 0.04 });
-          useTextReveal(scopeRef, ".s8-para",    { tl, position: "32.5", duration: 0.35, stagger: 0.04 });
+          useTextReveal(scopeRef, ".s8-heading", { tl, position: "35.2", duration: 0.35, stagger: 0.04 });
+          useTextReveal(scopeRef, ".s8-para",    { tl, position: "35.1", duration: 0.35, stagger: 0.04 });
+
+          // ── Animation speed controller ────────────────────────────────────
+          // Caps how fast the scrubbed timeline can advance per frame.
+          // Without this, fast wheel/trackpad flicks jump the timeline by a
+          // large progress chunk in one frame, making transitions look like
+          // instant cuts instead of smooth slides/reveals.
+          //
+          // maxProgressPerSecond: 0.20 means the timeline takes ≥ 5 s of
+          // wall-clock time to travel its full length no matter how fast the
+          // user scrolls. Tune up toward 0.28 if it feels too slow on touch.
+          // ── Speed controller ─────────────────────────────────────────────
+          // Now that scrub is 2.0 (desktop), the playhead already moves slowly.
+          // The speed controller's job is only to prevent the *target* from
+          // jumping many sections ahead in one wheel burst — not to provide the
+          // primary smoothing (scrub handles that).
+          //
+          // 0.12 desktop → at 60 fps, target advances max 0.002 per frame.
+          // Across the full timeline that means ~8 s minimum travel time
+          // wall-clock, which pairs well with scrub:2.0's long lerp tail.
+          //
+          // 0.24 touch → touch momentum already carries less distance per frame
+          // than wheel events; a tighter cap here would make it feel sluggish.
+          if (tl.scrollTrigger) {
+            speedCleanup = attachSpeedController(tl.scrollTrigger, {
+              maxProgressPerSecond: isTouchOnly() ? 0.24 : 0.12,
+              throttleReverse:      true,
+            });
+          }
 
           onScrollReady();
         });
@@ -308,6 +348,7 @@ export default function HomeDesktop() {
 
     return () => {
       vvCleanup?.();
+      speedCleanup?.();
 
       if (isTouchOnly()) {
         ScrollTrigger.normalizeScroll(false);
@@ -332,8 +373,6 @@ export default function HomeDesktop() {
 
   return (
     <div ref={scopeRef}>
-
-
       <div className="pin-all relative h-screen overflow-hidden">
 
         <div className="section-1 absolute inset-0 z-20">
@@ -354,44 +393,30 @@ export default function HomeDesktop() {
         <div className="section-6 absolute inset-0 z-[55]" style={{ pointerEvents: "none" }}>
           <SectionSix />
         </div>
-
         <div className="section-10 absolute inset-0 z-[65]" style={{ pointerEvents: "none" }}>
           <SectionTen />
         </div>
-
         <div className="section-7 absolute inset-0 z-[75]" style={{ pointerEvents: "none" }}>
           <SectionSeven />
         </div>
-
         <div className="section-9 absolute inset-0 z-[79]" style={{ pointerEvents: "none" }}>
           <SectionNine />
         </div>
-
         <div className="section-8 absolute inset-0 z-[80]" style={{ pointerEvents: "auto" }}>
           <SectionEight />
         </div>
-
         <div className="hero absolute inset-0 z-[90]" style={{ pointerEvents: "none" }}>
           <Hero />
         </div>
-
         <div
           className="section-cta absolute bottom-0 left-0 w-full z-[95]"
-          style={{
-            pointerEvents: "none",
-            visibility:    "hidden",
-          }}
+          style={{ pointerEvents: "none", visibility: "hidden" }}
         >
           <SectionCTA />
         </div>
-
         <div
           className="footer absolute left-0 w-full z-[96]"
-          style={{
-            bottom:        0,
-            pointerEvents: "none",
-            visibility:    "hidden",
-          }}
+          style={{ bottom: 0, pointerEvents: "none", visibility: "hidden" }}
         >
           <Footer />
         </div>
