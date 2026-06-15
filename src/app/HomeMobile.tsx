@@ -23,15 +23,36 @@ const SectionTen   = dynamic(() => import("../components/Home/SectionTen"),   { 
 
 gsap.registerPlugin(ScrollTrigger);
 
+// ── Returns the VISIBLE viewport height (excludes browser chrome) ─────────────
 const vvHeight = () =>
   (typeof visualViewport !== "undefined" && visualViewport != null
     ? visualViewport.height
     : null) ?? window.innerHeight;
 
+// ── How far the visible area is pushed down by the address bar ────────────────
+// On iOS/Android this is non-zero while the address bar is visible.
+const vvOffsetTop = () =>
+  (typeof visualViewport !== "undefined" && visualViewport != null
+    ? visualViewport.offsetTop
+    : null) ?? 0;
+
+// ── Sync both CSS custom properties onto :root ────────────────────────────────
+// --vvh → use as height:  var(--vvh)
+// --vvt → use as top:     var(--vvt)
+const setVVProps = () => {
+  const root = document.documentElement;
+  root.style.setProperty("--vvh", `${vvHeight()}px`);
+  root.style.setProperty("--vvt", `${vvOffsetTop()}px`);
+};
+
+// ── Directly size and position .pin-all to the visible viewport ───────────────
 const setPinHeight = () => {
-  const h  = vvHeight();
   const el = document.querySelector<HTMLElement>(".pin-all");
-  if (el) el.style.height = `${h}px`;
+  if (!el) return;
+  el.style.height = `${vvHeight()}px`;
+  // Offset the element downward by however tall the address bar is,
+  // so .pin-all starts exactly where the visible area starts.
+  el.style.top = `${vvOffsetTop()}px`;
 };
 
 export default function HomeMobile() {
@@ -40,6 +61,29 @@ export default function HomeMobile() {
 
   useLayoutEffect(() => {
     gsap.set(".section-1", { yPercent: 100, zIndex: 90 });
+  }, []);
+
+  // ── Keep CSS props + element geometry in sync on every chrome change ──────
+  useEffect(() => {
+    const sync = () => {
+      setVVProps();
+      setPinHeight();
+    };
+
+    sync(); // immediate — covers first paint
+
+    window.addEventListener("resize", sync);
+    // visualViewport "resize" fires when the visible area changes size
+    // visualViewport "scroll" fires on iOS when the address bar shrinks/grows
+    // (before a layout resize fires) — this is the earliest possible signal
+    window.visualViewport?.addEventListener("resize", sync);
+    window.visualViewport?.addEventListener("scroll",  sync);
+
+    return () => {
+      window.removeEventListener("resize", sync);
+      window.visualViewport?.removeEventListener("resize", sync);
+      window.visualViewport?.removeEventListener("scroll",  sync);
+    };
   }, []);
 
   useEffect(() => {
@@ -59,9 +103,6 @@ export default function HomeMobile() {
       const TRANSITION = 2.0;
       const EASE       = "power2.inOut";
       const PAUSE      = 0.8;
-
-      // 0.35 tracks finger/momentum input closely (with Lenis lerp:0.1
-      // doing the underlying smoothing) without feeling jittery.
       const scrubValue = 0.35;
 
       const footerEl = scopeRef.current?.querySelector<HTMLElement>(".footer");
@@ -147,14 +188,23 @@ export default function HomeMobile() {
 
         waitForMobBgs(() => {
           requestAnimationFrame(() => {
+            setVVProps();
             setPinHeight();
             ScrollTrigger.refresh();
 
             const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
             if (vv) {
-              const onVVResize = () => setPinHeight();
-              vv.addEventListener("resize", onVVResize);
-              vvCleanup = () => vv.removeEventListener("resize", onVVResize);
+              const onVVChange = () => {
+                setVVProps();
+                setPinHeight();
+                ScrollTrigger.refresh();
+              };
+              vv.addEventListener("resize", onVVChange);
+              vv.addEventListener("scroll", onVVChange);
+              vvCleanup = () => {
+                vv.removeEventListener("resize", onVVChange);
+                vv.removeEventListener("scroll", onVVChange);
+              };
             }
 
             gsap.set(".s7-mob-bg", { scale: 1.15, transformOrigin: "center center" });
@@ -316,7 +366,14 @@ export default function HomeMobile() {
 
   return (
     <div ref={scopeRef}>
-      <div className="pin-all relative overflow-hidden" style={{ height: "100svh" }}>
+      {/*
+        No inline height/top here — .pin-all geometry is driven entirely by:
+          CSS:  height: var(--vvh)   top: var(--vvt)
+          JS:   setPinHeight() writes both on every visualViewport change
+        This keeps .pin-all locked to the visible viewport even when the
+        iOS/Android address bar appears or disappears mid-scroll.
+      */}
+      <div className="pin-all relative overflow-hidden">
 
         <div className="section-1 absolute inset-0 z-[90]">
           <SectionOne />

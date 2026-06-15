@@ -419,3 +419,15 @@ p {
   }
 }
 
+.pin-all {
+  /* Fallback: 100svh for SSR / first paint before JS fires */
+  height: 100svh;
+ 
+  /* JS overrides both once visualViewport is available */
+  height: var(--vvh, 100svh);
+  top:    var(--vvt, 0px);
+ 
+  /* pin-all must be positioned so top: var(--vvt) takes effect */
+  position: relative;
+}
+ 
