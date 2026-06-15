@@ -4,18 +4,15 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSite } from "./context/SiteContext";
 import dynamic from "next/dynamic";
 
-import Hero         from "../components/Home/Hero";
-import SectionOne   from "../components/Home/SectionOne";
-import SectionTwo   from "../components/Home/SectionTwo";
+import Hero        from "../components/Home/Hero";
+import SectionOne  from "../components/Home/SectionOne";
+import SectionTwo  from "../components/Home/SectionTwo";
 import SectionThree from "../components/Home/SectionThree";
-import SectionFour  from "../components/Home/SectionFour";
-import SectionFive  from "../components/Home/SectionFive";
-import SectionSix   from "../components/Home/SectionSix";
-import SectionCTA   from "../components/SectionCTA";
-import Footer       from "../components/Footer";
-
-// Import shared helpers so every caller uses the same logic.
-import { syncVh, getVvHeight } from "../components/SmoothScroll";
+import SectionFour from "../components/Home/SectionFour";
+import SectionFive from "../components/Home/SectionFive";
+import SectionSix  from "../components/Home/SectionSix";
+import SectionCTA  from "../components/SectionCTA";
+import Footer      from "../components/Footer";
 
 const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { ssr: false });
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
@@ -28,23 +25,14 @@ gsap.registerPlugin(ScrollTrigger);
 
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
+const vvHeight = () =>
+  (typeof visualViewport !== "undefined" && visualViewport != null
+    ? visualViewport.height
+    : null) ?? window.innerHeight;
+
 export default function HomeDesktop() {
   const { preloaderDone, lenisRef, onScrollReady } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
-
-  // ── Keep .pin-all sized to the visible viewport ─────────────────────────
-  // SmoothScroll is the primary owner of these listeners, but we add them
-  // here too as a safety net (e.g. HMR, component mount order differences).
-  useEffect(() => {
-    syncVh();
-    const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
-    vv?.addEventListener("resize", syncVh);
-    window.addEventListener("resize", syncVh);
-    return () => {
-      vv?.removeEventListener("resize", syncVh);
-      window.removeEventListener("resize", syncVh);
-    };
-  }, []);
 
   useEffect(() => {
     if (!preloaderDone) return;
@@ -64,7 +52,10 @@ export default function HomeDesktop() {
         autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
       });
 
-      const scrubValue = isTouchOnly() ? 0.3 : 0.9;
+      // scrub: the playhead lerps toward the scroll-driven target over this
+      // many seconds. 0.5–0.8 tracks the input closely while still
+      // smoothing out jitter — pairs well with Lenis lerp:0.1.
+  const scrubValue = isTouchOnly() ? 0.3 : 0.9;
 
       const footerEl = scopeRef.current?.querySelector<HTMLElement>(".footer");
       const footerH  = footerEl?.offsetHeight ?? 600;
@@ -144,12 +135,11 @@ export default function HomeDesktop() {
 
       const buildTimeline = () => {
         requestAnimationFrame(() => {
-          // Sync --vh and .pin-all height before GSAP measures anything.
-          syncVh();
+          ScrollTrigger.refresh();
 
           const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
           if (vv) {
-            const onVVResize = () => syncVh();
+            const onVVResize = () => ScrollTrigger.refresh(true);
             vv.addEventListener("resize", onVVResize);
             vvCleanup = () => vv.removeEventListener("resize", onVVResize);
           }
@@ -190,7 +180,7 @@ export default function HomeDesktop() {
 
             .to(".section-4",  { yPercent: 0, duration: 2.8, ease: "power2.out" })
             .to(".s4-content", {
-              y: () => getVvHeight() * -0.45,
+              y: () => vvHeight() * -0.45,
               duration: 3.0,
               ease: "power1.inOut",
             }, "<+1.8")
@@ -223,7 +213,7 @@ export default function HomeDesktop() {
             .to(".s10-card", {
               y: () => {
                 const card = document.querySelector(".s10-card") as HTMLElement;
-                if (!card) return -getVvHeight() * 0.7;
+                if (!card) return -vvHeight() * 0.7;
                 return -card.getBoundingClientRect().top;
               },
               duration: 2.5, ease: "power2.inOut",
@@ -343,7 +333,7 @@ export default function HomeDesktop() {
 
   return (
     <div ref={scopeRef}>
-      <div className="pin-all relative overflow-hidden" style={{ height: "100dvh" }}>
+      <div className="pin-all relative h-screen overflow-hidden">
 
         <div className="section-1 absolute inset-0 z-20">
           <SectionOne />

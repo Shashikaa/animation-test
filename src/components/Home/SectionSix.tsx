@@ -340,7 +340,7 @@ function SectionSixDesktop() {
   }
 
   return (
-    <section className="!relative !w-full !h-screen !overflow-hidden section-six-wrapper !pointer-events-auto">
+    <section className="!relative !w-full !h-real !overflow-hidden section-six-wrapper !pointer-events-auto">
 
       {/* ── Permanent base backdrop — always opaque, blocks S5 completely ── */}
       <div

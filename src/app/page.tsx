@@ -15,6 +15,15 @@ export default function Home() {
     check();
   }, []);
 
+useEffect(() => {
+  const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
+  const h = vv ? vv.height : window.innerHeight;
+  document.documentElement.style.setProperty("--vh", `${h}px`);
+
+  const check = () => setIsMobile(window.innerWidth < 1025);
+  check();
+}, []);
+
   return (
     <>
       <PreloaderWrapper />

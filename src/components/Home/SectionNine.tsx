@@ -2,7 +2,7 @@
 
 export default function SectionNine() {
   return (
-    <section className="s9-section relative w-full h-screen overflow-hidden">
+    <section className="s9-section relative w-full h-real overflow-hidden">
 
       {/* Desktop bg */}
       <div

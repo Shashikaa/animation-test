@@ -6,20 +6,15 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSite } from "./context/SiteContext";
 import dynamic from "next/dynamic";
 
-import Hero         from "../components/Home/Hero";
-import SectionOne   from "../components/Home/SectionOne";
-import SectionTwo   from "../components/Home/SectionTwo";
+import Hero        from "../components/Home/Hero";
+import SectionOne  from "../components/Home/SectionOne";
+import SectionTwo  from "../components/Home/SectionTwo";
 import SectionThree from "../components/Home/SectionThree";
-import SectionFour  from "../components/Home/SectionFour";
-import SectionFive  from "../components/Home/SectionFive";
-import SectionSix   from "../components/Home/SectionSix";
-import SectionCTA   from "../components/SectionCTA";
-import Footer       from "../components/Footer";
-
-// Import the shared helpers so every caller uses the same logic.
-// SmoothScroll already calls syncVh on mount and on vv "resize", so
-// here we only need to call it before GSAP builds its timeline.
-import { syncVh, getVvHeight } from "../components/SmoothScroll";
+import SectionFour from "../components/Home/SectionFour";
+import SectionFive from "../components/Home/SectionFive";
+import SectionSix  from "../components/Home/SectionSix";
+import SectionCTA  from "../components/SectionCTA";
+import Footer      from "../components/Footer";
 
 const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { ssr: false });
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
@@ -28,27 +23,23 @@ const SectionTen   = dynamic(() => import("../components/Home/SectionTen"),   { 
 
 gsap.registerPlugin(ScrollTrigger);
 
+const vvHeight = () =>
+  (typeof visualViewport !== "undefined" && visualViewport != null
+    ? visualViewport.height
+    : null) ?? window.innerHeight;
+
+const setPinHeight = () => {
+  const h  = vvHeight();
+  const el = document.querySelector<HTMLElement>(".pin-all");
+  if (el) el.style.height = `${h}px`;
+};
+
 export default function HomeMobile() {
   const { preloaderDone, lenisRef, onScrollReady } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     gsap.set(".section-1", { yPercent: 100, zIndex: 90 });
-  }, []);
-
-  // ── Keep .pin-all sized to the visible viewport ─────────────────────────
-  // SmoothScroll handles the primary listener, but we add a secondary one
-  // here as a safety net in case this component mounts before SmoothScroll
-  // or outlives it during HMR.
-  useEffect(() => {
-    syncVh();
-    const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
-    vv?.addEventListener("resize", syncVh);
-    window.addEventListener("resize", syncVh);
-    return () => {
-      vv?.removeEventListener("resize", syncVh);
-      window.removeEventListener("resize", syncVh);
-    };
   }, []);
 
   useEffect(() => {
@@ -68,6 +59,9 @@ export default function HomeMobile() {
       const TRANSITION = 2.0;
       const EASE       = "power2.inOut";
       const PAUSE      = 0.8;
+
+      // 0.35 tracks finger/momentum input closely (with Lenis lerp:0.1
+      // doing the underlying smoothing) without feeling jittery.
       const scrubValue = 0.35;
 
       const footerEl = scopeRef.current?.querySelector<HTMLElement>(".footer");
@@ -153,15 +147,12 @@ export default function HomeMobile() {
 
         waitForMobBgs(() => {
           requestAnimationFrame(() => {
-            // Sync --vh and .pin-all height before GSAP measures anything.
-            // This is the single correct place to do it — after fonts are
-            // ready but before the ScrollTrigger pin is created.
-            syncVh();
+            setPinHeight();
+            ScrollTrigger.refresh();
 
             const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
             if (vv) {
-              // Only "resize", never "scroll". Never call ScrollTrigger.refresh().
-              const onVVResize = () => syncVh();
+              const onVVResize = () => setPinHeight();
               vv.addEventListener("resize", onVVResize);
               vvCleanup = () => vv.removeEventListener("resize", onVVResize);
             }
@@ -171,7 +162,7 @@ export default function HomeMobile() {
 
             gsap.set(".s10-video-wrap", {
               y: () => {
-                const vvH = getVvHeight();
+                const vvH = vvHeight();
                 const el  = document.querySelector(".s10-video-wrap") as HTMLElement;
                 if (!el) return 500;
                 return vvH - el.getBoundingClientRect().top + 20;
@@ -247,7 +238,7 @@ export default function HomeMobile() {
               .to(".s10-video-wrap", {
                 y: () => {
                   const el = document.querySelector(".s10-video-wrap") as HTMLElement;
-                  if (!el) return -getVvHeight() * 0.55;
+                  if (!el) return -vvHeight() * 0.55;
                   return -(el.getBoundingClientRect().top - 80);
                 },
                 duration: 1.8, ease: "none",
@@ -257,7 +248,7 @@ export default function HomeMobile() {
               .to(".s10-card", {
                 y: () => {
                   const card = document.querySelector(".s10-card") as HTMLElement;
-                  if (!card) return -getVvHeight() * 0.7;
+                  if (!card) return -vvHeight() * 0.7;
                   return -card.getBoundingClientRect().top;
                 },
                 duration: 2.5, ease: "none",
@@ -325,7 +316,8 @@ export default function HomeMobile() {
 
   return (
     <div ref={scopeRef}>
-      <div className="pin-all relative overflow-hidden">
+      <div className="pin-all relative overflow-hidden" style={{ height: "100svh" }}>
+
         <div className="section-1 absolute inset-0 z-[90]">
           <SectionOne />
         </div>

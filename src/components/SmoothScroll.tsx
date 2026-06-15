@@ -8,73 +8,18 @@ import { usePathname } from "next/navigation";
 import { useSite } from "../app/context/SiteContext";
 import { setScrollVelocity } from "../app/utils/scrollVelocity";
 
+// Guard: this module is imported by the root layout, which is server-
+// rendered for every route (including /_not-found). gsap.registerPlugin
+// touches `document` immediately, so it must never run on the server.
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
-
-// ─── Shared viewport-height helpers ────────────────────────────────────────
-//
-// WHY THIS EXISTS:
-// On mobile, the browser address bar slides in/out as the user scrolls.
-// When it hides, the visible viewport grows; when it shows, it shrinks.
-// GSAP pins `.pin-all` at a fixed pixel height, so without correction the
-// pinned element is shorter than the screen → a gap appears at the bottom.
-//
-// THE FIX (three layers, all in sync):
-//  1. CSS custom property `--vh` on <html>  →  used by `.pin-all` in CSS as
-//     a fallback before JS fires and as the source-of-truth for CSS calc().
-//  2. Inline `style.height` on `.pin-all`  →  gives GSAP the correct value
-//     when it measures the pin trigger's dimensions.
-//  3. `.site-root::after` background fill  →  covers the momentary gap
-//     between the address bar finishing its animation and JS updating the
-//     above two values (handled purely in CSS / globals.css).
-//
-// We listen to `visualViewport "resize"` (fires once the bar is fully
-// shown/hidden) rather than `"scroll"` (fires every pixel during animation).
-// We NEVER call ScrollTrigger.refresh() here — ignoreMobileResize handles it.
-// ───────────────────────────────────────────────────────────────────────────
-
-export const getVvHeight = (): number =>
-  (typeof visualViewport !== "undefined" && visualViewport != null
-    ? visualViewport.height
-    : null) ?? window.innerHeight;
-
-/** Updates both the CSS custom prop and the element's inline height. */
-export const syncVh = (): void => {
-  const h = getVvHeight();
-
-  // 1. CSS custom property — consumed by `.pin-all { height: calc(var(--vh) * 100) }`
-  document.documentElement.style.setProperty("--vh", `${h * 0.01}px`);
-
-  // 2. Inline style — consumed by GSAP when it measures the pin trigger
-  const el = document.querySelector<HTMLElement>(".pin-all");
-  if (el) el.style.height = `${h}px`;
-};
 
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
   const thumbRef       = useRef<HTMLDivElement>(null);
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const { lenisRef, preloaderDone, setOnScrollReady } = useSite();
   const pathname = usePathname();
-
-  // ── Set --vh immediately on mount ──────────────────────────────────────
-  // This runs before any section component renders, so the CSS custom prop
-  // is correct on the very first paint — no layout shift.
-  useEffect(() => {
-    syncVh();
-
-    const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
-
-    // "resize" fires once the address bar finishes showing/hiding.
-    // "scroll" fires every pixel during the transition — too noisy.
-    vv?.addEventListener("resize", syncVh);
-    window.addEventListener("resize", syncVh);
-
-    return () => {
-      vv?.removeEventListener("resize", syncVh);
-      window.removeEventListener("resize", syncVh);
-    };
-  }, []);
 
   // ── Create Lenis once ───────────────────────────────────────────────────
   useEffect(() => {
