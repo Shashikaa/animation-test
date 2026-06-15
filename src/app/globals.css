@@ -97,8 +97,9 @@ html {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   scroll-behavior: auto !important;
+  /* Lenis requires html to be height:auto to measure true document scroll
+     height. height:100% caps the scroll limit at the viewport height. */
   height: auto !important;
-  min-height: 100dvh;
 }
 
 body {
@@ -108,8 +109,9 @@ body {
   font-size:    var(--text-body);
   line-height:  var(--leading-body);
   height:       auto !important;
-  min-height:   100dvh !important;
+  min-height:   unset !important;
 }
+
 .site-root {
   overflow-x: hidden;
   position:   relative;
@@ -417,10 +419,7 @@ p {
   }
 }
 
-/* ─── Pin container ──────────────────────────────────────────── */
 .pin-all {
-  position: relative;
-  overflow: hidden;
-  height: 100svh;
-  height: 100dvh; /* updates live as the URL bar collapses/expands */
+  height: calc(var(--vh, 1vh) * 100);
 }
+ 
