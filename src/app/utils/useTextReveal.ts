@@ -15,7 +15,10 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { RefObject } from "react";
 
-gsap.registerPlugin(ScrollTrigger);
+// ❌ REMOVED: gsap.registerPlugin(ScrollTrigger)
+// registerPlugin is called inside useEffect in HomeDesktop/HomeMobile,
+// which are ssr:false. Calling it here runs during SSR prerender and
+// crashes with "document is not defined".
 
 export interface TextRevealOptions {
   /** Pixels to slide up from (default: 30) */
@@ -87,14 +90,12 @@ function splitIntoLines(el: HTMLElement): HTMLElement[] {
 export function restoreTextReveal(scope: HTMLElement, selector: string) {
   scope.querySelectorAll<HTMLElement>(selector).forEach((el) => {
     if (el.dataset.originalHtml !== undefined) {
-      // Animated mode: restore split DOM and clear inline styles
       el.innerHTML = el.dataset.originalHtml;
       delete el.dataset.originalHtml;
       el.style.opacity = "";
       el.style.transform = "";
       el.style.visibility = "";
     } else {
-      // Static mode: element was never split, just clear the visibility lock
       el.style.visibility = "";
     }
   });
@@ -122,19 +123,16 @@ export function useTextReveal(
   if (!elements.length) return;
 
   elements.forEach((el) => {
-    // ── Static mode (mobile): no split, just hide then reveal with section ──
     if (isStatic) {
       el.style.visibility = "hidden";
       if (tl) {
         tl.set(el, { visibility: "visible" }, position);
       } else {
-        // Standalone fallback: reveal immediately (section controls timing)
         el.style.visibility = "visible";
       }
       return;
     }
 
-    // ── Animated mode (desktop): split into lines, animate per line ─────────
     el.style.visibility = "hidden";
 
     const lineInners = splitIntoLines(el);

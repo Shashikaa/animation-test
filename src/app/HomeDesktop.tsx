@@ -1,5 +1,3 @@
-"use client";
-
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -22,7 +20,6 @@ const SectionNine  = dynamic(() => import("../components/Home/SectionNine"),  { 
 const SectionTen   = dynamic(() => import("../components/Home/SectionTen"),   { ssr: false });
 
 import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
-import { attachSpeedController } from "./utils/timelineSpeedController";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -44,8 +41,7 @@ export default function HomeDesktop() {
       ScrollTrigger.normalizeScroll(true);
     }
 
-    let vvCleanup:    (() => void) | null = null;
-    let speedCleanup: (() => void) | null = null;
+    let vvCleanup: (() => void) | null = null;
 
     const ctx = gsap.context(() => {
 
@@ -56,17 +52,10 @@ export default function HomeDesktop() {
         autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
       });
 
-      // ── scrub ───────────────────────────────────────────────────────────
-      // Desktop raised from 0.8 → 2.0. scrub is the number of seconds GSAP
-      // takes to lerp the timeline playhead to its scroll-driven target.
-      // 0.8 caught up very fast — any scroll input immediately pulled the
-      // playhead forward, making transitions feel snappy rather than cinematic.
-      // 2.0 gives the playhead a long, lazy tail: the timeline eases into and
-      // out of each transition over ~2 s of real time even after the user
-      // stops scrolling, producing the buttery "floating" feel.
-      // Touch stays at 0.4 — lower scrub on touch prevents the playhead from
-      // lagging behind fast momentum swipes, which feels unresponsive.
-      const scrubValue = isTouchOnly() ? 0.4 : 2.0;
+      // scrub: the playhead lerps toward the scroll-driven target over this
+      // many seconds. 0.5–0.8 tracks the input closely while still
+      // smoothing out jitter — pairs well with Lenis lerp:0.1.
+  const scrubValue = isTouchOnly() ? 0.3 : 0.9;
 
       const footerEl = scopeRef.current?.querySelector<HTMLElement>(".footer");
       const footerH  = footerEl?.offsetHeight ?? 600;
@@ -303,34 +292,6 @@ export default function HomeDesktop() {
           useTextReveal(scopeRef, ".s8-heading", { tl, position: "35.2", duration: 0.35, stagger: 0.04 });
           useTextReveal(scopeRef, ".s8-para",    { tl, position: "35.1", duration: 0.35, stagger: 0.04 });
 
-          // ── Animation speed controller ────────────────────────────────────
-          // Caps how fast the scrubbed timeline can advance per frame.
-          // Without this, fast wheel/trackpad flicks jump the timeline by a
-          // large progress chunk in one frame, making transitions look like
-          // instant cuts instead of smooth slides/reveals.
-          //
-          // maxProgressPerSecond: 0.20 means the timeline takes ≥ 5 s of
-          // wall-clock time to travel its full length no matter how fast the
-          // user scrolls. Tune up toward 0.28 if it feels too slow on touch.
-          // ── Speed controller ─────────────────────────────────────────────
-          // Now that scrub is 2.0 (desktop), the playhead already moves slowly.
-          // The speed controller's job is only to prevent the *target* from
-          // jumping many sections ahead in one wheel burst — not to provide the
-          // primary smoothing (scrub handles that).
-          //
-          // 0.12 desktop → at 60 fps, target advances max 0.002 per frame.
-          // Across the full timeline that means ~8 s minimum travel time
-          // wall-clock, which pairs well with scrub:2.0's long lerp tail.
-          //
-          // 0.24 touch → touch momentum already carries less distance per frame
-          // than wheel events; a tighter cap here would make it feel sluggish.
-          if (tl.scrollTrigger) {
-            speedCleanup = attachSpeedController(tl.scrollTrigger, {
-              maxProgressPerSecond: isTouchOnly() ? 0.24 : 0.12,
-              throttleReverse:      true,
-            });
-          }
-
           onScrollReady();
         });
       };
@@ -348,7 +309,6 @@ export default function HomeDesktop() {
 
     return () => {
       vvCleanup?.();
-      speedCleanup?.();
 
       if (isTouchOnly()) {
         ScrollTrigger.normalizeScroll(false);

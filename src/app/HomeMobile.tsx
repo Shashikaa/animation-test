@@ -21,8 +21,6 @@ const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { 
 const SectionNine  = dynamic(() => import("../components/Home/SectionNine"),  { ssr: false });
 const SectionTen   = dynamic(() => import("../components/Home/SectionTen"),   { ssr: false });
 
-import { attachSpeedController } from "./utils/timelineSpeedController";
-
 gsap.registerPlugin(ScrollTrigger);
 
 const vvHeight = () =>
@@ -47,8 +45,7 @@ export default function HomeMobile() {
   useEffect(() => {
     if (!preloaderDone) return;
 
-    let vvCleanup:    (() => void) | null = null;
-    let speedCleanup: (() => void) | null = null;
+    let vvCleanup: (() => void) | null = null;
 
     const ctx = gsap.context(() => {
 
@@ -62,7 +59,10 @@ export default function HomeMobile() {
       const TRANSITION = 2.0;
       const EASE       = "power2.inOut";
       const PAUSE      = 0.8;
-      const scrubValue = 0.6;
+
+      // 0.35 tracks finger/momentum input closely (with Lenis lerp:0.1
+      // doing the underlying smoothing) without feeling jittery.
+      const scrubValue = 0.35;
 
       const footerEl = scopeRef.current?.querySelector<HTMLElement>(".footer");
       const footerH  = footerEl?.offsetHeight ?? 600;
@@ -189,49 +189,41 @@ export default function HomeMobile() {
             });
 
             tl
-              // ── Hero → S1 ────────────────────────────────────────────
               .to(".section-1", { yPercent: 0,   duration: 2.0, ease: "none" })
               .to(".hero-bg",   { yPercent: -20, duration: 2.0, ease: "none" }, "<")
               .to(".s1-bg",     { yPercent: 0, scale: 1, duration: 1.8, ease: "none" }, "<")
               .to(".s1-card",   { yPercent: 0, opacity: 1, duration: 1.8, ease: "power2.out" }, 0.3)
               .to({}, { duration: PAUSE })
 
-              // ── S1 → S2 ──────────────────────────────────────────────
               .set(".section-1", { zIndex: 20 })
               .to(".section-2", { clipPath: "inset(0% 0% 0% 0%)", duration: TRANSITION, ease: EASE })
               .to(".section-1", { scale: 1.05,                     duration: TRANSITION, ease: EASE }, "<")
               .to(".s2-bg",     { yPercent: 0, scale: 1,           duration: TRANSITION, ease: "power2.out" }, "<")
               .to({}, { duration: PAUSE })
 
-              // ── S2 → S3 ──────────────────────────────────────────────
               .set(".section-3", { visibility: "visible" })
               .to(".section-3", { yPercent: 0,  duration: TRANSITION, ease: EASE })
               .to(".section-2", { scale: 1.05,  duration: TRANSITION, ease: EASE }, "<")
               .to({}, { duration: PAUSE })
 
-              // ── S3 → S4 ──────────────────────────────────────────────
               .to(".section-4",  { yPercent: 0,    duration: TRANSITION, ease: EASE })
               .to(".section-3",  { yPercent: -100, duration: TRANSITION, ease: EASE }, "-=1.2")
               .to(".s4-img-mob", { y: -60,          duration: TRANSITION, ease: "none" }, "<")
               .to({}, { duration: PAUSE })
 
-              // ── S4 → S5 ──────────────────────────────────────────────
               .to(".section-5", { clipPath: "inset(0% 0% 0% 0%)", duration: TRANSITION, ease: EASE })
               .to(".section-4", { scale: 1.05,                     duration: TRANSITION, ease: EASE }, "<")
               .to({}, { duration: PAUSE })
 
-              // ── S5 → S6 ──────────────────────────────────────────────
               .to(".section-6", { yPercent: 0,  duration: TRANSITION, ease: EASE })
               .to(".section-5", { scale: 1.05,  duration: TRANSITION, ease: EASE }, "<")
               .to({}, { duration: 0.6 })
 
-              // ── S6 → S10 ─────────────────────────────────────────────
               .set(".section-10", { visibility: "visible" })
               .to(".section-6",     { yPercent: -100, duration: TRANSITION, ease: EASE })
               .to(".s10-static-bg", { yPercent: 0,    duration: TRANSITION, ease: "power2.out" }, "<")
               .to({}, { duration: PAUSE })
 
-              // ── S10 inner ────────────────────────────────────────────
               .set(".s10-title",     { opacity: 1, y: 0 })
               .set(".s10-title-sub", { opacity: 1, y: 0 })
               .set(".s10-para-top",  { opacity: 1, y: 0 })
@@ -265,7 +257,6 @@ export default function HomeMobile() {
               .to(".s10-bg-img",    { y: "0%", duration: 2.5, ease: "none" }, "<")
               .to({}, { duration: 0.6 })
 
-              // ── S10 → S7 + S8 ────────────────────────────────────────
               .set(".section-8", { visibility: "visible" })
               .to(".section-7",  { yPercent: 0, duration: TRANSITION, ease: "power3.out" })
               .to(".section-8",  { yPercent: 0, duration: TRANSITION, ease: "power3.out" }, "<")
@@ -275,7 +266,6 @@ export default function HomeMobile() {
               .to(".s7-mob-bg",  { scale: 1,    duration: TRANSITION, ease: "power2.out" }, "<")
               .to({}, { duration: PAUSE })
 
-              // ── S7 → S8 ──────────────────────────────────────────────
               .to(".section-7", { yPercent: -100, duration: TRANSITION, ease: EASE })
               .to(".s8-mob-bg", { scale: 1,       duration: TRANSITION, ease: "power2.out" }, "<")
               .set(".section-8", { clipPath: "inset(0% 0% 0% 0%)" })
@@ -283,7 +273,6 @@ export default function HomeMobile() {
 
               .set(".section-7", { visibility: "hidden" })
 
-              // ── S8 → S9 ──────────────────────────────────────────────
               .set(".section-9", { visibility: "visible" })
               .to(".section-8", { clipPath: "inset(0% 0% 100% 0%)", duration: TRANSITION, ease: EASE })
               .to(".s9-bg-img", { yPercent: 0,  duration: TRANSITION, ease: "power2.out" }, "<")
@@ -291,7 +280,6 @@ export default function HomeMobile() {
               .to(".s9-para",   { opacity: 1,   duration: 1.2, ease: "power3.out" }, "<")
               .to({}, { duration: PAUSE })
 
-              // ── CTA + Footer ──────────────────────────────────────────
               .set(".section-cta", { visibility: "visible" })
               .to(".section-cta", { yPercent: 0,   duration: 3.5, ease: "power3.out" })
               .to(".section-9",   { scale: 1.05,   duration: 3.5, ease: EASE }, "<")
@@ -303,18 +291,6 @@ export default function HomeMobile() {
               .to(".section-9", { scale: 1.05,   duration: 2.5, ease: EASE }, "<")
               .to(".s9-bg-img", { yPercent: -20, duration: 2.5, ease: "none" }, "<")
               .to({}, { duration: 1.0 });
-
-            // ── Animation speed controller ──────────────────────────────
-            // Touch gets a slightly higher cap (0.26) because momentum
-            // flicks travel faster than wheel events. Both values ensure
-            // no single animation frame jumps more than ~4% of the full
-            // timeline, keeping yPercent slides and clipPath reveals smooth.
-            if (tl.scrollTrigger) {
-              speedCleanup = attachSpeedController(tl.scrollTrigger, {
-                maxProgressPerSecond: 0.26,
-                throttleReverse:      true,
-              });
-            }
 
             onScrollReady();
           });
@@ -334,7 +310,6 @@ export default function HomeMobile() {
 
     return () => {
       vvCleanup?.();
-      speedCleanup?.();
       ctx.revert();
     };
   }, [preloaderDone]);
