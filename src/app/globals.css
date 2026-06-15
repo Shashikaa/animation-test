@@ -17,13 +17,16 @@
 
 /* ─── Design Tokens ──────────────────────────────────────────── */
 :root {
-     --vh: 100svh; 
   --background: #ffffff;
   --foreground: #171717;
   --muted:      #6b6b6b;
   --muted-bg:   #f5f5f5;
   --border:     #e5e5e5;
   --accent:     #171717;
+
+  /* Real visual-viewport height, kept in sync by SmoothScroll.
+     Falls back to 100vh until the JS effect runs (SSR / first paint). */
+  --app-height: 100vh;
 
   --text-display: 40px;
   --text-body:    16px;
@@ -143,7 +146,7 @@ html.lenis body {
 /* ─── Preloader lock ─────────────────────────────────────────── */
 body.preloading {
   overflow: hidden !important;
-  height: var(--vh) !important;  /* ← was 100vh */
+  height: 100vh !important;
 }
 
 /* ─── GPU Layer Promotion ────────────────────────────────────────
@@ -250,10 +253,19 @@ canvas {
   height: 100%;
 }
 
+/* ─── Pin wrapper height ─────────────────────────────────────────
+   Driven by --app-height (synced to visualViewport.height in
+   SmoothScroll). This replaces the old JS-set inline height /
+   100svh approach so GSAP's pin spacer is always measured against
+   the real, keyboard-aware viewport. ──────────────────────────── */
+.pin-all {
+  height: var(--app-height);
+}
+
 .scroll-container {
   position: relative;
   width: 100%;
-  height: var(--vh);  /* ← was 100vh */
+  height: 100vh;
   overflow: hidden;
 }
 
@@ -418,8 +430,4 @@ p {
     clip-path:   none !important;
     will-change: auto !important;
   }
-}
-
-.h-real {
-  height: var(--vh);
 }

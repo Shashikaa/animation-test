@@ -128,7 +128,7 @@ export default function SectionTen() {
       <div
         className="s10-video-wrap absolute overflow-hidden"
         style={{
-          zIndex: 16,
+          zIndex: 1,
         }}
       >
         <video

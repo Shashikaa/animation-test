@@ -21,6 +21,30 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
   const { lenisRef, preloaderDone, setOnScrollReady } = useSite();
   const pathname = usePathname();
 
+  // ── Sync --app-height with the real visual viewport ─────────────────────
+  // Drives .pin-all (and any other element opting into --app-height) so
+  // GSAP's pin spacer is always sized against the real, keyboard-aware
+  // viewport instead of 100vh/100svh, which can misreport on mobile.
+  useEffect(() => {
+    const setAppHeight = () => {
+      const vh = window.visualViewport
+        ? window.visualViewport.height
+        : window.innerHeight;
+
+      document.documentElement.style.setProperty("--app-height", `${vh}px`);
+    };
+
+    setAppHeight();
+
+    window.visualViewport?.addEventListener("resize", setAppHeight);
+    window.addEventListener("resize", setAppHeight);
+
+    return () => {
+      window.visualViewport?.removeEventListener("resize", setAppHeight);
+      window.removeEventListener("resize", setAppHeight);
+    };
+  }, []);
+
   // ── Create Lenis once ───────────────────────────────────────────────────
   useEffect(() => {
     const isTouch = ScrollTrigger.isTouch > 0;

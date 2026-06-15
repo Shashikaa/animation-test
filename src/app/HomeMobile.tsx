@@ -28,12 +28,6 @@ const vvHeight = () =>
     ? visualViewport.height
     : null) ?? window.innerHeight;
 
-const setPinHeight = () => {
-  const h  = vvHeight();
-  const el = document.querySelector<HTMLElement>(".pin-all");
-  if (el) el.style.height = `${h}px`;
-};
-
 export default function HomeMobile() {
   const { preloaderDone, lenisRef, onScrollReady } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
@@ -147,12 +141,11 @@ export default function HomeMobile() {
 
         waitForMobBgs(() => {
           requestAnimationFrame(() => {
-            setPinHeight();
             ScrollTrigger.refresh();
 
             const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
             if (vv) {
-              const onVVResize = () => setPinHeight();
+              const onVVResize = () => ScrollTrigger.refresh();
               vv.addEventListener("resize", onVVResize);
               vvCleanup = () => vv.removeEventListener("resize", onVVResize);
             }
@@ -316,7 +309,7 @@ export default function HomeMobile() {
 
   return (
     <div ref={scopeRef}>
-      <div className="pin-all relative overflow-hidden" style={{ height: "var(--vh)" }}>
+      <div className="pin-all relative overflow-hidden">
 
         <div className="section-1 absolute inset-0 z-[90]">
           <SectionOne />
