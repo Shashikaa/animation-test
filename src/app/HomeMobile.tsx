@@ -124,28 +124,32 @@ export default function HomeMobile() {
       gsap.set(".section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
       gsap.set(".footer",      { y: footerH,    zIndex: 151, visibility: "hidden" });
 
-      const buildTimeline = () => {
-        const waitForMobBgs = (cb: () => void) => {
-          const check = () => {
-            if (document.querySelector(".s7-mob-bg") && document.querySelector(".s8-mob-bg")) {
-              cb();
-            } else {
-              requestAnimationFrame(check);
-            }
-          };
-          check();
+      const waitForMobBgs = (cb: () => void) => {
+        const check = () => {
+          if (document.querySelector(".s7-mob-bg") && document.querySelector(".s8-mob-bg")) {
+            cb();
+          } else {
+            requestAnimationFrame(check);
+          }
         };
+        check();
+      };
 
+      const buildTimeline = () => {
         waitForMobBgs(() => {
           requestAnimationFrame(() => {
-            ScrollTrigger.refresh();
 
-            // Only refresh ScrollTrigger on true orientation change
-            // (portrait ↔ landscape). visualViewport.resize and
-            // window.resize both fire when the browser bar toggles —
-            // responding to those causes the pin to jump. screen.orientation
-            // only fires on real rotations.
-            const onOrientationChange = () => ScrollTrigger.refresh(true);
+            // .pin-all's height/min-height come from `100lvh` in globals.css
+            // now — no manual pixel measurement needed. We only need a
+            // reference to it so we can strip the inline max-height GSAP
+            // re-applies on every refresh (see onRefresh below).
+            const pinEl = document.querySelector(".pin-all") as HTMLElement;
+
+            ScrollTrigger.refresh(true);
+
+            const onOrientationChange = () => {
+              ScrollTrigger.refresh(true);
+            };
             screen.orientation?.addEventListener("change", onOrientationChange);
             vvCleanup = () => screen.orientation?.removeEventListener("change", onOrientationChange);
 
@@ -173,6 +177,10 @@ export default function HomeMobile() {
                 preventOverlaps:     true,
                 fastScrollEnd:       true,
                 invalidateOnRefresh: true,
+                onRefresh: () => {
+                  // After every GSAP refresh, strip the max-height it re-applies
+                  if (pinEl) pinEl.style.removeProperty("max-height");
+                },
                 onLeave: () => {
                   lenisRef.current?.stop();
                   requestAnimationFrame(() => lenisRef.current?.start());
@@ -283,6 +291,11 @@ export default function HomeMobile() {
               .to(".section-9", { scale: 1.05,   duration: 2.5, ease: EASE }, "<")
               .to(".s9-bg-img", { yPercent: -20, duration: 2.5, ease: "none" }, "<")
               .to({}, { duration: 1.0 });
+
+            // Strip max-height immediately after pin is created
+            requestAnimationFrame(() => {
+              if (pinEl) pinEl.style.removeProperty("max-height");
+            });
 
             onScrollReady();
           });

@@ -18,30 +18,6 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
   const { lenisRef, preloaderDone, setOnScrollReady } = useSite();
   const pathname = usePathname();
 
-  // ── Lock --app-height ONCE on mount, never update on address bar toggle ──
-  // On real mobile touch devices: visualViewport.height gives the true
-  // usable height below the browser chrome at the moment of load.
-  // We capture it once and freeze it — the address bar showing/hiding
-  // must NOT change this value or GSAP's pin measurement breaks.
-  // Only a real orientation change (portrait↔landscape) re-measures.
-  useEffect(() => {
-    const lockHeight = () => {
-      const isTouch = ScrollTrigger.isTouch > 0;
-      const h = (isTouch && window.visualViewport)
-        ? window.visualViewport.height
-        : window.innerHeight;
-      document.documentElement.style.setProperty("--app-height", `${h}px`);
-    };
-
-    // Lock once immediately
-    lockHeight();
-
-    // Only re-lock on real orientation flip, NOT on visualViewport resize
-    // (which fires every time the address bar animates)
-    screen.orientation?.addEventListener("change", lockHeight);
-    return () => screen.orientation?.removeEventListener("change", lockHeight);
-  }, []);
-
   // ── Create Lenis once ─────────────────────────────────────────────────────
   useEffect(() => {
     const isTouch = ScrollTrigger.isTouch > 0;
@@ -148,7 +124,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
           top:           0,
           right:         0,
           width:         "6px",
-          height:        "100vh",
+          height:        "100lvh",
           zIndex:        99999,
           pointerEvents: "none",
         }}

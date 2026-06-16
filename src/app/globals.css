@@ -24,12 +24,6 @@
   --border:     #e5e5e5;
   --accent:     #171717;
 
-  /* Real visual-viewport height, set once on load by SmoothScroll.
-     Falls back to 100svh until JS runs (SSR / first paint).
-     100svh = smallest viewport (bar visible), which prevents any
-     initial flash of wrong height before JS fires. */
-  --app-height: 100svh;
-
   --text-display: 40px;
   --text-body:    16px;
   --text-sm:      14px;
@@ -67,7 +61,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: 0a0a0a;
     --foreground: #ededed;
     --muted:      #888888;
     --muted-bg:   #1a1a1a;
@@ -81,6 +75,12 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+/* Required for safe-area env() to work on iOS */
+html {
+  /* Extend background into the safe area (notch, home bar) */
+  background-color: #000;
 }
 
 html, body {
@@ -225,19 +225,32 @@ canvas {
 }
 
 /* ─── Pin wrapper height ─────────────────────────────────────────
-   --app-height is set ONCE on load by SmoothScroll.tsx using
-   visualViewport.height (touch) or innerHeight (desktop).
-   It is intentionally never updated when the mobile address bar
-   shows/hides — that would cause the pinned layout to jump.
-   Only a real orientation flip re-measures.
+   `lvh` = Large Viewport Height: the viewport size with browser
+   chrome (address bar) fully retracted. Unlike `dvh`/innerHeight,
+   this value is fixed by spec and never changes mid-scroll as the
+   address bar animates — so GSAP's pin always captures the right
+   number, regardless of when the browser chrome happens to be in
+   its show/hide transition.
 
-   100svh fallback = "small viewport" (bar visible), safe for SSR.
-   NO max-height — GSAP pin-spacer sets outer height to 17000px+
-   and max-height would cap the visible pinned element.
+   max-height: none !important overrides the inline max-height GSAP
+   sets on this element when it pins it.
 ──────────────────────────────────────────────────────────────── */
 .pin-all {
-  height:     var(--app-height, 100svh);
-  min-height: var(--app-height, 100svh);
+  height:     100lvh;
+  min-height: 100lvh;
+  max-height: none !important;
+}
+
+/* fallback only for browsers without lvh support */
+@supports not (height: 100lvh) {
+  .pin-all {
+    height:     100vh;
+    min-height: 100vh;
+  }
+}
+
+.pin-spacer > .pin-all {
+  max-height: none !important;
 }
 
 .scroll-container {
