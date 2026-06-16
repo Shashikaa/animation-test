@@ -112,7 +112,10 @@ function SectionSixMobile() {
   function handleNext() { go((active + 1) % PROJECTS.length); }
 
   return (
-    <section className="!relative !w-full !overflow-hidden section-six-wrapper !h-[100svh] !pointer-events-auto">
+    <section
+      className="section-six-wrapper !overflow-hidden !pointer-events-auto"
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+    >
 
       {/* ── Permanent base backdrop — always opaque, blocks S5 completely ── */}
       <div
@@ -340,7 +343,10 @@ function SectionSixDesktop() {
   }
 
   return (
-    <section className="!relative !w-full !h-screen !overflow-hidden section-six-wrapper !pointer-events-auto">
+    <section
+      className="section-six-wrapper !overflow-hidden !pointer-events-auto"
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+    >
 
       {/* ── Permanent base backdrop — always opaque, blocks S5 completely ── */}
       <div

@@ -294,7 +294,7 @@ export default function SectionTen() {
 
   /* Subtitle — just below title */
   .s10-title-sub {
-    top:       clamp(148px, 28vh, 200px);
+    top:       clamp(128px, 28vh, 190px);
     left:      24px;
     right:     auto;
     bottom:    auto;
@@ -317,10 +317,10 @@ export default function SectionTen() {
    * GSAP pushes it below viewport on init, scrolls y→0 to land here.
    */
 .s10-video-wrap {
-  top:       50%;
+  top:       70%;
   right:     20px;
   left:      auto;
-  transform: translateY(-50%);
+  transform: translateY(-70%);
   width:     70vw;
   height:    45vw;
   z-index:   12;

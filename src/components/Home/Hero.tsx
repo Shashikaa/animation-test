@@ -14,7 +14,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="hero relative w-full h-real overflow-hidden">
+    <section className="hero relative w-full h-full overflow-hidden">
 
       {/* Background layer — same position/size as before (inset-0) */}
       <div className="hero-bg absolute inset-0 bg-cover bg-center bg-[url('/hero-mobile.webp')] md:bg-[url('/hero.webp')] will-change-transform" />

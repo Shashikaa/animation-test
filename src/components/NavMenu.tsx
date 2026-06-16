@@ -155,7 +155,7 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
           initial="hidden"
           animate="visible"
           exit="hidden"
-          className="!fixed !z-[2000] !flex !flex-col !w-[100dvw] !h-[100dvh] !top-0 !left-0"
+          className="!fixed !z-[2000] !flex !flex-col !w-[100dvw] !h-full !top-0 !left-0"
           style={{
             backdropFilter:       "blur(38.55px) brightness(0.72) saturate(1.6)",
             WebkitBackdropFilter: "blur(38.55px) brightness(0.72) saturate(1.6)",

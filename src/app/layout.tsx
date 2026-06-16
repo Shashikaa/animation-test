@@ -6,6 +6,8 @@ import { SiteProvider } from "../app/context/SiteContext";
 import SmoothScroll from "../components/SmoothScroll";
 import HeaderWrapper from "../components/HeaderWrapper";
 import NavMenuWrapper from "../components/NavMenuWrapper";
+import PreloaderWrapper from "../components/PreloaderWrapper";
+import { headers } from "next/headers";
 
 const instrumentSans = Instrument_Sans({
   subsets:  ["latin"],
@@ -37,11 +39,15 @@ export const metadata: Metadata = {
   description: "Crafting Custom Swimming Pools with Style, Function, and Quality.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") ?? headersList.get("x-invoke-path") ?? "/";
+  const isHome = pathname === "/";
+
   return (
     <html
       lang="en"
-      data-preloading=""
+      data-preloading={isHome ? "" : undefined}
       className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased`}
     >
       <body className="flex flex-col">
@@ -50,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="site-root flex flex-col flex-1 overflow-x-hidden">
               <HeaderWrapper />
               <NavMenuWrapper />
+              {isHome && <PreloaderWrapper />}
               {children}
             </div>
           </SmoothScroll>

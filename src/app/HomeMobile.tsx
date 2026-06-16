@@ -216,7 +216,7 @@ export default function HomeMobile() {
               .to({}, { duration: PAUSE })
 
               .to(".section-6", { yPercent: 0,  duration: TRANSITION, ease: EASE })
-              .to(".section-5", { scale: 1.05,  duration: TRANSITION, ease: EASE }, "<")
+              .to(".section-5", { scale: 1.0,  duration: TRANSITION, ease: EASE }, "<")
               .to({}, { duration: 0.6 })
 
               .set(".section-10", { visibility: "visible" })
@@ -231,10 +231,17 @@ export default function HomeMobile() {
               .to(".s10-title",      { opacity: 0, y: -60, duration: 1.5, ease: "none" })
               .to(".s10-title-sub",  { opacity: 0, y: -40, duration: 1.5, ease: "none" }, "<")
               .to(".s10-para-top",   { opacity: 0, y: -50, duration: 1.5, ease: "none" }, "<")
-              .to(".s10-video-wrap", { y: 0,               duration: 2.0, ease: "none" }, "<")
+              // Video rises from off-screen up to its centred resting spot.
+              .to(".s10-video-wrap", { y: 40,               duration: 2.0, ease: "none" }, "<")
+              // Mark the instant it reaches centre so the exit move below can
+              // pick up from exactly there — no dead pause, no freeze.
+              .addLabel("s10VideoCentered")
               .to({}, { duration: 0.3 })
               .to(".s10-card",       { clipPath: "inset(0% 0% 0% 0%)", duration: 1.6, ease: "power2.out" })
               .to(".s10-card-body",  { clipPath: "inset(0% 0% 0% 0%)", duration: 1.4, ease: "power2.out" }, "<+0.2")
+              // Continues straight on from the centred position (same instant
+              // the rise-to-centre tween ends) into the exit move — the video
+              // never stops moving, it just keeps scrolling on up and away.
               .to(".s10-video-wrap", {
                 y: () => {
                   const el = document.querySelector(".s10-video-wrap") as HTMLElement;
@@ -242,7 +249,10 @@ export default function HomeMobile() {
                   return -(el.getBoundingClientRect().top - 80);
                 },
                 duration: 1.8, ease: "none",
-              }, "<+0.4")
+              }, "s10VideoCentered")
+              // ClipPath wipe kicks in a beat after it's moving again, so it
+              // reads as "scrolling away and getting swallowed" rather than a
+              // hard cut.
               .to(".s10-video-wrap", { clipPath: "inset(0% 0% 100% 0%)", duration: 1.2, ease: "none" }, "<+0.2")
               .set(".s10-video-wrap", { visibility: "hidden" })
               .to(".s10-card", {

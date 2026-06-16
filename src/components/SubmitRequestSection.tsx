@@ -258,7 +258,7 @@ export default function SubmitRequestSection({ onClose }: { onClose?: () => void
 
       <section
         id="submit-request-section"
-        className="sar-section relative w-full overflow-hidden z-10000"
+        className="sar-section relative w-full overflow-hidden z-10000 !h-full"
         style={{
           fontFamily: "'Instrument Sans', sans-serif",
           background: "linear-gradient(160deg, #1d5050 0%, #1a4a4a 35%, #163e3e 65%, #112e30 100%)",

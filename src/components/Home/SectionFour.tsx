@@ -74,28 +74,51 @@ export default function SectionFour() {
       <div
         className="s4-mobile-layout section-continer"
         style={{
-          display:       "none",
-          position:      "absolute",
-          inset:         0,
-          width:         "100%",
-          height:        "100%",
-          zIndex:        3,
-          flexDirection: "column",
-          boxSizing:     "border-box",
-          overflow:      "hidden",
+          display:            "none",
+          position:           "absolute",
+          inset:              0,
+          width:              "100%",
+          height:             "100%",
+          zIndex:             3,
+          flexDirection:      "column",
+          boxSizing:          "border-box",
+          overflow:           "hidden",
+          /* Forces its own GPU compositing layer so the text gets
+             rasterized independently of the parent .section-4's
+             scrubbed transform — fixes text dropping out mid-scroll
+             on mobile WebKit/Blink and only reappearing on reversal. */
+          transform:          "translateZ(0.001px)",
+          backfaceVisibility: "hidden",
+          willChange:         "transform",
           /* section-continer supplies padding-inline + padding-block */
-          paddingBlock:  undefined,
+          paddingBlock:       undefined,
         }}
       >
         {/* Title */}
-        <div style={{ display: "flex", justifyContent: "flex-end", flexShrink: 0 }}>
+        <div
+          style={{
+            display:            "flex",
+            justifyContent:     "flex-end",
+            flexShrink:         0,
+            transform:          "translateZ(0)",
+            backfaceVisibility: "hidden",
+          }}
+        >
           <h2 className="font-display  text-[#F4EEDF] text-right !mt-22 md:!mt-16">
             Making Memories.
           </h2>
         </div>
 
         {/* Para */}
-        <div style={{ marginTop: 32, maxWidth: 480, flexShrink: 0 }}>
+        <div
+          style={{
+            marginTop:          32,
+            maxWidth:           480,
+            flexShrink:         0,
+            transform:          "translateZ(0)",
+            backfaceVisibility: "hidden",
+          }}
+        >
           <p className="font-body  text-[#F4EEDF] md:!mt-8">
             At Grand Pools, we build more than just swimming pools — we create
             spaces where families gather, friends connect, and lasting memories
