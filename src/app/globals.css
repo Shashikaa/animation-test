@@ -24,17 +24,13 @@
   --border:     #e5e5e5;
   --accent:     #171717;
 
-  /* Real visual-viewport height, kept in sync by SmoothScroll.
-     Falls back to 100vh until the JS effect runs (SSR / first paint). */
-  --app-height: 100vh;
+  --app-height: 100svh;
 
   --text-display: 40px;
   --text-body:    16px;
   --text-sm:      14px;
   --text-xs:      12px;
 
-  /* 1.15 gives descenders (g, y, p, q, j) space without visually opening
-     up the tracking. Was 1, which clips descenders at display sizes. */
   --leading-display: 1.15;
   --leading-body:    1.2;
 
@@ -101,8 +97,6 @@ html {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   scroll-behavior: auto !important;
-  /* Lenis requires html to be height:auto to measure true document scroll
-     height. height:100% caps the scroll limit at the viewport height. */
   height: auto !important;
 }
 
@@ -149,25 +143,7 @@ body.preloading {
   height: 100vh !important;
 }
 
-/* ─── GPU Layer Promotion ────────────────────────────────────────
-   Rules are split by WHICH CSS property is animated so the browser
-   can allocate the narrowest possible compositing budget per layer.
-
-   Strategy:
-   • transform + opacity  → promotes to compositor thread (cheap)
-   • clip-path alone      → rasterises on main thread but avoids
-                            triggering layout; still worth isolating
-   • will-change: auto    → browser decides; used for sections that
-                            are currently hidden and shouldn't hold
-                            a permanent GPU layer
-
-   Do NOT add will-change to every element — excess promoted layers
-   exhaust GPU memory on low-end mobile devices.
-──────────────────────────────────────────────────────────────── */
-
-/* Sections animated by GSAP yPercent / scale / opacity.
-   transform3d(0,0,0) forces an immediate compositing layer so the
-   first animation frame doesn't cause a layer-promotion reflow. */
+/* ─── GPU Layer Promotion ──────────────────────────────────────── */
 .hero,
 .section-1,
 .section-2,
@@ -179,16 +155,12 @@ body.preloading {
   backface-visibility:  hidden;
 }
 
-/* section-9: only scale + opacity animated */
 .section-9 {
   will-change:          transform, opacity;
   transform:            translate3d(0, 0, 0);
   backface-visibility:  hidden;
 }
 
-/* Sections animated by clip-path only.
-   clip-path causes a repaint but not a layout reflow; keeping it
-   isolated to its own layer avoids invalidating sibling layers. */
 .section-3,
 .section-6,
 .section-8,
@@ -198,7 +170,6 @@ body.preloading {
   backface-visibility:  hidden;
 }
 
-/* S8 panels — clip-path only, each is their own layer */
 .s8-panel-left,
 .s8-panel-right {
   will-change:          clip-path;
@@ -206,7 +177,6 @@ body.preloading {
   backface-visibility:  hidden;
 }
 
-/* Canvas / video — always their own GPU layer */
 video,
 canvas {
   will-change:         transform;
@@ -214,8 +184,6 @@ canvas {
   backface-visibility: hidden;
 }
 
-/* First-level children of heavily-animated sections get their own
-   sublayers so parent transforms don't force child repaints. */
 .section-1 > *,
 .section-2 > *,
 .section-7 > * {
@@ -223,7 +191,6 @@ canvas {
   backface-visibility: hidden;
 }
 
-/* Background parallax images — transform only */
 .s1-bg,
 .s2-bg,
 .s4-bg-img,
@@ -254,12 +221,18 @@ canvas {
 }
 
 /* ─── Pin wrapper height ─────────────────────────────────────────
-   Driven by --app-height (synced to visualViewport.height in
-   SmoothScroll). This replaces the old JS-set inline height /
-   100svh approach so GSAP's pin spacer is always measured against
-   the real, keyboard-aware viewport. ──────────────────────────── */
+   --app-height is set once on load by SmoothScroll.tsx using
+   document.documentElement.clientHeight.
+
+   NO max-height — GSAP's pin-spacer sets the outer wrapper to the
+   full scroll distance (17000px+). max-height would cap the visible
+   pinned element and create a gap at the bottom.
+   height + min-height is all that's needed to give GSAP the correct
+   initial measurement before it takes over.
+──────────────────────────────────────────────────────────────── */
 .pin-all {
-  height: var(--app-height);
+  height:     var(--app-height);
+  min-height: var(--app-height);
 }
 
 .scroll-container {
@@ -342,7 +315,6 @@ body.preloading .scroll-container {
   padding-block:  85px;
 }
 
-/* Tablet */
 @media (max-width: 1025px) {
   .section-continer {
     padding-inline: 30px;
@@ -350,7 +322,6 @@ body.preloading .scroll-container {
   }
 }
 
-/* Mobile */
 @media (max-width: 767px) {
   .section-continer {
     padding-inline: 20px;
@@ -374,7 +345,7 @@ body.preloading .scroll-container {
 /* ─── Responsive h2 & p ──────────────────────────────────────── */
 h2 {
   font-size:   72px;
-  line-height: 1.15; /* was 1 — clips descenders on Cormorant/Canela */
+  line-height: 1.15;
 }
 
 p {
@@ -382,35 +353,27 @@ p {
   line-height: var(--leading-body);
 }
 
-/* Tablet */
 @media (max-width: 1024px) {
   h2 { font-size: 50px; }
   p  { font-size: 16px; }
 }
 
-/* Mobile */
 @media (max-width: 767px) {
   h2 { font-size: 32px; }
   p  { font-size: 12px; }
 }
 
-/* ─── Reduced motion ─────────────────────────────────────────────
-   Respect the OS accessibility setting. Disable all GSAP-driven
-   transforms so users who are sensitive to motion see a static page.
-   GSAP reads this via ScrollTrigger.normalizeScroll and the
-   prefersReducedMotion media query automatically.
-──────────────────────────────────────────────────────────────── */
+/* ─── Reduced motion ─────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation-duration:   0.01ms !important;
+    animation-duration:        0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration:  0.01ms !important;
-    scroll-behavior:      auto !important;
+    transition-duration:       0.01ms !important;
+    scroll-behavior:           auto !important;
   }
 
-  /* Make all sections immediately visible so content is accessible */
   .hero,
   .section-1,
   .section-2,

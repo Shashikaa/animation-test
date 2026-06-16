@@ -89,14 +89,14 @@ export default function SectionFour() {
       >
         {/* Title */}
         <div style={{ display: "flex", justifyContent: "flex-end", flexShrink: 0 }}>
-          <h2 className="font-display s4-title text-[#F4EEDF] text-right !mt-22 md:!mt-16">
+          <h2 className="font-display  text-[#F4EEDF] text-right !mt-22 md:!mt-16">
             Making Memories.
           </h2>
         </div>
 
         {/* Para */}
         <div style={{ marginTop: 32, maxWidth: 480, flexShrink: 0 }}>
-          <p className="font-body s4-para text-[#F4EEDF] md:!mt-8">
+          <p className="font-body  text-[#F4EEDF] md:!mt-8">
             At Grand Pools, we build more than just swimming pools — we create
             spaces where families gather, friends connect, and lasting memories
             are made. With expert craftsmanship and a passion for innovation,

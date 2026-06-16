@@ -53,9 +53,6 @@ export default function HomeMobile() {
       const TRANSITION = 2.0;
       const EASE       = "power2.inOut";
       const PAUSE      = 0.8;
-
-      // 0.35 tracks finger/momentum input closely (with Lenis lerp:0.1
-      // doing the underlying smoothing) without feeling jittery.
       const scrubValue = 0.35;
 
       const footerEl = scopeRef.current?.querySelector<HTMLElement>(".footer");
@@ -143,12 +140,14 @@ export default function HomeMobile() {
           requestAnimationFrame(() => {
             ScrollTrigger.refresh();
 
-            const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
-            if (vv) {
-              const onVVResize = () => ScrollTrigger.refresh();
-              vv.addEventListener("resize", onVVResize);
-              vvCleanup = () => vv.removeEventListener("resize", onVVResize);
-            }
+            // Only refresh ScrollTrigger on true orientation change
+            // (portrait ↔ landscape). visualViewport.resize and
+            // window.resize both fire when the browser bar toggles —
+            // responding to those causes the pin to jump. screen.orientation
+            // only fires on real rotations.
+            const onOrientationChange = () => ScrollTrigger.refresh(true);
+            screen.orientation?.addEventListener("change", onOrientationChange);
+            vvCleanup = () => screen.orientation?.removeEventListener("change", onOrientationChange);
 
             gsap.set(".s7-mob-bg", { scale: 1.15, transformOrigin: "center center" });
             gsap.set(".s8-mob-bg", { scale: 1.15, transformOrigin: "center center" });

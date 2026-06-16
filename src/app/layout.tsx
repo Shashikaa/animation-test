@@ -60,6 +60,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       data-preloading=""
       className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased`}
     >
+      <head>
+        {/* Set --app-height before any JS or CSS paint. Runs synchronously
+            so GSAP/Lenis never see a stale value. Uses innerHeight which
+            is the viewport height before any scroll expansion. */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            var h = window.innerHeight;
+            document.documentElement.style.setProperty('--app-height', h + 'px');
+          })();
+        `}} />
+      </head>
       <body className="flex flex-col">
         <SiteProvider>
           <SmoothScroll>

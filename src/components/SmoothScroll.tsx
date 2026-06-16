@@ -8,9 +8,6 @@ import { usePathname } from "next/navigation";
 import { useSite } from "../app/context/SiteContext";
 import { setScrollVelocity } from "../app/utils/scrollVelocity";
 
-// Guard: this module is imported by the root layout, which is server-
-// rendered for every route (including /_not-found). gsap.registerPlugin
-// touches `document` immediately, so it must never run on the server.
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
@@ -21,28 +18,20 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
   const { lenisRef, preloaderDone, setOnScrollReady } = useSite();
   const pathname = usePathname();
 
-  // ── Sync --app-height with the real visual viewport ─────────────────────
-  // Drives .pin-all (and any other element opting into --app-height) so
-  // GSAP's pin spacer is always sized against the real, keyboard-aware
-  // viewport instead of 100vh/100svh, which can misreport on mobile.
+  // ── Keep --app-height in sync with orientation changes ───────────────────
+  // Initial value is set by the inline <script> in layout.tsx before React
+  // hydration, so it's always the real viewport height. Here we only
+  // re-measure on true portrait ↔ landscape flips.
   useEffect(() => {
     const setAppHeight = () => {
-      const vh = window.visualViewport
-        ? window.visualViewport.height
-        : window.innerHeight;
-
-      document.documentElement.style.setProperty("--app-height", `${vh}px`);
+      document.documentElement.style.setProperty(
+        "--app-height",
+        `${window.innerHeight}px`
+      );
     };
 
-    setAppHeight();
-
-    window.visualViewport?.addEventListener("resize", setAppHeight);
-    window.addEventListener("resize", setAppHeight);
-
-    return () => {
-      window.visualViewport?.removeEventListener("resize", setAppHeight);
-      window.removeEventListener("resize", setAppHeight);
-    };
+    screen.orientation?.addEventListener("change", setAppHeight);
+    return () => screen.orientation?.removeEventListener("change", setAppHeight);
   }, []);
 
   // ── Create Lenis once ───────────────────────────────────────────────────
@@ -108,7 +97,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
       const scroll = lenis.scroll;
       const limit  = lenis.limit;
-      const trackH = visualViewport?.height ?? window.innerHeight;
+      const trackH = window.innerHeight;
       const thumbH = Math.max((trackH / (limit + trackH)) * trackH, 40);
       const maxTop = trackH - thumbH;
       const top    = limit > 0 ? (scroll / limit) * maxTop : 0;
