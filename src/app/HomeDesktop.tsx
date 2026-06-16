@@ -333,7 +333,7 @@ export default function HomeDesktop() {
 
   return (
     <div ref={scopeRef}>
-      <div className="pin-all relative overflow-hidden">
+      <div className="pin-all relative h-screen overflow-hidden">
 
         <div className="section-1 absolute inset-0 z-20">
           <SectionOne />

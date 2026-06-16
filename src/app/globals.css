@@ -24,6 +24,10 @@
   --border:     #e5e5e5;
   --accent:     #171717;
 
+  /* Real visual-viewport height, set once on load by SmoothScroll.
+     Falls back to 100svh until JS runs (SSR / first paint).
+     100svh = smallest viewport (bar visible), which prevents any
+     initial flash of wrong height before JS fires. */
   --app-height: 100svh;
 
   --text-display: 40px;
@@ -221,18 +225,19 @@ canvas {
 }
 
 /* ─── Pin wrapper height ─────────────────────────────────────────
-   --app-height is set once on load by SmoothScroll.tsx using
-   document.documentElement.clientHeight.
+   --app-height is set ONCE on load by SmoothScroll.tsx using
+   visualViewport.height (touch) or innerHeight (desktop).
+   It is intentionally never updated when the mobile address bar
+   shows/hides — that would cause the pinned layout to jump.
+   Only a real orientation flip re-measures.
 
-   NO max-height — GSAP's pin-spacer sets the outer wrapper to the
-   full scroll distance (17000px+). max-height would cap the visible
-   pinned element and create a gap at the bottom.
-   height + min-height is all that's needed to give GSAP the correct
-   initial measurement before it takes over.
+   100svh fallback = "small viewport" (bar visible), safe for SSR.
+   NO max-height — GSAP pin-spacer sets outer height to 17000px+
+   and max-height would cap the visible pinned element.
 ──────────────────────────────────────────────────────────────── */
 .pin-all {
-  height:     var(--app-height);
-  min-height: var(--app-height);
+  height:     var(--app-height, 100svh);
+  min-height: var(--app-height, 100svh);
 }
 
 .scroll-container {

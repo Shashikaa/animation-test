@@ -18,50 +18,51 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
   const { lenisRef, preloaderDone, setOnScrollReady } = useSite();
   const pathname = usePathname();
 
-  // ── Keep --app-height in sync with orientation changes ───────────────────
-  // Initial value is set by the inline <script> in layout.tsx before React
-  // hydration, so it's always the real viewport height. Here we only
-  // re-measure on true portrait ↔ landscape flips.
+  // ── Lock --app-height ONCE on mount, never update on address bar toggle ──
+  // On real mobile touch devices: visualViewport.height gives the true
+  // usable height below the browser chrome at the moment of load.
+  // We capture it once and freeze it — the address bar showing/hiding
+  // must NOT change this value or GSAP's pin measurement breaks.
+  // Only a real orientation change (portrait↔landscape) re-measures.
   useEffect(() => {
-    const setAppHeight = () => {
-      document.documentElement.style.setProperty(
-        "--app-height",
-        `${window.innerHeight}px`
-      );
+    const lockHeight = () => {
+      const isTouch = ScrollTrigger.isTouch > 0;
+      const h = (isTouch && window.visualViewport)
+        ? window.visualViewport.height
+        : window.innerHeight;
+      document.documentElement.style.setProperty("--app-height", `${h}px`);
     };
 
-    screen.orientation?.addEventListener("change", setAppHeight);
-    return () => screen.orientation?.removeEventListener("change", setAppHeight);
+    // Lock once immediately
+    lockHeight();
+
+    // Only re-lock on real orientation flip, NOT on visualViewport resize
+    // (which fires every time the address bar animates)
+    screen.orientation?.addEventListener("change", lockHeight);
+    return () => screen.orientation?.removeEventListener("change", lockHeight);
   }, []);
 
-  // ── Create Lenis once ───────────────────────────────────────────────────
+  // ── Create Lenis once ─────────────────────────────────────────────────────
   useEffect(() => {
     const isTouch = ScrollTrigger.isTouch > 0;
 
     const lenis = new Lenis({
-      lerp: isTouch ? 0.1 : 0.085,
-
+      lerp:               isTouch ? 0.1 : 0.085,
       orientation:        "vertical",
       gestureOrientation: "vertical",
       smoothWheel:        true,
-
-      wheelMultiplier: isTouch ? 1.0 : 0.85,
-
-      syncTouch:       false,
-      touchMultiplier: isTouch ? 1.5 : 1.5,
-
-      infinite: false,
-      autoRaf:  false,
+      wheelMultiplier:    isTouch ? 1.0 : 0.85,
+      syncTouch:          false,
+      touchMultiplier:    1.5,
+      infinite:           false,
+      autoRaf:            false,
       prevent: (node: Element) => node.closest("[data-lenis-prevent]") !== null,
     });
 
     lenisRef.current = lenis;
     lenis.stop();
 
-    const tick = (time: number) => {
-      lenis.raf(time * 1000);
-    };
-
+    const tick = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
 
@@ -70,31 +71,21 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
       setScrollVelocity(Math.abs(e.velocity ?? 0));
       window.dispatchEvent(new Event("lenis-scroll"));
     };
-
     lenis.on("scroll", onScroll);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState !== "visible") return;
-
       document.documentElement.style.pointerEvents = "";
       document.body.style.pointerEvents            = "";
-
       gsap.ticker.wake();
-
-      if (lenisRef.current) {
-        lenisRef.current.start();
-      }
-
+      if (lenisRef.current) lenisRef.current.start();
       ScrollTrigger.update();
     };
-
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     let thumbVisible = false;
-
     const updateThumb = () => {
       if (isTouch || !thumbRef.current) return;
-
       const scroll = lenis.scroll;
       const limit  = lenis.limit;
       const trackH = window.innerHeight;
@@ -109,14 +100,12 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
         thumbVisible = true;
         thumbRef.current.style.opacity = "1";
       }
-
       clearTimeout(scrollTimerRef.current);
       scrollTimerRef.current = setTimeout(() => {
         thumbVisible = false;
         if (thumbRef.current) thumbRef.current.style.opacity = "0";
       }, 800);
     };
-
     lenis.on("scroll", updateThumb);
 
     return () => {
@@ -131,38 +120,28 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     };
   }, [lenisRef]);
 
-  // ── Register the onScrollReady callback ─────────────────────────────────
+  // ── Register the onScrollReady callback ──────────────────────────────────
   useEffect(() => {
     setOnScrollReady(() => {
-      if (lenisRef.current) {
-        lenisRef.current.start();
-      }
+      if (lenisRef.current) lenisRef.current.start();
     });
-
-    return () => {
-      setOnScrollReady(() => {});
-    };
+    return () => { setOnScrollReady(() => {}); };
   }, [setOnScrollReady, lenisRef]);
 
-  // ── Re-enable scroll on every route change ──────────────────────────────
+  // ── Re-enable scroll on every route change ────────────────────────────────
   useEffect(() => {
     if (!preloaderDone) return;
-
     const id = setTimeout(() => {
       if (!lenisRef.current) return;
-
       lenisRef.current.start();
       ScrollTrigger.refresh();
     }, 50);
-
     return () => clearTimeout(id);
   }, [pathname, preloaderDone, lenisRef]);
 
   return (
     <>
       {children}
-
-      {/* Custom scrollbar — desktop only */}
       <div
         style={{
           position:      "fixed",
