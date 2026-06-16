@@ -29,7 +29,7 @@ const vvHeight = () =>
     : null) ?? window.innerHeight;
 
 export default function HomeMobile() {
-  const { preloaderDone, lenisRef, onScrollReady } = useSite();
+ const { preloaderDone, smootherRef, onScrollReady } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -181,10 +181,10 @@ export default function HomeMobile() {
                   // After every GSAP refresh, strip the max-height it re-applies
                   if (pinEl) pinEl.style.removeProperty("max-height");
                 },
-                onLeave: () => {
-                  lenisRef.current?.stop();
-                  requestAnimationFrame(() => lenisRef.current?.start());
-                },
+    onLeave: () => {
+  smootherRef.current?.paused(true);
+  requestAnimationFrame(() => smootherRef.current?.paused(false));
+},
               },
             });
 

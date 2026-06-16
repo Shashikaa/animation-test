@@ -11,15 +11,15 @@ const SOCIAL_LINKS = [
 ];
 
 export default function Footer() {
-  const { lenisRef } = useSite();
+const { smootherRef } = useSite();
 
-  const scrollToTop = () => {
-    if (lenisRef?.current) {
-      lenisRef.current.scrollTo(0, { duration: 1.5 });
-    } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
+const scrollToTop = () => {
+  if (smootherRef?.current) {
+    smootherRef.current.scrollTo(0, true); // true = smooth
+  } else {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+};
 
   return (
     <footer

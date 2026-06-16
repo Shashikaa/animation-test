@@ -61,7 +61,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: 0a0a0a;
+    --background: #0a0a0a;
     --foreground: #ededed;
     --muted:      #888888;
     --muted-bg:   #1a1a1a;
@@ -73,36 +73,24 @@
 /* ─── Reset & Base ───────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-/* Required for safe-area env() to work on iOS */
-html {
-  /* Extend background into the safe area (notch, home bar) */
-  background-color: #000;
-}
-
-html, body {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
+  margin:     0;
+  padding:    0;
 }
 
 html {
-  scrollbar-gutter: stable;
-  color-scheme: light dark;
-  -webkit-font-smoothing: antialiased;
+  background-color:        #000;
+  scrollbar-gutter:        stable;
+  color-scheme:            light dark;
+  -webkit-font-smoothing:  antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  scroll-behavior: auto !important;
-  height: auto !important;
+  text-rendering:          optimizeLegibility;
+  scroll-behavior:         auto !important;
+  height:                  auto;
+  scrollbar-width:         none;
+  -ms-overflow-style:      none;
 }
+
+html::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
 
 body {
   background:   var(--background);
@@ -110,75 +98,68 @@ body {
   font-family:  var(--font-body);
   font-size:    var(--text-body);
   line-height:  var(--leading-body);
-  height:       auto !important;
-  min-height:   unset !important;
+  height:       auto;
+  overflow-x:   hidden;
+  scrollbar-width:    none;
+  -ms-overflow-style: none;
 }
+
+body::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
 
 .site-root {
   overflow-x: hidden;
   position:   relative;
 }
 
-/* ─── Lenis ──────────────────────────────────────────────────── */
-html.lenis,
-html.lenis body {
-  height: auto;
+/* ─── ScrollSmoother ─────────────────────────────────────────── */
+#smooth-wrapper {
+  overflow: visible;
+  width:    100%;
 }
 
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
-}
-
-.lenis.lenis-smooth [data-lenis-prevent] {
-  overscroll-behavior: contain;
-}
-
-.lenis.lenis-stopped {
-  overflow: hidden;
-}
-
-.lenis.lenis-scrolling iframe {
-  pointer-events: none;
+#smooth-content {
+  overflow: visible;
+  width:    100%;
 }
 
 /* ─── Preloader lock ─────────────────────────────────────────── */
 body.preloading {
   overflow: hidden !important;
-  height: 100vh !important;
+  height:   100vh !important;
 }
 
-/* ─── GPU Layer Promotion ──────────────────────────────────────── */
+/* ─── GPU Layer Promotion ────────────────────────────────────── */
 .hero,
 .section-1,
 .section-2,
 .section-4,
 .section-5,
 .section-7 {
-  will-change:          transform, opacity;
-  transform:            translate3d(0, 0, 0);
-  backface-visibility:  hidden;
+  will-change:         transform, opacity;
+  transform:           translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 .section-9 {
-  will-change:          transform, opacity;
-  transform:            translate3d(0, 0, 0);
-  backface-visibility:  hidden;
+  will-change:         transform, opacity;
+  transform:           translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 .section-3,
 .section-6,
 .section-8,
 .section-10 {
-  will-change:          transform, clip-path;
-  transform:            translate3d(0, 0, 0);
-  backface-visibility:  hidden;
+  will-change:         transform, clip-path;
+  transform:           translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 .s8-panel-left,
 .s8-panel-right {
-  will-change:          clip-path;
-  transform:            translate3d(0, 0, 0);
-  backface-visibility:  hidden;
+  will-change:         clip-path;
+  transform:           translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 video,
@@ -206,9 +187,9 @@ canvas {
 .s10-bg-img,
 .s10-static-bg,
 .hero-bg {
-  will-change:          transform;
-  transform:            translate3d(0, 0, 0);
-  backface-visibility:  hidden;
+  will-change:         transform;
+  transform:           translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 /* ─── Sections Layout ────────────────────────────────────────── */
@@ -219,29 +200,18 @@ canvas {
 .section-4,
 .section-5 {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  inset:    0;
+  width:    100%;
+  height:   100%;
 }
 
-/* ─── Pin wrapper height ─────────────────────────────────────────
-   `lvh` = Large Viewport Height: the viewport size with browser
-   chrome (address bar) fully retracted. Unlike `dvh`/innerHeight,
-   this value is fixed by spec and never changes mid-scroll as the
-   address bar animates — so GSAP's pin always captures the right
-   number, regardless of when the browser chrome happens to be in
-   its show/hide transition.
-
-   max-height: none !important overrides the inline max-height GSAP
-   sets on this element when it pins it.
-──────────────────────────────────────────────────────────────── */
+/* ─── Pin wrapper height ─────────────────────────────────────── */
 .pin-all {
   height:     100lvh;
   min-height: 100lvh;
   max-height: none !important;
 }
 
-/* fallback only for browsers without lvh support */
 @supports not (height: 100lvh) {
   .pin-all {
     height:     100vh;
@@ -255,8 +225,8 @@ canvas {
 
 .scroll-container {
   position: relative;
-  width: 100%;
-  height: 100vh;
+  width:    100%;
+  height:   100vh;
   overflow: hidden;
 }
 
@@ -326,9 +296,9 @@ body.preloading .scroll-container {
 .stack   { display: flex; flex-direction: column; }
 
 .section-continer {
-  width: 100%;
-  max-width: 1920px;
-  margin: 0 auto;
+  width:          100%;
+  max-width:      1920px;
+  margin:         0 auto;
   padding-inline: 65px;
   padding-block:  85px;
 }
@@ -412,4 +382,3 @@ p {
     will-change: auto !important;
   }
 }
-

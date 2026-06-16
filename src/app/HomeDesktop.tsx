@@ -31,7 +31,7 @@ const vvHeight = () =>
     : null) ?? window.innerHeight;
 
 export default function HomeDesktop() {
-  const { preloaderDone, lenisRef, onScrollReady } = useSite();
+ const { preloaderDone, smootherRef, onScrollReady } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -155,10 +155,10 @@ export default function HomeDesktop() {
               preventOverlaps:     true,
               fastScrollEnd:       true,
               invalidateOnRefresh: true,
-              onLeave: () => {
-                lenisRef.current?.stop();
-                requestAnimationFrame(() => lenisRef.current?.start());
-              },
+onLeave: () => {
+  smootherRef.current?.paused(true);
+  requestAnimationFrame(() => smootherRef.current?.paused(false));
+},
             },
           });
 
