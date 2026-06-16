@@ -6,15 +6,15 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSite } from "./context/SiteContext";
 import dynamic from "next/dynamic";
 
-import Hero        from "../components/Home/Hero";
-import SectionOne  from "../components/Home/SectionOne";
-import SectionTwo  from "../components/Home/SectionTwo";
+import Hero         from "../components/Home/Hero";
+import SectionOne   from "../components/Home/SectionOne";
+import SectionTwo   from "../components/Home/SectionTwo";
 import SectionThree from "../components/Home/SectionThree";
-import SectionFour from "../components/Home/SectionFour";
-import SectionFive from "../components/Home/SectionFive";
-import SectionSix  from "../components/Home/SectionSix";
-import SectionCTA  from "../components/SectionCTA";
-import Footer      from "../components/Footer";
+import SectionFour  from "../components/Home/SectionFour";
+import SectionFive  from "../components/Home/SectionFive";
+import SectionSix   from "../components/Home/SectionSix";
+import SectionCTA   from "../components/SectionCTA";
+import Footer       from "../components/Footer";
 
 const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { ssr: false });
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
@@ -29,7 +29,7 @@ const vvHeight = () =>
     : null) ?? window.innerHeight;
 
 export default function HomeMobile() {
- const { preloaderDone, smootherRef, onScrollReady } = useSite();
+  const { preloaderDone, smootherRef, onScrollReady } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -139,10 +139,6 @@ export default function HomeMobile() {
         waitForMobBgs(() => {
           requestAnimationFrame(() => {
 
-            // .pin-all's height/min-height come from `100lvh` in globals.css
-            // now — no manual pixel measurement needed. We only need a
-            // reference to it so we can strip the inline max-height GSAP
-            // re-applies on every refresh (see onRefresh below).
             const pinEl = document.querySelector(".pin-all") as HTMLElement;
 
             ScrollTrigger.refresh(true);
@@ -178,47 +174,50 @@ export default function HomeMobile() {
                 fastScrollEnd:       true,
                 invalidateOnRefresh: true,
                 onRefresh: () => {
-                  // After every GSAP refresh, strip the max-height it re-applies
                   if (pinEl) pinEl.style.removeProperty("max-height");
                 },
-    onLeave: () => {
-  smootherRef.current?.paused(true);
-  requestAnimationFrame(() => smootherRef.current?.paused(false));
-},
+                onLeave: () => {
+                  smootherRef.current?.paused(true);
+                  requestAnimationFrame(() => smootherRef.current?.paused(false));
+                },
               },
             });
 
             tl
+              // ── Hero → Section 1 ──────────────────────────────────
               .to(".section-1", { yPercent: 0,   duration: 2.0, ease: "none" })
               .to(".hero-bg",   { yPercent: -20, duration: 2.0, ease: "none" }, "<")
               .to(".s1-bg",     { yPercent: 0, scale: 1, duration: 1.8, ease: "none" }, "<")
               .to(".s1-card",   { yPercent: 0, opacity: 1, duration: 1.8, ease: "power2.out" }, 0.3)
               .to({}, { duration: PAUSE })
 
+              // ── Section 1 → 2 ─────────────────────────────────────
               .set(".section-1", { zIndex: 20 })
               .to(".section-2", { clipPath: "inset(0% 0% 0% 0%)", duration: TRANSITION, ease: EASE })
-              .to(".section-1", { scale: 1.05,                     duration: TRANSITION, ease: EASE }, "<")
-              .to(".s2-bg",     { yPercent: 0, scale: 1,           duration: TRANSITION, ease: "power2.out" }, "<")
+              .to(".s2-bg",     { yPercent: 0, scale: 1, duration: TRANSITION, ease: "power2.out" }, "<")
               .to({}, { duration: PAUSE })
 
+              // ── Section 2 → 3 ─────────────────────────────────────
               .set(".section-3", { visibility: "visible" })
               .to(".section-3", { yPercent: 0,  duration: TRANSITION, ease: EASE })
-              .to(".section-2", { scale: 1.05,  duration: TRANSITION, ease: EASE }, "<")
               .to({}, { duration: PAUSE })
 
+              // ── Section 3 → 4 ─────────────────────────────────────
               .to(".section-4",  { yPercent: 0,    duration: TRANSITION, ease: EASE })
               .to(".section-3",  { yPercent: -100, duration: TRANSITION, ease: EASE }, "-=1.2")
-              .to(".s4-img-mob", { y: -60,          duration: TRANSITION, ease: "none" }, "<")
+              .to(".s4-img-mob", { y: -60,         duration: TRANSITION, ease: "none" }, "<")
               .to({}, { duration: PAUSE })
 
+              // ── Section 4 → 5 ─────────────────────────────────────
               .to(".section-5", { clipPath: "inset(0% 0% 0% 0%)", duration: TRANSITION, ease: EASE })
-              .to(".section-4", { scale: 1.05,                     duration: TRANSITION, ease: EASE }, "<")
               .to({}, { duration: PAUSE })
 
-              .to(".section-6", { yPercent: 0,  duration: TRANSITION, ease: EASE })
+              // ── Section 5 → 6 ─────────────────────────────────────
+              .to(".section-6", { yPercent: 0, duration: TRANSITION, ease: EASE })
               .to(".section-5", { scale: 1.0,  duration: TRANSITION, ease: EASE }, "<")
               .to({}, { duration: 0.6 })
 
+              // ── Section 6 → 10 ────────────────────────────────────
               .set(".section-10", { visibility: "visible" })
               .to(".section-6",     { yPercent: -100, duration: TRANSITION, ease: EASE })
               .to(".s10-static-bg", { yPercent: 0,    duration: TRANSITION, ease: "power2.out" }, "<")
@@ -231,17 +230,11 @@ export default function HomeMobile() {
               .to(".s10-title",      { opacity: 0, y: -60, duration: 1.5, ease: "none" })
               .to(".s10-title-sub",  { opacity: 0, y: -40, duration: 1.5, ease: "none" }, "<")
               .to(".s10-para-top",   { opacity: 0, y: -50, duration: 1.5, ease: "none" }, "<")
-              // Video rises from off-screen up to its centred resting spot.
-              .to(".s10-video-wrap", { y: 40,               duration: 2.0, ease: "none" }, "<")
-              // Mark the instant it reaches centre so the exit move below can
-              // pick up from exactly there — no dead pause, no freeze.
+              .to(".s10-video-wrap", { y: 40,              duration: 2.0, ease: "none" }, "<")
               .addLabel("s10VideoCentered")
               .to({}, { duration: 0.3 })
-              .to(".s10-card",       { clipPath: "inset(0% 0% 0% 0%)", duration: 1.6, ease: "power2.out" })
-              .to(".s10-card-body",  { clipPath: "inset(0% 0% 0% 0%)", duration: 1.4, ease: "power2.out" }, "<+0.2")
-              // Continues straight on from the centred position (same instant
-              // the rise-to-centre tween ends) into the exit move — the video
-              // never stops moving, it just keeps scrolling on up and away.
+              .to(".s10-card",      { clipPath: "inset(0% 0% 0% 0%)", duration: 1.6, ease: "power2.out" })
+              .to(".s10-card-body", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.4, ease: "power2.out" }, "<+0.2")
               .to(".s10-video-wrap", {
                 y: () => {
                   const el = document.querySelector(".s10-video-wrap") as HTMLElement;
@@ -250,9 +243,6 @@ export default function HomeMobile() {
                 },
                 duration: 1.8, ease: "none",
               }, "s10VideoCentered")
-              // ClipPath wipe kicks in a beat after it's moving again, so it
-              // reads as "scrolling away and getting swallowed" rather than a
-              // hard cut.
               .to(".s10-video-wrap", { clipPath: "inset(0% 0% 100% 0%)", duration: 1.2, ease: "none" }, "<+0.2")
               .set(".s10-video-wrap", { visibility: "hidden" })
               .to(".s10-card", {
@@ -267,15 +257,16 @@ export default function HomeMobile() {
               .to(".s10-bg-img",    { y: "0%", duration: 2.5, ease: "none" }, "<")
               .to({}, { duration: 0.6 })
 
+              // ── Section 7 + 8 slide in ────────────────────────────
               .set(".section-8", { visibility: "visible" })
               .to(".section-7",  { yPercent: 0, duration: TRANSITION, ease: "power3.out" })
               .to(".section-8",  { yPercent: 0, duration: TRANSITION, ease: "power3.out" }, "<")
-              .to(".section-10", { scale: 1.05, duration: TRANSITION, ease: EASE }, "<")
               .to(".s7-bg-img",  { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
               .to(".s8-bg-img",  { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
               .to(".s7-mob-bg",  { scale: 1,    duration: TRANSITION, ease: "power2.out" }, "<")
               .to({}, { duration: PAUSE })
 
+              // ── Section 7 exits, 8 stays ──────────────────────────
               .to(".section-7", { yPercent: -100, duration: TRANSITION, ease: EASE })
               .to(".s8-mob-bg", { scale: 1,       duration: TRANSITION, ease: "power2.out" }, "<")
               .set(".section-8", { clipPath: "inset(0% 0% 0% 0%)" })
@@ -283,26 +274,26 @@ export default function HomeMobile() {
 
               .set(".section-7", { visibility: "hidden" })
 
+              // ── Section 8 → 9 ─────────────────────────────────────
               .set(".section-9", { visibility: "visible" })
               .to(".section-8", { clipPath: "inset(0% 0% 100% 0%)", duration: TRANSITION, ease: EASE })
-              .to(".s9-bg-img", { yPercent: 0,  duration: TRANSITION, ease: "power2.out" }, "<")
-              .to(".s9-title",  { opacity: 1,   duration: 1.2, ease: "power2.out" }, "<+1.0")
-              .to(".s9-para",   { opacity: 1,   duration: 1.2, ease: "power3.out" }, "<")
+              .to(".s9-bg-img", { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
+              .to(".s9-title",  { opacity: 1,  duration: 1.2, ease: "power2.out" }, "<+1.0")
+              .to(".s9-para",   { opacity: 1,  duration: 1.2, ease: "power3.out" }, "<")
               .to({}, { duration: PAUSE })
 
+              // ── Section 9 → CTA ───────────────────────────────────
               .set(".section-cta", { visibility: "visible" })
               .to(".section-cta", { yPercent: 0,   duration: 3.5, ease: "power3.out" })
-              .to(".section-9",   { scale: 1.05,   duration: 3.5, ease: EASE }, "<")
               .to(".s9-bg-img",   { yPercent: -10, duration: 3.5, ease: "none" }, "<")
               .to({}, { duration: 0.5 })
 
+              // ── Footer ────────────────────────────────────────────
               .set(".footer", { visibility: "visible" })
               .to(".footer",    { y: 0,          duration: 2.5, ease: "power3.out" })
-              .to(".section-9", { scale: 1.05,   duration: 2.5, ease: EASE }, "<")
               .to(".s9-bg-img", { yPercent: -20, duration: 2.5, ease: "none" }, "<")
               .to({}, { duration: 1.0 });
 
-            // Strip max-height immediately after pin is created
             requestAnimationFrame(() => {
               if (pinEl) pinEl.style.removeProperty("max-height");
             });
@@ -332,7 +323,6 @@ export default function HomeMobile() {
   return (
     <div ref={scopeRef}>
       <div className="pin-all relative overflow-hidden">
-
         <div className="section-1 absolute inset-0 z-[90]">
           <SectionOne />
         </div>

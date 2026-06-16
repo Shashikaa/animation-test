@@ -50,18 +50,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       data-preloading={isHome ? "" : undefined}
       className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased`}
     >
-      <body className="flex flex-col">
-        <SiteProvider>
-          <SmoothScroll>
-            <div className="site-root flex flex-col flex-1 overflow-x-hidden">
-              <HeaderWrapper />
-              <NavMenuWrapper />
-              {isHome && <PreloaderWrapper />}
-              {children}
-            </div>
-          </SmoothScroll>
-        </SiteProvider>
-      </body>
+<body className="flex flex-col">
+  <SiteProvider>
+    <HeaderWrapper />
+    <NavMenuWrapper />
+
+    <SmoothScroll>
+      <div className="site-root flex flex-col flex-1 overflow-x-hidden">
+        {children}
+      </div>
+    </SmoothScroll>
+
+    {/* Preloader last = highest natural stacking + z-9999 */}
+    {isHome && <PreloaderWrapper />}
+  </SiteProvider>
+</body>
     </html>
   );
 }

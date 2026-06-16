@@ -259,7 +259,7 @@ export default function SectionTen() {
            */
           .s10-card {
             bottom:         0;
-            left:           40px;
+            left:           0px;
             top:            auto;
             transform:      none;
             width:          70%;

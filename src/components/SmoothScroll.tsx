@@ -25,7 +25,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     const smoother = ScrollSmoother.create({
       wrapper:            "#smooth-wrapper",
       content:            "#smooth-content",
-      smooth:             1.2,
+      smooth:             2.5,
       smoothTouch:        false,
       effects:            true,
       normalizeScroll:    false,
@@ -112,40 +112,41 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     return () => clearTimeout(id);
   }, [pathname, preloaderDone, smootherRef]);
 
-  return (
-    <>
-      <div id="smooth-wrapper">
-        <div id="smooth-content">
-          {children}
-        </div>
+return (
+  <>
+    <div id="smooth-wrapper">
+      <div id="smooth-content">
+        {children}
       </div>
+    </div>
 
+    {/* Custom scrollbar thumb */}
+    <div
+      style={{
+        position:      "fixed",
+        top:           0,
+        right:         0,
+        width:         "6px",
+        height:        "100lvh",
+        zIndex:        99999,
+        pointerEvents: "none",
+      }}
+    >
       <div
+        ref={thumbRef}
         style={{
-          position:      "fixed",
-          top:           0,
-          right:         0,
-          width:         "6px",
-          height:        "100lvh",
-          zIndex:        99999,
-          pointerEvents: "none",
+          position:     "absolute",
+          top:          0,
+          right:        "2px",
+          width:        "4px",
+          background:   "rgba(255,255,255,0.4)",
+          borderRadius: "999px",
+          opacity:      0,
+          transition:   "opacity 0.3s ease",
+          willChange:   "transform",
         }}
-      >
-        <div
-          ref={thumbRef}
-          style={{
-            position:     "absolute",
-            top:          0,
-            right:        "2px",
-            width:        "4px",
-            background:   "rgba(255,255,255,0.4)",
-            borderRadius: "999px",
-            opacity:      0,
-            transition:   "opacity 0.3s ease",
-            willChange:   "transform",
-          }}
-        />
-      </div>
-    </>
-  );
+      />
+    </div>
+  </>
+);
 }
