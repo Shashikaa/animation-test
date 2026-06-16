@@ -331,7 +331,7 @@ body.preloading .scroll-container {
 .transition-fast { transition: all var(--duration-fast) var(--ease-out); }
 
 /* ─── Responsive h2 & p ──────────────────────────────────────── */
-h2 {
+h2,h1 {
   font-size:   72px;
   line-height: 1.15;
 }
@@ -342,12 +342,12 @@ p {
 }
 
 @media (max-width: 1024px) {
-  h2 { font-size: 50px; }
+  h2,h1 { font-size: 50px; }
   p  { font-size: 16px; }
 }
 
 @media (max-width: 767px) {
-  h2 { font-size: 32px; }
+  h2,h1 { font-size: 32px; }
   p  { font-size: 12px; }
 }
 

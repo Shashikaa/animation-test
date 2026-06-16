@@ -105,7 +105,7 @@ export default function SectionFour() {
           }}
         >
           <h2 className="font-display  text-[#F4EEDF] text-right !mt-22 md:!mt-16">
-            Making Memories.
+            Making Memories
           </h2>
         </div>
 
@@ -176,7 +176,7 @@ export default function SectionFour() {
       >
         <div style={{ flexShrink: 0, display: "flex", justifyContent: "flex-end" }}>
           <h2 className="font-display s4-title text-[#F4EEDF]">
-            Making Memories.
+            Making Memories
           </h2>
         </div>
 

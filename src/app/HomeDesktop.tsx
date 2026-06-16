@@ -210,30 +210,26 @@ onLeave: () => {
             .to({}, { duration: 0.6 })
             .to(".s10-video-wrap", { clipPath: "inset(0% 0% 100% 0%)", duration: 1.6, ease: "power2.inOut" })
             .set(".s10-video-wrap", { visibility: "hidden" })
-.to(".s10-card", {
-  y: () => {
-    const card = document.querySelector(".s10-card") as HTMLElement;
-    if (!card) return -vvHeight() * 0.7;
-    // getBoundingClientRect().top reflects current translated position,
-    // so subtract any already-applied y transform to get true distance to top
-    const rect = card.getBoundingClientRect();
-    const currentY = gsap.getProperty(card, "y") as number;
-    return -(rect.top - currentY);
-  },
-  duration: 2.5, ease: "power2.inOut",
-}, "<+0.1")
+            .to(".s10-card", {
+              y: () => {
+                const card = document.querySelector(".s10-card") as HTMLElement;
+                if (!card) return -vvHeight() * 0.7;
+                return -card.getBoundingClientRect().top;
+              },
+              duration: 2.5, ease: "power2.inOut",
+            }, "<+0.1")
             .to(".s10-card-body", { y: 50,    duration: 2.5, ease: "power2.inOut" }, "<")
             .to(".s10-bg-img",    { y: "0%",  duration: 2.5, ease: "power2.inOut" }, "<")
             .to({}, { duration: 0.6 })
 
             .to(".section-7",  { yPercent: 0, duration: 2.4, ease: "power3.out" })
-            .to(".section-10", { scale: 1.0, duration: 2.4, ease: "power2.inOut" }, "<")
+            .to(".section-10", { scale: 1.05, duration: 2.4, ease: "power2.inOut" }, "<")
             .to(".s7-bg-img",  { yPercent: 0, duration: 2.4, ease: "power2.out" }, "<")
             .to({}, { duration: 0.8 })
 
             .set(".section-8", { visibility: "visible" })
             .to(".section-8",  { clipPath: "inset(0% 0% 0% 0%)", duration: 2.0, ease: "power2.inOut" })
-            .to(".section-7",  { scale: 1.05, duration: 2.0, ease: "power2.inOut" }, "<")
+            .to(".section-7",  { scale: 1.0, duration: 2.0, ease: "power2.inOut" }, "<")
             .to(".s8-bg-img",  { yPercent: 0, duration: 2.0, ease: "power2.out" }, "<")
             .to({}, { duration: 0.8 })
 
