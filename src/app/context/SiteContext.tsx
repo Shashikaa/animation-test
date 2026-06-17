@@ -25,6 +25,10 @@ const SiteContext = createContext<SiteContextType>({} as SiteContextType);
 
 export const PRELOADER_KEY = "gp_preloader_done";
 
+// Routes that mount their own local Preloader and must signal completion
+// back to this context themselves (via setPreloaderDone from useSite()).
+const PAGES_WITH_OWN_PRELOADER = ["/about"];
+
 export function SiteProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
@@ -32,19 +36,24 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const isHome = pathname === "/";
+    const hasOwnPreloader = PAGES_WITH_OWN_PRELOADER.includes(pathname ?? "");
+
+    if (hasOwnPreloader) {
+      setPreloaderDone(false);
+      return;
+    }
+
     if (!isHome) {
       setPreloaderDone(true);
       return;
     }
+
     try {
-      if (sessionStorage.getItem(PRELOADER_KEY) === "1") {
-        setPreloaderDone(true);
-      }
+      setPreloaderDone(sessionStorage.getItem(PRELOADER_KEY) === "1");
     } catch {
       setPreloaderDone(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [pathname]);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const smootherRef = useRef<ScrollSmoother | null>(null);

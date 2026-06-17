@@ -52,8 +52,8 @@
   --radius-lg:   16px;
   --radius-full: 9999px;
 
-  --ease-out:      cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out:   cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:  cubic-bezier(0.65, 0, 0.35, 1);
   --duration-fast: 150ms;
   --duration-base: 300ms;
   --duration-slow: 600ms;
@@ -111,71 +111,35 @@ body::-webkit-scrollbar { display: none !important; width: 0 !important; height:
   position:   relative;
 }
 
-/* ─── ScrollSmoother ─────────────────────────────────────────── */
-#smooth-wrapper {
-  overflow: visible;
-  width:    100%;
-}
-
+/* ─── ScrollSmoother Context ─────────────────────────────────── */
+#smooth-wrapper,
 #smooth-content {
   overflow: visible;
   width:    100%;
 }
 
-/* ─── Preloader lock ─────────────────────────────────────────── */
+/* ─── Main Thread Preloader Lock ─────────────────────────────── */
 body.preloading {
   overflow: hidden !important;
   height:   100vh !important;
 }
 
-/* ─── GPU Layer Promotion ────────────────────────────────────── */
+/* ─── GPU Accelerated Paint Layers ───────────────────────────── */
 .hero,
 .section-1,
 .section-2,
+.section-3,
 .section-4,
 .section-5,
-.section-7 {
-  will-change:         transform, opacity;
-  transform:           translate3d(0, 0, 0);
-  backface-visibility: hidden;
-}
-
-.section-9 {
-  will-change:         transform, opacity;
-  transform:           translate3d(0, 0, 0);
-  backface-visibility: hidden;
-}
-
-.section-3,
 .section-6,
+.section-7,
 .section-8,
-.section-10 {
-  will-change:         transform, clip-path;
-  transform:           translate3d(0, 0, 0);
-  backface-visibility: hidden;
-}
-
+.section-9,
+.section-10,
 .s8-panel-left,
-.s8-panel-right {
-  will-change:         clip-path;
-  transform:           translate3d(0, 0, 0);
-  backface-visibility: hidden;
-}
-
+.s8-panel-right,
 video,
-canvas {
-  will-change:         transform;
-  transform:           translate3d(0, 0, 0);
-  backface-visibility: hidden;
-}
-
-.section-1 > *,
-.section-2 > *,
-.section-7 > * {
-  transform:           translate3d(0, 0, 0);
-  backface-visibility: hidden;
-}
-
+canvas,
 .s1-bg,
 .s2-bg,
 .s4-bg-img,
@@ -187,25 +151,30 @@ canvas {
 .s10-bg-img,
 .s10-static-bg,
 .hero-bg {
-  will-change:         transform;
-  transform:           translate3d(0, 0, 0);
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
 }
 
-/* ─── Sections Layout ────────────────────────────────────────── */
+/* ─── Main Layout Matrix ─────────────────────────────────────── */
 .hero,
 .section-1,
 .section-2,
 .section-3,
 .section-4,
-.section-5 {
+.section-5,
+.section-6,
+.section-7,
+.section-8,
+.section-9,
+.section-10 {
   position: absolute;
   inset:    0;
   width:    100%;
   height:   100%;
 }
 
-/* ─── Pin wrapper height ─────────────────────────────────────── */
+/* ─── Viewport Pin Compositors ───────────────────────────────── */
 .pin-all {
   height:     100lvh;
   min-height: 100lvh;
@@ -221,29 +190,6 @@ canvas {
 
 .pin-spacer > .pin-all {
   max-height: none !important;
-}
-
-.scroll-container {
-  position: relative;
-  width:    100%;
-  height:   100vh;
-  overflow: hidden;
-}
-
-body.preloading .scroll-container {
-  visibility: hidden;
-}
-
-/* ─── Section wrappers ───────────────────────────────────────── */
-.section-six-wrapper {
-  overflow:    hidden;
-  contain:     layout paint;
-  will-change: transform;
-  transform:   translate3d(0, 0, 0);
-}
-
-.section-nine-wrapper {
-  overflow: hidden;
 }
 
 /* ─── Typography ─────────────────────────────────────────────── */
@@ -283,7 +229,7 @@ body.preloading .scroll-container {
 
 .text-muted { color: var(--muted); }
 
-/* ─── Layout Utilities ───────────────────────────────────────── */
+/* ─── Grid & Responsive Containers ───────────────────────────── */
 .container {
   width:          100%;
   max-width:      var(--container-max);
@@ -317,7 +263,7 @@ body.preloading .scroll-container {
   }
 }
 
-/* ─── Border & Surface ───────────────────────────────────────── */
+/* ─── Structural Borders ─────────────────────────────────────── */
 .border       { border: 1px solid var(--border); }
 .border-t     { border-top: 1px solid var(--border); }
 .border-b     { border-bottom: 1px solid var(--border); }
@@ -326,12 +272,12 @@ body.preloading .scroll-container {
 .rounded-lg   { border-radius: var(--radius-lg); }
 .rounded-full { border-radius: var(--radius-full); }
 
-/* ─── Transitions ────────────────────────────────────────────── */
+/* ─── Hardware Smooth Micro-Transitions ─────────────────────── */
 .transition      { transition: all var(--duration-base) var(--ease-out); }
 .transition-fast { transition: all var(--duration-fast) var(--ease-out); }
 
-/* ─── Responsive h2 & p ──────────────────────────────────────── */
-h2,h1 {
+/* ─── Scaled Fluid Typography ───────────────────────────────── */
+h2, h1 {
   font-size:   72px;
   line-height: 1.15;
 }
@@ -342,20 +288,18 @@ p {
 }
 
 @media (max-width: 1024px) {
-  h2,h1 { font-size: 50px; }
-  p  { font-size: 16px; }
+  h2, h1 { font-size: 50px; }
+  p { font-size: 16px; }
 }
 
 @media (max-width: 767px) {
-  h2,h1 { font-size: 32px; }
-  p  { font-size: 12px; }
+  h2, h1 { font-size: 32px; }
+  p { font-size: 12px; }
 }
 
-/* ─── Reduced motion ─────────────────────────────────────────── */
+/* ─── Accessibility & Reduced Motion Override ────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration:        0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration:       0.01ms !important;

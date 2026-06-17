@@ -38,13 +38,16 @@ function PoolsSVG({ width, height }: { width: number; height: number }) {
 
 
 // ─── Menu icon ────────────────────────────────────────────────────────────────
-function MenuIcon({ onClick }: { onClick?: () => void }) {
+function MenuIcon({ onClick, visible = true }: { onClick?: () => void; visible?: boolean }) {
   return (
     <button onClick={onClick} aria-label="Open menu" className="menu-icon-btn"
       style={{
         background: "none", border: "none", cursor: "pointer", padding: "8px",
         display: "flex", flexDirection: "column", alignItems: "flex-end",
         gap: "7px", outline: "none", position: "relative", zIndex: 2,
+        opacity: visible ? 1 : 0,
+        pointerEvents: visible ? "auto" : "none",
+        transition: "opacity 0.25s ease",
       }}
     >
       <span className="menu-line menu-line-top" />
@@ -72,7 +75,7 @@ function MenuIcon({ onClick }: { onClick?: () => void }) {
 }
  
 // ─── Contact Button ───────────────────────────────────────────────────────────
-function ContactButton({ onClick }: { onClick?: () => void }) {
+function ContactButton({ onClick, visible = true }: { onClick?: () => void; visible?: boolean }) {
   return (
     <button
       onClick={onClick}
@@ -81,6 +84,9 @@ function ContactButton({ onClick }: { onClick?: () => void }) {
         background: "none", border: "none", cursor: "pointer", padding: "0",
         outline: "none", position: "relative", zIndex: 2,
         display: "flex", alignItems: "center",
+        opacity: visible ? 1 : 0,
+        pointerEvents: visible ? "auto" : "none",
+        transition: "opacity 0.25s ease",
       }}
     >
       <span
@@ -265,8 +271,8 @@ export default function Header({
           isHome={pathname === "/"}
         />
 <div className="relative z-[2] flex items-center gap-0 md:gap-6">
-  <ContactButton onClick={handleContactClick} />
-  <MenuIcon onClick={onMenuClick} />
+  <ContactButton onClick={handleContactClick} visible={logoVisible} />
+  <MenuIcon onClick={onMenuClick} visible={logoVisible} />
 </div>
       </motion.header>
  
@@ -278,4 +284,3 @@ export default function Header({
     </>
   );
 }
- 

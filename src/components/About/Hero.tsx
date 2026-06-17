@@ -1,45 +1,53 @@
 "use client";
 
-export default function SectionOne() {
+import { useRef } from "react";
+
+interface HeroProps {
+  hideText?: boolean;
+}
+
+export default function Hero({ hideText = false }: HeroProps) {
+  const sectionRef = useRef<HTMLElement>(null);
+  const bgRef = useRef<HTMLDivElement>(null);
+
   return (
-    <section className="relative w-full h-screen overflow-hidden">
-
-      {/* ── Background images ── */}
+    <section ref={sectionRef} className="relative w-full h-screen overflow-hidden bg-[#111]">
+      {/* ── Hardware Accelerated Background image ── */}
       <div
-        className="s1-bg absolute left-0 right-0 bg-cover bg-center will-change-transform hidden lg:block"
-        style={{ top: "-10%", bottom: "-10%", backgroundImage: "url('/mernda-ave-bonbeach.webp')" }}
-      />
-      <div
-        className="s1-bg absolute left-0 right-0 bg-cover bg-top will-change-transform block lg:hidden"
-        style={{ top: "-10%", bottom: "-10%", backgroundImage: "url('/mernda-ave-bonbeach.webp')" }}
-      />
-
-      {/* ── Gradient overlay ── */}
-      <div
-        className="absolute inset-0 pointer-events-none"
+        ref={bgRef}
+        className="about-hero-bg absolute left-0 right-0 bg-cover bg-center"
         style={{
-          background: "linear-gradient(180deg, rgba(0,0,0,0) 51.72%, rgba(0,0,0,0.32) 86.09%)",
+          top: "-10%",
+          bottom: "-10%",
+          backgroundImage: "url('/hero-about.webp')",
+          transform: "scale(1.3) translateZ(0)", 
+          willChange: "transform",                 
+          backfaceVisibility: "hidden",            
         }}
       />
 
-      {/* ── Bottom-left text ── */}
-      <div className="section-continer relative z-10 h-full flex flex-col justify-end">
-        <div className="flex flex-col gap-2">
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 z-1" />
+
+      {/* ── Bottom-left text block using .section-continer ── */}
+      <div 
+        className="section-continer relative z-10 h-full flex flex-col justify-end !pb-22"
+        style={{ display: hideText ? "none" : "flex" }}
+      >
+        <div className="flex flex-col gap-4 lg:gap-2">
+          {/* FIX: Added lg:invisible so it only hides on desktop for GSAP */}
           <h1
-            className="text-[#F4EEDF] !font-[100]"
+            className="hero-title text-[#F4EEDF] !font-[100] "
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Designing Pools,
+            Designing Pool,
           </h1>
-          <p
-            className="text-[#F4EEDF] !mt-3"
-   
+          <p 
+            className="hero-desc text-[#F4EEDF] !mt-1 lg:invisible" 
           >
             Creating Experiences
           </p>
         </div>
       </div>
-
     </section>
   );
 }
