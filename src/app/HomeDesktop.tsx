@@ -106,9 +106,20 @@ export default function HomeDesktop() {
       gsap.set(".s9-bg-img", { yPercent: 0, scale: 1.15 });
       gsap.set(".s8-panel-left", { clipPath: "inset(0% 50% 0% 0%)", zIndex: 85 });
       gsap.set(".s8-panel-right", { clipPath: "inset(0% 0% 0% 50%)", zIndex: 85 });
-      gsap.set(".s9-title", { opacity: 0, x: 0, y: 4 });
       gsap.set(".s9-para", { opacity: 0, y: 5 });
       gsap.set(".footer", { yPercent: 100 }); 
+
+      // Section 9 title initialized at absolute viewport layout center
+      gsap.set(".s9-title", { 
+        opacity: 0, 
+        position: "absolute",
+        left: "50%", 
+        top: "50%", 
+        xPercent: -50, 
+        yPercent: -50,
+        x: 0, 
+        y: 0 
+      });
 
       const buildTimeline = () => {
         requestAnimationFrame(() => {
@@ -121,21 +132,20 @@ export default function HomeDesktop() {
             vvCleanup = () => vv.removeEventListener("resize", onVVResize);
           }
 
-const tl = gsap.timeline({
-  defaults: { ease: "power1.inOut" }, 
-  scrollTrigger: {
-    trigger: ".pin-all",
-    start: "top top",
-    // ── THE SWEET SPOT: Tightened from 42000 down to 37500 to add snap and eliminate the drag!
-    end: "+=37500", 
-    scrub: scrubValue,
-    pin: true,
-    anticipatePin: 1,
-    preventOverlaps: true,
-    fastScrollEnd: true,
-    invalidateOnRefresh: true,
-  },
-});
+          const tl = gsap.timeline({
+            defaults: { ease: "power1.inOut" }, 
+            scrollTrigger: {
+              trigger: ".pin-all",
+              start: "top top",
+              end: "+=35000", 
+              scrub: scrubValue,
+              pin: true,
+              anticipatePin: 1,
+              preventOverlaps: true,
+              fastScrollEnd: true,
+              invalidateOnRefresh: true,
+            },
+          });
 
           // ── HERO TO SECTION 1 ──
           tl.addLabel("heroStart")
@@ -149,6 +159,7 @@ const tl = gsap.timeline({
             .to(".section-2", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 }, "sec2Start")
             .to(".section-1", { scale: 1.05, duration: 3.8 }, "sec2Start")
             .to(".s2-bg", { yPercent: 0, scale: 1, duration: 3.8 }, "sec2Start")
+            .to({}, { duration: 1.0 }) 
             .set(".section-1", { display: "none" });
 
           // ── SECTION 3 REVEAL ──
@@ -156,26 +167,30 @@ const tl = gsap.timeline({
             .set(".section-3", { display: "block" })
             .to(".section-3", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 }, "sec3Start")
             .to(".section-2", { scale: 1.05, duration: 3.8 }, "sec3Start")
+            .to({}, { duration: 1.0 })
             .set(".section-2", { display: "none" });
 
           // ── SECTION 4 REVEAL ──
           tl.addLabel("sec4Start")
-            .to(".section-4", { yPercent: 0, duration: 4.2 }, "sec4Start")
-            .to(".s4-content", { y: () => vvHeight() * -0.45, duration: 4.5 }, "sec4Start+=1.2")
-            .to(".s4-img", { yPercent: -15, duration: 4.5 }, "sec4Start+=1.2")
-            .to(".s4-bg-img", { yPercent: 0, duration: 4.5 }, "sec4Start+=1.2");
+            .to(".section-4", { yPercent: 0, duration: 4.5 }, "sec4Start")
+            .set([".section-2", ".section-3"], { display: "none" });
+
+          // INTERNAL SECTION 4 SCROLL 
+          tl.addLabel("sec4ContentStart", "sec4Start+=4.5")
+            .to(".s4-content", { y: () => vvHeight() * -0.45, duration: 4.5 }, "sec4ContentStart")
+            .to(".s4-img", { yPercent: -15, duration: 4.5 }, "sec4ContentStart")
+            .to(".s4-bg-img", { yPercent: 0, duration: 4.5 }, "sec4ContentStart");
 
           // ── SECTION 5 REVEAL ──
           tl.addLabel("sec5Start")
-            .to(".section-3", { yPercent: -100, duration: 4.2 }, "sec5Start-=0.8")
-            .to(".section-5", { yPercent: 0, duration: 4.2 }, "sec5Start-=0.8")
-            .set(".section-3", { display: "none" });
+            .to(".section-5", { yPercent: 0, duration: 4.2 }, "sec5Start")
+            .set(".section-4", { display: "none" });
 
           // ── SECTION 6 REVEAL ──
           tl.addLabel("sec6Start")
             .to(".section-6", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 }, "sec6Start")
             .to(".section-5", { scale: 1.05, duration: 3.8 }, "sec6Start")
-            .set(".section-4", { display: "none" })
+            .to({}, { duration: 1.0 })
             .set(".section-5", { display: "none" });
 
           // ── SECTION 10 REVEAL ──
@@ -185,15 +200,15 @@ const tl = gsap.timeline({
             .to(".section-6", { scale: 1.05, duration: 3.8 }, "sec10Start")
             .to(".s10-static-bg", { yPercent: 0, duration: 3.8 }, "sec10Start")
             
-            .to(".s10-title", { opacity: 0, y: -50, duration: 1.8 })
-            .to(".s10-title-sub", { opacity: 0, y: -40, duration: 1.8 }, "<")
-            .to(".s10-para-top", { opacity: 0, y: -50, duration: 1.8 }, "<")
+            .to(".s10-title", { opacity: 0, y: -50, duration: 1.0 })
+            .to(".s10-title-sub", { opacity: 0, y: -40, duration: 1.0 }, "<")
+            .to(".s10-para-top", { opacity: 0, y: -50, duration: 1.0 }, "<")
             
-            .to(".s10-card", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 })
-            .to(".s10-card-body", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.2 }, "<")
+            .to(".s10-card", { clipPath: "inset(0% 0% 0% 0%)", duration: 2.0 })
+            .to(".s10-card-body", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.5 }, "<")
             
-            .to(".s10-video-wrap", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.0 })
-            .to(".s10-video-wrap", { clipPath: "inset(0% 0% 100% 0%)", duration: 2.5 })
+            .to(".s10-video-wrap", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.5 })
+            .to(".s10-video-wrap", { clipPath: "inset(0% 0% 100% 0%)", duration: 1.2 })
             .set(".s10-video-wrap", { display: "none" })
             
             .to(".s10-card", {
@@ -202,10 +217,11 @@ const tl = gsap.timeline({
                 if (!card) return -vvHeight() * 0.7;
                 return -card.getBoundingClientRect().top;
               },
-              duration: 4.2,
+              duration: 2.5,
             }, "<+0.2")
-            .to(".s10-card-body", { y: 50, duration: 4.2 }, "<")
-            .to(".s10-bg-img", { y: "0%", duration: 4.2 }, "<")
+            .to(".s10-card-body", { y: 50, duration: 2.5 }, "<")
+            .to(".s10-bg-img", { y: "0%", duration: 2.5 }, "<")
+            .to({}, { duration: 1.5 }) 
             .set(".section-6", { display: "none" });
 
           // ── SECTION 7 REVEAL ──
@@ -213,6 +229,7 @@ const tl = gsap.timeline({
             .to(".section-7", { yPercent: 0, duration: 4.2 }, "sec7Start")
             .to(".section-10", { scale: 1.05, duration: 4.2 }, "sec7Start")
             .to(".s7-bg-img", { yPercent: 0, duration: 4.2 }, "sec7Start")
+            .to({}, { duration: 1.0 })
             .set(".section-10", { display: "none" });
 
           // ── SECTION 8 REVEAL ──
@@ -220,7 +237,8 @@ const tl = gsap.timeline({
             .set(".section-8", { display: "block" })
             .to(".section-8", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 }, "sec8Start")
             .to(".section-7", { scale: 1.0, duration: 3.8 }, "sec8Start")
-            .to(".s8-bg-img", { yPercent: 0, duration: 3.8 }, "sec8Start");
+            .to(".s8-bg-img", { yPercent: 0, duration: 3.8 }, "sec8Start")
+            .to({}, { duration: 1.0 });
 
           // ── SECTION 9 REVEAL (SPLIT PANELS) ──
           tl.addLabel("sec9Start")
@@ -230,29 +248,38 @@ const tl = gsap.timeline({
             .to(".s8-panel-right", { clipPath: "inset(100% 0% 0% 50%)", duration: 3.8 }, "sec9Start")
             .to(".s9-bg-img", { yPercent: 0, scale: 1, duration: 3.8 }, "sec9Start")
             .to(".s9-title", { opacity: 1, duration: 2.0 }, "sec9Start+=1.2")
+            // FIXED: Stable edge-to-edge structural calculations keeping center metrics intact
             .to(".s9-title", {
               x: () => {
                 const el = document.querySelector(".s9-title") as HTMLElement;
                 const para = document.querySelector(".s9-para") as HTMLElement;
                 if (!el || !para) return 0;
-                return para.getBoundingClientRect().right - el.getBoundingClientRect().right;
+                
+                const targetX = para.getBoundingClientRect().right;
+                const currentX = el.getBoundingClientRect().right; 
+                return targetX - currentX;
               },
               y: () => {
                 const el = document.querySelector(".s9-title") as HTMLElement;
                 const para = document.querySelector(".s9-para") as HTMLElement;
                 if (!el || !para) return 0;
-                return para.getBoundingClientRect().top - el.offsetHeight - 12 - el.getBoundingClientRect().top;
+                
+                const targetY = para.getBoundingClientRect().top - 16;
+                const currentY = el.getBoundingClientRect().bottom;
+                return targetY - currentY;
               },
               duration: 3.5,
             })
             .to(".s9-para", { opacity: 1, y: 0, duration: 2.0 }, "<+1.5")
+            .to({}, { duration: 1.0 })
             .set(".section-8", { display: "none" });
 
           // ── CTA REVEAL ──
           tl.addLabel("ctaStart")
             .set(".section-cta", { display: "block" })
             .to(".section-cta", { yPercent: 0, duration: 4.8 }, "ctaStart")
-            .to(".section-9", { scale: 1.05, duration: 4.8 }, "ctaStart");
+            .to(".section-9", { scale: 1.05, duration: 4.8 }, "ctaStart")
+            .to({}, { duration: 1.0 });
 
           // ── FOOTER REVEAL ──
           tl.addLabel("footerStart")
@@ -260,27 +287,27 @@ const tl = gsap.timeline({
             .to(".footer", { yPercent: 0, duration: 5.5 }, "footerStart")
             .to(".section-9", { scale: 1.05, duration: 5.5 }, "footerStart");
 
-          // ── TEXT ANIMATIONS ──
-          useTextReveal(scopeRef, ".s2-title-main", { tl, position: "sec2Start+=0.8", duration: 0.4, stagger: 0.05 });
-          useTextReveal(scopeRef, ".s2-title-sub", { tl, position: "sec2Start+=1.0", duration: 0.4, stagger: 0.04 });
-          useTextReveal(scopeRef, ".s2-body", { tl, position: "sec2Start+=0.6", duration: 0.4, stagger: 0.05 });
+          // ── OPTIMIZED TEXT ANIMATION TIMINGS ──
+          useTextReveal(scopeRef, ".s2-title-main", { tl, position: "sec2Start+=1.9", duration: 0.4, stagger: 0.05 });
+          useTextReveal(scopeRef, ".s2-title-sub", { tl, position: "sec2Start+=1.9", duration: 0.4, stagger: 0.04 });
+          useTextReveal(scopeRef, ".s2-body", { tl, position: "sec2Start+=1.3", duration: 0.4, stagger: 0.05 });
           
-          useTextReveal(scopeRef, ".s4-title", { tl, position: "sec4Start+=2.4", duration: 0.4, stagger: 0.05 });
-          useTextReveal(scopeRef, ".s4-para", { tl, position: "sec4Start+=2.4", duration: 0.4, stagger: 0.05 });
+          useTextReveal(scopeRef, ".s4-title", { tl, position: "sec4Start+=2.0", duration: 0.4, stagger: 0.05 });
+          useTextReveal(scopeRef, ".s4-para", { tl, position: "sec4Start+=2.0", duration: 0.4, stagger: 0.05 });
           useTextReveal(scopeRef, ".s4-cta", { tl, position: ">+0.2", duration: 0.4, stagger: 0.04 });
           
-          useTextReveal(scopeRef, ".s5-title", { tl, position: "sec5Start+=0.8", duration: 0.4, stagger: 0.05 });
-          useTextReveal(scopeRef, ".s5-body", { tl, position: "sec5Start+=0.8", duration: 0.4, stagger: 0.05 });
+          useTextReveal(scopeRef, ".s5-title", { tl, position: "sec5Start+=2.8", duration: 0.4, stagger: 0.05 });
+          useTextReveal(scopeRef, ".s5-body", { tl, position: "sec5Start+=2.8", duration: 0.4, stagger: 0.05 });
           
-          useTextReveal(scopeRef, ".s10-title", { tl, position: "sec10Start+=0.8", duration: 0.4, stagger: 0.05 });
-          useTextReveal(scopeRef, ".s10-title-sub", { tl, position: "sec10Start+=0.8", duration: 0.4, stagger: 0.04 });
-          useTextReveal(scopeRef, ".s10-para-top", { tl, position: "sec10Start+=0.3", duration: 0.4, stagger: 0.04 });
+          useTextReveal(scopeRef, ".s10-title", { tl, position: "sec10Start+=1.9", duration: 0.4, stagger: 0.05 });
+          useTextReveal(scopeRef, ".s10-title-sub", { tl, position: "sec10Start+=1.8", duration: 0.4, stagger: 0.04 });
+          useTextReveal(scopeRef, ".s10-para-top", { tl, position: "sec10Start+=1.0", duration: 0.4, stagger: 0.04 });
           
-          useTextReveal(scopeRef, ".s7-title", { tl, position: "sec7Start+=0.8", duration: 0.4, stagger: 0.05, yOffset: -10 });
-          useTextReveal(scopeRef, ".s7-para", { tl, position: "sec7Start+=0.8", duration: 0.4, stagger: 0.05, yOffset: -10 });
+          useTextReveal(scopeRef, ".s7-title", { tl, position: "sec7Start+=1.7", duration: 0.4, stagger: 0.05, yOffset: -10 });
+          useTextReveal(scopeRef, ".s7-para", { tl, position: "sec7Start+=1.7", duration: 0.4, stagger: 0.05, yOffset: -10 });
           
-          useTextReveal(scopeRef, ".s8-heading", { tl, position: "sec8Start+=0.8", duration: 0.4, stagger: 0.05 });
-          useTextReveal(scopeRef, ".s8-para", { tl, position: "sec8Start+=0.4", duration: 0.4, stagger: 0.05 });
+          useTextReveal(scopeRef, ".s8-heading", { tl, position: "sec8Start+=1.9", duration: 0.4, stagger: 0.05 });
+          useTextReveal(scopeRef, ".s8-para", { tl, position: "sec8Start+=1.8", duration: 0.4, stagger: 0.05 });
 
           onScrollReady();
         });

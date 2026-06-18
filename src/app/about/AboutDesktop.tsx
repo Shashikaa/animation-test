@@ -49,6 +49,9 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     const ctx = gsap.context(() => {
+      // Force initial state on render pass
+
+
       gsap.set(".about-hero-panel-left", { clipPath: "inset(0% 0% 0% 0%)" });
       gsap.set(".about-hero-panel-right", { clipPath: "inset(0% 0% 0% 0%)" });
       gsap.set(".s1-card", { y: 50, opacity: 0 });
@@ -64,38 +67,23 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // Fluid Hero Intro Setup
+// Fluid Hero Intro Setup
   useEffect(() => {
     if (!preloaderDone || !isReady) return;
 
     const ctx = gsap.context(() => {
+      // 1. Zoom out background image smoothly
       gsap.to(".about-hero-bg", {
         scale: 1.2,
-        duration: 2.0,
+        duration: 2.2,
         ease: "power2.out"
       });
 
-      const textTl = gsap.timeline({
-        onComplete: () => setIntroDone(true)
+      // 2. Simply switch control over to ScrollTrigger when background settles
+      gsap.delayedCall(1.2, () => {
+        setIntroDone(true);
       });
 
-      useTextReveal(scopeRef, ".hero-title", {
-        tl: textTl,
-        position: 0.4,
-        yOffset: 30,
-        stagger: 0.06,
-        duration: 0.5,
-        ease: "power2.out"
-      });
-
-      useTextReveal(scopeRef, ".hero-desc", {
-        tl: textTl,
-        position: 0.6,
-        yOffset: 30,
-        stagger: 0.06,
-        duration: 0.5,
-        ease: "power2.out"
-      });
     }, scopeRef);
 
     return () => ctx.revert();
@@ -134,10 +122,11 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         clipPath: "inset(100% 0% 0% 50%)",
         duration: 2.0,
       }, "<")
-      .to(".about-hero-bg", {
-        scale: 1.0,
-        duration: 2.0,
-      }, "<");
+      .fromTo(".about-hero-bg", 
+        { scale: 1.2 }, 
+        { scale: 1.0, duration: 2.0 }, 
+        "<"
+      );
 
       tl.to(".s1-card", {
         visibility: "visible",
@@ -315,8 +304,6 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
     return () => {
       ctx.revert();
       if (scopeRef.current) {
-        restoreTextReveal(scopeRef.current, ".hero-title");
-        restoreTextReveal(scopeRef.current, ".hero-desc");
         restoreTextReveal(scopeRef.current, ".s1-reveal-text");
         restoreTextReveal(scopeRef.current, ".s2-reveal-text");
         restoreTextReveal(scopeRef.current, ".s3-reveal-bottom");

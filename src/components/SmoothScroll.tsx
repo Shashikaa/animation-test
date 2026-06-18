@@ -15,26 +15,30 @@ if (typeof window !== "undefined") {
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
   const thumbRef = useRef<HTMLDivElement>(null);
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const { preloaderDone } = useSite();
+  
+  // Destructure smootherRef from your updated global site context
+  const { preloaderDone, smootherRef } = useSite();
+  
   const pathname = usePathname();
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
-    // ── MOBILE SAFETY GUARD RAIL ──
-    // If it's a touch device, abort instantly. Native mobile scrolling handles the rest.
     if (ScrollTrigger.isTouch > 0 || !preloaderDone) return;
 
-    // Initialize Lenis directly on the root window with optimized desktop tracking
     const lenis = new Lenis({
-      duration: 1.2,          // Snappier response time to eliminate home page drag
-      wheelMultiplier: 1.1,   // Subtle physical velocity boost per wheel click
+      duration: 1.2,
+      wheelMultiplier: 1.1,
       touchMultiplier: 1.0,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     });
 
     lenisRef.current = lenis;
 
-    // Frame-perfect sync with GSAP's Ticker
+    // Hook up the context ref to your active Lenis instance
+    if (smootherRef) {
+      smootherRef.current = lenis;
+    }
+
     lenis.on("scroll", ScrollTrigger.update);
     
     const tickerCallback = (time: number) => {
@@ -43,7 +47,6 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     gsap.ticker.add(tickerCallback);
     gsap.ticker.lagSmoothing(0);
 
-    // High performance scroll tracking for your custom thumb
     let lastY = 0;
     let lastTime = performance.now();
     let thumbVisible = false;
@@ -87,10 +90,14 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
       setScrollVelocity(0);
       gsap.ticker.remove(tickerCallback);
       lenis.destroy();
+      
+      // Clean up the ref when unmounting
+      if (smootherRef) {
+        smootherRef.current = null;
+      }
     };
-  }, [preloaderDone]);
+  }, [preloaderDone, smootherRef]); // Added smootherRef to dependency array
 
-  // Handle route transformations / page jumps smoothly
   useEffect(() => {
     if (!preloaderDone || !lenisRef.current) return;
     lenisRef.current.scrollTo(0, { immediate: true });

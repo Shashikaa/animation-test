@@ -7,7 +7,7 @@ type FadePreloaderProps = {
   onComplete?:  () => void;
 };
 
-const EXIT_DURATION_MS = 800;
+const EXIT_DURATION_MS = 100;
 
 export default function FadePreloader({ onExitStart, onComplete }: FadePreloaderProps) {
   const [visible, setVisible] = useState(true);
@@ -18,7 +18,7 @@ export default function FadePreloader({ onExitStart, onComplete }: FadePreloader
     const fadeTimer = setTimeout(() => {
       setFading(true);
       onExitStart?.(); // header starts its opacity transition in this same tick
-    }, 600);
+    }, 100);
     return () => clearTimeout(fadeTimer);
   }, [onExitStart]);
 

@@ -29,8 +29,6 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     if (typeof window === "undefined") return;
     window.scrollTo(0, 0);
 
-    // ✅ FIXED: Removed local classList mutations. State now updates 
-    // cleanly via the application's central provider pipeline.
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
@@ -54,19 +52,22 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
       clipPath: "inset(100% 0% 0% 0%)",
       WebkitClipPath: "inset(100% 0% 0% 0%)"
     });
-    
-    gsap.set([".about-section-three .s3-reveal-top", ".about-section-three .s3-reveal-bottom"], { 
-      opacity: 0, 
-      y: 30 
+
+    // Section 4 sits underneath Section 3 driven by stacking index
+    gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0 });
+
+    // ✅ FIXED: Initialize Section 5 with clipPath stack layers instead of x positioning
+    gsap.set(".about-section-five", { 
+      visibility: "hidden", 
+      clipPath: "inset(100% 0% 0% 0%)",
+      WebkitClipPath: "inset(100% 0% 0% 0%)"
     });
 
-    gsap.set(".about-section-four", { visibility: "hidden", yPercent: 100 });
-    gsap.set(".about-section-five", { visibility: "hidden", xPercent: 100 });
     gsap.set(".about-section-cta", { visibility: "hidden", y: "100%" });
     gsap.set(".about-footer-wrap", { visibility: "hidden", y: "100%" });
   }, [preloaderDone]);
 
-  // Hero Intro Scale Sequence — Synchronized for zero delay gap
+  // Hero Intro Scale Sequence
   useEffect(() => {
     if (!preloaderDone || !isReady) return;
 
@@ -99,6 +100,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
         },
       });
 
+      // Section 1
       tl.to(".about-section-one", {
         yPercent: 0,
         duration: 2.0,
@@ -113,45 +115,61 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
 
       tl.to({}, { duration: 0.4 });
 
+      // Section 2
       tl.set(".about-section-two", { visibility: "visible" })
         .to(".about-section-two", { yPercent: 0, duration: 2.0, ease: "power2.inOut" });
       
       tl.to({}, { duration: 0.4 });
 
+      // Section 3
       tl.set(".about-section-three", { visibility: "visible" })
-        .addLabel("sec3MobileStart")
         .fromTo(
           ".about-section-three",
           { clipPath: "inset(100% 0% 0% 0%)", WebkitClipPath: "inset(100% 0% 0% 0%)" },
-          { clipPath: "inset(0% 0% 0% 0%)", WebkitClipPath: "inset(0% 0% 0% 0%)", duration: 2.0, ease: "power2.inOut" },
-          "sec3MobileStart"
+          { clipPath: "inset(0% 0% 0% 0%)", WebkitClipPath: "inset(0% 0% 0% 0%)", duration: 2.0, ease: "power2.inOut" }
         );
-
-      tl.set([".about-section-three .s3-reveal-top", ".about-section-three .s3-reveal-bottom"], { 
-        visibility: "visible" 
-      }, "sec3MobileStart+=0.8");
-
-      tl.to(
-        [".about-section-three .s3-reveal-top", ".about-section-three .s3-reveal-bottom"],
-        { opacity: 1, y: 0, duration: 1.0, stagger: 0.2, ease: "power2.out" },
-        "sec3MobileStart+=0.8"
-      );
       
       tl.to({}, { duration: 0.4 });
 
+      // Slide Section 3 up and away, revealing Section 4 underneath
       tl.set(".about-section-four", { visibility: "visible" })
-        .to(".about-section-four", { yPercent: 0, duration: 2.0, ease: "power2.inOut" });
+        .addLabel("sec3to4Transition")
+        .to(".about-section-three", {
+          yPercent: -100,
+          duration: 2.0,
+          ease: "power2.inOut"
+        }, "sec3to4Transition")
+        .fromTo(".about-section-four .s4-img-bg", 
+          { yPercent: 15 },
+          { 
+            yPercent: 0, 
+            duration: 2.0, 
+            ease: "power2.inOut" 
+          }, 
+          "sec3to4Transition"
+        );
       
       tl.to({}, { duration: 0.4 });
 
+      // ✅ FIXED: Section 4 to 5 ClipPath reveal transitions
       tl.set(".about-section-five", { visibility: "visible" })
-        .to(".about-section-five", { xPercent: 0, duration: 2.0, ease: "power2.inOut" });
+        .to(".about-section-five", { 
+          clipPath: "inset(0% 0% 0% 0%)", 
+          WebkitClipPath: "inset(0% 0% 0% 0%)", 
+          duration: 2.0, 
+          ease: "power2.inOut" 
+        })
+        // Reveal Section 5 static titles and card content elements smoothly as the clip reveals
+        .to(".s5-static-title, .s5-static-desc", { y: 0, opacity: 1, duration: 1.2, ease: "power2.out" }, "0")
+        .to(".s5-main-glass-card", { x: 0, opacity: 1, duration: 1.2, ease: "power2.out" }, "<");
       
       tl.to({}, { duration: 0.4 });
 
+      // CTA
       tl.set(".about-section-cta", { visibility: "visible" })
         .to(".about-section-cta", { y: "0%", duration: 1.8, ease: "power2.inOut" });
 
+      // Footer
       tl.set(".about-footer-wrap", { visibility: "visible" })
         .to(".about-footer-wrap", { y: "0%", duration: 1.8, ease: "power2.inOut" });
 
@@ -164,9 +182,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     <div ref={scopeRef}>
       <div 
         className="about-pin relative h-screen w-screen overflow-hidden bg-[#111]"
-        style={{ 
-          visibility: "visible"
-        }}
+        style={{ visibility: "visible" }}
       >
         <div className="about-hero-panel-left absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
           <Hero hideText={false} />
@@ -191,11 +207,19 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
           <SectionThree />
         </div>
 
-        <div className="about-section-four absolute inset-0 w-full h-full" style={{ zIndex: 50 }}>
+        <div className="about-section-four absolute inset-0 w-full h-full" style={{ zIndex: 35 }}>
           <SectionFour />
         </div>
 
-        <div className="about-section-five absolute inset-0 w-full h-full" style={{ zIndex: 60 }}>
+        {/* Section 5 stacked higher on top of 4 to support vertical mask wiping */}
+        <div 
+          className="about-section-five absolute inset-0 w-full h-full" 
+          style={{ 
+            zIndex: 45,
+            clipPath: "inset(100% 0% 0% 0%)",
+            WebkitClipPath: "inset(100% 0% 0% 0%)"
+          }}
+        >
           <SectionFive />
         </div>
 
