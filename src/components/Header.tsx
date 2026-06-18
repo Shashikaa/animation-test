@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
@@ -36,18 +37,14 @@ function PoolsSVG({ width, height }: { width: number; height: number }) {
   );
 }
 
-
 // ─── Menu icon ────────────────────────────────────────────────────────────────
-function MenuIcon({ onClick, visible = true }: { onClick?: () => void; visible?: boolean }) {
+function MenuIcon({ onClick }: { onClick?: () => void }) {
   return (
     <button onClick={onClick} aria-label="Open menu" className="menu-icon-btn"
       style={{
         background: "none", border: "none", cursor: "pointer", padding: "8px",
         display: "flex", flexDirection: "column", alignItems: "flex-end",
         gap: "7px", outline: "none", position: "relative", zIndex: 2,
-        opacity: visible ? 1 : 0,
-        pointerEvents: visible ? "auto" : "none",
-        transition: "opacity 0.25s ease",
       }}
     >
       <span className="menu-line menu-line-top" />
@@ -75,7 +72,7 @@ function MenuIcon({ onClick, visible = true }: { onClick?: () => void; visible?:
 }
  
 // ─── Contact Button ───────────────────────────────────────────────────────────
-function ContactButton({ onClick, visible = true }: { onClick?: () => void; visible?: boolean }) {
+function ContactButton({ onClick }: { onClick?: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -84,9 +81,6 @@ function ContactButton({ onClick, visible = true }: { onClick?: () => void; visi
         background: "none", border: "none", cursor: "pointer", padding: "0",
         outline: "none", position: "relative", zIndex: 2,
         display: "flex", alignItems: "center",
-        opacity: visible ? 1 : 0,
-        pointerEvents: visible ? "auto" : "none",
-        transition: "opacity 0.25s ease",
       }}
     >
       <span
@@ -117,12 +111,10 @@ function Logo({
   onClick,
   href = "/",
   logoVisible = false,
-  isHome = false,
 }: {
   onClick?: () => void;
   href?: string;
   logoVisible?: boolean;
-  isHome?: boolean;
 }) {
   return (
     <a
@@ -134,7 +126,8 @@ function Logo({
         display: "flex", alignItems: "center", gap: LOGO_GAP,
         position: "relative", zIndex: 2, textDecoration: "none",
         cursor: "pointer",
-        opacity: isHome ? 0 : logoVisible ? 1 : 0,
+        // FIX: Removed the logic that forced opacity to zero when on Home page.
+        opacity: logoVisible ? 1 : 0,
         transition: "opacity 0.25s ease",
       }}
       onMouseEnter={e => { if (logoVisible) e.currentTarget.style.opacity = "0.72"; }}
@@ -190,7 +183,6 @@ export default function Header({
   const [scrolled,  setScrolled]  = useState(false);
   const [isMobile,  setIsMobile]  = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const pathname = usePathname();
  
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -268,12 +260,11 @@ export default function Header({
           onClick={onLogoClick}
           href={logoHref}
           logoVisible={logoVisible}
-          isHome={pathname === "/"}
         />
-<div className="relative z-[2] flex items-center gap-0 md:gap-6">
-  <ContactButton onClick={handleContactClick} visible={logoVisible} />
-  <MenuIcon onClick={onMenuClick} visible={logoVisible} />
-</div>
+        <div className="relative z-[2] flex items-center gap-0 md:gap-6">
+          <ContactButton onClick={handleContactClick} />
+          <MenuIcon onClick={onMenuClick} />
+        </div>
       </motion.header>
  
       {/* ── Submit A Request modal ── */}

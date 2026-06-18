@@ -1,19 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
-import Preloader from "@/src/components/About/Preloader";
 import { useSite } from "@/src/app/context/SiteContext";
-import HeaderWrapper from "../../components/HeaderWrapper";
-import NavMenuWrapper from "../../components/NavMenuWrapper";
-
-const AboutDesktop = dynamic(() => import("./AboutDesktop"), { ssr: false });
-const AboutMobile  = dynamic(() => import("./AboutMobile"),  { ssr: false });
+// Import normally so the code is already bundled and ready to execute instantly
+import AboutDesktop from "./AboutDesktop";
+import AboutMobile from "./AboutMobile";
 
 export default function AboutPage() {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
-  const [localPreloaderDone, setLocalPreloaderDone] = useState(false);
-  const { setPreloaderDone: setGlobalPreloaderDone } = useSite();
+  const { preloaderDone } = useSite();
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1025);
@@ -22,32 +17,17 @@ export default function AboutPage() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  const handleComplete = () => {
-    setLocalPreloaderDone(true);
-    setGlobalPreloaderDone(true);
-  };
+  // Avoid rendering a blank state while checking window width on the very first frame
+  if (isMobile === null) {
+    return <div className="h-screen w-full bg-[#111]" />;
+  }
 
   return (
-    <div className="relative min-h-screen w-full bg-[#111]">
-      {/* ── 1. NATIVE PRELOADER: Mounts instantly on frame 1 without waiting for chunks ── */}
-      {!localPreloaderDone && (
-        <Preloader onComplete={handleComplete} />
-      )}
-
-      {/* ── 2. CONDITIONAL HEADER & NAV: Revealed frame-perfect alongside page elements ── */}
-      {localPreloaderDone && (
-        <>
-          <HeaderWrapper />
-          <NavMenuWrapper />
-        </>
-      )}
-
-      {/* ── 3. SEAMLESS REVEAL LAYOUT: Renders safely hidden behind the preloader ── */}
-      {isMobile !== null && (
-        <div style={{ opacity: localPreloaderDone ? 1 : 0, visibility: localPreloaderDone ? "visible" : "hidden" }}>
-          {isMobile ? <AboutMobile /> : <AboutDesktop />}
-        </div>
-      )}
-    </div>
+    <>
+      {isMobile 
+        ? <AboutMobile preloaderDone={preloaderDone} />
+        : <AboutDesktop preloaderDone={preloaderDone} />
+      }
+    </>
   );
 }

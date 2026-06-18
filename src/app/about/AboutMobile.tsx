@@ -1,6 +1,5 @@
 "use client";
 
-import Preloader from "@/src/components/About/Preloader";
 import Hero from "@/src/components/About/Hero";
 import SectionOne from "@/src/components/About/SectionOne";
 import SectionTwo from "@/src/components/About/SectionTwo";
@@ -16,16 +15,24 @@ import { useSite } from "@/src/app/context/SiteContext";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function AboutMobile() {
-  const [preloaderDone, setPreloaderDone] = useState(false);
+type AboutMobileProps = {
+  preloaderDone: boolean;
+};
+
+export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
+  const { setPreloaderDone } = useSite(); 
   const [introDone, setIntroDone] = useState(false);
+  const [isReady, setIsReady] = useState(true);
   const scopeRef = useRef<HTMLDivElement>(null);
-  const { setPreloaderDone: setSitePreloaderDone } = useSite();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.scrollTo(0, 0);
-  }, []);
+
+    // ✅ FIXED: Removed local classList mutations. State now updates 
+    // cleanly via the application's central provider pipeline.
+    setPreloaderDone(true);
+  }, [setPreloaderDone]);
 
   useEffect(() => {
     const locked = !preloaderDone || !introDone;
@@ -35,23 +42,19 @@ export default function AboutMobile() {
     };
   }, [preloaderDone, introDone]);
 
-  // Initial clean structural states for mobile slide overlays
+  // Initial clean structural configurations
   useEffect(() => {
     if (!preloaderDone) return;
     
-    // Section One sits directly below viewport waiting to slide up
     gsap.set(".about-section-one", { yPercent: 100 });
-
     gsap.set(".about-section-two", { visibility: "hidden", yPercent: 100 });
     
-    // Set clip-path baseline for Section 3 instead of yPercent
     gsap.set(".about-section-three", { 
       visibility: "hidden", 
       clipPath: "inset(100% 0% 0% 0%)",
       WebkitClipPath: "inset(100% 0% 0% 0%)"
     });
     
-    // Hide Section 3 text nodes initially so they don't pop prematurely
     gsap.set([".about-section-three .s3-reveal-top", ".about-section-three .s3-reveal-bottom"], { 
       opacity: 0, 
       y: 30 
@@ -63,9 +66,9 @@ export default function AboutMobile() {
     gsap.set(".about-footer-wrap", { visibility: "hidden", y: "100%" });
   }, [preloaderDone]);
 
-  // Hero Intro Scale Sequence
+  // Hero Intro Scale Sequence — Synchronized for zero delay gap
   useEffect(() => {
-    if (!preloaderDone) return;
+    if (!preloaderDone || !isReady) return;
 
     const ctx = gsap.context(() => {
       gsap.to(".about-hero-bg", { 
@@ -77,7 +80,7 @@ export default function AboutMobile() {
     }, scopeRef);
 
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, [preloaderDone, isReady]);
 
   // Pure Section Transition Scroll Timeline
   useEffect(() => {
@@ -96,7 +99,6 @@ export default function AboutMobile() {
         },
       });
 
-      // ── HERO TO SECTION 1 SLIDE UP ──
       tl.to(".about-section-one", {
         yPercent: 0,
         duration: 2.0,
@@ -111,13 +113,11 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: 0.4 });
 
-      // ── SECTION 2 SLIDE UP ──
       tl.set(".about-section-two", { visibility: "visible" })
         .to(".about-section-two", { yPercent: 0, duration: 2.0, ease: "power2.inOut" });
       
       tl.to({}, { duration: 0.4 });
 
-      // ── SECTION 3 CLIP-PATH REVEAL OVER SECTION 2 (FIXED) ──
       tl.set(".about-section-three", { visibility: "visible" })
         .addLabel("sec3MobileStart")
         .fromTo(
@@ -127,7 +127,6 @@ export default function AboutMobile() {
           "sec3MobileStart"
         );
 
-      // Force inline style tracking visible, then trigger smooth text up-reveals
       tl.set([".about-section-three .s3-reveal-top", ".about-section-three .s3-reveal-bottom"], { 
         visibility: "visible" 
       }, "sec3MobileStart+=0.8");
@@ -140,19 +139,16 @@ export default function AboutMobile() {
       
       tl.to({}, { duration: 0.4 });
 
-      // ── SECTION 4 SLIDE UP ──
       tl.set(".about-section-four", { visibility: "visible" })
         .to(".about-section-four", { yPercent: 0, duration: 2.0, ease: "power2.inOut" });
       
       tl.to({}, { duration: 0.4 });
 
-      // ── SECTION 5 SLIDE IN ──
       tl.set(".about-section-five", { visibility: "visible" })
         .to(".about-section-five", { xPercent: 0, duration: 2.0, ease: "power2.inOut" });
       
       tl.to({}, { duration: 0.4 });
 
-      // ── CTA & FOOTER ARRIVALS ──
       tl.set(".about-section-cta", { visibility: "visible" })
         .to(".about-section-cta", { y: "0%", duration: 1.8, ease: "power2.inOut" });
 
@@ -166,21 +162,16 @@ export default function AboutMobile() {
 
   return (
     <div ref={scopeRef}>
-      <Preloader onComplete={() => {
-        setPreloaderDone(true);
-        setSitePreloaderDone(true);
-      }} />
-
       <div 
         className="about-pin relative h-screen w-screen overflow-hidden bg-[#111]"
-        style={{ visibility: preloaderDone ? "visible" : "hidden" }}
+        style={{ 
+          visibility: "visible"
+        }}
       >
-        {/* Base Layer: Pinned Hero Viewport */}
         <div className="about-hero-panel-left absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
           <Hero hideText={false} />
         </div>
 
-        {/* Sliding Overlays stack cleanly upward */}
         <div className="about-section-one absolute inset-0 w-full h-full" style={{ zIndex: 20 }}>
           <SectionOne />
         </div>
@@ -189,7 +180,6 @@ export default function AboutMobile() {
           <SectionTwo />
         </div>
 
-        {/* Section Three: Configured with precise CSS masks & visibility safety hooks */}
         <div 
           className="about-section-three absolute inset-0 w-full h-full" 
           style={{ 

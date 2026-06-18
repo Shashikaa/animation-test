@@ -1,16 +1,16 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+import FadePreloader from "./FadePreloader";
 import { useSite } from "../app/context/SiteContext";
-import Preloader from "./Preloader";
 
-export default function PreloaderWrapper() {
+export default function FadePreloaderWrapper() {
   const { setPreloaderDone } = useSite();
 
   const handleComplete = () => {
-    // FIXED: Only clear the scrolling lock when the preloader completely finishes its intro
     document.body.classList.remove("preloading");
     setPreloaderDone(true);
   };
 
-  return <Preloader onComplete={handleComplete} />;
+  return <FadePreloader onComplete={handleComplete} />;
 }

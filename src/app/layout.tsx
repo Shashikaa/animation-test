@@ -3,11 +3,10 @@ import { Instrument_Sans, Cormorant_Garamond } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { SiteProvider } from "../app/context/SiteContext";
-import SmoothScroll from "../components/SmoothScroll";
 import HeaderWrapper from "../components/HeaderWrapper";
 import NavMenuWrapper from "../components/NavMenuWrapper";
-import PreloaderWrapper from "../components/PreloaderWrapper";
-import { headers } from "next/headers";
+import PreloaderToggle from "../components/PreloaderToggle";
+import SmoothScroll from "../components/SmoothScroll"; // Import your updated Lenis component
 
 const instrumentSans = Instrument_Sans({
   subsets:  ["latin"],
@@ -39,32 +38,29 @@ export const metadata: Metadata = {
   description: "Crafting Custom Swimming Pools with Style, Function, and Quality.",
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const headersList = await headers();
-  const pathname = headersList.get("x-pathname") ?? headersList.get("x-invoke-path") ?? "/";
-  const isHome = pathname === "/";
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      data-preloading={isHome ? "" : undefined}
-      className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased`}
-    >
-<body className="flex flex-col">
-  <SiteProvider>
-    <HeaderWrapper />
-    <NavMenuWrapper />
+    <html lang="en" className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased`}>
+      <body className="flex flex-col min-h-screen preloading">
+        <SiteProvider>
+          {/* 
+            SmoothScroll now wraps your actual markup flow cleanly.
+            Because Lenis uses native scrolling, headers with fixed or sticky 
+            positioning can live inside here safely without jumping layout bugs.
+          */}
+          <SmoothScroll>
+            <HeaderWrapper />
+            <NavMenuWrapper />
 
-    <SmoothScroll>
-      <div className="site-root flex flex-col flex-1 overflow-x-hidden">
-        {children}
-      </div>
-    </SmoothScroll>
+            <main className="site-root flex flex-col flex-1 w-full overflow-x-hidden">
+              {children}
+            </main>
+          </SmoothScroll>
 
-    {/* Preloader last = highest natural stacking + z-9999 */}
-    {isHome && <PreloaderWrapper />}
-  </SiteProvider>
-</body>
+          {/* Separated out client thread toggle */}
+          <PreloaderToggle />
+        </SiteProvider>
+      </body>
     </html>
   );
 }

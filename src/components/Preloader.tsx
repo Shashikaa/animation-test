@@ -33,6 +33,7 @@ function useResponsiveScale() {
   return scale;
 }
 
+// ─── Shared SVG components ────────────────────────────────────────────────────
 function GrandSVG({ width, height }: { width: number; height: number }) {
   return (
     <svg viewBox="0 0 212 30" width={width} height={height} fill="none"
@@ -59,6 +60,7 @@ function PoolsSVG({ width, height }: { width: number; height: number }) {
   );
 }
 
+// ─── Icon SVG — accepts MotionValues directly, zero setState ─────────────────
 function LogoSVG({
   waveProgressMV,
   circleProgressMV,
@@ -73,36 +75,57 @@ function LogoSVG({
   height: number;
 }) {
   const fill = "#F4EEDF";
-  const clipW       = useTransform(waveProgressMV, v => v * 206);
-  const waveOpacity = useTransform(waveProgressMV, v => Math.min(1, v));
+  // useTransform is reactive without triggering React re-renders
+  const clipW        = useTransform(waveProgressMV, v => v * 206);
+  const waveOpacity  = useTransform(waveProgressMV, v => Math.min(1, v));
 
   return (
-    <svg viewBox="385 0 206 178.21" width={width} height={height}
-      style={{ display: "block", flexShrink: 0, overflow: "visible" }} aria-hidden>
+    <svg
+      viewBox="385 0 206 178.21"
+      width={width}
+      height={height}
+      style={{ display: "block", flexShrink: 0, overflow: "visible" }}
+      aria-hidden
+    >
       <defs>
         <clipPath id="wave-reveal">
+          {/* motion.rect animates width without a React re-render */}
           <motion.rect x="385" y="0" width={clipW} height="178.21" />
         </clipPath>
       </defs>
+
       <motion.g clipPath="url(#wave-reveal)" style={{ opacity: waveOpacity }}>
         <path fill={fill} d="M571.87,92.4c-.07,2-.22,3.99-.44,5.96l-5.78,1.33h-.03l-.44.11c-.72.17-1.45.35-2.19.53-3.36.82-6.84,1.67-10.32,1.82-9.97.45-17.17-3.48-21.46-11.64-.6-1.17-1.14-.98-2.21-.49l-.14.07c-3.17,1.46-6.3,3.11-9.3,4.91-6.34,4.01-13.21,7.11-20.43,9.19-6.63,1.89-12.93.55-19.84-4.22-6.1-4.2-9.44-10.49-10.22-19.21-.1-1.21-.18-2.43-.26-3.65-.07-1.2-.15-2.41-.26-3.61-.07-.43-.18-.88-.31-1.33-.5.23-.96.51-1.39.84-.99,1.02-2.04,2.08-3.09,3.15-3.56,3.61-7.25,7.35-10.72,11.17-9.08,10.01-19.09,19.3-29.75,27.62-2.34,1.87-4.86,3.56-7.47,5.04,0,0-.01.01-.04.02-.32.18-2.48,1.39-5.07,2.34-.73-1.69-1.41-3.41-2.02-5.16,2.42-.97,4.73-2.32,5.02-2.49h.01l.02-.02c6.65-3.88,12.79-8.61,18.25-14.04,6.33-6.09,12.56-12.42,18.59-18.53,2.92-2.96,5.84-5.92,8.77-8.86l1.29-1.31c2.78-2.83,5.65-5.76,8.43-8.68.71-.75,1.41-1.09,2.06-1,.62.08,1.16.54,1.59,1.36.53.99.86,2.06.98,3.18.11,1.26.09,2.52.07,3.74-.01.49-.02.98-.02,1.46-.13,7.23.86,12.62,3.19,17.49,3.65,7.6,13.25,11.5,21.84,8.89,7.84-2.5,15.38-5.94,22.41-10.22,2.51-1.39,5.12-2.58,7.79-3.57,3.55-1.45,4.56-1.05,6.34,2.47,1.61,3.54,4.46,6.29,8.03,7.76,4.3,1.63,8.96,2.02,13.48,1.12,3.01-.57,6.16-1.26,9.37-2.06h.02l5.65-1.48h0Z" />
       </motion.g>
+
       <motion.g style={{ opacity: circleProgressMV }}>
         <path fill={fill} d="M487.9,5.01c-46.42,0-84.04,37.63-84.04,84.05,0,9.87,1.7,19.34,4.83,28.13.61,1.75,1.29,3.47,2.02,5.16,12.9,29.86,42.6,50.75,77.19,50.75,43.27,0,78.9-32.71,83.53-74.74.22-1.97.37-3.96.44-5.96.05-1.11.07-2.22.07-3.34,0-46.42-37.63-84.05-84.04-84.05h0ZM565.65,99.69c-5.18,38.3-38.02,67.83-77.75,67.83-32.35,0-60.12-19.57-72.12-47.51-.76-1.74-1.44-3.51-2.06-5.31h-.01c-2.77-8.04-4.28-16.66-4.28-25.64,0-43.34,35.13-78.47,78.47-78.47s78.47,35.13,78.47,78.47c0,1.62-.05,3.22-.15,4.81-.11,1.96-.3,3.9-.57,5.82h0Z" />
         <path fill={fill} d="M410.71,122.35s-.07.03-.1.04c-1.34.48-2.72.87-4.11,1.17-5.63,1.17-10.97-.73-16.32-5.81-3.98-3.78-5.17-8.95-3.55-15.38.29-.92.67-1.77,1.13-2.58.08-.21.18-.42.32-.6.75-1,2.17-1.21,3.18-.46.53.27.89.66,1.04,1.14.21.7-.11,1.42-.44,2.03-1.13,2.15-1.38,4.62-.7,6.96.17.7.4,1.37.68,2.02,2.08,4.79,6.83,7.61,11.75,7.5,1.58-.03,3.14-.44,4.7-1.03l.39-.15c.62,1.74,1.29,3.46,2.03,5.15h0Z" />
         <path fill={fill} d="M589.72,89.97c-.82,1.99-2.38,3.48-4.33,4.16-4.47,1.74-9.13,3.16-13.84,4.2l-.12.03c.22-1.96.37-3.95.44-5.95l.11-.03c1.2-.33,2.38-.66,3.57-.99,2.47-.71,4.92-1.68,7.29-2.61,1.34-.53,2.68-1.06,4.03-1.55.81-.21,1.59-.32,2.37-.35l.44-.02.07.43c.16.89.15,1.79-.03,2.68h0Z" />
       </motion.g>
-      <motion.path fill={fill} style={{ opacity: dotOpacityMV }}
+
+      <motion.path
+        fill={fill}
+        style={{ opacity: dotOpacityMV }}
         d="M591.28,107.71l-1.42-1.6h0c-.97-1.06-2.56-1.27-3.77-.53l-.18.09c-.26.18-.49.4-.68.65-.99,1.3-.74,3.17.55,4.16,1.03.82,2.16,1.53,3.32,2.09.12.07.25.1.4.1.36,0,.81-.21,1.38-.63.06-.04.11-.09.16-.14,1.22-1.09,1.33-2.97.25-4.19,0,0-.01,0-.01,0Z"
       />
     </svg>
   );
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-type Phase = "idle" | "wave-draw" | "circle-appear" | "text-reveal" | "hold" | "fly-out" | "done";
+// ─── Types & helpers ──────────────────────────────────────────────────────────
+type Phase =
+  | "idle"
+  | "wave-draw"
+  | "circle-appear"
+  | "text-reveal"
+  | "hold"
+  | "fly-out"
+  | "done";
 
-// ─── Visibility-aware wait ────────────────────────────────────────────────────
+// Visibility-aware wait — pauses countdown while tab is hidden,
+// resumes when visible again. Keeps in sync with Framer Motion's
+// animate() which also pauses its rAF loop when the tab is hidden.
 const wait = (ms: number) =>
   new Promise<void>((resolve) => {
     let remaining = ms;
@@ -134,47 +157,16 @@ const wait = (ms: number) =>
     };
 
     document.addEventListener("visibilitychange", handler);
+
     if (document.visibilityState !== "hidden") schedule();
-  });
-
-// ─── animateAndWait ───────────────────────────────────────────────────────────
-// Framer Motion PAUSES animations when the tab is hidden, so .then() never
-// fires until the user comes back. Instead we: start the animation normally,
-// but also listen for the tab going hidden and instantly snap to the target
-// value so the promise resolves immediately — the sequence keeps moving
-// while the tab is in the background.
-const animateAndWait = (
-  mv: MotionValue<number>,
-  target: number,
-  options: Parameters<typeof animate>[2],
-): Promise<void> =>
-  new Promise<void>((resolve) => {
-    // Cast mv to any to satisfy TypeScript overload resolution for framer-motion's animate
-    const controls = (animate as any)(mv, target, options);
-
-    const onHidden = () => {
-      if (document.visibilityState === "hidden") {
-        // Snap to target instantly — Framer has paused, so we finish it
-        controls.stop();
-        mv.set(target);
-        document.removeEventListener("visibilitychange", onHidden);
-        resolve();
-      }
-    };
-
-    document.addEventListener("visibilitychange", onHidden);
-
-    controls.then(() => {
-      document.removeEventListener("visibilitychange", onHidden);
-      resolve();
-    });
+    // If already hidden, handler fires on next visibilitychange → visible
   });
 
 // ─── Preloader ────────────────────────────────────────────────────────────────
 export default function Preloader({ onComplete }: { onComplete?: () => void }) {
-  const [phase,       setPhase]       = useState<Phase>("idle");
-  const [mounted,     setMounted]     = useState(true);
-  const [waterPaused, setWaterPaused] = useState(false);
+  const [phase,        setPhase]        = useState<Phase>("idle");
+  const [mounted,      setMounted]      = useState(true);
+  const [waterPaused,  setWaterPaused]  = useState(false);   // ← Fix ②
 
   const rScale  = useResponsiveScale();
   const iconW   = LOGO_ICON_W * rScale;
@@ -185,6 +177,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   const poolsH  = POOLS_SVG_H * rScale;
   const logoGap = 12;
 
+  // Refs for fly-out rect measurements
   const grandRef    = useRef<HTMLDivElement>(null);
   const iconRef     = useRef<HTMLDivElement>(null);
   const poolsRef    = useRef<HTMLDivElement>(null);
@@ -192,54 +185,60 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   const iconSvgRef  = useRef<HTMLDivElement>(null);
   const poolsSvgRef = useRef<HTMLDivElement>(null);
 
+  // ─── Motion values ─────────────────────────────────────────────────────────
+  // Fix ①: all motion values passed directly — no useState/useEffect listeners
   const waveProgressMV   = useMotionValue(0);
   const circleProgressMV = useMotionValue(0);
   const dotOpacityMV     = useMotionValue(0);
 
-  const slideAmt    = 400;
+  const slideAmt   = 400;
   const textProgress = useMotionValue(0);
   const textX_left   = useTransform(textProgress, [0, 1], [-slideAmt, 0]);
   const textX_right  = useTransform(textProgress, [0, 1], [slideAmt,  0]);
   const textOpacity  = useTransform(textProgress, [0, 0.1, 1], [0, 1, 1]);
 
+  // Background + logo overlay opacity — used directly as style props
   const bgOpacity   = useMotionValue(1);
   const logoOpacity = useMotionValue(1);
 
+  // Per-element fly-out transforms
   const grandX = useMotionValue(0); const grandY = useMotionValue(0); const grandS = useMotionValue(1);
   const iconX  = useMotionValue(0); const iconY  = useMotionValue(0); const iconS  = useMotionValue(1);
   const poolsX = useMotionValue(0); const poolsY = useMotionValue(0); const poolsS = useMotionValue(1);
 
+  // ─── Animation sequence ────────────────────────────────────────────────────
   useEffect(() => {
     const run = async () => {
+      
+  // If tab is hidden when preloader starts, wait for it to become visible
+  if (document.visibilityState === "hidden") {
+    await new Promise<void>((r) => {
+      const check = () => {
+        if (document.visibilityState === "visible") {
+          document.removeEventListener("visibilitychange", check);
+          r();
+        }
+      };
+      document.addEventListener("visibilitychange", check);
+    });
+  }
 
-      // Wait for tab to be visible before starting
-      if (document.visibilityState === "hidden") {
-        await new Promise<void>((r) => {
-          const check = () => {
-            if (document.visibilityState === "visible") {
-              document.removeEventListener("visibilitychange", check);
-              r();
-            }
-          };
-          document.addEventListener("visibilitychange", check);
-        });
-      }
+  await wait(400);  // ← only ONE wait(400) here
 
-      await wait(400);
+  setPhase("wave-draw");
+  animate(waveProgressMV, 1, { duration: 2.2, ease: [0.16, 1, 0.3, 1] });
+  await wait(1800);
 
-      setPhase("wave-draw");
-      await animateAndWait(waveProgressMV, 1, { duration: 2.2, ease: [0.16, 1, 0.3, 1] });
+  setPhase("text-reveal");
+  animate(circleProgressMV, 1, { duration: 1.4, ease: [0.16, 1, 0.3, 1] });
+  animate(dotOpacityMV,     1, { duration: 1.2, ease: [0.16, 1, 0.3, 1] });
+  await wait(1400);
 
-      setPhase("text-reveal");
-      await Promise.all([
-        animateAndWait(circleProgressMV, 1, { duration: 1.4, ease: [0.16, 1, 0.3, 1] }),
-        animateAndWait(dotOpacityMV,     1, { duration: 1.2, ease: [0.16, 1, 0.3, 1] }),
-      ]);
+  animate(textProgress, 1, { duration: 1.4, ease: [0.16, 1, 0.3, 1] });
+  await wait(1400);
 
-      await animateAndWait(textProgress, 1, { duration: 1.4, ease: [0.16, 1, 0.3, 1] });
-
-      setPhase("hold");
-      await wait(700);
+  setPhase("hold");
+  await wait(700);
 
       const hGrand = document.getElementById("h-grand-svg");
       const hIcon  = document.getElementById("h-icon-svg");
@@ -255,6 +254,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
 
       await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
 
+      // Fix ③: batch ALL getBoundingClientRect reads before any writes
       const hGR = hGrand.getBoundingClientRect();
       const hIR = hIcon.getBoundingClientRect();
       const hPR = hPools.getBoundingClientRect();
@@ -291,34 +291,42 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
       const pTx = phCx - (pCx + (pSCx - pCx) * pScale);
       const pTy = phCy - (pCy + (pSCy - pCy) * pScale);
 
+      // Fix ②: stop WebGL canvas work before kicking off fly-out
       setWaterPaused(true);
+
       setPhase("fly-out");
 
-      await Promise.all([
-        animateAndWait(grandX, gTx,    { duration: dur, ease }),
-        animateAndWait(grandY, gTy,    { duration: dur, ease }),
-        animateAndWait(grandS, gScale, { duration: dur, ease }),
-        animateAndWait(iconX,  iTx,    { duration: dur, ease }),
-        animateAndWait(iconY,  iTy,    { duration: dur, ease }),
-        animateAndWait(iconS,  iScale, { duration: dur, ease }),
-        animateAndWait(poolsX, pTx,    { duration: dur, ease }),
-        animateAndWait(poolsY, pTy,    { duration: dur, ease }),
-        animateAndWait(poolsS, pScale, { duration: dur, ease }),
-        animateAndWait(bgOpacity, 0,   { duration: dur, ease }),
-      ]);
+      // All writes happen after all reads — no layout thrash
+      animate(grandX, gTx, { duration: dur, ease });
+      animate(grandY, gTy, { duration: dur, ease });
+      animate(grandS, gScale, { duration: dur, ease });
 
-      const pageContent = document.getElementById("page-content");
-      if (pageContent) {
-        pageContent.style.transition = "none";
-        pageContent.style.visibility = "visible";
-        pageContent.style.opacity    = "0";
-        requestAnimationFrame(() => {
+      animate(iconX,  iTx, { duration: dur, ease });
+      animate(iconY,  iTy, { duration: dur, ease });
+      animate(iconS,  iScale, { duration: dur, ease });
+
+      animate(poolsX, pTx, { duration: dur, ease });
+      animate(poolsY, pTy, { duration: dur, ease });
+      animate(poolsS, pScale, { duration: dur, ease });
+
+      animate(bgOpacity, 0, { duration: dur, ease });
+
+      setTimeout(() => {
+        const pageContent = document.getElementById("page-content");
+        if (pageContent) {
+          pageContent.style.transition = "none";
+          pageContent.style.visibility = "visible";
+          pageContent.style.opacity    = "0";
           requestAnimationFrame(() => {
-            pageContent.style.transition = `opacity ${dur}s cubic-bezier(0.76,0,0.24,1)`;
-            pageContent.style.opacity    = "1";
+            requestAnimationFrame(() => {
+              pageContent.style.transition = `opacity ${dur}s cubic-bezier(0.76,0,0.24,1)`;
+              pageContent.style.opacity    = "1";
+            });
           });
-        });
-      }
+        }
+      }, 80);
+
+      await wait(dur * 1000);
 
       const headerLogoEl = document.getElementById("header-logo-inner");
       if (headerLogoEl) {
@@ -326,7 +334,8 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
         headerLogoEl.style.opacity    = "1";
       }
 
-      await animateAndWait(logoOpacity, 0, { duration: 0.25, ease: "easeInOut" });
+      animate(logoOpacity, 0, { duration: 0.25, ease: "easeInOut" });
+      await wait(250);
 
       setPhase("done");
       setMounted(false);
@@ -340,64 +349,121 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[9999] min-h-screen">
+
+      {/* 1. BG IMAGE — opacity driven by motion value directly */}
       <motion.img
         src="/IntroReveal.webp"
-        alt="" aria-hidden
+        alt=""
+        aria-hidden
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
         style={{ zIndex: 0, objectPosition: "center 30%", opacity: bgOpacity }}
       />
-      <motion.div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1, opacity: bgOpacity }}>
+
+      {/* 2. WATER CANVAS — paused during fly-out so GPU is free */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{ zIndex: 1, opacity: bgOpacity }}
+      >
         <WaterBackground paused={waterPaused} />
       </motion.div>
+
+      {/* 3. LOGO GROUP */}
       <motion.div
         style={{
-          position: "absolute", inset: 0, zIndex: 10,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          overflow: "hidden", opacity: logoOpacity, pointerEvents: "none",
+          position:       "absolute",
+          inset:          0,
+          zIndex:         10,
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "center",
+          overflow:       "hidden",
+          opacity:        logoOpacity,
+          pointerEvents:  "none",
         }}
       >
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "center",
-          gap: logoGap, width: "100%", maxWidth: "100vw",
-          padding: "0 24px", boxSizing: "border-box",
-        }}>
-          <motion.div ref={grandRef} style={{
-            x: grandX, y: grandY, scale: grandS,
-            transformOrigin: "center center",
-            display: "flex", alignItems: "center", willChange: "transform",
-          }}>
-            <motion.div ref={grandSvgRef} style={{
-              x: textX_left, opacity: textOpacity,
-              marginRight: logoGap, display: "flex", alignItems: "center", willChange: "transform",
-            }}>
+        <div
+          style={{
+            display:        "flex",
+            alignItems:     "center",
+            justifyContent: "center",
+            gap:            logoGap,
+            width:          "100%",
+            maxWidth:       "100vw",
+            padding:        "0 24px",
+            boxSizing:      "border-box",
+          }}
+        >
+          {/* LEFT: GRAND */}
+          <motion.div
+            ref={grandRef}
+            style={{
+              x: grandX, y: grandY, scale: grandS,
+              transformOrigin: "center center",
+              display: "flex", alignItems: "center",
+              willChange: "transform",
+            }}
+          >
+            <motion.div
+              ref={grandSvgRef}
+              style={{
+                x:           textX_left,
+                opacity:     textOpacity,
+                marginRight: logoGap,
+                display:     "flex",
+                alignItems:  "center",
+                willChange:  "transform",
+              }}
+            >
               <GrandSVG width={grandW} height={grandH} />
             </motion.div>
           </motion.div>
 
-          <motion.div ref={iconRef} style={{
-            x: iconX, y: iconY, scale: iconS,
-            transformOrigin: "center center", flexShrink: 0,
-            display: "flex", alignItems: "center", justifyContent: "center", willChange: "transform",
-          }}>
+          {/* CENTER: ICON */}
+          <motion.div
+            ref={iconRef}
+            style={{
+              x: iconX, y: iconY, scale: iconS,
+              transformOrigin: "center center",
+              flexShrink:     0,
+              display:        "flex",
+              alignItems:     "center",
+              justifyContent: "center",
+              willChange:     "transform",
+            }}
+          >
             <div ref={iconSvgRef} style={{ display: "flex" }}>
+              {/* Fix ①: motion values passed directly — LogoSVG never re-renders */}
               <LogoSVG
                 waveProgressMV={waveProgressMV}
                 circleProgressMV={circleProgressMV}
                 dotOpacityMV={dotOpacityMV}
-                width={iconW} height={iconH}
+                width={iconW}
+                height={iconH}
               />
             </div>
           </motion.div>
 
-          <motion.div ref={poolsRef} style={{
-            x: poolsX, y: poolsY, scale: poolsS,
-            transformOrigin: "center center",
-            display: "flex", alignItems: "center", willChange: "transform",
-          }}>
-            <motion.div ref={poolsSvgRef} style={{
-              x: textX_right, opacity: textOpacity,
-              marginLeft: logoGap, display: "flex", alignItems: "center", willChange: "transform",
-            }}>
+          {/* RIGHT: POOLS */}
+          <motion.div
+            ref={poolsRef}
+            style={{
+              x: poolsX, y: poolsY, scale: poolsS,
+              transformOrigin: "center center",
+              display: "flex", alignItems: "center",
+              willChange: "transform",
+            }}
+          >
+            <motion.div
+              ref={poolsSvgRef}
+              style={{
+                x:          textX_right,
+                opacity:    textOpacity,
+                marginLeft: logoGap,
+                display:    "flex",
+                alignItems: "center",
+                willChange: "transform",
+              }}
+            >
               <PoolsSVG width={poolsW} height={poolsH} />
             </motion.div>
           </motion.div>

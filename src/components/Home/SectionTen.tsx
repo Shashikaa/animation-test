@@ -126,9 +126,9 @@ export default function SectionTen() {
                    Exits via clipPath wipe after card reveals.
       ══════════════════════════════════════════ */}
       <div
-        className="s10-video-wrap absolute overflow-hidden"
+        className="s10-video-wrap absolute overflow-hidden z-1 lg:!z-50"
         style={{
-          zIndex: 1,
+        
         }}
       >
         <video

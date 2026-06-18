@@ -53,7 +53,7 @@
   --radius-full: 9999px;
 
   --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out:  cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --duration-fast: 150ms;
   --duration-base: 300ms;
   --duration-slow: 600ms;
@@ -84,8 +84,10 @@ html {
   -webkit-font-smoothing:  antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering:          optimizeLegibility;
-  scroll-behavior:         auto !important;
+  
+  scroll-behavior:         auto !important; 
   height:                  auto;
+  
   scrollbar-width:         none;
   -ms-overflow-style:      none;
 }
@@ -100,6 +102,7 @@ body {
   line-height:  var(--leading-body);
   height:       auto;
   overflow-x:   hidden;
+  
   scrollbar-width:    none;
   -ms-overflow-style: none;
 }
@@ -111,70 +114,13 @@ body::-webkit-scrollbar { display: none !important; width: 0 !important; height:
   position:   relative;
 }
 
-/* ─── ScrollSmoother Context ─────────────────────────────────── */
-#smooth-wrapper,
-#smooth-content {
-  overflow: visible;
-  width:    100%;
-}
-
-/* ─── Main Thread Preloader Lock ─────────────────────────────── */
+/* ─── Preloader lock ─────────────────────────────────────────── */
 body.preloading {
   overflow: hidden !important;
   height:   100vh !important;
 }
 
-/* ─── GPU Accelerated Paint Layers ───────────────────────────── */
-.hero,
-.section-1,
-.section-2,
-.section-3,
-.section-4,
-.section-5,
-.section-6,
-.section-7,
-.section-8,
-.section-9,
-.section-10,
-.s8-panel-left,
-.s8-panel-right,
-video,
-canvas,
-.s1-bg,
-.s2-bg,
-.s4-bg-img,
-.s4-img,
-.s4-img-mob,
-.s7-bg-img,
-.s8-bg-img,
-.s9-bg-img,
-.s10-bg-img,
-.s10-static-bg,
-.hero-bg {
-  will-change: transform, opacity;
-  transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
-}
-
-/* ─── Main Layout Matrix ─────────────────────────────────────── */
-.hero,
-.section-1,
-.section-2,
-.section-3,
-.section-4,
-.section-5,
-.section-6,
-.section-7,
-.section-8,
-.section-9,
-.section-10 {
-  position: absolute;
-  inset:    0;
-  width:    100%;
-  height:   100%;
-}
-
-/* ─── Viewport Pin Compositors ───────────────────────────────── */
+/* ─── Pin wrapper height ─────────────────────────────────────── */
 .pin-all {
   height:     100lvh;
   min-height: 100lvh;
@@ -190,6 +136,21 @@ canvas,
 
 .pin-spacer > .pin-all {
   max-height: none !important;
+}
+
+.scroll-container {
+  position: relative;
+  width:    100%;
+}
+
+body.preloading .scroll-container {
+  visibility: hidden;
+}
+
+/* ─── Section wrappers ───────────────────────────────────────── */
+.section-six-wrapper,
+.section-nine-wrapper {
+  overflow: hidden;
 }
 
 /* ─── Typography ─────────────────────────────────────────────── */
@@ -229,7 +190,7 @@ canvas,
 
 .text-muted { color: var(--muted); }
 
-/* ─── Grid & Responsive Containers ───────────────────────────── */
+/* ─── Layout Utilities ───────────────────────────────────────── */
 .container {
   width:          100%;
   max-width:      var(--container-max);
@@ -263,7 +224,7 @@ canvas,
   }
 }
 
-/* ─── Structural Borders ─────────────────────────────────────── */
+/* ─── Border & Surface ───────────────────────────────────────── */
 .border       { border: 1px solid var(--border); }
 .border-t     { border-top: 1px solid var(--border); }
 .border-b     { border-bottom: 1px solid var(--border); }
@@ -272,11 +233,11 @@ canvas,
 .rounded-lg   { border-radius: var(--radius-lg); }
 .rounded-full { border-radius: var(--radius-full); }
 
-/* ─── Hardware Smooth Micro-Transitions ─────────────────────── */
-.transition      { transition: all var(--duration-base) var(--ease-out); }
+/* ─── Transitions ────────────────────────────────────────────── */
+.transition  { transition: all var(--duration-base) var(--ease-out); }
 .transition-fast { transition: all var(--duration-fast) var(--ease-out); }
 
-/* ─── Scaled Fluid Typography ───────────────────────────────── */
+/* ─── Responsive h2 & p ──────────────────────────────────────── */
 h2, h1 {
   font-size:   72px;
   line-height: 1.15;
@@ -289,40 +250,22 @@ p {
 
 @media (max-width: 1024px) {
   h2, h1 { font-size: 50px; }
-  p { font-size: 16px; }
+  p  { font-size: 16px; }
 }
 
 @media (max-width: 767px) {
   h2, h1 { font-size: 32px; }
-  p { font-size: 12px; }
+  p  { font-size: 12px; }
 }
 
-/* ─── Accessibility & Reduced Motion Override ────────────────── */
+/* ─── Reduced motion ─────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration:        0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration:       0.01ms !important;
     scroll-behavior:           auto !important;
-  }
-
-  .hero,
-  .section-1,
-  .section-2,
-  .section-3,
-  .section-4,
-  .section-5,
-  .section-6,
-  .section-7,
-  .section-8,
-  .section-9,
-  .section-10,
-  .section-cta,
-  .footer {
-    transform:   none !important;
-    opacity:     1 !important;
-    visibility:  visible !important;
-    clip-path:   none !important;
-    will-change: auto !important;
   }
 }

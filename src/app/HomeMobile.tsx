@@ -29,7 +29,9 @@ const vvHeight = () =>
     : null) ?? window.innerHeight;
 
 export default function HomeMobile() {
-  const { preloaderDone, smootherRef, onScrollReady } = useSite();
+  const contextValues = useSite() as any;
+  const preloaderDone = contextValues.preloaderDone;
+  const onScrollReady = contextValues.onScrollReady ?? (() => {});
   const scopeRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -42,25 +44,23 @@ export default function HomeMobile() {
     let vvCleanup: (() => void) | null = null;
 
     const ctx = gsap.context(() => {
-
       gsap.ticker.lagSmoothing(0);
 
       ScrollTrigger.config({
-        ignoreMobileResize: true,
-        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
+        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize",
       });
 
       const TRANSITION = 2.0;
       const EASE       = "power2.inOut";
       const PAUSE      = 0.8;
-      const scrubValue = 0.35;
+      const scrubValue = 0.5; // ── EQUALIZED KINETICS: Bumped slightly to allow a softer tracking drift
 
-      const footerEl = scopeRef.current?.querySelector<HTMLElement>(".footer");
+      const footerEl = scopeRef.current?.querySelector<HTMLElement>(`.footer`);
       const footerH  = footerEl?.offsetHeight ?? 600;
 
+      // Maintain structural sets
       gsap.set(".hero",    { yPercent: 0, zIndex: 5 });
       gsap.set(".hero-bg", { yPercent: 0 });
-
       gsap.set(".section-1", { yPercent: 100, zIndex: 90 });
       gsap.set(".s1-bg",     { yPercent: 10,  scale: 1.0 });
       gsap.set(".s1-card",   { yPercent: 80,  opacity: 0 });
@@ -138,7 +138,6 @@ export default function HomeMobile() {
       const buildTimeline = () => {
         waitForMobBgs(() => {
           requestAnimationFrame(() => {
-
             const pinEl = document.querySelector(".pin-all") as HTMLElement;
 
             ScrollTrigger.refresh(true);
@@ -163,10 +162,12 @@ export default function HomeMobile() {
             });
 
             const tl = gsap.timeline({
+              defaults: { ease: "power1.inOut" }, // ── MATCHES ABOUT PRESETS
               scrollTrigger: {
                 trigger:             ".pin-all",
                 start:               "top top",
-                end:                 "+=17000",
+                // ── MATCHES ABOUT DURATION RATIO: Tightened to match the spatial distance of AboutMobile
+                end:                 "+=13500", 
                 scrub:               scrubValue,
                 pin:                 true,
                 anticipatePin:       1,
@@ -175,10 +176,6 @@ export default function HomeMobile() {
                 invalidateOnRefresh: true,
                 onRefresh: () => {
                   if (pinEl) pinEl.style.removeProperty("max-height");
-                },
-                onLeave: () => {
-                  smootherRef.current?.paused(true);
-                  requestAnimationFrame(() => smootherRef.current?.paused(false));
                 },
               },
             });
@@ -230,7 +227,7 @@ export default function HomeMobile() {
               .to(".s10-title",      { opacity: 0, y: -60, duration: 1.5, ease: "none" })
               .to(".s10-title-sub",  { opacity: 0, y: -40, duration: 1.5, ease: "none" }, "<")
               .to(".s10-para-top",   { opacity: 0, y: -50, duration: 1.5, ease: "none" }, "<")
-              .to(".s10-video-wrap", { y: 40,              duration: 2.0, ease: "none" }, "<")
+              .to(".s10-video-wrap", { y: 40,               duration: 2.0, ease: "none" }, "<")
               .addLabel("s10VideoCentered")
               .to({}, { duration: 0.3 })
               .to(".s10-card",      { clipPath: "inset(0% 0% 0% 0%)", duration: 1.6, ease: "power2.out" })
