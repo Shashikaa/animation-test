@@ -100,13 +100,13 @@ export default function SectionFive() {
       {/* Main Container Titles */}
       <div className="!absolute !z-10 !bottom-[60px] !left-[30px] md:!bottom-[105px] md:!left-[65px] !flex !flex-col !gap-1 !overflow-hidden">
         <h2
-          className="s5-static-title !font-[100] !text-2xl md:!text-4xl !text-[#F4EEDF] !will-change-transform"
+          className="s5-static-title !font-[100]  !text-[#F4EEDF] !will-change-transform"
           style={{ fontFamily: "var(--font-display)" }}
         >
           Decades of Expertise
         </h2>
         <p 
-          className="s5-static-desc !text-sm md:!text-base !text-[#F4EEDF] !will-change-transform" 
+          className="s5-static-desc !text-[#F4EEDF] !will-change-transform !mt-4" 
           style={{ fontFamily: "var(--font-body)" }}
         >
           Unmatched Craftsmanship
@@ -149,16 +149,16 @@ export default function SectionFive() {
                 <h3 className="!font-normal !text-white !text-3xl md:!text-[40px]">
                   {slide.stat}
                 </h3>
-                <p className="!text-white !text-sm !mt-1" style={{ fontFamily: "var(--font-body)" }}>
-                  <strong className="block !text-white/90">{slide.label}</strong>
-                  <span className="text-white/70">{slide.desc}</span>
+                <p className="!text-white !text-sm !mt-4" style={{ fontFamily: "var(--font-body)" }}>
+      
+                  <span className="text-white">{slide.desc}</span>
                 </p>
               </div>
             ))}
           </div>
 
           {/* Navigation Controls */}
-          <div className="!flex !items-center !justify-between !mt-6">
+          <div className="!flex !items-center !justify-between !pt-12">
             <button
               type="button"
               onClick={handlePrev}

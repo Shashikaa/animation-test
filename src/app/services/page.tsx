@@ -2,32 +2,33 @@
 
 import { useEffect, useState } from "react";
 import { useSite } from "@/src/app/context/SiteContext";
-// Import normally so the code is already bundled and ready to execute instantly
-import AboutDesktop from "./AboutDesktop";
-import AboutMobile from "./AboutMobile";
+import ServiceMobile from "./ServiceMobile";
+import ServiceDesktop from "./ServiceDesktop";
 
-export default function AboutPage() {
+export default function ServicePage() {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
   const { preloaderDone } = useSite();
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1025);
     check();
+    
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // Avoid rendering a blank state while checking window width on the very first frame
+  // Prevent flash or hydration mismatch while window width resolves
   if (isMobile === null) {
-    return <div className="h-screen w-full " />;
+    return <div className="h-screen w-full" />;
   }
 
   return (
     <>
-      {isMobile 
-        ? <AboutMobile preloaderDone={preloaderDone} />
-        : <AboutDesktop preloaderDone={preloaderDone} />
-      }
+      {isMobile ? (
+        <ServiceMobile preloaderDone={preloaderDone} />
+      ) : (
+        <ServiceDesktop preloaderDone={preloaderDone} />
+      )}
     </>
   );
 }

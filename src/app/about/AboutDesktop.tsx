@@ -50,7 +50,8 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
     if (!preloaderDone) return;
     const ctx = gsap.context(() => {
       // Force initial state on render pass
-
+      gsap.set(".about-hero-bg", { scale: 1.3 });
+      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
 
       gsap.set(".about-hero-panel-left", { clipPath: "inset(0% 0% 0% 0%)" });
       gsap.set(".about-hero-panel-right", { clipPath: "inset(0% 0% 0% 0%)" });
@@ -67,24 +68,34 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
     return () => ctx.revert();
   }, [preloaderDone]);
 
+  // Fluid Hero Intro Setup
 // Fluid Hero Intro Setup
   useEffect(() => {
     if (!preloaderDone || !isReady) return;
 
     const ctx = gsap.context(() => {
+      // ✅ Match Services: Trigger setIntroDone ONLY when the full timeline finishes
+      const introTl = gsap.timeline({
+        onComplete: () => setIntroDone(true)
+      });
+
       // 1. Zoom out background image smoothly
-      gsap.to(".about-hero-bg", {
-        scale: 1.2,
+      introTl.to(".about-hero-bg", {
+        scale: 1.0,
         duration: 2.2,
         ease: "power2.out"
-      });
+      }, 0);
 
-      // 2. Simply switch control over to ScrollTrigger when background settles
-      gsap.delayedCall(1.2, () => {
-        setIntroDone(true);
-      });
+      // 2. Coordinated text fade-in
+      introTl.to([".hero-title", ".hero-desc"], {
+        opacity: 1,
+        y: 0,
+        duration: 1.4,
+        stagger: 0.2,
+        ease: "power3.out",
+      }, 0.4);
 
-    }, scopeRef);
+    });
 
     return () => ctx.revert();
   }, [preloaderDone, isReady]);
@@ -123,8 +134,8 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         duration: 2.0,
       }, "<")
       .fromTo(".about-hero-bg", 
-        { scale: 1.2 }, 
-        { scale: 1.0, duration: 2.0 }, 
+        { scale: 1.0 }, // Starts from the post-intro scale layout
+        { scale: 0.85, duration: 2.0 }, 
         "<"
       );
 

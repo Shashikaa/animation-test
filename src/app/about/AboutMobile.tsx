@@ -7,7 +7,7 @@ import SectionThree from "@/src/components/About/SectionThree";
 import SectionFour from "@/src/components/About/SectionFour";
 import SectionFive from "@/src/components/About/SectionFive";
 import SectionCTA from "@/src/components/SectionCTA";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Footer from "@/src/components/Footer";
@@ -40,34 +40,41 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // Initial clean structural configurations
-  useEffect(() => {
+  // Initial clean structural configurations (Runs instantly before paint)
+  useLayoutEffect(() => {
     if (!preloaderDone) return;
     
-    gsap.set(".about-section-one", { yPercent: 100 });
-    gsap.set(".about-section-two", { visibility: "hidden", yPercent: 100 });
-    
-    gsap.set(".about-section-three", { 
-      visibility: "hidden", 
-      clipPath: "inset(100% 0% 0% 0%)",
-      WebkitClipPath: "inset(100% 0% 0% 0%)"
-    });
+    const ctx = gsap.context(() => {
+      // Initialize the background image scaled up slightly for the intro timeline
+      gsap.set(".about-hero-bg", { scale: 1.3 });
 
-    // Section 4 sits underneath Section 3 driven by stacking index
-    gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0 });
+      gsap.set(".about-section-one", { yPercent: 100 });
+      gsap.set(".about-section-two", { visibility: "hidden", yPercent: 100 });
+      
+      gsap.set(".about-section-three", { 
+        visibility: "hidden", 
+        clipPath: "inset(100% 0% 0% 0%)",
+        WebkitClipPath: "inset(100% 0% 0% 0%)"
+      });
 
-    // ✅ FIXED: Initialize Section 5 with clipPath stack layers instead of x positioning
-    gsap.set(".about-section-five", { 
-      visibility: "hidden", 
-      clipPath: "inset(100% 0% 0% 0%)",
-      WebkitClipPath: "inset(100% 0% 0% 0%)"
-    });
+      // Section 4 sits underneath Section 3 driven by stacking index
+      gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0 });
 
-    gsap.set(".about-section-cta", { visibility: "hidden", y: "100%" });
-    gsap.set(".about-footer-wrap", { visibility: "hidden", y: "100%" });
+      // Initialize Section 5 with clipPath stack layers instead of x positioning
+      gsap.set(".about-section-five", { 
+        visibility: "hidden", 
+        clipPath: "inset(100% 0% 0% 0%)",
+        WebkitClipPath: "inset(100% 0% 0% 0%)"
+      });
+
+      gsap.set(".about-section-cta", { visibility: "hidden", y: "100%" });
+      gsap.set(".about-footer-wrap", { visibility: "hidden", y: "100%" });
+    }, scopeRef);
+
+    return () => ctx.revert();
   }, [preloaderDone]);
 
-  // Hero Intro Scale Sequence
+  // Hero Intro Scale Sequence (Only background scales; text is completely untouched)
   useEffect(() => {
     if (!preloaderDone || !isReady) return;
 
@@ -151,7 +158,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
       
       tl.to({}, { duration: 0.4 });
 
-      // ✅ FIXED: Section 4 to 5 ClipPath reveal transitions
+      // Section 4 to 5 ClipPath reveal transitions
       tl.set(".about-section-five", { visibility: "visible" })
         .to(".about-section-five", { 
           clipPath: "inset(0% 0% 0% 0%)", 
@@ -159,7 +166,6 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
           duration: 2.0, 
           ease: "power2.inOut" 
         })
-        // Reveal Section 5 static titles and card content elements smoothly as the clip reveals
         .to(".s5-static-title, .s5-static-desc", { y: 0, opacity: 1, duration: 1.2, ease: "power2.out" }, "0")
         .to(".s5-main-glass-card", { x: 0, opacity: 1, duration: 1.2, ease: "power2.out" }, "<");
       
@@ -180,12 +186,13 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
 
   return (
     <div ref={scopeRef}>
-      <div 
-        className="about-pin relative h-screen w-screen overflow-hidden bg-[#111]"
-        style={{ visibility: "visible" }}
-      >
+<div 
+      className="about-pin pin-all relative w-full overflow-hidden "
+      style={{ visibility: "visible" }}
+    >
         <div className="about-hero-panel-left absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
-          <Hero hideText={false} />
+          {/* ✅ Passed isMobile={true} so the text elements are instantly visible */}
+          <Hero hideText={false} isMobile={true} />
         </div>
 
         <div className="about-section-one absolute inset-0 w-full h-full" style={{ zIndex: 20 }}>
