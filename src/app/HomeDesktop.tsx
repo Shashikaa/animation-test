@@ -109,7 +109,6 @@ export default function HomeDesktop() {
       gsap.set(".s9-para", { opacity: 0, y: 5 });
       gsap.set(".footer", { yPercent: 100 }); 
 
-      // Section 9 title initialized at absolute viewport layout center
       gsap.set(".s9-title", { 
         opacity: 0, 
         position: "absolute",
@@ -137,7 +136,7 @@ export default function HomeDesktop() {
             scrollTrigger: {
               trigger: ".pin-all",
               start: "top top",
-              end: "+=35000", 
+              end: "+=28800", // 👈 Optimized: Exactly 12 structural phases * 2400px per section transition
               scrub: scrubValue,
               pin: true,
               anticipatePin: 1,
@@ -159,7 +158,7 @@ export default function HomeDesktop() {
             .to(".section-2", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 }, "sec2Start")
             .to(".section-1", { scale: 1.05, duration: 3.8 }, "sec2Start")
             .to(".s2-bg", { yPercent: 0, scale: 1, duration: 3.8 }, "sec2Start")
-            .to({}, { duration: 1.0 }) 
+            .to({}, { duration: 0.2 }) // Compressed dead space pad
             .set(".section-1", { display: "none" });
 
           // ── SECTION 3 REVEAL ──
@@ -167,7 +166,7 @@ export default function HomeDesktop() {
             .set(".section-3", { display: "block" })
             .to(".section-3", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 }, "sec3Start")
             .to(".section-2", { scale: 1.05, duration: 3.8 }, "sec3Start")
-            .to({}, { duration: 1.0 })
+            .to({}, { duration: 0.2 }) // Compressed dead space pad
             .set(".section-2", { display: "none" });
 
           // ── SECTION 4 REVEAL ──
@@ -190,7 +189,7 @@ export default function HomeDesktop() {
           tl.addLabel("sec6Start")
             .to(".section-6", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 }, "sec6Start")
             .to(".section-5", { scale: 1.05, duration: 3.8 }, "sec6Start")
-            .to({}, { duration: 1.0 })
+            .to({}, { duration: 0.2 }) // Compressed dead space pad
             .set(".section-5", { display: "none" });
 
           // ── SECTION 10 REVEAL ──
@@ -221,7 +220,7 @@ export default function HomeDesktop() {
             }, "<+0.2")
             .to(".s10-card-body", { y: 50, duration: 2.5 }, "<")
             .to(".s10-bg-img", { y: "0%", duration: 2.5 }, "<")
-            .to({}, { duration: 1.5 }) 
+            .to({}, { duration: 0.2 }) // Compressed dead space pad
             .set(".section-6", { display: "none" });
 
           // ── SECTION 7 REVEAL ──
@@ -229,7 +228,7 @@ export default function HomeDesktop() {
             .to(".section-7", { yPercent: 0, duration: 4.2 }, "sec7Start")
             .to(".section-10", { scale: 1.05, duration: 4.2 }, "sec7Start")
             .to(".s7-bg-img", { yPercent: 0, duration: 4.2 }, "sec7Start")
-            .to({}, { duration: 1.0 })
+            .to({}, { duration: 0.2 }) // Compressed dead space pad
             .set(".section-10", { display: "none" });
 
           // ── SECTION 8 REVEAL ──
@@ -238,7 +237,7 @@ export default function HomeDesktop() {
             .to(".section-8", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 }, "sec8Start")
             .to(".section-7", { scale: 1.0, duration: 3.8 }, "sec8Start")
             .to(".s8-bg-img", { yPercent: 0, duration: 3.8 }, "sec8Start")
-            .to({}, { duration: 1.0 });
+            .to({}, { duration: 0.2 }); // Compressed dead space pad
 
           // ── SECTION 9 REVEAL (SPLIT PANELS) ──
           tl.addLabel("sec9Start")
@@ -248,7 +247,6 @@ export default function HomeDesktop() {
             .to(".s8-panel-right", { clipPath: "inset(100% 0% 0% 50%)", duration: 3.8 }, "sec9Start")
             .to(".s9-bg-img", { yPercent: 0, scale: 1, duration: 3.8 }, "sec9Start")
             .to(".s9-title", { opacity: 1, duration: 2.0 }, "sec9Start+=1.2")
-            // FIXED: Stable edge-to-edge structural calculations keeping center metrics intact
             .to(".s9-title", {
               x: () => {
                 const el = document.querySelector(".s9-title") as HTMLElement;
@@ -271,7 +269,7 @@ export default function HomeDesktop() {
               duration: 3.5,
             })
             .to(".s9-para", { opacity: 1, y: 0, duration: 2.0 }, "<+1.5")
-            .to({}, { duration: 1.0 })
+            .to({}, { duration: 0.2 }) // Compressed dead space pad
             .set(".section-8", { display: "none" });
 
           // ── CTA REVEAL ──
@@ -279,7 +277,7 @@ export default function HomeDesktop() {
             .set(".section-cta", { display: "block" })
             .to(".section-cta", { yPercent: 0, duration: 4.8 }, "ctaStart")
             .to(".section-9", { scale: 1.05, duration: 4.8 }, "ctaStart")
-            .to({}, { duration: 1.0 });
+            .to({}, { duration: 0.2 }); // Compressed dead space pad
 
           // ── FOOTER REVEAL ──
           tl.addLabel("footerStart")
@@ -287,7 +285,7 @@ export default function HomeDesktop() {
             .to(".footer", { yPercent: 0, duration: 5.5 }, "footerStart")
             .to(".section-9", { scale: 1.05, duration: 5.5 }, "footerStart");
 
-          // ── OPTIMIZED TEXT ANIMATION TIMINGS ──
+          // ── TEXT REVEAL TIMINGS ──
           useTextReveal(scopeRef, ".s2-title-main", { tl, position: "sec2Start+=1.9", duration: 0.4, stagger: 0.05 });
           useTextReveal(scopeRef, ".s2-title-sub", { tl, position: "sec2Start+=1.9", duration: 0.4, stagger: 0.04 });
           useTextReveal(scopeRef, ".s2-body", { tl, position: "sec2Start+=1.3", duration: 0.4, stagger: 0.05 });

@@ -52,8 +52,8 @@ export default function HomeMobile() {
 
       const TRANSITION = 2.0;
       const EASE       = "power2.inOut";
-      const PAUSE      = 0.8;
-      const scrubValue = 0.5; // ── EQUALIZED KINETICS: Bumped slightly to allow a softer tracking drift
+      const PAUSE      = 0.8; // 🌟 INCREASED: Wider safety buffers to intercept touch velocity/momentum
+      const scrubValue = 0.5;
 
       const footerEl = scopeRef.current?.querySelector<HTMLElement>(`.footer`);
       const footerH  = footerEl?.offsetHeight ?? 600;
@@ -162,12 +162,11 @@ export default function HomeMobile() {
             });
 
             const tl = gsap.timeline({
-              defaults: { ease: "power1.inOut" }, // ── MATCHES ABOUT PRESETS
+              defaults: { ease: "power1.inOut" },
               scrollTrigger: {
                 trigger:             ".pin-all",
                 start:               "top top",
-                // ── MATCHES ABOUT DURATION RATIO: Tightened to match the spatial distance of AboutMobile
-                end:                 "+=13500", 
+                end:                 "+=15600", // 🌟 INCREASED: Added extra pixels to balance the expanded safe halts
                 scrub:               scrubValue,
                 pin:                 true,
                 anticipatePin:       1,
@@ -177,13 +176,19 @@ export default function HomeMobile() {
                 onRefresh: () => {
                   if (pinEl) pinEl.style.removeProperty("max-height");
                 },
+                snap: {
+                  snapTo: 1 / 12, 
+                  duration: { min: 0.2, max: 0.6 },
+                  delay: 0.05,
+                  ease: "power1.inOut"
+                }
               },
             });
 
             tl
               // ── Hero → Section 1 ──────────────────────────────────
-              .to(".section-1", { yPercent: 0,   duration: 2.0, ease: "none" })
-              .to(".hero-bg",   { yPercent: -20, duration: 2.0, ease: "none" }, "<")
+              .to(".section-1", { yPercent: 0,   duration: TRANSITION, ease: "none" })
+              .to(".hero-bg",   { yPercent: -20, duration: TRANSITION, ease: "none" }, "<")
               .to(".s1-bg",     { yPercent: 0, scale: 1, duration: 1.8, ease: "none" }, "<")
               .to(".s1-card",   { yPercent: 0, opacity: 1, duration: 1.8, ease: "power2.out" }, 0.3)
               .to({}, { duration: PAUSE })
@@ -212,7 +217,7 @@ export default function HomeMobile() {
               // ── Section 5 → 6 ─────────────────────────────────────
               .to(".section-6", { yPercent: 0, duration: TRANSITION, ease: EASE })
               .to(".section-5", { scale: 1.0,  duration: TRANSITION, ease: EASE }, "<")
-              .to({}, { duration: 0.6 })
+              .to({}, { duration: PAUSE }) 
 
               // ── Section 6 → 10 ────────────────────────────────────
               .set(".section-10", { visibility: "visible" })
@@ -227,9 +232,9 @@ export default function HomeMobile() {
               .to(".s10-title",      { opacity: 0, y: -60, duration: 1.5, ease: "none" })
               .to(".s10-title-sub",  { opacity: 0, y: -40, duration: 1.5, ease: "none" }, "<")
               .to(".s10-para-top",   { opacity: 0, y: -50, duration: 1.5, ease: "none" }, "<")
-              .to(".s10-video-wrap", { y: 40,               duration: 2.0, ease: "none" }, "<")
+              .to(".s10-video-wrap", { y: 40,               duration: TRANSITION, ease: "none" }, "<")
               .addLabel("s10VideoCentered")
-              .to({}, { duration: 0.3 })
+              .to({}, { duration: PAUSE }) 
               .to(".s10-card",      { clipPath: "inset(0% 0% 0% 0%)", duration: 1.6, ease: "power2.out" })
               .to(".s10-card-body", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.4, ease: "power2.out" }, "<+0.2")
               .to(".s10-video-wrap", {
@@ -252,7 +257,7 @@ export default function HomeMobile() {
               })
               .to(".s10-card-body", { y: 30,   duration: 2.5, ease: "none" }, "<")
               .to(".s10-bg-img",    { y: "0%", duration: 2.5, ease: "none" }, "<")
-              .to({}, { duration: 0.6 })
+              .to({}, { duration: PAUSE }) 
 
               // ── Section 7 + 8 slide in ────────────────────────────
               .set(".section-8", { visibility: "visible" })
@@ -281,15 +286,15 @@ export default function HomeMobile() {
 
               // ── Section 9 → CTA ───────────────────────────────────
               .set(".section-cta", { visibility: "visible" })
-              .to(".section-cta", { yPercent: 0,   duration: 3.5, ease: "power3.out" })
-              .to(".s9-bg-img",   { yPercent: -10, duration: 3.5, ease: "none" }, "<")
-              .to({}, { duration: 0.5 })
+              .to(".section-cta", { yPercent: 0,   duration: TRANSITION, ease: "power3.out" }) 
+              .to(".s9-bg-img",   { yPercent: -10, duration: TRANSITION, ease: "none" }, "<")
+              .to({}, { duration: PAUSE }) 
 
               // ── Footer ────────────────────────────────────────────
               .set(".footer", { visibility: "visible" })
-              .to(".footer",    { y: 0,          duration: 2.5, ease: "power3.out" })
-              .to(".s9-bg-img", { yPercent: -20, duration: 2.5, ease: "none" }, "<")
-              .to({}, { duration: 1.0 });
+              .to(".footer",    { y: 0,          duration: TRANSITION, ease: "power3.out" }) 
+              .to(".s9-bg-img", { yPercent: -20, duration: TRANSITION, ease: "none" }, "<")
+              .to({}, { duration: 0.4 }); 
 
             requestAnimationFrame(() => {
               if (pinEl) pinEl.style.removeProperty("max-height");

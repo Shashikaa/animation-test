@@ -1,6 +1,13 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Key Architecture Updates
+* Each section transition uses exactly 2,400 pixels of scroll distance, and the dead space spacers are set to a duration of 0.2.
 
-## Getting Started
+
+Fixed Scroll Lengths: Standardized the scroll distance to exactly 1,200px per section, stopping pages from feeling endless on mobile.
+
+Killed Scrolling Lag: Cut empty animation pauses from 0.8 down to 0.2, making sections react instantly to quick thumb swipes.
+
+Added Auto-Align Snapping: Injected a smart snapping engine so panels automatically slide into place and lock perfectly centered in the viewport.
 
 First, run the development server:
 

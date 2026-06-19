@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useLayoutEffect } from "react";
+import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSite } from "@/src/app/context/SiteContext";
@@ -8,6 +8,8 @@ import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal"
 import Hero from "@/src/components/Service/Hero";
 import SectionOne from "@/src/components/Service/SectionOne";
 import SectionTwo from "@/src/components/Service/SectionTwo";
+import SectionCTA from "@/src/components/SectionCTA";
+import Footer from "@/src/components/Footer";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -18,6 +20,9 @@ type ServicesDesktopProps = {
 export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps) {
   const { setPreloaderDone } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
+  
+  const [introDone, setIntroDone] = useState(false);
+  const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -29,24 +34,27 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
+  useEffect(() => {
+    const locked = !preloaderDone || !introDone;
+    document.body.style.overflow = locked ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [preloaderDone, introDone]);
+
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     const ctx = gsap.context(() => {
-      // Hero Defaults
       gsap.set(".service-hero-bg", { scale: 1.3, xPercent: 0, transformOrigin: "center center" });
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
       gsap.set(".services-hero-top-layer", { width: "100%" });
-      
-      // Section One Layout Configs
       gsap.set(".section-one-wrap", { clipPath: "inset(100% 0% 0% 0%)" });
-      
-      // 🌟 Glass Card & Text Presets to mirror the About page setup
       gsap.set(".s1-glass-card", { x: 40, opacity: 0 }); 
       gsap.set([".s1-static-title", ".s1-static-desc"], { opacity: 0, y: 30 });
       gsap.set([".s1-reveal-top", ".s1-reveal-bottom"], { opacity: 0, y: 40 });
-      
-      // Section Two Configuration
       gsap.set(".services-section-two-wrap", { visibility: "hidden", clipPath: "inset(0% 0% 0% 100%)" });
+      gsap.set(".services-section-cta", { visibility: "hidden", y: "100%" });
+      gsap.set(".services-footer-wrap", { visibility: "hidden", y: "100%" });
     }, scopeRef);
     return () => ctx.revert();
   }, [preloaderDone]);
@@ -55,31 +63,40 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
     if (!preloaderDone) return;
 
     const ctx = gsap.context(() => {
-      const masterTl = gsap.timeline();
+      const introTl = gsap.timeline({
+        onComplete: () => setIntroDone(true)
+      });
 
-      // PART A: Initial Landing Intro
-      masterTl.to(".service-hero-bg", {
+      introTl.to(".service-hero-bg", {
         scale: 1.1, 
         duration: 2.2,
         ease: "power2.out"
       }, 0);
 
-      masterTl.to([".hero-title", ".hero-desc"], {
+      introTl.to([".hero-title", ".hero-desc"], {
         opacity: 1,
         y: 0,
         duration: 1.4,
         stagger: 0.2,
         ease: "power3.out",
       }, 0.4);
+    }, scopeRef);
 
-      // PART B: Main Scroll Timeline
+    return () => ctx.revert();
+  }, [preloaderDone]);
+
+  useEffect(() => {
+    if (!introDone) return;
+
+    const ctx = gsap.context(() => {
+      // 4 step transitions * 2400px = 9600px total scroll distance
       const scrollTl = gsap.timeline({
         scrollTrigger: {
           trigger: ".services-hero-master",
           start: "top top",
-          end: "+=500%", 
+          end: "+=9600", 
           pin: true,
-          scrub: 1.5,
+          scrub: 1.5,     
           invalidateOnRefresh: true,
         }
       });
@@ -98,7 +115,7 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
         ease: "power1.inOut",
       }, 0.1);
 
-      // ── 2. SECOND PHASE: Reveal Section One Sheet & Glass Container Slide In ──
+      // ── 2. SECOND PHASE: Reveal Section One Sheet ──
       scrollTl.to(".section-one-wrap", {
         clipPath: "inset(0% 0% 0% 0%)",
         duration: 1.5,
@@ -112,7 +129,6 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
         ease: "power1.inOut",
       }, 1.6);
 
-      // 🌟 Matches Section Five behavior of About: Glass Card slides horizontally & fades in
       scrollTl.to(".s1-glass-card", {
         opacity: 1,
         x: 0,
@@ -120,7 +136,6 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
         ease: "power2.out"
       }, 2.0);
 
-      // Static text blocks fade up slightly behind it
       scrollTl.to([".s1-static-title", ".s1-static-desc"], {
         opacity: 1,
         y: 0,
@@ -129,7 +144,6 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
         ease: "power2.out"
       }, 2.4);
 
-      // Core structural content animations running natively
       scrollTl.to(".s1-reveal-top", {
         opacity: 1,
         y: 0,
@@ -145,8 +159,8 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
         ease: "power2.out"
       }, 2.1);
 
-      // Brief pause to read Section One content
-      scrollTl.to({}, { duration: 1.0 });
+      // Reduced padding step space to compress layout dead zones
+      scrollTl.to({}, { duration: 0.3 });
 
       // ── 3. THIRD PHASE: Transition to Section Two ──
       scrollTl.set(".services-section-two-wrap", { visibility: "visible" })
@@ -154,24 +168,44 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
           clipPath: "inset(0% 0% 0% 0%)", 
           duration: 2.0,
           ease: "power1.inOut",
+          onStart: () => setIsSectionTwoActive(true),
+          onReverseComplete: () => setIsSectionTwoActive(false)
         })
         .to(".section-one-wrap", {
-   
           duration: 2.0,
           ease: "power1.inOut",
         }, "<");
 
-      // Section Two Text Reveal
       useTextReveal(scopeRef, ".s2-reveal-text", {
         tl: scrollTl,
-        position: ">-=1.2",
+        position: ">-=0.2",
         yOffset: 25,
         stagger: 0.04,
         duration: 0.5,
         ease: "power2.out",
       });
 
-      scrollTl.to({}, { duration: 0.5 });
+      scrollTl.to({}, { duration: 0.3 });
+
+      // ── 4. FOURTH PHASE: Section CTA Reveal ──
+      scrollTl.addLabel("ctaStart")
+        .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
+        .to(".services-section-cta", {
+          y: "0%",
+          duration: 2.2,
+          ease: "power1.inOut"
+        }, "ctaStart");
+
+      scrollTl.to({}, { duration: 0.3 });
+
+      // ── 5. FIFTH PHASE: Footer Reveal ──
+      scrollTl.addLabel("footerStart")
+        .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
+        .to(".services-footer-wrap", {
+          y: "0%",
+          duration: 2.2,
+          ease: "power1.inOut"
+        }, "footerStart");
 
     }, scopeRef);
 
@@ -181,22 +215,30 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
         restoreTextReveal(scopeRef.current, ".s2-reveal-text");
       }
     };
-  }, [preloaderDone]);
+  }, [introDone]);
 
   return (
     <div ref={scopeRef} className="w-full bg-[#111] relative">
       <div className="services-hero-master relative w-full h-screen overflow-hidden z-10">
-        
         <Hero />
-        
         <div className="section-one-wrap absolute inset-0 w-full h-full z-20 bg-[#111] overflow-hidden">
           <SectionOne />
         </div>
-
-        <div className="services-section-two-wrap absolute inset-0 w-full h-full z-30 overflow-y-auto bg-[#111]">
-          <SectionTwo />
+        <div className="services-section-two-wrap absolute inset-0 w-full h-full z-30 overflow-hidden bg-[#111]">
+          <SectionTwo isActive={isSectionTwoActive} />
         </div>
-
+        <div
+          className="services-section-cta absolute inset-0 w-full h-full bg-white"
+          style={{ zIndex: 40, transform: "translateY(100%)" }}
+        >
+          <SectionCTA />
+        </div>
+        <div
+          className="services-footer-wrap absolute inset-0 w-full h-full flex flex-col justify-end"
+          style={{ zIndex: 50, transform: "translateY(100%)" }}
+        >
+          <Footer />
+        </div>
       </div>
     </div>
   );

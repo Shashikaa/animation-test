@@ -3,14 +3,13 @@
 import React, { createContext, useContext, useState, useEffect, useRef, MutableRefObject } from "react";
 import { usePathname } from "next/navigation";
 
-export const PAGES_WITH_OWN_PRELOADER = ["/about"];
+export const PAGES_WITH_OWN_PRELOADER: string[] = [];
 
 interface SiteContextProps {
   menuOpen: boolean;
   setMenuOpen: (open: boolean) => void;
   preloaderDone: boolean;
   setPreloaderDone: (done: boolean) => void;
-  // Added smootherRef to context types (supports Lenis instance or any smooth scroll reference)
   smootherRef: MutableRefObject<any> | null;
 }
 
@@ -21,19 +20,28 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
   const [preloaderDone, setPreloaderDone] = useState(false);
   const pathname = usePathname();
   
-  // Initialize the ref container here
   const smootherRef = useRef<any>(null);
 
   useEffect(() => {
     const isMainHomeRoute = pathname === "/";
     const hasCustomLoader = PAGES_WITH_OWN_PRELOADER.includes(pathname ?? "");
 
+    // 1. If it's a completely custom heavy loader page
     if (hasCustomLoader) {
       setPreloaderDone(false);
       document.body.classList.add("preloading");
-    } else if (!isMainHomeRoute) {
-      setPreloaderDone(true);
-      document.body.classList.remove("preloading");
+    } 
+    // 2. If it's your regular inner pages (e.g. /about, /contact)
+    else if (!isMainHomeRoute) {
+      // Keep it false! Let the FadePreloaderWrapper tell us when it is finished.
+      setPreloaderDone(false); 
+      document.body.classList.add("preloading");
+    }
+    // 3. For the main homepage route
+    else {
+      // Your separate home preloader setup manages state for the "/" path
+      setPreloaderDone(false);
+      document.body.classList.add("preloading");
     }
   }, [pathname]);
 
@@ -44,7 +52,7 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
         setMenuOpen, 
         preloaderDone, 
         setPreloaderDone, 
-        smootherRef // Passed into the provider value
+        smootherRef 
       }}
     >
       {children}

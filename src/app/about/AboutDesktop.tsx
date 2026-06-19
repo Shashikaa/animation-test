@@ -45,14 +45,11 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // Layout tracking setups
   useLayoutEffect(() => {
-    if (!preloaderDone) return;
+    // Let layout run immediately to intercept default states cleanly
     const ctx = gsap.context(() => {
-      // Force initial state on render pass
       gsap.set(".about-hero-bg", { scale: 1.3 });
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
-
       gsap.set(".about-hero-panel-left", { clipPath: "inset(0% 0% 0% 0%)" });
       gsap.set(".about-hero-panel-right", { clipPath: "inset(0% 0% 0% 0%)" });
       gsap.set(".s1-card", { y: 50, opacity: 0 });
@@ -66,27 +63,22 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
       gsap.set(".about-footer-wrap", { visibility: "hidden", y: "100%" });
     }, scopeRef);
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []); // Run on mount to guarantee no instant flashes
 
-  // Fluid Hero Intro Setup
-// Fluid Hero Intro Setup
   useEffect(() => {
     if (!preloaderDone || !isReady) return;
 
     const ctx = gsap.context(() => {
-      // ✅ Match Services: Trigger setIntroDone ONLY when the full timeline finishes
       const introTl = gsap.timeline({
         onComplete: () => setIntroDone(true)
       });
 
-      // 1. Zoom out background image smoothly
       introTl.to(".about-hero-bg", {
         scale: 1.0,
         duration: 2.2,
         ease: "power2.out"
       }, 0);
 
-      // 2. Coordinated text fade-in
       introTl.to([".hero-title", ".hero-desc"], {
         opacity: 1,
         y: 0,
@@ -94,13 +86,11 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         stagger: 0.2,
         ease: "power3.out",
       }, 0.4);
-
-    });
+    }, scopeRef);
 
     return () => ctx.revert();
   }, [preloaderDone, isReady]);
 
-  // Main Scrolling Timeline Execution
   useEffect(() => {
     if (!introDone) return;
 
@@ -110,7 +100,7 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         scrollTrigger: {
           trigger: ".about-pin",
           start: "top top",
-          end: "+=18000",            
+          end: "+=16800",            
           scrub: 1.5,               
           pin: true,
           pinSpacing: true,
@@ -134,7 +124,7 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         duration: 2.0,
       }, "<")
       .fromTo(".about-hero-bg", 
-        { scale: 1.0 }, // Starts from the post-intro scale layout
+        { scale: 1.0 }, 
         { scale: 0.85, duration: 2.0 }, 
         "<"
       );
@@ -156,7 +146,7 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         ease: "power2.out",
       });
 
-      tl.to({}, { duration: 0.8 }); 
+      tl.to({}, { duration: 0.2 }); 
 
       // ── SECTION 2 REVEAL ──
       tl.set(".about-section-two", { visibility: "visible" })
@@ -185,6 +175,8 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         duration: 0.4,
         ease: "power2.out",
       });
+
+      tl.to({}, { duration: 0.2 });
 
       // ── SECTION 2 TO 3 REVEAL ──
       tl.set(".about-section-three", { visibility: "visible" }, ">-=0.1")
@@ -228,7 +220,7 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         ease: "power2.out",
       });
 
-      tl.to({}, { duration: 0.8 });
+      tl.to({}, { duration: 0.2 });
 
       // ── SECTION 3 TO 4 REVEAL ──
       tl.addLabel("sec4Start")
@@ -260,14 +252,14 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         ease: "power2.out"
       });
 
-      tl.to({}, { duration: 0.8 });
+      tl.to({}, { duration: 0.2 });
 
       // ── SECTION 4 TO 5 REVEAL ──
       tl.addLabel("sec5Start")
         .to(".about-section-four .s4-img-bg", {
           scale: 1.0,
           duration: 2.2,
-        }, "sec5Start")
+          }, "sec5Start")
         .set(".about-section-five", { visibility: "visible" }, "sec5Start")
         .to(".about-section-five", {
           clipPath: "inset(0% 0% 0% 0%)",
@@ -287,7 +279,7 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
           ease: "power2.out"
         }, "sec5Start+=1.1");
 
-      tl.to({}, { duration: 0.8 });
+      tl.to({}, { duration: 0.2 });
 
       // ── PHASE 2: SECTION CTA REVEAL ──
       tl.addLabel("ctaStart")
@@ -297,7 +289,7 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
           duration: 2.2,
         }, "ctaStart");
 
-      tl.to({}, { duration: 0.8 });
+      tl.to({}, { duration: 0.2 });
 
       // ── PHASE 4: FOOTER REVEAL ──
       tl.addLabel("footerStart")
@@ -307,8 +299,6 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
           duration: 2.2,
           ease: "power1.inOut"
         }, "footerStart");
-
-      tl.to({}, { duration: 0.5 });
 
     }, scopeRef);
 
@@ -333,22 +323,18 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         <div className="about-section-one absolute inset-0" style={{ zIndex: 10 }}>
           <SectionOne />
         </div>
-
         <div className="about-hero-panel-left absolute inset-0" style={{ zIndex: 20, overflow: "hidden" }}>
-          <Hero hideText={false} />
+          <Hero/>
         </div>
-
         <div className="about-hero-panel-right absolute inset-0" style={{ zIndex: 20, overflow: "hidden" }}>
-          <Hero hideText={true} />
+          <Hero  />
         </div>
-
         <div
           className="about-section-two absolute inset-0"
           style={{ zIndex: 30, clipPath: "inset(100% 0% 0% 0%)" }}
         >
           <SectionTwo />
         </div>
-
         <div
           className="about-section-three absolute inset-0 w-full h-full"
           style={{
@@ -359,28 +345,24 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         >
           <SectionThree />
         </div>
-
         <div
           className="about-section-four absolute inset-0"
           style={{ zIndex: 50, clipPath: "inset(100% 0% 0% 0%)" }}
         >
           <SectionFour />
         </div>
-
         <div
           className="about-section-five absolute inset-0"
           style={{ zIndex: 60, clipPath: "inset(0% 0% 0% 100%)" }}
         >
           <SectionFive />
         </div>
-
         <div
           className="about-section-cta absolute inset-0 w-full h-full bg-white"
           style={{ zIndex: 70, transform: "translateY(100%)" }}
         >
           <SectionCTA />
         </div>
-
         <div
           className="about-footer-wrap absolute inset-0 w-full h-full flex flex-col justify-end"
           style={{ zIndex: 80, transform: "translateY(100%)" }}

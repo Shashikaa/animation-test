@@ -2,10 +2,6 @@
 
 import { useRef, useState, useCallback, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-// Ensure ScrollTrigger is registered
-gsap.registerPlugin(ScrollTrigger);
 
 const slides = [
   {
@@ -31,154 +27,211 @@ const slides = [
 const CLIP_DURATION = 1.0;
 const TEXT_DURATION = 0.7;
 
-function animateTextIn(selector: string) {
-  document.querySelectorAll(selector).forEach((el) => {
-    const inners = Array.from(
-      el.querySelectorAll(":scope > .s3-line-wrap > .s3-line-inner")
-    ) as HTMLElement[];
-    inners.forEach((inner, idx) => {
-      gsap.killTweensOf(inner);
-      gsap.fromTo(
-        inner,
-        { y: 10, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: TEXT_DURATION,
-          ease: "elastic.out(1, 0.5)",
-          delay: idx * 0.08,
-        }
-      );
-    });
-  });
-}
+type SectionTwoProps = {
+  isActive: boolean;
+};
 
-function animateTextOut(selector: string) {
-  document.querySelectorAll(selector).forEach((el) => {
-    const inners = Array.from(
-      el.querySelectorAll(":scope > .s3-line-wrap > .s3-line-inner")
-    ) as HTMLElement[];
-    inners.forEach((inner, idx) => {
-      gsap.killTweensOf(inner);
-      gsap.to(inner, {
-        y: -10,
-        opacity: 0,
-        duration: 0.2,
-        ease: "power2.in",
-        delay: idx * 0.03,
-      });
-    });
-  });
-}
-
-export default function SectionTwo() {
+export default function SectionTwo({ isActive }: SectionTwoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const currentRef = useRef<number>(0);
   const [current, setCurrent] = useState(0);
   const animating = useRef<boolean>(false);
+  const entranceTimeline = useRef<gsap.core.Timeline | null>(null);
 
+  function animateTextIn(selector: string) {
+    if (!containerRef.current) return;
+    containerRef.current.querySelectorAll(selector).forEach((el) => {
+      const inners = Array.from(
+        el.querySelectorAll(":scope > .s3-line-wrap > .s3-line-inner")
+      ) as HTMLElement[];
+      inners.forEach((inner, idx) => {
+        gsap.killTweensOf(inner);
+        gsap.fromTo(
+          inner,
+          { y: 30, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: TEXT_DURATION,
+            ease: "power3.out",
+            delay: idx * 0.08,
+          }
+        );
+      });
+    });
+  }
+
+  function animateTextOut(selector: string) {
+    if (!containerRef.current) return;
+    containerRef.current.querySelectorAll(selector).forEach((el) => {
+      const inners = Array.from(
+        el.querySelectorAll(":scope > .s3-line-wrap > .s3-line-inner")
+      ) as HTMLElement[];
+      inners.forEach((inner, idx) => {
+        gsap.killTweensOf(inner);
+        gsap.to(inner, {
+          y: -20,
+          opacity: 0,
+          duration: 0.3,
+          ease: "power2.in",
+          delay: idx * 0.03,
+        });
+      });
+    });
+  }
+
+  // Set initial text states on load safely scoped inside container
   useEffect(() => {
+    if (!containerRef.current) return;
     slides.forEach((_, i) => {
-      document
+      containerRef.current!
         .querySelectorAll(`.s3-text-${i + 1} > .s3-line-wrap > .s3-line-inner`)
         .forEach((el) => {
-          gsap.set(el, i === 0 ? { y: 0, opacity: 1 } : { y: 10, opacity: 0 });
+          gsap.set(el, { y: 30, opacity: 0 });
         });
     });
   }, []);
 
-  // ── INVIEW REVEAL ANIMATION FOR GLASS CARD & BUTTON TEXTS ──
+  // Set up baseline hidden layouts and built entrance animation timeline
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      // Baseline hidden state
       gsap.set(".s2-glass-card", { x: 120, opacity: 0 });
       gsap.set(".s2-card-btn", { y: 20, opacity: 0 });
 
-      // Trigger animation on scroll entry
-      gsap.to(".s2-glass-card", {
-        x: 0,
-        opacity: 1,
-        duration: 1.2,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: ".s2-desktop-section",
-          start: "top 75%",
-          toggleActions: "play none none none",
-        },
-        onComplete: () => {
-          // Staggered text reveal once card slides in
-          gsap.to(".s2-card-btn", {
-            y: 0,
-            opacity: 1,
-            duration: 0.8,
-            stagger: 0.15,
-            ease: "power2.out",
-          });
-
-          // 🌟 FIX: Trigger text animation for the first slide immediately on enter
-          animateTextIn(".s3-text-1");
-        },
-      });
+      entranceTimeline.current = gsap.timeline({ paused: true })
+        .to(".s2-glass-card", {
+          x: 0,
+          opacity: 1,
+          duration: 1.2,
+          ease: "power3.out",
+        })
+        .to(".s2-card-btn", {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          stagger: 0.15,
+          ease: "power2.out",
+        }, "-=0.8")
+        .add(() => {
+          if (window.innerWidth >= 768) {
+            animateTextIn(".s2-desktop-section .s3-text-1");
+          }
+        }, "-=0.5");
     }, containerRef);
 
     return () => ctx.revert();
   }, []);
 
+  // Listen to the parent active status to play/reverse animations gracefully
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    if (isActive) {
+      entranceTimeline.current?.play();
+      
+      // Force immediate static visibility on Mobile targets instantly when active
+      if (window.innerWidth < 768) {
+        slides.forEach((_, i) => {
+          containerRef.current!
+            .querySelectorAll(`.s3-mobile-section .s3-text-${i + 1} > .s3-line-wrap > .s3-line-inner`)
+            .forEach((el) => {
+              gsap.killTweensOf(el);
+              gsap.set(el, { y: 0, opacity: 1 });
+            });
+        });
+      }
+    } else {
+      entranceTimeline.current?.reverse();
+      // Reset text states safely
+      slides.forEach((_, i) => {
+        containerRef.current!
+          .querySelectorAll(`.s3-text-${i + 1} > .s3-line-wrap > .s3-line-inner`)
+          .forEach((el) => {
+            gsap.killTweensOf(el);
+            gsap.set(el, { y: 30, opacity: 0 });
+          });
+      });
+    }
+  }, [isActive]);
+
   const goTo = useCallback((next: number, direction: "next" | "prev") => {
     const prev = currentRef.current;
-    if (animating.current || next === prev) return;
+    if (animating.current || next === prev || !containerRef.current) return;
     animating.current = true;
+
+    const isMobile = window.innerWidth < 768;
 
     currentRef.current = next;
     setCurrent(next);
 
-    const incomingClipStart =
-      direction === "next" ? "inset(0 100% 0 0)" : "inset(0 0% 0 100%)";
+    const incomingClipStart = direction === "next" ? "inset(0 100% 0 0)" : "inset(0 0% 0 100%)";
     const incomingClipEnd = "inset(0 0% 0 0%)";
 
-    gsap.set(`.s3-bg-${next + 1}`, {
+    // Update image viewports cleanly scoping them by device context layout prefix
+    const contextPrefix = isMobile ? ".s3-mobile-section" : ".s2-desktop-section";
+
+    gsap.set(`${contextPrefix} .s3-bg-${next + 1}`, {
       clipPath: incomingClipStart,
       zIndex: 2,
     });
-    gsap.set(`.s3-bg-${prev + 1}`, {
+    gsap.set(`${contextPrefix} .s3-bg-${prev + 1}`, {
       clipPath: "inset(0 0% 0 0)",
       zIndex: 1,
     });
 
-    gsap.to(`.s3-bg-${next + 1}`, {
+    gsap.to(`${contextPrefix} .s3-bg-${next + 1}`, {
       clipPath: incomingClipEnd,
       duration: CLIP_DURATION,
       ease: "power2.inOut",
       onComplete: () => {
-        gsap.set(`.s3-bg-${next + 1}`, { zIndex: 1 });
-        gsap.set(`.s3-bg-${prev + 1}`, {
+        gsap.set(`${contextPrefix} .s3-bg-${next + 1}`, { zIndex: 1 });
+        gsap.set(`${contextPrefix} .s3-bg-${prev + 1}`, {
           zIndex: 1,
           clipPath: "inset(0 100% 0 0)",
         });
       },
     });
 
-    document
-      .querySelectorAll(`.s3-text-${prev + 1} > .s3-line-wrap > .s3-line-inner`)
-      .forEach((el) => {
-        gsap.killTweensOf(el);
-        gsap.set(el, { y: 0, opacity: 1 });
+    // 🌟 FIXED: Use context-specific targeting so mobile does not alter Desktop cards
+    if (isMobile) {
+      slides.forEach((_, i) => {
+        const textBlock = containerRef.current!.querySelector(`.s3-mobile-section .s3-text-${i + 1}`) as HTMLElement;
+        if (textBlock) {
+          textBlock.style.opacity = i === next ? "1" : "0";
+          textBlock.style.position = i === next ? "relative" : "absolute";
+        }
+        containerRef.current!
+          .querySelectorAll(`.s3-mobile-section .s3-text-${i + 1} > .s3-line-wrap > .s3-line-inner`)
+          .forEach((el) => {
+            gsap.killTweensOf(el);
+            gsap.set(el, { y: 0, opacity: 1 });
+          });
       });
-    animateTextOut(`.s3-text-${prev + 1}`);
 
-    gsap.set(`.s3-text-${next + 1}`, { opacity: 1 });
-    document
-      .querySelectorAll(`.s3-text-${next + 1} > .s3-line-wrap > .s3-line-inner`)
-      .forEach((el) => {
-        gsap.killTweensOf(el);
-        gsap.set(el, { y: 10, opacity: 0 });
-      });
-
-    gsap.delayedCall(0.32, () => animateTextIn(`.s3-text-${next + 1}`));
-
-    gsap.delayedCall(CLIP_DURATION + 0.15, () => {
       animating.current = false;
-    });
+    } else {
+      // Desktop standard animation flow safely limited to desktop container elements
+      containerRef.current
+        .querySelectorAll(`.s2-desktop-section .s3-text-${prev + 1} > .s3-line-wrap > .s3-line-inner`)
+        .forEach((el) => {
+          gsap.killTweensOf(el);
+        });
+      animateTextOut(`.s2-desktop-section .s3-text-${prev + 1}`);
+
+      gsap.set(`.s2-desktop-section .s3-text-${next + 1}`, { opacity: 1 });
+      containerRef.current
+        .querySelectorAll(`.s2-desktop-section .s3-text-${next + 1} > .s3-line-wrap > .s3-line-inner`)
+        .forEach((el) => {
+          gsap.killTweensOf(el);
+          gsap.set(el, { y: 30, opacity: 0 });
+        });
+
+      gsap.delayedCall(0.35, () => animateTextIn(`.s2-desktop-section .s3-text-${next + 1}`));
+
+      gsap.delayedCall(CLIP_DURATION + 0.15, () => {
+        animating.current = false;
+      });
+    }
   }, []);
 
   const handleTab = (idx: number) => {
@@ -194,7 +247,6 @@ export default function SectionTwo() {
         className="s2-desktop-section hidden md:block w-full min-h-screen relative overflow-hidden z-30"
         style={{ pointerEvents: "auto" }}
       >
-        {/* Background images */}
         {slides.map((slide, i) => (
           <img
             key={i}
@@ -215,18 +267,16 @@ export default function SectionTwo() {
           />
         ))}
 
-        {/* Gradient overlay */}
         <div
           style={{
             position: "absolute",
             inset: 0,
-            background:
-              "linear-gradient(2.13deg, #19211C 3.01%, rgba(21, 40, 31, 0) 59.11%)",
+            background: "linear-gradient(2.13deg, #19211C 3.01%, rgba(21, 40, 31, 0) 59.11%)",
             zIndex: 2,
           }}
         />
 
-        {/* Floating Glass Card Container Layer (Right Side) */}
+        {/* Floating Glass Card */}
         <div
           className="s2-glass-card"
           style={{
@@ -267,7 +317,7 @@ export default function SectionTwo() {
           ))}
         </div>
 
-        {/* Bottom Content */}
+        {/* Bottom Content Area */}
         <div
           className="section-continer w-full"
           style={{
@@ -284,7 +334,6 @@ export default function SectionTwo() {
             paddingRight: "5%",
           }}
         >
-          {/* Left Content */}
           <div style={{ display: "flex", alignItems: "center", flex: 1 }}>
             <div style={{ position: "relative", flex: 1 }}>
               {slides.map((slide, i) => (
@@ -327,9 +376,8 @@ export default function SectionTwo() {
             </div>
           </div>
 
-          {/* Learn More */}
           <a
-            href="/services"
+            href="/contact-us"
             style={{
               position: "relative",
               display: "inline-block",
@@ -345,7 +393,7 @@ export default function SectionTwo() {
             }}
             className="group transition-opacity duration-200 hover:opacity-70 font-body"
           >
-            LEARNING MORE
+            CONTACT US
             <span
               style={{
                 position: "absolute",
@@ -364,7 +412,7 @@ export default function SectionTwo() {
 
       {/* ── MOBILE LAYOUT ── */}
       <section
-        className="flex md:hidden flex-col section-continer w-full min-h-screen relative overflow-hidden z-30"
+        className="s3-mobile-section flex md:hidden flex-col section-continer w-full min-h-screen relative overflow-hidden z-30 "
         style={{
           pointerEvents: "auto",
           backgroundImage: "url('/services.webp')",
@@ -373,14 +421,7 @@ export default function SectionTwo() {
           backgroundRepeat: "no-repeat",
         }}
       >
-        <div
-          style={{
-            position: "relative",
-            width: "100%",
-            height: "50vh",
-            overflow: "hidden",
-          }}
-        >
+        <div style={{ position: "relative", width: "100%", height: "50vh", overflow: "hidden", marginTop: 32 }}>
           {slides.map((slide, i) => (
             <img
               key={i}
@@ -405,8 +446,7 @@ export default function SectionTwo() {
               position: "absolute",
               inset: 0,
               zIndex: 2,
-              background:
-                "linear-gradient(2.13deg, #19211C 6.01%, rgba(21,40,31,0) 59.11%)",
+              background: "linear-gradient(2.13deg, #19211C 6.01%, rgba(21,40,31,0) 59.11%)",
               pointerEvents: "none",
             }}
           />
@@ -440,10 +480,7 @@ export default function SectionTwo() {
                   flex: 1,
                   textAlign: "left",
                   color: current === i ? "#F4EEDF" : "rgba(244,238,223,0.45)",
-                  borderBottom:
-                    current === i
-                      ? "1.5px solid #F4EEDF"
-                      : "1.5px solid rgba(244,238,223,0.45)",
+                  borderBottom: current === i ? "1.5px solid #F4EEDF" : "1.5px solid rgba(244,238,223,0.45)",
                   transition: "color 0.25s, border-color 0.25s",
                   whiteSpace: "nowrap",
                 }}
@@ -454,15 +491,15 @@ export default function SectionTwo() {
           </div>
         </div>
 
-        <div style={{ position: "relative", flexGrow: 1, padding: "20px" }}>
+        <div style={{ position: "relative", flexGrow: 1, padding: "0px" }}>
           {slides.map((slide, i) => (
             <div
               key={i}
               className={`s3-text s3-text-${i + 1}`}
               style={{
                 position: i === 0 ? "relative" : "absolute",
-                top: "20px",
-                left: "20px",
+                top: "40px",
+                left: "0px",
                 right: "20px",
                 opacity: i === 0 ? 1 : 0,
                 display: "flex",
@@ -491,7 +528,7 @@ export default function SectionTwo() {
               <div className="s3-line-wrap" style={{ overflow: "hidden", marginTop: 24 }}>
                 <div className="s3-line-inner">
                   <a
-                    href="/services"
+                    href="/contact-us"
                     className="font-body"
                     style={{
                       position: "relative",
@@ -504,7 +541,7 @@ export default function SectionTwo() {
                       textDecoration: "none",
                     }}
                   >
-                    LEARN MORE
+                    CONTACT US
                     <span
                       style={{
                         position: "absolute",

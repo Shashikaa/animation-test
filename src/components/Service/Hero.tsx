@@ -7,12 +7,12 @@ interface HeroProps {
 
 export default function ServicesHero({ hideText = false, isMobile = false }: HeroProps) {
   return (
-    <div className="services-hero-master relative w-full h-screen overflow-hidden bg-[#F4EEDF] z-10">
+    <div className="relative w-full h-full bg-[#F4EEDF]">
       
-      {/* UNDERNEATH LAYER: Stationary card block - Perfectly positioned for Mobile & Desktop */}
-      <div className="absolute bottom-0 left-0 w-full h-[320px] lg:top-0 lg:right-0 lg:left-auto lg:h-full lg:w-[550px] grid place-items-center !px-12 lg:!px-16  z-0">
-        <div className="w-full max-w-[420px] text-left lg:text-left mx-auto">
-          <p className="  text-[#19211C] !text-[14px] md:!text-[16px] ">
+      {/* UNDERNEATH LAYER: Stationary text block card reveal anchor */}
+      <div className="absolute bottom-0 left-0 w-full h-[320px] lg:top-0 lg:right-0 lg:left-auto lg:h-full lg:w-[550px] grid place-items-center !px-12 lg:!px-16 z-0">
+        <div className="w-full max-w-[420px] text-left mx-auto">
+          <p className="text-[#19211C] !text-[14px] md:!text-[16px]">
             From stunning pool renovations to high-end commercial builds, 
             we deliver tailored solutions with precision and care. Whether you're 
             upgrading an existing pool or starting from scratch, our expert team 
@@ -21,7 +21,7 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
         </div>
       </div>
 
-      {/* TOP LAYER: Full screen image container */}
+      {/* TOP LAYER: Full screen image container clipped with Inset values */}
       <div 
         className="services-hero-top-layer absolute inset-0 w-full h-full overflow-hidden z-10 will-change-[clip-path]"
         style={{ clipPath: "inset(0px 0px 0px 0px)" }}
