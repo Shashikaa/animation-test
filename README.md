@@ -1,6 +1,6 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 ## Key Architecture Updates
-* Each section transition uses exactly 2,400 pixels of scroll distance, and the dead space spacers are set to a duration of 0.2.
+* Each section transition uses exactly 2,200 pixels of scroll distance, and the dead space spacers are set to a duration of 0.2.
 
 
 Fixed Scroll Lengths: Standardized the scroll distance to exactly 1,200px per section, stopping pages from feeling endless on mobile.

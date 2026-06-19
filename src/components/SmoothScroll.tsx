@@ -24,9 +24,9 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     if (ScrollTrigger.isTouch > 0 || !preloaderDone) return;
 
     const lenis = new Lenis({
-      duration: 1.1,         // Slightly faster duration for punchier snapping tracking
-      wheelMultiplier: 1.0,   // Standardizing normalized scaling output
-      touchMultiplier: 1.0,
+duration: 0.9,          // 🌟 Dropped from 1.1: Makes the scroll stop quicker and feel tighter
+  wheelMultiplier: 1.2,  // 🌟 Raised from 1.0: Gives you that heavy, responsive push per wheel click
+  touchMultiplier: 1.0,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     });
 

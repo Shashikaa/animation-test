@@ -87,7 +87,7 @@ export default function HomeDesktop() {
         gsap.set(selector, { force3D: true, willChange: "transform, opacity, clip-path" });
       });
 
-      const scrubValue = 1.5;
+      const scrubValue = 0.8; // Adjusted down slightly to align better with desktop snappy logic
 
       gsap.set(".s1-bg", { yPercent: 10, scale: 1.0 });
       gsap.set(".s1-card", { yPercent: 80, opacity: 0 });
@@ -131,18 +131,44 @@ export default function HomeDesktop() {
             vvCleanup = () => vv.removeEventListener("resize", onVVResize);
           }
 
+          // Dynamic tracking matrix array for runtime snap calculations
+          let cachedProgressLabels: number[] = [];
+
           const tl = gsap.timeline({
-            defaults: { ease: "power1.inOut" }, 
+            defaults: { ease: "none" }, 
             scrollTrigger: {
               trigger: ".pin-all",
               start: "top top",
-              end: "+=28800", // 👈 Optimized: Exactly 12 structural phases * 2400px per section transition
+              end: "+=26400",
               scrub: scrubValue,
               pin: true,
               anticipatePin: 1,
               preventOverlaps: true,
               fastScrollEnd: true,
               invalidateOnRefresh: true,
+              snap: {
+                snapTo: (progress) => {
+                  if (cachedProgressLabels.length === 0) return progress;
+                  if (progress <= 0) return 0;
+                  if (progress >= 1) return 1;
+
+                  for (let i = 0; i < cachedProgressLabels.length - 1; i++) {
+                    const start = cachedProgressLabels[i];
+                    const end = cachedProgressLabels[i + 1];
+
+                    if (progress >= start && progress <= end) {
+                      const localProgress = (progress - start) / (end - start);
+                      // Preserved early directional trigger threshold
+                      return localProgress > 0.3 ? end : start;
+                    }
+                  }
+                  return progress;
+                },
+                // Controlled speed values preventing rapid jumps forward/backward
+                duration: { min: 0.7, max: 1.2 }, 
+                delay: 0.1, 
+                ease: "power2.inOut", 
+              },
             },
           });
 
@@ -158,7 +184,7 @@ export default function HomeDesktop() {
             .to(".section-2", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 }, "sec2Start")
             .to(".section-1", { scale: 1.05, duration: 3.8 }, "sec2Start")
             .to(".s2-bg", { yPercent: 0, scale: 1, duration: 3.8 }, "sec2Start")
-            .to({}, { duration: 0.2 }) // Compressed dead space pad
+            .to({}, { duration: 0.2 }) 
             .set(".section-1", { display: "none" });
 
           // ── SECTION 3 REVEAL ──
@@ -166,7 +192,7 @@ export default function HomeDesktop() {
             .set(".section-3", { display: "block" })
             .to(".section-3", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 }, "sec3Start")
             .to(".section-2", { scale: 1.05, duration: 3.8 }, "sec3Start")
-            .to({}, { duration: 0.2 }) // Compressed dead space pad
+            .to({}, { duration: 0.2 }) 
             .set(".section-2", { display: "none" });
 
           // ── SECTION 4 REVEAL ──
@@ -189,7 +215,7 @@ export default function HomeDesktop() {
           tl.addLabel("sec6Start")
             .to(".section-6", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 }, "sec6Start")
             .to(".section-5", { scale: 1.05, duration: 3.8 }, "sec6Start")
-            .to({}, { duration: 0.2 }) // Compressed dead space pad
+            .to({}, { duration: 0.2 }) 
             .set(".section-5", { display: "none" });
 
           // ── SECTION 10 REVEAL ──
@@ -220,7 +246,7 @@ export default function HomeDesktop() {
             }, "<+0.2")
             .to(".s10-card-body", { y: 50, duration: 2.5 }, "<")
             .to(".s10-bg-img", { y: "0%", duration: 2.5 }, "<")
-            .to({}, { duration: 0.2 }) // Compressed dead space pad
+            .to({}, { duration: 0.2 }) 
             .set(".section-6", { display: "none" });
 
           // ── SECTION 7 REVEAL ──
@@ -228,7 +254,7 @@ export default function HomeDesktop() {
             .to(".section-7", { yPercent: 0, duration: 4.2 }, "sec7Start")
             .to(".section-10", { scale: 1.05, duration: 4.2 }, "sec7Start")
             .to(".s7-bg-img", { yPercent: 0, duration: 4.2 }, "sec7Start")
-            .to({}, { duration: 0.2 }) // Compressed dead space pad
+            .to({}, { duration: 0.2 }) 
             .set(".section-10", { display: "none" });
 
           // ── SECTION 8 REVEAL ──
@@ -237,7 +263,7 @@ export default function HomeDesktop() {
             .to(".section-8", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 }, "sec8Start")
             .to(".section-7", { scale: 1.0, duration: 3.8 }, "sec8Start")
             .to(".s8-bg-img", { yPercent: 0, duration: 3.8 }, "sec8Start")
-            .to({}, { duration: 0.2 }); // Compressed dead space pad
+            .to({}, { duration: 0.2 }); 
 
           // ── SECTION 9 REVEAL (SPLIT PANELS) ──
           tl.addLabel("sec9Start")
@@ -269,7 +295,7 @@ export default function HomeDesktop() {
               duration: 3.5,
             })
             .to(".s9-para", { opacity: 1, y: 0, duration: 2.0 }, "<+1.5")
-            .to({}, { duration: 0.2 }) // Compressed dead space pad
+            .to({}, { duration: 0.2 }) 
             .set(".section-8", { display: "none" });
 
           // ── CTA REVEAL ──
@@ -277,7 +303,7 @@ export default function HomeDesktop() {
             .set(".section-cta", { display: "block" })
             .to(".section-cta", { yPercent: 0, duration: 4.8 }, "ctaStart")
             .to(".section-9", { scale: 1.05, duration: 4.8 }, "ctaStart")
-            .to({}, { duration: 0.2 }); // Compressed dead space pad
+            .to({}, { duration: 0.2 }); 
 
           // ── FOOTER REVEAL ──
           tl.addLabel("footerStart")
@@ -306,6 +332,15 @@ export default function HomeDesktop() {
           
           useTextReveal(scopeRef, ".s8-heading", { tl, position: "sec8Start+=1.9", duration: 0.4, stagger: 0.05 });
           useTextReveal(scopeRef, ".s8-para", { tl, position: "sec8Start+=1.8", duration: 0.4, stagger: 0.05 });
+
+          // Post-construction label parsing matrix setup
+          const totalDuration = tl.totalDuration();
+          const labelNames = [
+            "heroStart", "sec2Start", "sec3Start", "sec4Start", "sec4ContentStart", 
+            "sec5Start", "sec6Start", "sec10Start", "sec7Start", "sec8Start", 
+            "sec9Start", "ctaStart", "footerStart"
+          ];
+          cachedProgressLabels = [0, ...labelNames.map(name => tl.labels[name] / totalDuration), 1];
 
           onScrollReady();
         });

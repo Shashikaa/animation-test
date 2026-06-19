@@ -102,7 +102,7 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         scrollTrigger: {
           trigger: ".about-pin",
           start: "top top",
-          end: "+=5400", 
+         end: "+=8800", 
           scrub: 0.8, 
           pin: true,
           pinSpacing: true,

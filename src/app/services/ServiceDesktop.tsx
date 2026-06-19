@@ -89,14 +89,14 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-      // 4 step transitions * 2400px = 9600px total scroll distance
+      // 🌟 UPDATED: 5 distinct transition phases * 2200px = 11000px total distance
       const scrollTl = gsap.timeline({
         scrollTrigger: {
           trigger: ".services-hero-master",
           start: "top top",
-          end: "+=9600", 
+          end: "+=11000", 
           pin: true,
-          scrub: 1.5,     
+          scrub: 0.8, // 🌟 UPDATED: Matches the tactile response weight of your premium profiles
           invalidateOnRefresh: true,
         }
       });
@@ -159,7 +159,6 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
         ease: "power2.out"
       }, 2.1);
 
-      // Reduced padding step space to compress layout dead zones
       scrollTl.to({}, { duration: 0.3 });
 
       // ── 3. THIRD PHASE: Transition to Section Two ──
