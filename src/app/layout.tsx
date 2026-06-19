@@ -41,13 +41,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased`}>
-      <body className="flex flex-col min-h-screen preloading">
+      {/* Add suppressHydrationWarning here */}
+      <body className="flex flex-col min-h-screen preloading" suppressHydrationWarning>
         <SiteProvider>
-          {/* 
-            SmoothScroll now wraps your actual markup flow cleanly.
-            Because Lenis uses native scrolling, headers with fixed or sticky 
-            positioning can live inside here safely without jumping layout bugs.
-          */}
           <SmoothScroll>
             <HeaderWrapper />
             <NavMenuWrapper />
@@ -57,7 +53,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </main>
           </SmoothScroll>
 
-          {/* Separated out client thread toggle */}
           <PreloaderToggle />
         </SiteProvider>
       </body>

@@ -16,9 +16,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
   const thumbRef = useRef<HTMLDivElement>(null);
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   
-  // Destructure smootherRef from your updated global site context
   const { preloaderDone, smootherRef } = useSite();
-  
   const pathname = usePathname();
   const lenisRef = useRef<Lenis | null>(null);
 
@@ -26,19 +24,19 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     if (ScrollTrigger.isTouch > 0 || !preloaderDone) return;
 
     const lenis = new Lenis({
-      duration: 1.2,
-      wheelMultiplier: 1.1,
+      duration: 1.1,         // Slightly faster duration for punchier snapping tracking
+      wheelMultiplier: 1.0,   // Standardizing normalized scaling output
       touchMultiplier: 1.0,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     });
 
     lenisRef.current = lenis;
 
-    // Hook up the context ref to your active Lenis instance
     if (smootherRef) {
       smootherRef.current = lenis;
     }
 
+    // Direct synchronization interface binding
     lenis.on("scroll", ScrollTrigger.update);
     
     const tickerCallback = (time: number) => {
@@ -90,8 +88,6 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
       setScrollVelocity(0);
       gsap.ticker.remove(tickerCallback);
       lenis.destroy();
-      
-      // Clean up the ref when unmounting
       if (smootherRef) {
         smootherRef.current = null;
       }
@@ -101,14 +97,15 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
   useEffect(() => {
     if (!preloaderDone || !lenisRef.current) return;
     lenisRef.current.scrollTo(0, { immediate: true });
-    ScrollTrigger.refresh();
+    
+    // Ensure ScrollTrigger evaluates geometry after DOM modifications settle
+    setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 50);
   }, [pathname, preloaderDone]);
 
   return (
     <>
-      {/* 🌟 FIX: Added structural wrapper styling so full-height mobile absolute positioning 
-        and pinning do not collapse inside Next.js layout layers.
-      */}
       <div className="flex flex-col min-h-screen w-full">
         {children}
       </div>

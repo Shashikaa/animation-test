@@ -46,9 +46,8 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
   }, [preloaderDone, introDone]);
 
   useLayoutEffect(() => {
-    // Let layout run immediately to intercept default states cleanly
     const ctx = gsap.context(() => {
-      gsap.set(".about-hero-bg", { scale: 1.3 });
+      gsap.set(".about-hero-bg", { scale: 1.4 });
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
       gsap.set(".about-hero-panel-left", { clipPath: "inset(0% 0% 0% 0%)" });
       gsap.set(".about-hero-panel-right", { clipPath: "inset(0% 0% 0% 0%)" });
@@ -63,7 +62,7 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
       gsap.set(".about-footer-wrap", { visibility: "hidden", y: "100%" });
     }, scopeRef);
     return () => ctx.revert();
-  }, []); // Run on mount to guarantee no instant flashes
+  }, []);
 
   useEffect(() => {
     if (!preloaderDone || !isReady) return;
@@ -74,7 +73,7 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
       });
 
       introTl.to(".about-hero-bg", {
-        scale: 1.0,
+        scale: 1.15,
         duration: 2.2,
         ease: "power2.out"
       }, 0);
@@ -95,18 +94,49 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
+      // Create cache array for pre-calculated normalized snap landmarks
+      let cachedProgressLabels: number[] = [];
+
       const tl = gsap.timeline({
-        defaults: { ease: "power1.inOut" }, 
+        defaults: { ease: "none" }, 
         scrollTrigger: {
           trigger: ".about-pin",
           start: "top top",
-          end: "+=16800",            
-          scrub: 1.5,               
+          end: "+=5400", 
+          scrub: 0.8, 
           pin: true,
           pinSpacing: true,
           anticipatePin: 1,
           invalidateOnRefresh: true,
           fastScrollEnd: true,
+snap: {
+  snapTo: (progress) => {
+    if (cachedProgressLabels.length === 0) return progress;
+    if (progress <= 0) return 0;
+    if (progress >= 1) return 1;
+
+    for (let i = 0; i < cachedProgressLabels.length - 1; i++) {
+      const start = cachedProgressLabels[i];
+      const end = cachedProgressLabels[i + 1];
+
+      if (progress >= start && progress <= end) {
+        const localProgress = (progress - start) / (end - start);
+        // Kept your preferred 30% forward-snap trigger condition
+        return localProgress > 0.3 ? end : start;
+      }
+    }
+    return progress;
+  },
+  // 🌟 SLOW DOWN SPEED: Increased duration limits so the auto-scroll takes longer to arrive
+  duration: { min: 0.7, max: 1.2 }, 
+  
+  // 🌟 BREATHING ROOM: Delay before auto-scrolling kicks in (helps with smooth-scroll compatibility)
+  delay: 0.1, 
+  
+  // 🌟 GENTLE MOTION: "power2.inOut" accelerates and decelerates smoothly, 
+  // removing the sudden aggressive jerk forward or backward.
+  ease: "power2.inOut",
+},
         },
       });
 
@@ -115,19 +145,20 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
       tl.set([".s3-reveal-bottom", ".s3-reveal-top"], { visibility: "hidden" });
 
       // ── SECTION 1 REVEAL ──
-      tl.to(".about-hero-panel-left", {
-        clipPath: "inset(0% 50% 100% 0%)",
-        duration: 2.0,
-      })
-      .to(".about-hero-panel-right", {
-        clipPath: "inset(100% 0% 0% 50%)",
-        duration: 2.0,
-      }, "<")
-      .fromTo(".about-hero-bg", 
-        { scale: 1.0 }, 
-        { scale: 0.85, duration: 2.0 }, 
-        "<"
-      );
+      tl.addLabel("sec1Start")
+        .to(".about-hero-panel-left", {
+          clipPath: "inset(0% 50% 100% 0%)",
+          duration: 2.0,
+        })
+        .to(".about-hero-panel-right", {
+          clipPath: "inset(100% 0% 0% 50%)",
+          duration: 2.0,
+        }, "<")
+        .fromTo(".about-hero-bg", 
+          { scale: 1.15 }, 
+          { scale: 1.0, duration: 2.0 }, 
+          "<"
+        );
 
       tl.to(".s1-card", {
         visibility: "visible",
@@ -149,7 +180,8 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
       tl.to({}, { duration: 0.2 }); 
 
       // ── SECTION 2 REVEAL ──
-      tl.set(".about-section-two", { visibility: "visible" })
+      tl.addLabel("sec2Start")
+        .set(".about-section-two", { visibility: "visible" })
         .to(".about-section-two", {
           clipPath: "inset(0% 0% 0% 0%)",
           duration: 2.0,
@@ -199,7 +231,6 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
           "sec3Start"
         );
 
-      // ── SECTION 3 NATIVE REVEAL ──
       tl.set(".s3-reveal-bottom", { visibility: "visible" }, "sec3Start+=0.4");
       useTextReveal(scopeRef, ".s3-reveal-bottom", {
         tl,
@@ -234,7 +265,6 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         .to(".about-section-four", {
           clipPath: "inset(0% 0% 0% 0%)",
           duration: 2.0,
-          ease: "power1.inOut"
         }, "sec4Start")
         .to(".s4-glass-card", {
           opacity: 1,
@@ -259,7 +289,7 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         .to(".about-section-four .s4-img-bg", {
           scale: 1.0,
           duration: 2.2,
-          }, "sec5Start")
+        }, "sec5Start")
         .set(".about-section-five", { visibility: "visible" }, "sec5Start")
         .to(".about-section-five", {
           clipPath: "inset(0% 0% 0% 0%)",
@@ -297,8 +327,12 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         .to(".about-footer-wrap", {
           y: "0%",
           duration: 2.2,
-          ease: "power1.inOut"
         }, "footerStart");
+
+      // 🌟 THE SNAp OPTIMIZATION: Parse timeline labels dynamically ONCE after construction
+      const totalDuration = tl.totalDuration();
+      const labelNames = ["sec1Start", "sec2Start", "sec3Start", "sec4Start", "sec5Start", "ctaStart", "footerStart"];
+      cachedProgressLabels = [0, ...labelNames.map(name => tl.labels[name] / totalDuration), 1];
 
     }, scopeRef);
 
@@ -327,7 +361,7 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
           <Hero/>
         </div>
         <div className="about-hero-panel-right absolute inset-0" style={{ zIndex: 20, overflow: "hidden" }}>
-          <Hero  />
+          <Hero />
         </div>
         <div
           className="about-section-two absolute inset-0"
