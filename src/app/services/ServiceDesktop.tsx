@@ -89,132 +89,156 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-      // 🌟 UPDATED: 5 distinct transition phases * 2200px = 11000px total distance
-// 🌟 UPDATED: 5 distinct transition phases * 2200px = 11000px total distance with custom snap logic
+      // 1. Array cache matching the deterministic progress snapping approach in About
+      let cachedProgressLabels: number[] = [];
+
       const scrollTl = gsap.timeline({
+        defaults: { ease: "none" }, // Clear out timeline-level default eases
         scrollTrigger: {
           trigger: ".services-hero-master",
           start: "top top",
           end: "+=11000", 
           pin: true,
+          pinSpacing: true,
           scrub: 0.8, 
           invalidateOnRefresh: true,
           fastScrollEnd: true,
           preventOverlaps: true,
           snap: {
-            snapTo: [0, 0.25, 0.5, 0.75, 1.0], // Explicit structural progress snapping points
-            directional: true,
-            delay: 0.1,                        // Gives tracking breathing room for trackpads
-            duration: { min: 0.7, max: 1.2 },  // Smooth kinetic snapping speed window
-            ease: "power2.inOut"               // Premium acceleration and deceleration curve
+            snapTo: (progress) => {
+              if (cachedProgressLabels.length === 0) return progress;
+              if (progress <= 0) return 0;
+              if (progress >= 1) return 1;
+
+              for (let i = 0; i < cachedProgressLabels.length - 1; i++) {
+                const start = cachedProgressLabels[i];
+                const end = cachedProgressLabels[i + 1];
+
+                if (progress >= start && progress <= end) {
+                  const localProgress = (progress - start) / (end - start);
+                  // Strict 30% breakthrough snap margin imported directly from About config
+                  return localProgress > 0.3 ? end : start;
+                }
+              }
+              return progress;
+            },
+            duration: { min: 0.7, max: 1.2 },  
+            delay: 0.1,                         
+            ease: "power2.inOut"               
           }
         }
       });
 
-      // ── 1. FIRST PHASE: Compress Hero Layout ──
-      scrollTl.to(".hero-text-wrap", {
-        opacity: 0,
-        y: -40,
-        duration: 0.5,
-        ease: "power1.out"
-      }, 0);
+      // ── PHASE 1: Compress Hero Layout ──
+      scrollTl.addLabel("phase1")
+        .to(".hero-text-wrap", {
+          opacity: 0,
+          y: -40,
+          duration: 0.5,
+          ease: "power1.out"
+        }, "phase1")
+        .to(".services-hero-top-layer", {
+          width: "calc(100% - 600px)",
+          duration: 1.5,
+          ease: "power1.inOut",
+        }, "phase1+=0.1");
 
-      scrollTl.to(".services-hero-top-layer", {
-        width: "calc(100% - 600px)",
-        duration: 1.5,
-        ease: "power1.inOut",
-      }, 0.1);
+      // Equalized spacer padding
+      scrollTl.to({}, { duration: 0.2 });
 
-      // ── 2. SECOND PHASE: Reveal Section One Sheet ──
-      scrollTl.to(".section-one-wrap", {
-        clipPath: "inset(0% 0% 0% 0%)",
-        duration: 1.5,
-        ease: "power1.inOut"
-      }, 1.6);
+      // ── PHASE 2: Reveal Section One Sheet ──
+      scrollTl.addLabel("phase2")
+        .to(".section-one-wrap", {
+          clipPath: "inset(0% 0% 0% 0%)",
+          duration: 1.5,
+          ease: "power1.inOut"
+        }, "phase2")
+        .to(".service-hero-bg", {
+          xPercent: -8,   
+          scale: 1.6,     
+          duration: 1.5,
+          ease: "power1.inOut",
+        }, "phase2")
+        .to(".s1-glass-card", {
+          opacity: 1,
+          x: 0,
+          duration: 1.5,
+          ease: "power2.out"
+        }, "phase2+=0.4")
+        .to(".s1-reveal-bottom", {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: "power2.out"
+        }, "phase2+=0.5")
+        .to(".s1-reveal-top", {
+          opacity: 1,
+          y: 0,
+          stagger: 0.15,
+          duration: 0.8,
+          ease: "power2.out"
+        }, "phase2+=0.6")
+        .to([".s1-static-title", ".s1-static-desc"], {
+          opacity: 1,
+          y: 0,
+          duration: 1.2,
+          stagger: 0.15,
+          ease: "power2.out"
+        }, "phase2+=0.8");
 
-      scrollTl.to(".service-hero-bg", {
-        xPercent: -8,   
-        scale: 1.6,     
-        duration: 1.5,
-        ease: "power1.inOut",
-      }, 1.6);
+      // Equalized spacer padding
+      scrollTl.to({}, { duration: 0.2 });
 
-      scrollTl.to(".s1-glass-card", {
-        opacity: 1,
-        x: 0,
-        duration: 1.5,
-        ease: "power2.out"
-      }, 2.0);
-
-      scrollTl.to([".s1-static-title", ".s1-static-desc"], {
-        opacity: 1,
-        y: 0,
-        duration: 1.2,
-        stagger: 0.15,
-        ease: "power2.out"
-      }, 2.4);
-
-      scrollTl.to(".s1-reveal-top", {
-        opacity: 1,
-        y: 0,
-        stagger: 0.15,
-        duration: 0.8,
-        ease: "power2.out"
-      }, 2.2);
-
-      scrollTl.to(".s1-reveal-bottom", {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: "power2.out"
-      }, 2.1);
-
-      scrollTl.to({}, { duration: 0.3 });
-
-      // ── 3. THIRD PHASE: Transition to Section Two ──
-      scrollTl.set(".services-section-two-wrap", { visibility: "visible" })
+      // ── PHASE 3: Transition to Section Two ──
+      scrollTl.addLabel("phase3")
+        .set(".services-section-two-wrap", { visibility: "visible" }, "phase3")
         .to(".services-section-two-wrap", {
           clipPath: "inset(0% 0% 0% 0%)", 
           duration: 2.0,
           ease: "power1.inOut",
           onStart: () => setIsSectionTwoActive(true),
           onReverseComplete: () => setIsSectionTwoActive(false)
-        })
+        }, "phase3")
         .to(".section-one-wrap", {
           duration: 2.0,
           ease: "power1.inOut",
-        }, "<");
+        }, "phase3");
 
       useTextReveal(scopeRef, ".s2-reveal-text", {
         tl: scrollTl,
-        position: ">-=0.2",
+        position: "phase3+=0.8",
         yOffset: 25,
         stagger: 0.04,
         duration: 0.5,
         ease: "power2.out",
       });
 
-      scrollTl.to({}, { duration: 0.3 });
+      // Equalized spacer padding
+      scrollTl.to({}, { duration: 0.2 });
 
-      // ── 4. FOURTH PHASE: Section CTA Reveal ──
-      scrollTl.addLabel("ctaStart")
-        .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
+      // ── PHASE 4: Section CTA Reveal ──
+      scrollTl.addLabel("phase4")
+        .set(".services-section-cta", { visibility: "visible" }, "phase4")
         .to(".services-section-cta", {
           y: "0%",
           duration: 2.2,
-          ease: "power1.inOut"
-        }, "ctaStart");
+        }, "phase4");
 
-      scrollTl.to({}, { duration: 0.3 });
+      // Equalized spacer padding
+      scrollTl.to({}, { duration: 0.2 });
 
-      // ── 5. FIFTH PHASE: Footer Reveal ──
-      scrollTl.addLabel("footerStart")
-        .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
+      // ── PHASE 5: Footer Reveal ──
+      scrollTl.addLabel("phase5")
+        .set(".services-footer-wrap", { visibility: "visible" }, "phase5")
         .to(".services-footer-wrap", {
           y: "0%",
           duration: 2.2,
-          ease: "power1.inOut"
-        }, "footerStart");
+        }, "phase5");
+
+      // 🌟 FIXED SNAP TRACKING MATRICES
+      const totalDuration = scrollTl.totalDuration();
+      const labelNames = ["phase1", "phase2", "phase3", "phase4", "phase5"];
+      cachedProgressLabels = [0, ...labelNames.map(name => scrollTl.labels[name] / totalDuration), 1];
 
     }, scopeRef);
 
@@ -230,7 +254,7 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
     <div ref={scopeRef} className="w-full relative">
       <div className="services-hero-master relative w-full h-screen overflow-hidden z-10">
         <Hero />
-        <div className="section-one-wrap absolute inset-0 w-full h-full z-20  overflow-hidden">
+        <div className="section-one-wrap absolute inset-0 w-full h-full z-20 overflow-hidden">
           <SectionOne />
         </div>
         <div className="services-section-two-wrap absolute inset-0 w-full h-full z-30 overflow-hidden bg-[#111]">
