@@ -90,14 +90,24 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
 
     const ctx = gsap.context(() => {
       // 🌟 UPDATED: 5 distinct transition phases * 2200px = 11000px total distance
+// 🌟 UPDATED: 5 distinct transition phases * 2200px = 11000px total distance with custom snap logic
       const scrollTl = gsap.timeline({
         scrollTrigger: {
           trigger: ".services-hero-master",
           start: "top top",
           end: "+=11000", 
           pin: true,
-          scrub: 0.8, // 🌟 UPDATED: Matches the tactile response weight of your premium profiles
+          scrub: 0.8, 
           invalidateOnRefresh: true,
+          fastScrollEnd: true,
+          preventOverlaps: true,
+          snap: {
+            snapTo: [0, 0.25, 0.5, 0.75, 1.0], // Explicit structural progress snapping points
+            directional: true,
+            delay: 0.1,                        // Gives tracking breathing room for trackpads
+            duration: { min: 0.7, max: 1.2 },  // Smooth kinetic snapping speed window
+            ease: "power2.inOut"               // Premium acceleration and deceleration curve
+          }
         }
       });
 
