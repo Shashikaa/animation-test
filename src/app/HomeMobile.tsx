@@ -52,7 +52,7 @@ export default function HomeMobile() {
 
       const TRANSITION = 2.0;
       const EASE       = "power2.inOut";
-      const PAUSE      = 0.8; // 🌟 INCREASED: Wider safety buffers to intercept touch velocity/momentum
+      const PAUSE      = 0.4; // Normalized baseline spacing matching previous tracks
       const scrubValue = 0.5;
 
       const footerEl = scopeRef.current?.querySelector<HTMLElement>(`.footer`);
@@ -81,7 +81,7 @@ export default function HomeMobile() {
       gsap.set(".section-4", { yPercent: 100, visibility: "visible", zIndex: 105 });
       gsap.set(".s5-card",   { scale: 1, transformOrigin: "center center" });
       gsap.set(".s4-content", { y: 0 });
-      gsap.set(".s4-bg-img",  { yPercent: 8 });
+      gsap.set(".s4-bg-img",   { yPercent: 8 });
       gsap.set(".s4-img-mob", { y: 60 });
 
       gsap.set(".section-5", {
@@ -161,29 +161,23 @@ export default function HomeMobile() {
               clipPath: "none",
             });
 
-            const tl = gsap.timeline({
-              defaults: { ease: "power1.inOut" },
-              scrollTrigger: {
-                trigger:             ".pin-all",
-                start:               "top top",
-                end:                 "+=15600", // 🌟 INCREASED: Added extra pixels to balance the expanded safe halts
-                scrub:               scrubValue,
-                pin:                 true,
-                anticipatePin:       1,
-                preventOverlaps:     true,
-                fastScrollEnd:       true,
-                invalidateOnRefresh: true,
-                onRefresh: () => {
-                  if (pinEl) pinEl.style.removeProperty("max-height");
-                },
-                snap: {
-                  snapTo: 1 / 12, 
-                  duration: { min: 0.2, max: 0.6 },
-                  delay: 0.05,
-                  ease: "power1.inOut"
-                }
-              },
-            });
+const tl = gsap.timeline({
+  defaults: { ease: "power1.inOut" },
+  scrollTrigger: {
+    trigger:             ".pin-all",
+    start:               "top top",
+    end:                 "+=14400", // 12 sections * 1200px
+    scrub:               0.2,       // Fast, direct reaction to thumb swipes
+    pin:                 true,
+    anticipatePin:       1,
+    preventOverlaps:     true,
+    fastScrollEnd:       true,
+    invalidateOnRefresh: true,
+    onRefresh: () => {
+      if (pinEl) pinEl.style.removeProperty("max-height");
+    }
+  },
+});
 
             tl
               // ── Hero → Section 1 ──────────────────────────────────

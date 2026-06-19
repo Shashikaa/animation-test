@@ -102,23 +102,16 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: ".services-pin-master",
-          start: "top top",
-          end: "+=6500", 
-          pin: true,
-          scrub: 0.8,
-          invalidateOnRefresh: true,
-          // 🌟 ADDED: Mobile snapping engine mapped to your timeline milestones
-          snap: {
-            snapTo: 1 / 5, 
-            duration: { min: 0.2, max: 0.6 },
-            delay: 0.05,
-            ease: "power1.inOut"
-          }
-        }
-      });
+const tl = gsap.timeline({
+  scrollTrigger: {
+    trigger: ".services-pin-master",
+    start: "top top",
+    end: "+=6000", // Standardized: 5 milestones * 1200px
+    pin: true,
+    scrub: 0.2,    // Killed scrolling lag to match Home page
+    invalidateOnRefresh: true
+  }
+});
 
       // STEP A: Hero top layer image clips UP to reveal underneath card text block
       tl.to(".hero-text-wrap", {
@@ -169,7 +162,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
       tl.set(".services-section-cta", { visibility: "visible" })
         .to(".services-section-cta", {
           y: "0%",
-          duration: 2.0, // Updated to 2.0 to give uniform snapping precision
+          duration: 2.0, // Updated to 2.0 to give uniform precision
           ease: "power2.inOut"
         });
 
@@ -179,7 +172,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
       tl.set(".services-footer-wrap", { visibility: "visible" })
         .to(".services-footer-wrap", {
           y: "0%",
-          duration: 2.0, // Updated to 2.0 to give uniform snapping precision
+          duration: 2.0, // Updated to 2.0 to give uniform precision
           ease: "power2.inOut"
         });
 

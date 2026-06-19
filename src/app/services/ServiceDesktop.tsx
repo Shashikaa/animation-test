@@ -218,10 +218,10 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
   }, [introDone]);
 
   return (
-    <div ref={scopeRef} className="w-full bg-[#111] relative">
+    <div ref={scopeRef} className="w-full relative">
       <div className="services-hero-master relative w-full h-screen overflow-hidden z-10">
         <Hero />
-        <div className="section-one-wrap absolute inset-0 w-full h-full z-20 bg-[#111] overflow-hidden">
+        <div className="section-one-wrap absolute inset-0 w-full h-full z-20  overflow-hidden">
           <SectionOne />
         </div>
         <div className="services-section-two-wrap absolute inset-0 w-full h-full z-30 overflow-hidden bg-[#111]">

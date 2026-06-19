@@ -109,24 +109,17 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: ".about-pin",
-          start: "top top",
-          end: "+=8400", // Optimized for Mobile (7 distinct states * 1200px baseline)
-          scrub: 0.8,    
-          pin: true,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          // Mobile snapping engine to avoid awkward halfway scroll positions
-snap: {
-    snapTo: 1 / 7, 
-    duration: { min: 0.2, max: 0.6 },
-    delay: 0.05,
-    ease: "power1.inOut"
-  }
-        },
-      });
+const tl = gsap.timeline({
+  scrollTrigger: {
+    trigger: ".about-pin",
+    start: "top top",
+    end: "+=8400", // 7 sections * 1200px
+    scrub: 0.2,    // Speed up timeline lag from 0.8
+    pin: true,
+    anticipatePin: 1,
+    invalidateOnRefresh: true
+  },
+});
 
       // Section 1
       tl.to(".about-section-one", {

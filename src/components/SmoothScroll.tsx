@@ -96,7 +96,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
         smootherRef.current = null;
       }
     };
-  }, [preloaderDone, smootherRef]); // Added smootherRef to dependency array
+  }, [preloaderDone, smootherRef]);
 
   useEffect(() => {
     if (!preloaderDone || !lenisRef.current) return;
@@ -106,7 +106,12 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
 
   return (
     <>
-      {children}
+      {/* 🌟 FIX: Added structural wrapper styling so full-height mobile absolute positioning 
+        and pinning do not collapse inside Next.js layout layers.
+      */}
+      <div className="flex flex-col min-h-screen w-full">
+        {children}
+      </div>
 
       {/* Custom scrollbar thumb */}
       <div
