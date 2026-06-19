@@ -87,7 +87,7 @@ export default function HomeDesktop() {
         gsap.set(selector, { force3D: true, willChange: "transform, opacity, clip-path" });
       });
 
-      const scrubValue = 0.8; // Adjusted down slightly to align better with desktop snappy logic
+      const scrubValue = 0.8;
 
       gsap.set(".s1-bg", { yPercent: 10, scale: 1.0 });
       gsap.set(".s1-card", { yPercent: 80, opacity: 0 });
@@ -131,7 +131,6 @@ export default function HomeDesktop() {
             vvCleanup = () => vv.removeEventListener("resize", onVVResize);
           }
 
-          // Dynamic tracking matrix array for runtime snap calculations
           let cachedProgressLabels: number[] = [];
 
           const tl = gsap.timeline({
@@ -158,13 +157,11 @@ export default function HomeDesktop() {
 
                     if (progress >= start && progress <= end) {
                       const localProgress = (progress - start) / (end - start);
-                      // Preserved early directional trigger threshold
                       return localProgress > 0.3 ? end : start;
                     }
                   }
                   return progress;
                 },
-                // Controlled speed values preventing rapid jumps forward/backward
                 duration: { min: 0.7, max: 1.2 }, 
                 delay: 0.1, 
                 ease: "power2.inOut", 
@@ -204,7 +201,8 @@ export default function HomeDesktop() {
           tl.addLabel("sec4ContentStart", "sec4Start+=4.5")
             .to(".s4-content", { y: () => vvHeight() * -0.45, duration: 4.5 }, "sec4ContentStart")
             .to(".s4-img", { yPercent: -15, duration: 4.5 }, "sec4ContentStart")
-            .to(".s4-bg-img", { yPercent: 0, duration: 4.5 }, "sec4ContentStart");
+            .to(".s4-bg-img", { yPercent: 0, duration: 4.5 }, "sec4ContentStart")
+            .addLabel("sec4ContentEnd");
 
           // ── SECTION 5 REVEAL ──
           tl.addLabel("sec5Start")
@@ -225,17 +223,21 @@ export default function HomeDesktop() {
             .to(".section-6", { scale: 1.05, duration: 3.8 }, "sec10Start")
             .to(".s10-static-bg", { yPercent: 0, duration: 3.8 }, "sec10Start")
             
+            .addLabel("sec10TextHide")
             .to(".s10-title", { opacity: 0, y: -50, duration: 1.0 })
             .to(".s10-title-sub", { opacity: 0, y: -40, duration: 1.0 }, "<")
             .to(".s10-para-top", { opacity: 0, y: -50, duration: 1.0 }, "<")
             
+            .addLabel("sec10CardReveal")
             .to(".s10-card", { clipPath: "inset(0% 0% 0% 0%)", duration: 2.0 })
             .to(".s10-card-body", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.5 }, "<")
             
+            .addLabel("sec10VideoTransition")
             .to(".s10-video-wrap", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.5 })
             .to(".s10-video-wrap", { clipPath: "inset(0% 0% 100% 0%)", duration: 1.2 })
             .set(".s10-video-wrap", { display: "none" })
             
+            .addLabel("sec10FinalScroll")
             .to(".s10-card", {
               y: () => {
                 const card = document.querySelector(".s10-card") as HTMLElement;
@@ -272,7 +274,11 @@ export default function HomeDesktop() {
             .to(".s8-panel-left", { clipPath: "inset(0% 50% 100% 0%)", duration: 3.8 }, "sec9Start")
             .to(".s8-panel-right", { clipPath: "inset(100% 0% 0% 50%)", duration: 3.8 }, "sec9Start")
             .to(".s9-bg-img", { yPercent: 0, scale: 1, duration: 3.8 }, "sec9Start")
+            
+            .addLabel("sec9TitleFade")
             .to(".s9-title", { opacity: 1, duration: 2.0 }, "sec9Start+=1.2")
+            
+            .addLabel("sec9TitleMove")
             .to(".s9-title", {
               x: () => {
                 const el = document.querySelector(".s9-title") as HTMLElement;
@@ -333,12 +339,21 @@ export default function HomeDesktop() {
           useTextReveal(scopeRef, ".s8-heading", { tl, position: "sec8Start+=1.9", duration: 0.4, stagger: 0.05 });
           useTextReveal(scopeRef, ".s8-para", { tl, position: "sec8Start+=1.8", duration: 0.4, stagger: 0.05 });
 
-          // Post-construction label parsing matrix setup
+          // Matrix mapping configuration including inner checkpoints
           const totalDuration = tl.totalDuration();
           const labelNames = [
-            "heroStart", "sec2Start", "sec3Start", "sec4Start", "sec4ContentStart", 
-            "sec5Start", "sec6Start", "sec10Start", "sec7Start", "sec8Start", 
-            "sec9Start", "ctaStart", "footerStart"
+            "heroStart", 
+            "sec2Start", 
+            "sec3Start", 
+            "sec4Start", "sec4ContentStart", "sec4ContentEnd",
+            "sec5Start", 
+            "sec6Start", 
+            "sec10Start", "sec10TextHide", "sec10CardReveal", "sec10VideoTransition", "sec10FinalScroll",
+            "sec7Start", 
+            "sec8Start", 
+            "sec9Start", "sec9TitleFade", "sec9TitleMove",
+            "ctaStart", 
+            "footerStart"
           ];
           cachedProgressLabels = [0, ...labelNames.map(name => tl.labels[name] / totalDuration), 1];
 

@@ -42,6 +42,8 @@ export default function HomeMobile() {
     if (!preloaderDone) return;
 
     let vvCleanup: (() => void) | null = null;
+    let fallbackTimeout: NodeJS.Timeout | null = null;
+    let timelineInitialized = false;
 
     const ctx = gsap.context(() => {
       gsap.ticker.lagSmoothing(0);
@@ -52,13 +54,11 @@ export default function HomeMobile() {
 
       const TRANSITION = 2.0;
       const EASE       = "power2.inOut";
-      const PAUSE      = 0.4; // Normalized baseline spacing matching previous tracks
-      const scrubValue = 0.5;
-
+      const PAUSE      = 0.4; 
       const footerEl = scopeRef.current?.querySelector<HTMLElement>(`.footer`);
       const footerH  = footerEl?.offsetHeight ?? 600;
 
-      // Maintain structural sets
+      // Structural sets
       gsap.set(".hero",    { yPercent: 0, zIndex: 5 });
       gsap.set(".hero-bg", { yPercent: 0 });
       gsap.set(".section-1", { yPercent: 100, zIndex: 90 });
@@ -124,9 +124,15 @@ export default function HomeMobile() {
       gsap.set(".section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
       gsap.set(".footer",      { y: footerH,    zIndex: 151, visibility: "hidden" });
 
+      // FIX 1: Prevent infinite loops if components take a moment to dynamically load
       const waitForMobBgs = (cb: () => void) => {
+        let framesChecked = 0;
         const check = () => {
-          if (document.querySelector(".s7-mob-bg") && document.querySelector(".s8-mob-bg")) {
+          framesChecked++;
+          const hasS7 = document.querySelector(".s7-mob-bg");
+          const hasS8 = document.querySelector(".s8-mob-bg");
+          
+          if ((hasS7 && hasS8) || framesChecked > 60) {
             cb();
           } else {
             requestAnimationFrame(check);
@@ -136,6 +142,9 @@ export default function HomeMobile() {
       };
 
       const buildTimeline = () => {
+        if (timelineInitialized) return;
+        timelineInitialized = true;
+
         waitForMobBgs(() => {
           requestAnimationFrame(() => {
             const pinEl = document.querySelector(".pin-all") as HTMLElement;
@@ -161,23 +170,23 @@ export default function HomeMobile() {
               clipPath: "none",
             });
 
-const tl = gsap.timeline({
-  defaults: { ease: "power1.inOut" },
-  scrollTrigger: {
-    trigger:             ".pin-all",
-    start:               "top top",
-    end:                 "+=14400", // 12 sections * 1200px
-    scrub:               0.2,       // Fast, direct reaction to thumb swipes
-    pin:                 true,
-    anticipatePin:       1,
-    preventOverlaps:     true,
-    fastScrollEnd:       true,
-    invalidateOnRefresh: true,
-    onRefresh: () => {
-      if (pinEl) pinEl.style.removeProperty("max-height");
-    }
-  },
-});
+            const tl = gsap.timeline({
+              defaults: { ease: "power1.inOut" },
+              scrollTrigger: {
+                trigger:             ".pin-all",
+                start:               "top top",
+                end:                 "+=14400", 
+                scrub:               0.2,       
+                pin:                 true,
+                anticipatePin:       1,
+                preventOverlaps:     true,
+                fastScrollEnd:       true,
+                invalidateOnRefresh: true,
+                onRefresh: () => {
+                  if (pinEl) pinEl.style.removeProperty("max-height");
+                }
+              },
+            });
 
             tl
               // ── Hero → Section 1 ──────────────────────────────────
@@ -248,7 +257,8 @@ const tl = gsap.timeline({
                   return -card.getBoundingClientRect().top;
                 },
                 duration: 2.5, ease: "none",
-              })
+              }
+              )
               .to(".s10-card-body", { y: 30,   duration: 2.5, ease: "none" }, "<")
               .to(".s10-bg-img",    { y: "0%", duration: 2.5, ease: "none" }, "<")
               .to({}, { duration: PAUSE }) 
@@ -308,10 +318,18 @@ const tl = gsap.timeline({
         setTimeout(() => document.fonts.ready.then(buildTimeline), 0);
       }
 
+      // FIX 2: Safeguard fallback to force layout building if fonts or dynamic assets hang
+      fallbackTimeout = setTimeout(() => {
+        if (!timelineInitialized) {
+          buildTimeline();
+        }
+      }, 1000);
+
     }, scopeRef);
 
     return () => {
       vvCleanup?.();
+      if (fallbackTimeout) clearTimeout(fallbackTimeout);
       ctx.revert();
     };
   }, [preloaderDone]);
@@ -343,9 +361,12 @@ const tl = gsap.timeline({
         <div className="section-9 absolute inset-0 z-[121]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionNine />
         </div>
-        <div className="section-8 absolute inset-0 z-[128]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        
+        {/* FIX 3: Turned pointerEvents to "none" here to stop background canvas hijacking scroll loops */}
+        <div className="section-8 absolute inset-0 z-[128]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionEight />
         </div>
+
         <div className="section-7 absolute inset-0 z-[130]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionSeven />
         </div>

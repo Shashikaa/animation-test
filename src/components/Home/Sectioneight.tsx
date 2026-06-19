@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import WaterBackground from "../Ripplecanvas";
+// 1. Swapped imports from WaterBackground to LiquidCanvas
+import LiquidCanvas from "../LiquidCanvas"; 
 
 export default function SectionEight() {
   const sectionRef   = useRef<HTMLDivElement>(null);
@@ -9,6 +10,27 @@ export default function SectionEight() {
   const personRef    = useRef<HTMLDivElement>(null);
 
   const [offscreen, setOffscreen] = useState(false);
+  // Track asset initialization to prevent un-cached canvas flickering
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
+
+  // ── PRELOAD HIGH-PRIORITY WEBGL TEXTURES ──
+  useEffect(() => {
+    const desktopSrc = "/Forest.webp";
+    const mobileSrc = "/ForestMob.webp";
+
+    const preloadImage = (src: string) => {
+      return new Promise<void>((resolve) => {
+        const img = new Image();
+        img.src = src;
+        img.onload = () => resolve();
+        img.onerror = () => resolve(); // Fallback smoothly if block fails
+      });
+    };
+
+    Promise.all([preloadImage(desktopSrc), preloadImage(mobileSrc)]).then(() => {
+      setAssetsLoaded(true);
+    });
+  }, []);
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -72,28 +94,25 @@ export default function SectionEight() {
       className="relative w-full h-full overflow-hidden"
       style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
     >
+      {/* Dynamic Link Preload Tags injected into Head on-the-fly */}
+      <link rel="preload" href="/Forest.webp" as="image" type="image/webp" />
+      <link rel="preload" href="/ForestMob.webp" as="image" type="image/webp" />
+
       {/* ══════════════════════════════════════
           MOBILE + TABLET LAYOUT
       ══════════════════════════════════════ */}
       <div className="lg:!hidden !absolute !inset-0 !overflow-hidden section-container">
-        {/* BG — s8-mob-bg receives scale zoom-out from GSAP */}
-        <div
-          className="s8-mob-bg !absolute !inset-0 !bg-cover !bg-center"
-          style={{
-            backgroundImage: "url('/ForestMob.webp')",
-            willChange: "transform",
-          }}
-        />
-
-        <div className="absolute inset-0 z-10">
-          <WaterBackground />
+        {/* Mobile liquid canvas wrapper */}
+        <div 
+          className="absolute inset-0 z-10 transition-opacity duration-300"
+          style={{ opacity: assetsLoaded ? 1 : 0 }}
+        >
+          {assetsLoaded && <LiquidCanvas imageSrc="/ForestMob.webp" />}
         </div>
 
         {/* Text — top right */}
         <div className="!absolute !top-0 !right-0 !z-20 !flex !flex-col !items-end !gap-4 !pt-[27vh] !px-5">
-          <h2
-            className="!text-[#F4EEDF] !text-right font-display"
-          >
+          <h2 className="!text-[#F4EEDF] !text-right font-display">
             Water as Sanctuary.
           </h2>
           <p className="!text-[#F4EEDF] !text-right !text-[14px] !leading-snug font-body !max-w-[260px]">
@@ -104,7 +123,7 @@ export default function SectionEight() {
       </div>
 
       {/* ══════════════════════════════════════
-          DESKTOP LAYOUT — unchanged
+          DESKTOP LAYOUT
       ══════════════════════════════════════ */}
       <div ref={containerRef} className="hidden lg:block absolute inset-0" style={{ overflow: "hidden" }}>
 
@@ -114,21 +133,21 @@ export default function SectionEight() {
           style={{ clipPath: "inset(0% 50% 0% 0%)" }}
         >
           <div
-            className="s8-bg-img absolute bg-cover bg-center"
+            className="s8-bg-img absolute transition-opacity duration-300"
             style={{
-              backgroundImage: "url('/Forest.webp')",
               top: 0, left: 0, width: "100%", height: "120%",
               willChange: "transform",
+              opacity: assetsLoaded ? 1 : 0
             }}
-          />
+          >
+            {assetsLoaded && <LiquidCanvas imageSrc="/Forest.webp" />}
+          </div>
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 z-10 pointer-events-none"
             style={{ background: "linear-gradient(94.35deg, #162D24 -1.26%, #094146 100%)", opacity: 0.10 }}
           />
-          <div className="absolute inset-0" style={{ background: "#0000007A" }} />
-          <div className="absolute inset-0 z-10">
-            <WaterBackground />
-          </div>
+          <div className="absolute inset-0 z-10 pointer-events-none" style={{ background: "#0000007A" }} />
+          
           <div
             ref={personRef}
             className="absolute z-20"
@@ -155,21 +174,21 @@ export default function SectionEight() {
           style={{ clipPath: "inset(0% 0% 0% 50%)" }}
         >
           <div
-            className="s8-bg-img absolute bg-cover bg-center"
+            className="s8-bg-img absolute transition-opacity duration-300"
             style={{
-              backgroundImage: "url('/Forest.webp')",
               top: 0, left: 0, width: "100%", height: "120%",
               willChange: "transform",
+              opacity: assetsLoaded ? 1 : 0
             }}
-          />
+          >
+            {assetsLoaded && <LiquidCanvas imageSrc="/Forest.webp" />}
+          </div>
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 z-10 pointer-events-none"
             style={{ background: "linear-gradient(94.35deg, #162D24 -1.26%, #094146 100%)", opacity: 0.10 }}
           />
-          <div className="absolute inset-0" style={{ background: "#0000007A" }} />
-          <div className="absolute inset-0 z-10">
-            <WaterBackground />
-          </div>
+          <div className="absolute inset-0 z-10 pointer-events-none" style={{ background: "#0000007A" }} />
+          
           <div
             className="absolute z-20 pointer-events-none"
             style={{
