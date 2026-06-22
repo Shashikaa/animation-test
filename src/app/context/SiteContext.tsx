@@ -19,30 +19,39 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [preloaderDone, setPreloaderDone] = useState(false);
   const pathname = usePathname();
-  
   const smootherRef = useRef<any>(null);
+  
+  const isBrowserNavRef = useRef(false);
 
   useEffect(() => {
-    const isMainHomeRoute = pathname === "/";
-    const hasCustomLoader = PAGES_WITH_OWN_PRELOADER.includes(pathname ?? "");
+    const handlePopState = () => {
+      isBrowserNavRef.current = true;
+      setPreloaderDone(true);
+      document.body.classList.remove("preloading");
+    };
 
-    // 1. If it's a completely custom heavy loader page
-    if (hasCustomLoader) {
-      setPreloaderDone(false);
-      document.body.classList.add("preloading");
-    } 
-    // 2. If it's your regular inner pages (e.g. /about, /contact)
-    else if (!isMainHomeRoute) {
-      // Keep it false! Let the FadePreloaderWrapper tell us when it is finished.
-      setPreloaderDone(false); 
-      document.body.classList.add("preloading");
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (isBrowserNavRef.current) {
+      isBrowserNavRef.current = false;
+      return;
     }
-    // 3. For the main homepage route
-    else {
-      // Your separate home preloader setup manages state for the "/" path
-      setPreloaderDone(false);
-      document.body.classList.add("preloading");
-    }
+
+    // Standard Navigation
+    setPreloaderDone(false);
+    document.body.classList.add("preloading");
+
+    // 🌟 FAIL-SAFE TIMEOUT: If your FadePreloader animation fails to finish 
+    // or gets hung up during routing transitions, this forces the page open.
+    const failSafe = setTimeout(() => {
+      document.body.classList.remove("preloading");
+      setPreloaderDone(true);
+    }, 2500); // 2.5 second max limit layout fallback
+
+    return () => clearTimeout(failSafe);
   }, [pathname]);
 
   return (

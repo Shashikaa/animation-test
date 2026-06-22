@@ -8,16 +8,7 @@ export default function ContactHero({ hideText = false }: HeroProps) {
   return (
     <div className="relative w-full h-full bg-[#F4EEDF]">
       
-      {/* UNDERNEATH LAYER: Stationary text block card reveal anchor */}
-      <div className="absolute bottom-0 left-0 w-full h-[320px] lg:top-0 lg:right-0 lg:left-auto lg:h-full lg:w-[550px] grid place-items-center !px-12 lg:!px-16 z-0">
-        <div className="w-full max-w-[420px] text-left mx-auto">
-          <p className="text-[#19211C] !text-[14px] md:!text-[16px]">
-            Ready to bring your vision to life? Whether you have a specific project 
-            in mind or need expert guidance, our team is here to help you navigate 
-            every step of the journey. Let’s create something exceptional together.
-          </p>
-        </div>
-      </div>
+
 
       {/* TOP LAYER: Full screen image container clipped with Inset values */}
       <div 
@@ -40,7 +31,7 @@ export default function ContactHero({ hideText = false }: HeroProps) {
           
           {!hideText && (
             <div className="hero-text-wrap section-continer relative z-10 h-full flex flex-col justify-end !pb-22 will-change-[opacity,transform]">
-              <div className="flex flex-col !gap-2 lg:!gap-6 leading-normal">
+              <div className="flex flex-col !gap-2 lg:!gap-6">
                 <h1
                   className="hero-title text-[#F4EEDF] !font-[100]"
                   style={{
@@ -51,7 +42,7 @@ export default function ContactHero({ hideText = false }: HeroProps) {
                   <br />
                   Dream Pool to Life
                 </h1>
-                <p className="hero-desc text-[#F4EEDF] !mt-1 w-[434px]">
+                <p className="hero-desc text-[#F4EEDF] !mt-1 max-w-[434px]">
                   Have a question or ready to start your project? Get in touch with our friendly team we’re here to help every step of the way, from planning to completion.
                 </p>
               </div>

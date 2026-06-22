@@ -5,7 +5,10 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSite } from "@/src/app/context/SiteContext";
 import ContactHero from "@/src/components/contact/Hero";
-// Import your additional sections here, e.g., Footer, Form
+import SectionCTA from "@/src/components/contact/SectionCTA";
+import SectionOne from "@/src/components/contact/SectionOne";
+import FAQSection from "@/src/components/contact/FAQSection";
+import Footer from "@/src/components/Footer"; // Ensure your correct Footer path
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -29,12 +32,17 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
     if (!preloaderDone) return;
     const ctx = gsap.context(() => {
       // Baseline setup
-      gsap.set(".contact-hero-bg", { scale: 1.3 });
+      gsap.set(".contact-hero-bg", { scale: 1.3, yPercent: 0 });
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
-      gsap.set(".contact-hero-top-layer", { clipPath: "inset(0px 0px 0px 0px)" });
       
-      // Setup for subsequent sections (e.g., footer)
-      gsap.set(".contact-footer-wrap", { visibility: "hidden", y: "100%" });
+      // Position subsequent sections below the screen viewport
+      gsap.set(".cta-scroll-wrapper", { y: "100vh" });
+      gsap.set(".section-one-scroll-wrapper", { y: "100vh" });
+      gsap.set(".faq-scroll-wrapper", { y: "100vh" });
+      gsap.set(".footer-scroll-wrapper", { y: "100vh" });
+      
+      // Ensure the text wrapper opacity is initialized
+      gsap.set(".faq-content", { opacity: 1 });
     }, scopeRef);
     return () => ctx.revert();
   }, [preloaderDone]);
@@ -56,20 +64,30 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
         scrollTrigger: {
           trigger: ".contact-pin-master",
           start: "top top",
-          end: "+=4000",
+          end: "+=9500", // Expanded tracking space to make room for all mobile sections comfortably
           pin: true,
-          scrub: 0.2,
+          scrub: 1.2,
+          invalidateOnRefresh: true,
         }
       });
 
-      // Hero Animation
-      tl.to(".hero-text-wrap", { opacity: 0, y: -40, duration: 2.0 }, 0)
-        .to(".contact-hero-top-layer", { clipPath: "inset(0px 0px 320px 0px)", duration: 2.0, ease: "power2.inOut" }, 0)
-        .to(".contact-hero-bg", { yPercent: 5, duration: 2.0, ease: "power2.inOut" }, 0);
+      tl
+        // ─── PHASE 1: Hero content fades out / CTA moves up ───
+        .to(".contact-hero-bg", { yPercent: -15, ease: "none", duration: 2 }, 0)
+        .to(".hero-text-wrap", { opacity: 0, y: -40, ease: "power1.in", duration: 1.5 }, 0)
+        .to(".cta-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: 2.5 }, 0)
 
-      // Add your subsequent section reveals here
-      tl.set(".contact-footer-wrap", { visibility: "visible" })
-        .to(".contact-footer-wrap", { y: "0%", duration: 2.0, ease: "power2.inOut" });
+        // ─── PHASE 2: Section One comes up ───
+        .to(".section-one-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: 2.5 }, 2.5)
+
+        // ─── PHASE 3: FAQ Section glides over Section One ───
+        .to(".faq-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: 2.5 }, 5.0)
+
+        // ─── PHASE 4: FAQ Content Fades out (leaving background) ───
+        .to(".faq-content", { opacity: 0, y: -20, ease: "power2.in", duration: 1.5 }, 7.5)
+
+        // ─── PHASE 5: Footer slides up over FAQ Background ───
+        .to(".footer-scroll-wrapper", { y: "0vh", ease: "power2.out", duration: 2.0 }, 8.5);
 
     }, scopeRef);
     return () => ctx.revert();
@@ -79,14 +97,31 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
     <div ref={scopeRef} className="min-h-screen w-full bg-zinc-950 text-white overflow-hidden">
       <div className="contact-pin-master relative w-full h-screen">
         
-        {/* Layer 1: Hero */}
+        {/* Layer 1: Hero Component */}
         <div className="absolute inset-0 w-full h-full z-10">
           <ContactHero />
         </div>
 
-        {/* Layer 2: Footer / Other Content */}
-        <div className="contact-footer-wrap absolute inset-0 w-full h-full z-20" style={{ transform: "translateY(100%)" }}>
-           {/* Add your Contact form or Footer component here */}
+        {/* Layer 2: Slide-up CTA Wrapper */}
+        <div className="cta-scroll-wrapper absolute inset-0 w-full h-full z-20 will-change-transform">
+          <SectionCTA />
+        </div>
+
+        {/* Layer 3: Section One (Scrollable container for long cards on mobile) */}
+        <div className="section-one-scroll-wrapper absolute inset-0 w-full h-full z-30 overflow-y-auto will-change-transform">
+          <SectionOne />
+        </div>
+
+        {/* Layer 4: FAQ Section Layer */}
+        <div className="faq-scroll-wrapper absolute inset-0 w-full h-full z-40 overflow-y-auto will-change-transform">
+          <FAQSection />
+        </div>
+
+        {/* Layer 5: Footer Layer */}
+        <div className="footer-scroll-wrapper absolute inset-0 w-full h-full z-50 flex flex-col justify-end pointer-events-none will-change-transform">
+          <div className="w-full pointer-events-auto overflow-y-auto max-h-screen">
+            <Footer />
+          </div>
         </div>
 
       </div>
