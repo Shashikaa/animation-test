@@ -17,11 +17,13 @@ const SiteContext = createContext<SiteContextProps | undefined>(undefined);
 
 export function SiteProvider({ children }: { children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  // Default to false so the preloader can render on first paint
   const [preloaderDone, setPreloaderDone] = useState(false);
   const pathname = usePathname();
   const smootherRef = useRef<any>(null);
   
   const isBrowserNavRef = useRef(false);
+  const isFirstMountRef = useRef(true); // Track if this is the initial site load
 
   useEffect(() => {
     const handlePopState = () => {
@@ -35,21 +37,27 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // 1. Handle browser back/forward buttons cleanly
     if (isBrowserNavRef.current) {
       isBrowserNavRef.current = false;
       return;
     }
 
-    // Standard Navigation
+    // 2. Prevent initial landing page layout from triggering standard router transitions
+    if (isFirstMountRef.current && pathname === "/") {
+      isFirstMountRef.current = false;
+      return; 
+    }
+
+    // Standard Navigation configuration (subsequent routes or subpages)
     setPreloaderDone(false);
     document.body.classList.add("preloading");
 
-    // 🌟 FAIL-SAFE TIMEOUT: If your FadePreloader animation fails to finish 
-    // or gets hung up during routing transitions, this forces the page open.
+    // FAIL-SAFE TIMEOUT: For interior subpages transitions
     const failSafe = setTimeout(() => {
       document.body.classList.remove("preloading");
       setPreloaderDone(true);
-    }, 2500); // 2.5 second max limit layout fallback
+    }, 2500);
 
     return () => clearTimeout(failSafe);
   }, [pathname]);

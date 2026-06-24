@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { motion, useMotionValue, useTransform, animate, MotionValue } from "framer-motion";
-import WaterBackground from "./Ripplecanvas";
+// ─── SWAPPED: Old WaterBackground replaced with new WaveCanvas ───
+import WaveCanvas from "./WaveCanvas"; 
 
 export const LOGO_COLOR        = "#F4EEDF";
 export const LOGO_ICON_W       = 160;
@@ -53,7 +54,7 @@ function PoolsSVG({ width, height }: { width: number; height: number }) {
       xmlns="http://www.w3.org/2000/svg" style={{ display: "block", flexShrink: 0 }} aria-hidden>
       <path d="M0 30.2049V0.561459H11.7523C13.2389 0.538699 14.7009 0.942084 15.9649 1.72381C17.2067 2.51757 18.2224 3.61794 18.9137 4.91848C19.6622 6.29387 20.0434 7.83862 20.0204 9.40386C20.0473 11.0377 19.667 12.6526 18.9137 14.1032C18.2274 15.4168 17.2113 16.5299 15.9649 17.3335C14.7098 18.1257 13.2513 18.5369 11.7666 18.5172H3.35579V30.2049H0ZM3.35579 15.2299H11.9237C12.7714 15.2386 13.5987 14.9707 14.2799 14.4669C15.0103 13.9059 15.5873 13.1701 15.9578 12.3276C16.3924 11.3695 16.6094 10.3272 16.5933 9.27551C16.6359 7.84872 16.1532 6.45584 15.2367 5.36061C14.8414 4.86196 14.3377 4.45965 13.7637 4.18415C13.1897 3.90864 12.5606 3.76716 11.9237 3.7704H3.35579V15.2299Z" fill="#F4EBE4"/>
       <path d="M55.6852 30.2051C53.6922 30.2253 51.7156 29.8446 49.8732 29.0855C48.1232 28.3602 46.5447 27.2768 45.2394 25.9051C43.9208 24.5101 42.9898 22.8698 42.2049 21.0774C40.7637 17.1647 40.7637 12.8675 42.2049 8.95478C42.8914 7.16752 43.9224 5.53216 45.2394 4.14137C46.5431 2.76896 48.1155 1.6791 49.8589 0.939562C53.5839 -0.581416 57.7578 -0.581416 61.4828 0.939562C63.2308 1.68222 64.8096 2.77148 66.1238 4.14137C67.4536 5.5317 68.4925 7.17292 69.1797 8.96904C70.6209 12.8817 70.6209 17.179 69.1797 21.0917C68.4925 22.8878 67.4536 24.529 66.1238 25.9194C64.8125 27.2873 63.2325 28.37 61.4828 29.0998C59.6438 29.8521 57.6723 30.228 55.6852 30.2051ZM55.6852 26.9034C57.6696 26.9509 59.6275 26.4415 61.3365 25.433C63.0454 24.4246 64.4369 22.9575 65.3526 21.1987C66.3013 19.2906 66.7949 17.1892 66.7949 15.0589C66.7949 12.9286 66.3013 10.8272 65.3526 8.91912C64.4428 7.17988 63.0816 5.7169 61.4114 4.68332C60.1388 3.89479 58.7167 3.37766 57.2343 3.16443C55.752 2.9512 54.2416 3.04647 52.7979 3.44428C51.3542 3.84208 50.0086 4.5338 48.8454 5.47598C47.6823 6.41816 46.7268 7.59043 46.0391 8.91912C45.1041 10.8312 44.6181 12.931 44.6181 15.0589C44.6181 17.1868 45.1041 19.2866 46.0391 21.1987C46.9291 22.9393 48.2863 24.3984 49.9589 25.4131C51.6905 26.4349 53.6744 26.9513 55.6852 26.9034Z" fill="#F4EBE4"/>
-      <path d="M105.929 30.204C103.938 30.2248 101.964 29.844 100.124 29.0844C98.376 28.3597 96.7997 27.2762 95.4976 25.904C94.1789 24.5104 93.15 22.8696 92.4703 21.0763C91.0197 17.1653 91.0197 12.8647 92.4703 8.95367C93.15 7.16042 94.1789 5.51955 95.4976 4.126C96.8026 2.75185 98.3777 1.6618 100.124 0.924198C103.847 -0.597129 108.019 -0.597129 111.741 0.924198C113.489 1.66685 115.068 2.75611 116.382 4.126C117.712 5.51633 118.751 7.15756 119.438 8.95367C120.879 12.8664 120.879 17.1636 119.438 21.0763C118.751 22.8724 117.712 24.5137 116.382 25.904C115.071 27.2719 113.491 28.3546 111.741 29.0844C109.899 29.8435 107.922 30.2242 105.929 30.204ZM105.929 26.9023C107.913 26.9498 109.871 26.4404 111.58 25.4319C113.289 24.4235 114.681 22.9564 115.597 21.1975C116.545 19.2895 117.039 17.1881 117.039 15.0578C117.039 12.9275 116.545 10.8261 115.597 8.91802C114.692 7.16098 113.324 5.68402 111.641 4.64657C109.907 3.63884 107.936 3.10798 105.929 3.10798C103.922 3.10798 101.952 3.63884 100.217 4.64657C98.5498 5.67705 97.1948 7.14131 96.2973 8.88236C95.3623 10.7944 94.8763 12.8942 94.8763 15.0221C94.8763 17.15 95.3623 19.2499 96.2973 21.1619C97.2055 22.9223 98.5923 24.3914 100.298 25.4004C102.005 26.4095 103.961 26.9177 105.943 26.8667L105.929 26.9023Z" fill="#F4EBE4"/>
+      <path d="M105.929 30.204ZM105.929 26.9023C107.913 26.9498 109.871 26.4404 111.58 25.4319C113.289 24.4235 114.681 22.9564 115.597 21.1975C116.545 19.2895 117.039 17.1881 117.039 15.0578C117.039 12.9275 116.545 10.8261 115.597 8.91802C114.692 7.16098 113.324 5.68402 111.641 4.64657C109.907 3.63884 107.936 3.10798 105.929 3.10798C103.922 3.10798 101.952 3.63884 100.217 4.64657C98.5498 5.67705 97.1948 7.14131 96.2973 8.88236C95.3623 10.7944 94.8763 12.8942 94.8763 15.0221C94.8763 17.15 95.3623 19.2499 96.2973 21.1619C97.2055 22.9223 98.5923 24.3914 100.298 25.4004C102.005 26.4095 103.961 26.9177 105.943 26.8667L105.929 26.9023Z" fill="#F4EBE4"/>
       <path d="M141.629 30.204V0.560547H144.985V26.9451H159.229V30.204H141.629Z" fill="#F4EBE4"/>
       <path d="M191.215 30.2038C189.067 30.2712 186.937 29.781 185.035 28.7812C183.133 27.7813 181.523 26.3059 180.362 24.499L182.697 21.9176C183.741 23.5366 185.14 24.8972 186.788 25.8967C188.227 26.6702 189.839 27.0653 191.472 27.0448C192.669 27.0631 193.857 26.8475 194.971 26.4101C195.922 26.0417 196.763 25.4352 197.413 24.6487C198 23.9096 198.313 22.9897 198.298 22.0459C198.317 21.3232 198.141 20.6087 197.786 19.9784C197.432 19.3481 196.913 18.8255 196.284 18.4662C194.534 17.4669 192.638 16.7452 190.665 16.3269C187.781 15.6518 185.584 14.6701 184.075 13.3818C182.566 12.0935 181.809 10.2513 181.805 7.85531C181.782 6.36973 182.235 4.91569 183.097 3.70508C184 2.47155 185.205 1.48956 186.595 0.852694C189.12 -0.426215 192.035 -0.704779 194.756 0.0728637C197.477 0.850507 199.803 2.62686 201.268 5.0457L198.891 7.42032C198.082 6.1036 196.999 4.97724 195.713 4.11868C194.449 3.31126 192.973 2.8968 191.472 2.9278C189.855 2.86261 188.264 3.34788 186.96 4.30408C186.399 4.71141 185.945 5.2487 185.638 5.86975C185.331 6.49081 185.179 7.17707 185.196 7.86957C185.169 8.51149 185.302 9.15005 185.584 9.72767C185.866 10.3053 186.287 10.8038 186.81 11.1783C187.881 11.9627 189.666 12.6045 192.108 13.1679C194.621 13.6579 197.004 14.6658 199.105 16.1272C199.94 16.7386 200.612 17.5452 201.063 18.4764C201.513 19.4075 201.729 20.4349 201.689 21.4683C201.719 23.0889 201.262 24.6812 200.376 26.0393C199.47 27.3938 198.2 28.4663 196.713 29.1341C194.981 29.89 193.104 30.2552 191.215 30.2038Z" fill="#F4EBE4"/>
     </svg>
@@ -75,7 +76,6 @@ function LogoSVG({
   height: number;
 }) {
   const fill = "#F4EEDF";
-  // useTransform is reactive without triggering React re-renders
   const clipW        = useTransform(waveProgressMV, v => v * 206);
   const waveOpacity  = useTransform(waveProgressMV, v => Math.min(1, v));
 
@@ -89,7 +89,6 @@ function LogoSVG({
     >
       <defs>
         <clipPath id="wave-reveal">
-          {/* motion.rect animates width without a React re-render */}
           <motion.rect x="385" y="0" width={clipW} height="178.21" />
         </clipPath>
       </defs>
@@ -123,9 +122,6 @@ type Phase =
   | "fly-out"
   | "done";
 
-// Visibility-aware wait — pauses countdown while tab is hidden,
-// resumes when visible again. Keeps in sync with Framer Motion's
-// animate() which also pauses its rAF loop when the tab is hidden.
 const wait = (ms: number) =>
   new Promise<void>((resolve) => {
     let remaining = ms;
@@ -157,16 +153,13 @@ const wait = (ms: number) =>
     };
 
     document.addEventListener("visibilitychange", handler);
-
     if (document.visibilityState !== "hidden") schedule();
-    // If already hidden, handler fires on next visibilitychange → visible
   });
 
 // ─── Preloader ────────────────────────────────────────────────────────────────
 export default function Preloader({ onComplete }: { onComplete?: () => void }) {
-  const [phase,        setPhase]        = useState<Phase>("idle");
-  const [mounted,      setMounted]      = useState(true);
-  const [waterPaused,  setWaterPaused]  = useState(false);   // ← Fix ②
+  const [phase,      setPhase]      = useState<Phase>("idle");
+  const [mounted,    setMounted]    = useState(true);
 
   const rScale  = useResponsiveScale();
   const iconW   = LOGO_ICON_W * rScale;
@@ -185,8 +178,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   const iconSvgRef  = useRef<HTMLDivElement>(null);
   const poolsSvgRef = useRef<HTMLDivElement>(null);
 
-  // ─── Motion values ─────────────────────────────────────────────────────────
-  // Fix ①: all motion values passed directly — no useState/useEffect listeners
+  // Motion values
   const waveProgressMV   = useMotionValue(0);
   const circleProgressMV = useMotionValue(0);
   const dotOpacityMV     = useMotionValue(0);
@@ -197,11 +189,9 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   const textX_right  = useTransform(textProgress, [0, 1], [slideAmt,  0]);
   const textOpacity  = useTransform(textProgress, [0, 0.1, 1], [0, 1, 1]);
 
-  // Background + logo overlay opacity — used directly as style props
   const bgOpacity   = useMotionValue(1);
   const logoOpacity = useMotionValue(1);
 
-  // Per-element fly-out transforms
   const grandX = useMotionValue(0); const grandY = useMotionValue(0); const grandS = useMotionValue(1);
   const iconX  = useMotionValue(0); const iconY  = useMotionValue(0); const iconS  = useMotionValue(1);
   const poolsX = useMotionValue(0); const poolsY = useMotionValue(0); const poolsS = useMotionValue(1);
@@ -210,7 +200,6 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   useEffect(() => {
     const run = async () => {
       
-  // If tab is hidden when preloader starts, wait for it to become visible
   if (document.visibilityState === "hidden") {
     await new Promise<void>((r) => {
       const check = () => {
@@ -223,7 +212,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
     });
   }
 
-  await wait(400);  // ← only ONE wait(400) here
+  await wait(400);
 
   setPhase("wave-draw");
   animate(waveProgressMV, 1, { duration: 2.2, ease: [0.16, 1, 0.3, 1] });
@@ -254,7 +243,6 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
 
       await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
 
-      // Fix ③: batch ALL getBoundingClientRect reads before any writes
       const hGR = hGrand.getBoundingClientRect();
       const hIR = hIcon.getBoundingClientRect();
       const hPR = hPools.getBoundingClientRect();
@@ -291,12 +279,8 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
       const pTx = phCx - (pCx + (pSCx - pCx) * pScale);
       const pTy = phCy - (pCy + (pSCy - pCy) * pScale);
 
-      // Fix ②: stop WebGL canvas work before kicking off fly-out
-      setWaterPaused(true);
-
       setPhase("fly-out");
 
-      // All writes happen after all reads — no layout thrash
       animate(grandX, gTx, { duration: dur, ease });
       animate(grandY, gTy, { duration: dur, ease });
       animate(grandS, gScale, { duration: dur, ease });
@@ -350,22 +334,21 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   return (
     <div className="fixed inset-0 z-[9999] min-h-screen">
 
-      {/* 1. BG IMAGE — opacity driven by motion value directly */}
-      <motion.img
-        src="/IntroReveal.webp"
-        alt=""
-        aria-hidden
-        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-        style={{ zIndex: 0, objectPosition: "center 30%", opacity: bgOpacity }}
-      />
-
-      {/* 2. WATER CANVAS — paused during fly-out so GPU is free */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        style={{ zIndex: 1, opacity: bgOpacity }}
-      >
-        <WaterBackground paused={waterPaused} />
-      </motion.div>
+{/* 2. NEW WATER CANVAS LAYER */}
+<motion.div
+  className="absolute inset-0 pointer-events-none"
+  style={{ 
+    zIndex: 1, 
+    opacity: bgOpacity 
+  }}
+  // Force the hardware acceleration layer to instantiate immediately
+  initial={{ opacity: 1 }}
+>
+  {/* Wrap it in an isolated container so it mounts instantly and doesn't wait for wait() states */}
+  <div className="w-full h-full absolute inset-0 transform-gpu">
+    <WaveCanvas />
+  </div>
+</motion.div>
 
       {/* 3. LOGO GROUP */}
       <motion.div
@@ -432,7 +415,6 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
             }}
           >
             <div ref={iconSvgRef} style={{ display: "flex" }}>
-              {/* Fix ①: motion values passed directly — LogoSVG never re-renders */}
               <LogoSVG
                 waveProgressMV={waveProgressMV}
                 circleProgressMV={circleProgressMV}
