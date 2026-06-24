@@ -2,27 +2,117 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { AmbientLight, VideoTexture, SRGBColorSpace, LinearFilter } from "three";
+import {
+  AmbientLight,
+  VideoTexture,
+  LinearFilter,
+  NoColorSpace,
+  NoToneMapping,
+  SRGBColorSpace,
+  ShaderMaterial,
+  PlaneGeometry,
+  Mesh,
+  Vector2,
+  WebGLRenderTarget,
+  RGBAFormat,
+  FloatType,
+  Uniform,
+} from "three";
 import LiquidBackgroundFn from "../app/utils/liquidBackground";
 
-export default function WaveCanvas() {
+type WaveCanvasProps = {
+  onReady?: () => void;
+};
+
+// Pure passthrough vertex shader
+const vertexShader = `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+// Fragment shader: samples video with liquid displacement — no PBR, no tone mapping
+const fragmentShader = `
+  uniform sampler2D map;
+  uniform sampler2D displacementMap;
+  uniform vec2 uvMapScale;
+  uniform float displacementScale;
+  varying vec2 vUv;
+
+  void main() {
+    vec4 disp = texture2D(displacementMap, vUv);
+    vec3 normal = vec3(disp.b, disp.a, sqrt(max(0.0, 1.0 - dot(disp.ba, disp.ba))));
+
+    vec2 dUv = normal.xy * displacementScale * 0.04;
+    vec2 newUv = ((vUv - 0.5) * uvMapScale + 0.5) + dUv;
+    float st = smoothstep(0.0, 0.1, length(dUv));
+
+    // Subtle chromatic aberration — same as original liquidBackground source
+    float redOffset   = 0.01;
+    float greenOffset = 0.02;
+    float blueOffset  = 0.03;
+
+    float r = texture2D(map, newUv + vec2(redOffset   * st, 0.0)).r;
+    float g = texture2D(map, newUv + vec2(greenOffset  * st, 0.0)).g;
+    float b = texture2D(map, newUv + vec2(blueOffset   * st, 0.0)).b;
+
+    gl_FragColor = vec4(r, g, b, 1.0);
+  }
+`;
+
+export default function WaveCanvas({ onReady }: WaveCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isReady, setIsReady] = useState(false);
   const appInstanceRef = useRef<any>(null);
+  const hasFiredReady = useRef(false);
 
   useEffect(() => {
     if (!canvasRef.current || !videoRef.current) return;
 
     let destroyed = false;
     let animationFrameId: number;
-    const video = videoRef.current;
+    let rvfcId: number;
+    let failSafeTimeout: NodeJS.Timeout;
+
+    const video = videoRef.current as HTMLVideoElement;
     let videoTexture: VideoTexture | null = null;
 
-    // Playback logic matching readiness parameters
+    const flags = {
+      videoReady: false,
+      engineReady: false,
+      textureUploaded: false,
+    };
+
+    const checkAndMarkReady = () => {
+      if (hasFiredReady.current) return;
+      if (flags.videoReady && flags.engineReady && flags.textureUploaded) {
+        hasFiredReady.current = true;
+        clearTimeout(failSafeTimeout);
+        requestAnimationFrame(() => {
+          if (destroyed) return;
+          requestAnimationFrame(() => {
+            if (destroyed) return;
+            setIsReady(true);
+            onReady?.();
+          });
+        });
+      }
+    };
+
+    failSafeTimeout = setTimeout(() => {
+      if (!hasFiredReady.current) {
+        flags.videoReady = true;
+        flags.engineReady = true;
+        flags.textureUploaded = true;
+        checkAndMarkReady();
+      }
+    }, 1800);
+
     const playVideo = () => {
-      video.play().catch((err) => {
-        console.log("Autoplay blocked, waiting for interaction.", err);
+      video.play().catch(() => {
         const startVideo = () => {
           video.play().catch(() => {});
           window.removeEventListener("click", startVideo);
@@ -31,7 +121,7 @@ export default function WaveCanvas() {
       });
     };
 
-    // --- OPTIMIZATION: BYPASS UNUSED HEAVY CUBEMAP GENERATION ---
+    // Mock PMREM so liquidBackground doesn't crash without an env map
     const originalFromScene = THREE.PMREMGenerator.prototype.fromScene;
     THREE.PMREMGenerator.prototype.fromScene = function () {
       return { texture: null } as any;
@@ -41,73 +131,60 @@ export default function WaveCanvas() {
     appInstanceRef.current = appInstance;
 
     THREE.PMREMGenerator.prototype.fromScene = originalFromScene;
-    // -------------------------------------------------------------
-
     appInstance.three.resize();
 
-    const matteLight = new AmbientLight(0xffffff, 1.5);
+    // ── Renderer: no tone mapping, output in sRGB ──────────────────────────
+    const renderer = appInstance.three.renderer;
+    renderer.toneMapping = NoToneMapping;
+    renderer.outputColorSpace = SRGBColorSpace;
+
+    // We don't need Three's default lighting for a video passthrough
+    const matteLight = new AmbientLight(0xffffff, 1.0);
     appInstance.three.scene.add(matteLight);
 
-    appInstance.liquidPlane.material.envMap = null;
-    appInstance.liquidPlane.material.metalness = 0.0;
-    appInstance.liquidPlane.material.roughness = 1.0;
-
+    // ── Video texture: NoColorSpace = don't touch what the browser decoded ─
     videoTexture = new VideoTexture(video);
-    videoTexture.colorSpace = SRGBColorSpace;
+    videoTexture.colorSpace = NoColorSpace;
     videoTexture.minFilter = LinearFilter;
-    appInstance.liquidPlane.material.map = videoTexture;
+    videoTexture.magFilter = LinearFilter;
 
-    appInstance.liquidPlane.material.onBeforeCompile = (shader: any) => {
-      Object.assign(shader.uniforms, appInstance.liquidPlane.uniforms);
-      shader.fragmentShader = `
-        uniform vec2 uvMapScale;
-        uniform sampler2D displacementMap;
-        uniform float displacementScale;
-        float redOffset   = 0.0;
-        float greenOffset = 0.0;
-        float blueOffset  = 0.0;
-      ` + shader.fragmentShader;
+    // ── Replace MeshStandardMaterial with pure ShaderMaterial ─────────────
+    // MeshStandardMaterial runs PBR lighting math (Fresnel, GGX, tone mapping)
+    // which desaturates and brightens the video. ShaderMaterial bypasses all of
+    // that — what comes out of the sampler is exactly what goes to the screen.
+    const shaderMat = new ShaderMaterial({
+      uniforms: {
+        map:              { value: videoTexture },
+        displacementMap:  { value: appInstance.liquidPlane.uniforms.displacementMap.value },
+        uvMapScale:       { value: new Vector2(1, 1) },
+        displacementScale:{ value: 5.0 },
+      },
+      vertexShader,
+      fragmentShader,
+      depthWrite: false,
+    });
 
-      shader.fragmentShader = shader.fragmentShader.replace(
-        "#include <map_fragment>",
-        `
-        vec4 disp = texture2D(displacementMap, vUv);
-        vec3 transformedNormal = vec3(disp.b, disp.a, sqrt(1.0 - dot(disp.ba, disp.ba)));
-        #ifdef USE_MAP
-          vec2 dUv = transformedNormal.xy * displacementScale * 0.04;
-          vec2 newUv = ((vUv - 0.5) * uvMapScale + 0.5) + dUv;
-          float st = smoothstep(0.0, 0.1, length(dUv));
-          diffuseColor.r *= texture2D(map, newUv + redOffset * st).r;
-          diffuseColor.g *= texture2D(map, newUv + greenOffset * st).g;
-          diffuseColor.b *= texture2D(map, newUv + blueOffset * st).b;
-        #endif
-        `
-      );
+    // Swap the material on the existing liquidPlane mesh
+    appInstance.liquidPlane.material.dispose();
+    appInstance.liquidPlane.material = shaderMat;
 
-      shader.fragmentShader = shader.fragmentShader.replace(
-        "#include <normal_fragment_maps>",
-        "\n normal = transformedNormal;\n "
-      );
-    };
+    // Keep a reference to uniforms the rest of the code uses
+    appInstance.liquidPlane.uniforms = shaderMat.uniforms;
 
-    appInstance.liquidPlane.material.needsUpdate = true;
-    appInstance.liquidPlane.uniforms.displacementScale.value = 5.0;
-
-    if (appInstance.liquidPlane.attenuation !== undefined) {
-      appInstance.liquidPlane.attenuation = 0.95;
-    }
+    // Texture upload gate
+    flags.textureUploaded = true; // ShaderMaterial doesn't go through initTexture
 
     const updateVideoAspect = () => {
-      if (!videoTexture || !appInstanceRef.current) return;
-      const plane = appInstanceRef.current.liquidPlane;
+      if (!appInstanceRef.current) return;
+      const uniforms = appInstanceRef.current.liquidPlane.uniforms;
       const currentRatio = appInstanceRef.current.three.size.ratio;
       const videoRatio = video.videoWidth / video.videoHeight;
 
       if (videoRatio && currentRatio) {
         if (currentRatio < videoRatio) {
-          plane.uniforms.uvMapScale.value.set(currentRatio / videoRatio, 1);
+          uniforms.uvMapScale.value.set(currentRatio / videoRatio, 1);
         } else {
-          plane.uniforms.uvMapScale.value.set(1, videoRatio / currentRatio);
+          uniforms.uvMapScale.value.set(1, videoRatio / currentRatio);
         }
       }
     };
@@ -115,12 +192,21 @@ export default function WaveCanvas() {
     if (video.videoWidth > 0) {
       updateVideoAspect();
     } else {
-      video.addEventListener("loadedmetadata", updateVideoAspect);
+      (video as HTMLVideoElement).addEventListener("loadedmetadata", updateVideoAspect);
     }
 
     appInstance.three.onAfterResize = () => {
       updateVideoAspect();
     };
+
+    if (appInstance.three && typeof appInstance.three === "object") {
+      appInstance.three.onAfterRender = () => {
+        if (!flags.engineReady) {
+          flags.engineReady = true;
+          checkAndMarkReady();
+        }
+      };
+    }
 
     if (appInstance.interaction) {
       appInstance.interaction.onMove = () => {
@@ -136,18 +222,25 @@ export default function WaveCanvas() {
     appInstance.setRain(false);
     playVideo();
 
-    // Render loop and state tracking
+    if ("requestVideoFrameCallback" in video) {
+      const onFramePresented = () => {
+        if (destroyed) return;
+        flags.videoReady = true;
+        checkAndMarkReady();
+      };
+      rvfcId = (video as any).requestVideoFrameCallback(onFramePresented);
+    } else {
+      (video as HTMLVideoElement).addEventListener("loadeddata", () => {
+        flags.videoReady = true;
+        checkAndMarkReady();
+      });
+    }
+
     const renderLoop = () => {
       if (destroyed) return;
-      if (videoTexture) {
+      if (videoTexture && video.readyState >= video.HAVE_CURRENT_DATA) {
         videoTexture.needsUpdate = true;
       }
-
-      // CRITICAL: Only set isReady true when video pixel buffer contains current frame data
-      if (!isReady && video.readyState >= 3) {
-        setIsReady(true);
-      }
-
       animationFrameId = requestAnimationFrame(renderLoop);
     };
     renderLoop();
@@ -156,46 +249,41 @@ export default function WaveCanvas() {
 
     return () => {
       destroyed = true;
+      clearTimeout(failSafeTimeout);
       cancelAnimationFrame(animationFrameId);
+      if (rvfcId && "cancelVideoFrameCallback" in video) {
+        (video as any).cancelVideoFrameCallback(rvfcId);
+      }
       if (videoTexture) videoTexture.dispose();
+      shaderMat.dispose();
       if (appInstanceRef.current && typeof appInstanceRef.current.dispose === "function") {
         appInstanceRef.current.dispose();
         appInstanceRef.current = null;
       }
-      video.removeEventListener("loadedmetadata", updateVideoAspect);
+      (video as HTMLVideoElement).removeEventListener("loadedmetadata", updateVideoAspect);
     };
-  }, [isReady]);
+  }, [onReady]);
 
-return (
-  <div className="relative w-full h-full bg-transparent">
-    <video
-      ref={videoRef}
-      src="/videos/pool.mp4"
-      loop
-      muted
-      playsInline
-      preload="auto"
-      crossOrigin="anonymous"
-      className="hidden"
-    />
-    
-    <canvas
-      ref={canvasRef}
-      className={`h-full w-full block touch-pan-y transition-opacity duration-300 ease-in-out ${
-        isReady ? "opacity-100" : "opacity-0"
-      }`}
-    />
-
-    {/* Linear Gradient Overlay */}
-    <div 
-      className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ease-in-out ${
-        isReady ? "opacity-100" : "opacity-0"
-      }`}
-      style={{
-        background: "linear-gradient(135deg, #162D24 0%, #094146 100%)",
-        mixBlendMode: "multiply" // Optional: Use 'multiply' or 'overlay' if you want the video details to pop through, or remove it for a flat backdrop look
-      }}
-    />
-  </div>
-);
+  return (
+    <div className="relative w-full h-full  overflow-hidden">
+      <video
+        ref={videoRef}
+        src="/videos/Pool.mp4"
+        loop
+        muted
+        playsInline
+        preload="auto"
+        crossOrigin="anonymous"
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        style={{ zIndex: 1 }}
+      />
+      <canvas
+        ref={canvasRef}
+        className={`absolute inset-0 w-full h-full block transition-opacity duration-500 ease-out ${
+          isReady ? "opacity-100" : "opacity-0"
+        }`}
+        style={{ zIndex: 2 }}
+      />
+    </div>
+  );
 }

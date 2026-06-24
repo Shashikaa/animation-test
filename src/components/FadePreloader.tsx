@@ -27,12 +27,13 @@ export default function FadePreloader({
     gsap.fromTo(
       orbRef.current,
       {
-        y: -600,
+        y: "-20vh", // Starts slightly above the viewport
       },
       {
-        y: 700,
+        y: "140vh", // CHANGED: Forces it to travel way past the bottom of the screen
         duration: 2.5,
-        ease: "power3.out",
+        ease: "power2.out",
+        force3D: true, // Key for hardware acceleration / smoothness
       }
     );
   }, []);
@@ -103,6 +104,7 @@ export default function FadePreloader({
           background: "#7C8C2D",
           filter: "blur(220px)",
           opacity: 0.9,
+          willChange: "transform",
         }}
       />
     </div>
