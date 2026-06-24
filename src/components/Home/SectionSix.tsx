@@ -154,7 +154,7 @@ function SectionSixMobile() {
       />
 
       {/* Content */}
-      <div className="!relative !z-[3] !h-full !flex !flex-col !justify-end section-continer">
+      <div className="!relative !z-[3] !h-full !flex !flex-col !justify-end section-container">
 
         {/* Number + Title */}
         <div className="!mb-[30px]">
@@ -384,7 +384,7 @@ function SectionSixDesktop() {
       />
 
       {/* Content */}
-      <div className="section-continer !relative !z-[3] !h-full !flex !flex-col !justify-center !pb-40 !gap-6">
+      <div className="section-container !relative !z-[3] !h-full !flex !flex-col !justify-center !pb-40 !gap-6">
         <div className="!relative !h-20">
           {PROJECTS.map((p, i) => (
             <h2

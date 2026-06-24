@@ -72,7 +72,7 @@ export default function SectionFour() {
 
       {/* ── MOBILE + TABLET layout (≤ 1024px) ── */}
       <div
-        className="s4-mobile-layout section-continer"
+        className="s4-mobile-layout section-container"
         style={{
           display:            "none",
           position:           "absolute",
@@ -90,7 +90,7 @@ export default function SectionFour() {
           transform:          "translateZ(0.001px)",
           backfaceVisibility: "hidden",
           willChange:         "transform",
-          /* section-continer supplies padding-inline + padding-block */
+          /* section-container supplies padding-inline + padding-block */
           paddingBlock:       undefined,
         }}
       >
@@ -159,7 +159,7 @@ export default function SectionFour() {
 
       {/* ── DESKTOP layout (≥ 1025px) ── */}
       <div
-        className="s4-content s4-desktop-layout section-continer"
+        className="s4-content s4-desktop-layout section-container"
         style={{
           position:      "absolute",
           top:           0,
@@ -171,7 +171,7 @@ export default function SectionFour() {
           flexDirection: "column",
           boxSizing:     "border-box",
           willChange:    "transform",
-          /* section-continer supplies padding-inline + padding-block */
+          /* section-container supplies padding-inline + padding-block */
         }}
       >
         <div style={{ flexShrink: 0, display: "flex", justifyContent: "flex-end" }}>

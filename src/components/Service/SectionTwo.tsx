@@ -319,7 +319,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
 
         {/* Bottom Content Area */}
         <div
-          className="section-continer w-full"
+          className="section-container w-full"
           style={{
             position: "absolute",
             bottom: 0,
@@ -412,7 +412,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
 
       {/* ── MOBILE LAYOUT ── */}
       <section
-        className="s3-mobile-section flex md:hidden flex-col section-continer w-full min-h-screen relative overflow-hidden z-30 "
+        className="s3-mobile-section flex md:hidden flex-col section-container w-full min-h-screen relative overflow-hidden z-30 "
         style={{
           pointerEvents: "auto",
           backgroundImage: "url('/services.webp')",

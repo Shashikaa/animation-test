@@ -30,7 +30,7 @@ export default function ContactHero({ hideText = false }: HeroProps) {
      
           
           {!hideText && (
-            <div className="hero-text-wrap section-continer relative z-10 h-full flex flex-col justify-end !pb-22 will-change-[opacity,transform]">
+            <div className="hero-text-wrap section-container relative z-10 h-full flex flex-col justify-end !pb-22 will-change-[opacity,transform]">
               <div className="flex flex-col !gap-2 lg:!gap-6">
                 <h1
                   className="hero-title text-[#F4EEDF] !font-[100]"

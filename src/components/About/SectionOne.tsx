@@ -17,7 +17,7 @@ export default function SectionOne() {
       />
 
       {/* ── Content ── */}
-      <div className="section-continer relative z-10 h-full flex items-end justify-end !pb-54">
+      <div className="section-container relative z-10 h-full flex items-end justify-end !pb-54">
         {/* FIX: Replaced inline visibility with lg:invisible, and fixed spacing properties */}
         <div
           className="s1-card w-full max-w-[280px] md:max-w-[330px] lg:max-w-[370px] flex flex-col justify-center gap-4 will-change-transform !py-8 !p-6 md:!p-8 lg:!p-10 lg:invisible"

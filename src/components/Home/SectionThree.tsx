@@ -212,7 +212,7 @@ export default function SectionThree() {
 
         {/* Bottom Content */}
         <div
-          className="section-continer"
+          className="section-container"
           style={{
             position: "absolute",
             bottom: 0,
@@ -354,7 +354,7 @@ export default function SectionThree() {
 
       {/* ── MOBILE LAYOUT ── */}
       <section
-        className="flex md:hidden flex-col section-continer"
+        className="flex md:hidden flex-col section-container"
         style={{
           position: "absolute",
           inset: 0,

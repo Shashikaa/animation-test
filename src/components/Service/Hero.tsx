@@ -40,7 +40,7 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 z-[1]" />
           
           {!hideText && (
-            <div className="hero-text-wrap section-continer relative z-10 h-full flex flex-col justify-end !pb-22 will-change-[opacity,transform]">
+            <div className="hero-text-wrap section-container relative z-10 h-full flex flex-col justify-end !pb-22 will-change-[opacity,transform]">
               <div className="flex flex-col !gap-2 lg:!gap-6 leading-normal">
                 <h1
                   className="hero-title text-[#F4EEDF] !font-[100]"

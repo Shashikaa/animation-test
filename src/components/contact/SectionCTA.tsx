@@ -53,7 +53,7 @@ export default function SectionCTA() {
           DESKTOP layout — unchanged, now starts at lg
           ══════════════════════════════════════════ */}
       <div
-        className="hidden lg:flex section-continer"
+        className="hidden lg:flex section-container"
         style={{
           position: "relative",
           zIndex: 10,

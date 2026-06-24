@@ -39,7 +39,7 @@ export default function SectionOne() {
 
       <WaterBackground paused={offscreen} />
 
-      <div className="section-continer relative z-[2] h-full flex flex-col justify-between pb-10 md:pb-14 lg:pb-16">
+      <div className="section-container relative z-[2] h-full flex flex-col justify-between pb-10 md:pb-14 lg:pb-16">
         
         {/* TOP CONTENT */}
         {/* We keep the split class targeted tightly to individual blocks to prevent multi-element layout collapse */}

@@ -25,7 +25,7 @@ export default function SectionFour() {
         }}
       />
 
-      <div className="section-continer relative z-[1] h-full flex items-end md:items-end px-4 md:px-8 lg:px-0 !pb-26 md:!pb-32 lg:!pb-50">
+      <div className="section-container relative z-[1] h-full flex items-end md:items-end px-4 md:px-8 lg:px-0 !pb-26 md:!pb-32 lg:!pb-50">
         <div
           className="s4-glass-card w-full max-w-[250px] md:max-w-[340px] lg:max-w-[360px] h-auto md:h-[148px] lg:h-[164px] !pl-6 md:!pl-6 lg:!pl-6 !pr-6 md:!pr-6 lg:!pr-6 !py-6 md:!py-7 lg:!py-8 flex flex-col justify-center gap-4 will-change-transform"
           style={{

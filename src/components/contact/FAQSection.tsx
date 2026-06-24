@@ -53,7 +53,7 @@ export default function FAQSection() {
       
       {/* Main Container */}
      {/* Main Container — ADD 'faq-content' CLASS HERE */}
-<div className="faq-content section-continer relative z-20 w-full h-full flex flex-col lg:flex-row justify-center lg:justify-between gap-16 md:gap-8">
+<div className="faq-content section-container relative z-20 w-full h-full flex flex-col lg:flex-row justify-center lg:justify-between gap-16 md:gap-8">
         
         {/* LEFT SIDE — Title offset upwards matching Figma view */}
         <div className="flex flex-col select-none justify-start pt-12 md:!pt-24 lg:!pt-32">

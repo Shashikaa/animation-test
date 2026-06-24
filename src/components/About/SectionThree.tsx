@@ -39,7 +39,7 @@ export default function SectionThree() {
 
       <WaterBackground paused={offscreen} />
 
-      <div className="section-continer relative z-[2] h-full flex flex-col justify-between pb-10 md:pb-14 lg:pb-16">
+      <div className="section-container relative z-[2] h-full flex flex-col justify-between pb-10 md:pb-14 lg:pb-16">
         {/* TOP CONTENT */}
         <div className="flex flex-col !mt-44">
           <h2 className="s3-reveal-top font-display text-[#F4EEDF] leading-[1.2] !font-[100]">

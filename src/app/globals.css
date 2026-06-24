@@ -202,7 +202,8 @@ body.preloading .scroll-container {
 .row     { display: flex; align-items: center; }
 .stack   { display: flex; flex-direction: column; }
 
-.section-continer {
+/* Fixed Typo Here */
+.section-container {
   width:          100%;
   max-width:      1920px;
   margin:         0 auto;
@@ -211,14 +212,14 @@ body.preloading .scroll-container {
 }
 
 @media (max-width: 1025px) {
-  .section-continer {
+  .section-container {
     padding-inline: 30px;
     padding-block:  65px;
   }
 }
 
 @media (max-width: 767px) {
-  .section-continer {
+  .section-container {
     padding-inline: 20px;
     padding-block:  65px;
   }

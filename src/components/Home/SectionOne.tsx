@@ -17,7 +17,7 @@ export default function SectionOne() {
 
       <div className="absolute inset-0 bg-black/[0.01]" />
 
-      <div className="section-continer relative z-[1] h-full flex items-start md:items-center px-4 md:px-8 lg:px-0 !pt-32 md:!pt-20 lg:!pt-0">
+      <div className="section-container relative z-[1] h-full flex items-start md:items-center px-4 md:px-8 lg:px-0 !pt-32 md:!pt-20 lg:!pt-0">
         <div
           className="s1-card w-full max-w-[250px] md:max-w-[340px] lg:max-w-[400px] h-auto md:h-[148px] lg:h-[154px] !pl-6 md:!pl-8 lg:!pl-10 !pr-6 md:!pr-10 lg:!pr-12 !py-6 md:!py-7 lg:!py-8 flex flex-col justify-center gap-4 will-change-transform"
           style={{

@@ -50,7 +50,7 @@ export default function Hero({ isMobile = false }: HeroProps) {
 
       {/* ONLY ONE INSTANCE OF TEXT REQUIRED */}
       <div 
-        className="about-hero-text-wrap section-continer relative z-10 h-full flex flex-col justify-end !pb-22"
+        className="about-hero-text-wrap section-container relative z-10 h-full flex flex-col justify-end !pb-22"
       >
         <div className="flex flex-col !gap-2 lg:!gap-6 leading-normal">
           <h1

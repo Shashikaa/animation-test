@@ -23,7 +23,7 @@ export default function Hero() {
       <div className="absolute inset-0 z-0 bg-[linear-gradient(107.8deg,rgba(25,33,28,0)_50.32%,rgba(25,33,28,0.72)_78.81%)] hidden md:block" />
 
       {/* Content */}
-      <div className="section-continer relative z-10 h-full flex items-end justify-end !pb-[115px] !lg:pb-[85px]">
+      <div className="section-container relative z-10 h-full flex items-end justify-end !pb-[115px] !lg:pb-[85px]">
         <div>
           <p className="text-[#F4EEDF] font-body leading-[1.2] font-normal max-w-[330px] md:max-w-[400px] text-right">
             At Grand Pools, we create custom swimming pools that blend style,

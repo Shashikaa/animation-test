@@ -64,7 +64,7 @@ export default function SectionTwo() {
         )}
       </div>
 
-      <div className="section-continer relative z-[2] h-full flex flex-col justify-between pb-10 md:pb-14 lg:pb-16">
+      <div className="section-container relative z-[2] h-full flex flex-col justify-between pb-10 md:pb-14 lg:pb-16">
         {/* TOP */}
         <div className="flex flex-col !mt-44">
           <h2 className="s2-title-main font-display text-[#F4EEDF] leading-[1.2] !font-[100]">
