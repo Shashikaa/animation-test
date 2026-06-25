@@ -107,27 +107,17 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
     }
   };
 
-  // FIXED: Hot reload changing images with cross-origin handling and fail-safe logging
+  // Hot reload changing images
   useEffect(() => {
     if (!shaderMatRef.current) return;
-    
     const loader = new TextureLoader();
-    loader.setCrossOrigin("anonymous");
-
-    loader.load(
-      imageSrc, 
-      (texture) => {
-        texture.colorSpace = NoColorSpace;
-        if (shaderMatRef.current) {
-          shaderMatRef.current.uniforms.bgImage.value = texture;
-          updateAspectRatios();
-        }
-      },
-      undefined,
-      (error) => {
-        console.error(`[WebGL Error] Vercel failed to stream image from path: ${imageSrc}`, error);
+    loader.load(imageSrc, (texture) => {
+      texture.colorSpace = NoColorSpace;
+      if (shaderMatRef.current) {
+        shaderMatRef.current.uniforms.bgImage.value = texture;
+        updateAspectRatios();
       }
-    );
+    });
   }, [imageSrc]);
 
   useEffect(() => {
@@ -220,6 +210,7 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
     appInstance.liquidPlane.material = shaderMat;
     appInstance.liquidPlane.uniforms = shaderMat.uniforms;
 
+    // Apply the lingering LiquidCanvas decay characteristics
     if (appInstance.liquidPlane && appInstance.liquidPlane.attenuation !== undefined) {
       appInstance.liquidPlane.attenuation = 0.95; 
     }
@@ -245,13 +236,14 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
       };
     }
 
+    // Interactive mouse tracking configurations matching original LiquidCanvas specs
     if (appInstance.interaction) {
       appInstance.interaction.onMove = () => {
         appInstance.liquidPlane.addDrop(
           appInstance.interaction.nPosition.x,
           appInstance.interaction.nPosition.y,
-          0.04,
-          0.004
+          0.04,  // Matches LiquidCanvas radius
+          0.004  // Matches LiquidCanvas strength
         );
       };
     }
@@ -299,12 +291,13 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
         appInstanceRef.current.dispose();
         appInstanceRef.current = null;
       }
+      // Fixed: uses the scoped `video` element variable directly to avoid TypeScript 'never' errors during unmount lifecycle
       video.removeEventListener("loadedmetadata", updateAspectRatios);
     };
   }, []);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
+    <div className="relative w-full h-full overflow-hidden">
       <video
         ref={videoRef}
         src="/videos/pool-waves.mp4"
@@ -317,7 +310,7 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
       />
       <canvas
         ref={canvasRef}
-        className={`absolute inset-0 w-full h-screen block transition-opacity duration-500 ease-out ${
+        className={`absolute inset-0 w-full h-full block transition-opacity duration-500 ease-out ${
           isReady ? "opacity-100" : "opacity-0"
         }`}
         style={{ zIndex: 2 }}
