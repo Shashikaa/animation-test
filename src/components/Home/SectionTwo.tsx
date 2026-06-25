@@ -50,18 +50,21 @@ export default function SectionTwo() {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full h-full overflow-hidden "
+      className="relative w-full h-full overflow-hidden"
       style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
     >
-      {/* Background Layer Group */}
-      <div className="absolute inset-0 z-0 pointer-events-none s2-bg">
+      {/* Background Layer Group — Images are set as the base layer here */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-all duration-500 s2-bg"
+        style={{ backgroundImage: `url(${activeBgImage})` }}
+      >
         
-        {/* WebGL Wave Canvas Container — Rendered at full opacity since mixing happens on-GPU */}
+        {/* WebGL Wave Canvas Container — Overlays the background at 0.2 opacity */}
         <div 
           className="absolute inset-0 w-full h-full transition-opacity duration-700"
           style={{ 
             zIndex: 1,
-            opacity: canvasLoaded ? 1 : 0, 
+            opacity: canvasLoaded ? 0.1 : 0, // Clamped to a max opacity of 0.2
           }}
         >
           <WaveCanvas 
