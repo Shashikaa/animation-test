@@ -41,6 +41,7 @@ export default function HomeDesktop() {
   // ── INITIAL STATE SETTING (PRE-RENDER RUN) ──
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
+      // Structural Layout Initialization
       gsap.set(".hero", { yPercent: 0, zIndex: 30, display: "block" });
       gsap.set(".section-1", { yPercent: 0, zIndex: 20, display: "block" });
       gsap.set(".section-2", { display: "block", clipPath: "inset(100% 0% 0% 0%)", zIndex: 25 });
@@ -54,6 +55,12 @@ export default function HomeDesktop() {
       gsap.set(".section-9", { display: "none", opacity: 1, zIndex: 79 });
       gsap.set(".section-cta", { yPercent: 100, zIndex: 95, display: "none" });
       gsap.set(".footer", { yPercent: 100, zIndex: 96, display: "none" }); 
+
+      // Baseline parameters set immediately to handle FOUC
+      gsap.set(".hero-bg", { scale: 1.15, transformOrigin: "center center" });
+      
+      // Forces initialization setup state hiding elements immediately inside pre-render context
+      gsap.set(".hero-secondary-para", { visibility: "hidden" });
     }, scopeRef);
     return () => ctx.revert();
   }, []);
@@ -77,10 +84,11 @@ export default function HomeDesktop() {
       });
 
       const performanceTargets = [
-        ".hero", ".section-1", ".section-2", ".section-3", ".section-4", 
-        ".section-5", ".section-6", ".section-7", ".section-8", ".section-9", 
-        ".section-10", ".s1-bg", ".s2-bg", ".s4-bg-img", ".s4-img", 
-        ".s7-bg-img", ".s8-bg-img", ".s9-bg-img", ".s10-bg-img", ".s10-static-bg"
+        ".hero", ".hero-bg-wrapper", ".hero-bg", ".hero-secondary-para", ".hero-right-text", 
+        ".section-1", ".section-2", ".section-3", ".section-4", ".section-5", 
+        ".section-6", ".section-7", ".section-8", ".section-9", ".section-10", 
+        ".s1-bg", ".s2-bg", ".s4-bg-img", ".s4-img", ".s7-bg-img", ".s8-bg-img", 
+        ".s9-bg-img", ".s10-bg-img", ".s10-static-bg"
       ];
       
       performanceTargets.forEach(selector => {
@@ -89,6 +97,7 @@ export default function HomeDesktop() {
 
       const scrubValue = 0.8;
 
+      // Sub-section configurations
       gsap.set(".s1-bg", { yPercent: 10, scale: 1.0 });
       gsap.set(".s1-card", { yPercent: 80, opacity: 0 });
       gsap.set(".s2-bg", { yPercent: 0, scale: 1.0 });
@@ -138,7 +147,7 @@ export default function HomeDesktop() {
             scrollTrigger: {
               trigger: ".pin-all",
               start: "top top",
-              end: "+=26400",
+              end: "+=28400", 
               scrub: scrubValue,
               pin: true,
               anticipatePin: 1,
@@ -169,11 +178,32 @@ export default function HomeDesktop() {
             },
           });
 
-          // ── HERO TO SECTION 1 ──
+          // ── HERO SCROLL OVERLAYS & SUB-ANIMATIONS ──
           tl.addLabel("heroStart")
-            .to(".hero", { yPercent: -100, duration: 3.8 }, "heroStart")
-            .to(".s1-bg", { yPercent: 0, scale: 1, duration: 3.8 }, "heroStart")
-            .to(".s1-card", { yPercent: 0, opacity: 1, duration: 2.8 }, "heroStart+=0.4")
+            // Title and right text take 2.5 seconds to fade out completely
+            .to(".hero h1, .hero [class*='bottom-8'], .hero-right-text", { 
+              opacity: 0, 
+              y: -40, 
+              duration: 2.5 
+            }, "heroStart")
+
+            .to(".hero-bg-wrapper", {
+              clipPath: "inset(0% 8% 12% 50%)", 
+              duration: 4.5
+            }, "heroStart")
+
+            .to(".hero-bg", {
+              scale: 1.0,
+              duration: 4.5
+            }, "heroStart")
+            
+            .to({}, { duration: 1.2 });
+
+          // ── HERO EXIT TO SECTION 1 ──
+          tl.addLabel("heroExit")
+            .to(".hero", { yPercent: -100, duration: 3.8 }, "heroExit")
+            .to(".s1-bg", { yPercent: 0, scale: 1, duration: 3.8 }, "heroExit")
+            .to(".s1-card", { yPercent: 0, opacity: 1, duration: 2.8 }, "heroExit+=0.4")
             .set(".hero", { display: "none" });
 
           // ── SECTION 2 REVEAL ──
@@ -318,6 +348,9 @@ export default function HomeDesktop() {
             .to(".section-9", { scale: 1.05, duration: 5.5 }, "footerStart");
 
           // ── TEXT REVEAL TIMINGS ──
+          // HERO SECTION TEXT REVEAL
+          useTextReveal(scopeRef, ".hero-secondary-para", { tl, position: "heroStart+=2.5", duration: 0.5, stagger: 0.06 });
+
           useTextReveal(scopeRef, ".s2-title-main", { tl, position: "sec2Start+=1.9", duration: 0.4, stagger: 0.05 });
           useTextReveal(scopeRef, ".s2-title-sub", { tl, position: "sec2Start+=1.9", duration: 0.4, stagger: 0.04 });
           useTextReveal(scopeRef, ".s2-body", { tl, position: "sec2Start+=1.3", duration: 0.4, stagger: 0.05 });
@@ -339,21 +372,14 @@ export default function HomeDesktop() {
           useTextReveal(scopeRef, ".s8-heading", { tl, position: "sec8Start+=1.9", duration: 0.4, stagger: 0.05 });
           useTextReveal(scopeRef, ".s8-para", { tl, position: "sec8Start+=1.8", duration: 0.4, stagger: 0.05 });
 
-          // Matrix mapping configuration including inner checkpoints
+          // Matrix mapping setup
           const totalDuration = tl.totalDuration();
           const labelNames = [
-            "heroStart", 
-            "sec2Start", 
-            "sec3Start", 
-            "sec4Start", "sec4ContentStart", "sec4ContentEnd",
-            "sec5Start", 
-            "sec6Start", 
-            "sec10Start", "sec10TextHide", "sec10CardReveal", "sec10VideoTransition", "sec10FinalScroll",
-            "sec7Start", 
-            "sec8Start", 
-            "sec9Start", "sec9TitleFade", "sec9TitleMove",
-            "ctaStart", 
-            "footerStart"
+            "heroStart", "heroExit", "sec2Start", "sec3Start", "sec4Start", 
+            "sec4ContentStart", "sec4ContentEnd", "sec5Start", "sec6Start", 
+            "sec10Start", "sec10TextHide", "sec10CardReveal", "sec10VideoTransition", 
+            "sec10FinalScroll", "sec7Start", "sec8Start", "sec9Start", 
+            "sec9TitleFade", "sec9TitleMove", "ctaStart", "footerStart"
           ];
           cachedProgressLabels = [0, ...labelNames.map(name => tl.labels[name] / totalDuration), 1];
 
@@ -383,6 +409,7 @@ export default function HomeDesktop() {
         restoreTextReveal(
           scopeRef.current,
           [
+            ".hero-secondary-para",
             ".s2-title-main", ".s2-title-sub", ".s2-body",
             ".s4-title", ".s4-para", ".s4-cta",
             ".s5-title", ".s5-body",

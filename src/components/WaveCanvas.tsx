@@ -218,19 +218,23 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
       };
     }
 
+    // Liquid look tweaks
+    if (appInstance.liquidPlane.attenuation !== undefined) {
+      appInstance.liquidPlane.attenuation = 0.86;
+    }
+
     if (appInstance.interaction) {
       let lastDropTime = 0;
       appInstance.interaction.onMove = () => {
         const now = performance.now();
-        // Throttle rapid touch movements on mobile browsers
-        if (now - lastDropTime < 16) return; 
+        if (now - lastDropTime < 35) return; 
         lastDropTime = now;
 
         appInstance.liquidPlane.addDrop(
           appInstance.interaction.nPosition.x,
           appInstance.interaction.nPosition.y,
-          0.012,
-          0.002
+          0.06,  // Broader wave profile
+          0.0015 // Softer intensity
         );
       };
     }
@@ -284,9 +288,6 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
 
   return (
     <div className="relative w-full h-full overflow-hidden">
-      {/* On mobile: The video stays perfectly visible and uses native, battery-efficient rendering. 
-        On desktop: It serves as the texture data feed hidden underneath the active Canvas element.
-      */}
       <video
         ref={videoRef}
         src="/videos/pool-waves.mp4"
@@ -294,7 +295,7 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
         loop
         muted
         playsInline
-        autoPlay={isMobile} // Explicitly trigger autoplay on mobile fallbacks
+        autoPlay={isMobile}
         preload="auto"
         crossOrigin="anonymous"
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
