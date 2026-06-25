@@ -70,7 +70,7 @@ export default function HomeMobile() {
         clipPath:   "inset(100% 0% 0% 0%)",
         zIndex:     95,
       });
-      gsap.set(".s2-bg", { yPercent: 10, scale: 1.0 });
+      gsap.set(".s2-bg", { yPercent: 0, scale: 1.0 });
 
       gsap.set(".section-3", {
         visibility: "hidden",
@@ -340,7 +340,7 @@ export default function HomeMobile() {
         <div className="section-1 absolute inset-0 z-[90]">
           <SectionOne />
         </div>
-        <div className="section-2 absolute inset-0 z-[95]" style={{ pointerEvents: "none", visibility: "hidden" }}>
+        <div className="section-2 absolute inset-0 z-[95]" style={{  visibility: "hidden" }}>
           <SectionTwo />
         </div>
         <div className="section-3 absolute inset-0 z-[100]" style={{ pointerEvents: "none", visibility: "hidden" }}>

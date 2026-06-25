@@ -91,7 +91,7 @@ export default function HomeDesktop() {
 
       gsap.set(".s1-bg", { yPercent: 10, scale: 1.0 });
       gsap.set(".s1-card", { yPercent: 80, opacity: 0 });
-      gsap.set(".s2-bg", { yPercent: 10, scale: 1.0 });
+      gsap.set(".s2-bg", { yPercent: 0, scale: 1.0 });
       gsap.set(".s5-card", { scale: 1, transformOrigin: "center center" });
       gsap.set(".s4-scroll-body", { y: 0 });
       gsap.set(".s4-img", { yPercent: 15 });

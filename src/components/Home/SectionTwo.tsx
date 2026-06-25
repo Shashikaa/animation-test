@@ -55,7 +55,7 @@ export default function SectionTwo() {
     >
       {/* Background Layer Group — Images are set as the base layer here */}
       <div 
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-all duration-500 "
+        className="absolute s2-bg inset-0 z-0 bg-cover bg-center bg-no-repeat transition-all duration-500 "
         style={{ backgroundImage: `url(${activeBgImage})` }}
       >
         

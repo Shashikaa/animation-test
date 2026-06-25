@@ -39,7 +39,10 @@ const fragmentShader = `
     vec3 normal = vec3(disp.b, disp.a, sqrt(max(0.0, 1.0 - dot(disp.ba, disp.ba))));
 
     vec2 dUv = normal.xy * displacementScale * 0.04;
-    vec2 newUv = ((vUv - 0.5) * uvMapScale + 0.5) + dUv;
+    
+    // FIX: Force texture scaling relative to the true center (0.5, 0.5) instead of the corner (0.0, 0.0)
+    vec2 newUv = ((vUv - 0.5) * uvMapScale) + 0.5 + dUv;
+    
     float st = smoothstep(0.0, 0.1, length(dUv));
 
     float redOffset   = 0.01;
@@ -166,7 +169,6 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
       if (!appInstanceRef.current || !canvasRef.current) return;
       const uniforms = appInstanceRef.current.liquidPlane.uniforms;
       
-      // Use actual bounding rect dimensions of the canvas for precision on mobile viewports
       const canvasWidth = canvasRef.current.clientWidth;
       const canvasHeight = canvasRef.current.clientHeight;
       
@@ -175,11 +177,11 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
 
       if (videoRatio && currentRatio) {
         if (currentRatio < videoRatio) {
-          // Portrait / Taller displays (Mobile standard) -> Centers horizontally, keeps Y anchored correctly
-          uniforms.uvMapScale.value.set(currentRatio / videoRatio, 1);
+          // FIX: Emulate true CSS 'object-cover' centered scaling across both bounds on mobile portrait viewports
+          uniforms.uvMapScale.value.set(currentRatio / videoRatio, 1.0);
         } else {
-          // Landscape / Wider displays (Desktop standard) -> Centers vertically
-          uniforms.uvMapScale.value.set(1, videoRatio / currentRatio);
+          // Landscape / Desktop viewports
+          uniforms.uvMapScale.value.set(1.0, videoRatio / currentRatio);
         }
       }
     };
@@ -226,7 +228,6 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
     const renderLoop = () => {
       if (destroyed) return;
       
-      // Keep aspect ratio perfectly tracked with mobile orientation changes & viewport resizing
       updateVideoAspect();
 
       if (videoTexture && video.readyState >= video.HAVE_CURRENT_DATA) {
