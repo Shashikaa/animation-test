@@ -40,7 +40,6 @@ const fragmentShader = `
 
     vec2 dUv = normal.xy * displacementScale * 0.04;
     
-    // FIX: Force texture scaling relative to the true center (0.5, 0.5) instead of the corner (0.0, 0.0)
     vec2 newUv = ((vUv - 0.5) * uvMapScale) + 0.5 + dUv;
     
     float st = smoothstep(0.0, 0.1, length(dUv));
@@ -61,10 +60,31 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isReady, setIsReady] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const appInstanceRef = useRef<any>(null);
   const hasFiredReady = useRef(false);
 
+  // Check for mobile environment safely on mount
   useEffect(() => {
+    const checkMobile = () => {
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+      const isSmallScreen = window.innerWidth < 768;
+      return isMobileUA || isSmallScreen;
+    };
+
+    if (checkMobile()) {
+      setIsMobile(true);
+      // Immediately clear the ready states for fallback visibility
+      setIsReady(true);
+      onReady?.();
+    }
+  }, [onReady]);
+
+  useEffect(() => {
+    // If it's a mobile device, completely skip initializing Three.js
+    if (isMobile) return;
     if (!canvasRef.current || !videoRef.current) return;
 
     let destroyed = false;
@@ -119,7 +139,6 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
       });
     };
 
-    // Mock PMREM so liquidBackground doesn't crash without an env map
     const originalFromScene = THREE.PMREMGenerator.prototype.fromScene;
     THREE.PMREMGenerator.prototype.fromScene = function () {
       return { texture: null } as any;
@@ -131,7 +150,6 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
     THREE.PMREMGenerator.prototype.fromScene = originalFromScene;
     appInstance.three.resize();
 
-    // Renderer Config
     const renderer = appInstance.three.renderer;
     renderer.toneMapping = NoToneMapping;
     renderer.outputColorSpace = SRGBColorSpace;
@@ -139,13 +157,11 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
     const matteLight = new AmbientLight(0xffffff, 1.0);
     appInstance.three.scene.add(matteLight);
 
-    // Video Texture Init
     videoTexture = new VideoTexture(video);
     videoTexture.colorSpace = NoColorSpace;
     videoTexture.minFilter = LinearFilter;
     videoTexture.magFilter = LinearFilter;
 
-    // Custom pure Shader Material setup
     const shaderMat = new ShaderMaterial({
       uniforms: {
         map:               { value: videoTexture },
@@ -164,23 +180,30 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
 
     flags.textureUploaded = true;
 
-    // Fixed aspect ratio engine logic
+    // OPTIMIZATION: Cache values to prevent Layout Thrashing during layout checks
+    let lastCanvasWidth = 0;
+    let lastCanvasHeight = 0;
+
     const updateVideoAspect = () => {
       if (!appInstanceRef.current || !canvasRef.current) return;
-      const uniforms = appInstanceRef.current.liquidPlane.uniforms;
       
       const canvasWidth = canvasRef.current.clientWidth;
       const canvasHeight = canvasRef.current.clientHeight;
       
+      // Stop execution if dimensions haven't actual shifted
+      if (canvasWidth === lastCanvasWidth && canvasHeight === lastCanvasHeight) return;
+      
+      lastCanvasWidth = canvasWidth;
+      lastCanvasHeight = canvasHeight;
+
+      const uniforms = appInstanceRef.current.liquidPlane.uniforms;
       const currentRatio = canvasWidth / canvasHeight;
       const videoRatio = video.videoWidth / video.videoHeight;
 
       if (videoRatio && currentRatio) {
         if (currentRatio < videoRatio) {
-          // FIX: Emulate true CSS 'object-cover' centered scaling across both bounds on mobile portrait viewports
           uniforms.uvMapScale.value.set(currentRatio / videoRatio, 1.0);
         } else {
-          // Landscape / Desktop viewports
           uniforms.uvMapScale.value.set(1.0, videoRatio / currentRatio);
         }
       }
@@ -195,14 +218,19 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
       };
     }
 
-    // Subtle Hover Effects
     if (appInstance.interaction) {
+      let lastDropTime = 0;
       appInstance.interaction.onMove = () => {
+        const now = performance.now();
+        // Throttle rapid touch movements on mobile browsers
+        if (now - lastDropTime < 16) return; 
+        lastDropTime = now;
+
         appInstance.liquidPlane.addDrop(
           appInstance.interaction.nPosition.x,
           appInstance.interaction.nPosition.y,
-          0.012, // Small radius for narrow ripples
-          0.002  // Subtle strength for diving distortion texture effect
+          0.012,
+          0.002
         );
       };
     }
@@ -224,7 +252,6 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
       });
     }
 
-    // Constant Render Loop
     const renderLoop = () => {
       if (destroyed) return;
       
@@ -253,10 +280,13 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
         appInstanceRef.current = null;
       }
     };
-  }, []);
+  }, [isMobile]);
 
   return (
     <div className="relative w-full h-full overflow-hidden">
+      {/* On mobile: The video stays perfectly visible and uses native, battery-efficient rendering. 
+        On desktop: It serves as the texture data feed hidden underneath the active Canvas element.
+      */}
       <video
         ref={videoRef}
         src="/videos/pool-waves.mp4"
@@ -264,18 +294,22 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
         loop
         muted
         playsInline
+        autoPlay={isMobile} // Explicitly trigger autoplay on mobile fallbacks
         preload="auto"
         crossOrigin="anonymous"
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
         style={{ zIndex: 1 }}
       />
-      <canvas
-        ref={canvasRef}
-        className={`absolute inset-0 w-full h-full block transition-opacity duration-500 ease-out ${
-          isReady ? "opacity-100" : "opacity-0"
-        }`}
-        style={{ zIndex: 2 }}
-      />
+      
+      {!isMobile && (
+        <canvas
+          ref={canvasRef}
+          className={`absolute inset-0 w-full h-full block transition-opacity duration-500 ease-out ${
+            isReady ? "opacity-100" : "opacity-0"
+          }`}
+          style={{ zIndex: 2 }}
+        />
+      )}
     </div>
   );
 }

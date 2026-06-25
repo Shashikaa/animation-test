@@ -14,11 +14,28 @@ const globalTextureCache: Record<string, any> = {};
 export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isReady, setIsReady] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const appInstanceRef = useRef<any>(null);
+
+  // ── STEP 1: MOBILE DETECTION ──
+  useEffect(() => {
+    const checkMobile = () => {
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+      const isSmallScreen = window.innerWidth < 768;
+      return isMobileUA || isSmallScreen;
+    };
+
+    if (checkMobile()) {
+      setIsMobile(true);
+      setIsReady(true); // Show fallback immediately
+    }
+  }, []);
 
   // ── HOOK 1: ENGINE INITIALIZATION ──
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (isMobile || !canvasRef.current) return;
 
     let destroyed = false;
 
@@ -80,7 +97,13 @@ export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
       }
 
       if (appInstance.interaction) {
+        let lastDropTime = 0;
         appInstance.interaction.onMove = () => {
+          const now = performance.now();
+          // Throttle mouse moves to 60fps limit max
+          if (now - lastDropTime < 16) return;
+          lastDropTime = now;
+
           appInstance.liquidPlane.addDrop(
             appInstance.interaction.nPosition.x, 
             appInstance.interaction.nPosition.y, 
@@ -114,21 +137,25 @@ export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
         appInstanceRef.current = null;
       }
     };
-  }, []);
+  }, [isMobile]);
 
   // ── HOOK 2: HARDWARE ACCELERATED TEXTURE INSTANCING ──
   useEffect(() => {
+    if (isMobile) return;
+    
     let active = true;
+    let rafId: number;
     setIsReady(false);
 
     const checkAndLoad = () => {
+      if (!active) return;
+      
       const appInstance = appInstanceRef.current;
       if (!appInstance) {
-        requestAnimationFrame(checkAndLoad);
+        rafId = requestAnimationFrame(checkAndLoad);
         return;
       }
 
-      // OPTIMIZATION: If image has been uploaded into GPU memory by either panel, grab it immediately
       if (globalTextureCache[imageSrc]) {
         if (appInstance.liquidPlane?.material) {
           appInstance.liquidPlane.material.map = globalTextureCache[imageSrc];
@@ -139,11 +166,9 @@ export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
         return;
       }
 
-      // Fallback to initial loader if first render cycle
       appInstance.loadImage(imageSrc).then(() => {
         if (!active) return;
         
-        // Cache the completed texture data configuration
         if (appInstance.liquidPlane?.material?.map) {
           globalTextureCache[imageSrc] = appInstance.liquidPlane.material.map;
         }
@@ -157,13 +182,25 @@ export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
 
     return () => {
       active = false;
+      cancelAnimationFrame(rafId);
     };
-  }, [imageSrc]);
+  }, [imageSrc, isMobile]);
+
+  // ── STEP 3: CLEAN RENDERING STRATEGY ──
+  if (isMobile) {
+    return (
+      <img 
+        src={imageSrc} 
+        alt="Background" 
+        className="h-full w-full object-cover select-none pointer-events-none"
+      />
+    );
+  }
 
   return (
     <canvas 
       ref={canvasRef} 
-      className={`h-full w-full block touch-pan-y transition-opacity duration-300 ease-in-out ${
+      className={`h-full w-full block transition-opacity duration-300 ease-in-out ${
         isReady ? "opacity-100" : "opacity-0"
       }`}
     />
