@@ -69,7 +69,10 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
     let rvfcId: number;
     let failSafeTimeout: NodeJS.Timeout;
 
-    const video = videoRef.current as HTMLVideoElement;
+    const video = videoRef.current as HTMLVideoElement & {
+      requestVideoFrameCallback?: (callback: (now: number, metadata: any) => void) => number;
+      cancelVideoFrameCallback?: (id: number) => void;
+    };
     let videoTexture: VideoTexture | null = null;
 
     const flags = {
@@ -207,7 +210,7 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
     appInstance.setRain(false);
     playVideo();
 
-    if ("requestVideoFrameCallback" in video) {
+    if (typeof (video as any).requestVideoFrameCallback === "function") {
       const onFramePresented = () => {
         if (destroyed) return;
         flags.videoReady = true;
