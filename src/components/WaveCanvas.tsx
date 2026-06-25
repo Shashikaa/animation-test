@@ -268,7 +268,7 @@ export default function WaveCanvas({ onReady }: WaveCanvasProps) {
     <div className="relative w-full h-full  overflow-hidden">
       <video
         ref={videoRef}
-        src="/videos/Pool.mp4"
+        src="/videos/pool-waves.mp4"
         loop
         muted
         playsInline

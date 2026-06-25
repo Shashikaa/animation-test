@@ -24,18 +24,27 @@ export default function FadePreloader({
   useEffect(() => {
     if (!orbRef.current) return;
 
-    gsap.fromTo(
-      orbRef.current,
-      {
-        y: "-20vh", // Starts slightly above the viewport
-      },
-      {
-        y: "140vh", // CHANGED: Forces it to travel way past the bottom of the screen
-        duration: 2.5,
-        ease: "power2.out",
-        force3D: true, // Key for hardware acceleration / smoothness
-      }
-    );
+    // Create a GSAP matchMedia instance
+    const mm = gsap.matchMedia();
+
+    // Only run the animation on desktop (screens wider than 1024px)
+    mm.add("(min-width: 1025px)", () => {
+      gsap.fromTo(
+        orbRef.current,
+        {
+          y: "-20vh",
+        },
+        {
+          y: "140vh",
+          duration: 2.5,
+          ease: "power2.out",
+          force3D: true,
+        }
+      );
+    });
+
+    // Cleanup matchMedia when component unmounts
+    return () => mm.revert();
   }, []);
 
   useEffect(() => {
@@ -87,15 +96,14 @@ export default function FadePreloader({
       <div
         className="absolute inset-0"
         style={{
-          background:
-            "linear-gradient(135deg, #162D24 0%, #094146 100%)",
+          background: "linear-gradient(135deg, #162D24 0%, #094146 100%)",
         }}
       />
 
-      {/* Moving Glow */}
+      {/* Moving Glow - Hidden by default on mobile/tablet, shown on desktop */}
       <div
         ref={orbRef}
-        className="absolute rounded-full"
+        className="hidden lg:block absolute rounded-full"
         style={{
           width: "900px",
           height: "900px",
