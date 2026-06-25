@@ -54,7 +54,7 @@ export default function SectionTwo() {
       style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
     >
       {/* Background Layer Group */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
+      <div className="absolute inset-0 z-0 pointer-events-none s2-bg">
         
         {/* WebGL Wave Canvas Container — Rendered at full opacity since mixing happens on-GPU */}
         <div 
