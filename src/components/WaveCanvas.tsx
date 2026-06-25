@@ -107,17 +107,27 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
     }
   };
 
-  // Hot reload changing images
+  // FIXED: Hot reload changing images with cross-origin handling and fail-safe logging
   useEffect(() => {
     if (!shaderMatRef.current) return;
+    
     const loader = new TextureLoader();
-    loader.load(imageSrc, (texture) => {
-      texture.colorSpace = NoColorSpace;
-      if (shaderMatRef.current) {
-        shaderMatRef.current.uniforms.bgImage.value = texture;
-        updateAspectRatios();
+    loader.setCrossOrigin("anonymous");
+
+    loader.load(
+      imageSrc, 
+      (texture) => {
+        texture.colorSpace = NoColorSpace;
+        if (shaderMatRef.current) {
+          shaderMatRef.current.uniforms.bgImage.value = texture;
+          updateAspectRatios();
+        }
+      },
+      undefined,
+      (error) => {
+        console.error(`[WebGL Error] Vercel failed to stream image from path: ${imageSrc}`, error);
       }
-    });
+    );
   }, [imageSrc]);
 
   useEffect(() => {
@@ -210,7 +220,6 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
     appInstance.liquidPlane.material = shaderMat;
     appInstance.liquidPlane.uniforms = shaderMat.uniforms;
 
-    // Apply the lingering LiquidCanvas decay characteristics
     if (appInstance.liquidPlane && appInstance.liquidPlane.attenuation !== undefined) {
       appInstance.liquidPlane.attenuation = 0.95; 
     }
@@ -236,14 +245,13 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
       };
     }
 
-    // Interactive mouse tracking configurations matching original LiquidCanvas specs
     if (appInstance.interaction) {
       appInstance.interaction.onMove = () => {
         appInstance.liquidPlane.addDrop(
           appInstance.interaction.nPosition.x,
           appInstance.interaction.nPosition.y,
-          0.04,  // Matches LiquidCanvas radius
-          0.004  // Matches LiquidCanvas strength
+          0.04,
+          0.004
         );
       };
     }
@@ -291,7 +299,6 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
         appInstanceRef.current.dispose();
         appInstanceRef.current = null;
       }
-      // Fixed: uses the scoped `video` element variable directly to avoid TypeScript 'never' errors during unmount lifecycle
       video.removeEventListener("loadedmetadata", updateAspectRatios);
     };
   }, []);
