@@ -161,29 +161,27 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
 
     flags.textureUploaded = true;
 
+    // Fixed aspect ratio engine logic
     const updateVideoAspect = () => {
-      if (!appInstanceRef.current) return;
+      if (!appInstanceRef.current || !canvasRef.current) return;
       const uniforms = appInstanceRef.current.liquidPlane.uniforms;
-      const currentRatio = appInstanceRef.current.three.size.ratio;
+      
+      // Use actual bounding rect dimensions of the canvas for precision on mobile viewports
+      const canvasWidth = canvasRef.current.clientWidth;
+      const canvasHeight = canvasRef.current.clientHeight;
+      
+      const currentRatio = canvasWidth / canvasHeight;
       const videoRatio = video.videoWidth / video.videoHeight;
 
       if (videoRatio && currentRatio) {
         if (currentRatio < videoRatio) {
+          // Portrait / Taller displays (Mobile standard) -> Centers horizontally, keeps Y anchored correctly
           uniforms.uvMapScale.value.set(currentRatio / videoRatio, 1);
         } else {
+          // Landscape / Wider displays (Desktop standard) -> Centers vertically
           uniforms.uvMapScale.value.set(1, videoRatio / currentRatio);
         }
       }
-    };
-
-    if (video.videoWidth > 0) {
-      updateVideoAspect();
-    } else {
-      video.addEventListener("loadedmetadata", updateVideoAspect);
-    }
-
-    appInstance.three.onAfterResize = () => {
-      updateVideoAspect();
     };
 
     if (appInstance.three && typeof appInstance.three === "object") {
@@ -224,8 +222,13 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
       });
     }
 
+    // Constant Render Loop
     const renderLoop = () => {
       if (destroyed) return;
+      
+      // Keep aspect ratio perfectly tracked with mobile orientation changes & viewport resizing
+      updateVideoAspect();
+
       if (videoTexture && video.readyState >= video.HAVE_CURRENT_DATA) {
         videoTexture.needsUpdate = true;
       }
@@ -248,7 +251,6 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
         appInstanceRef.current.dispose();
         appInstanceRef.current = null;
       }
-      video.removeEventListener("loadedmetadata", updateVideoAspect);
     };
   }, []);
 
