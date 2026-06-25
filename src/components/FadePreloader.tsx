@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import gsap from "gsap";
 
 type FadePreloaderProps = {
   onExitStart?: () => void;
   onComplete?: () => void;
 };
 
-const HOLD_DURATION_MS = 1500;
-const EXIT_DURATION_MS = 600;
+// 1. Reduced this down to 400ms so it cuts out almost instantly
+const HOLD_DURATION_MS = 400; 
+const EXIT_DURATION_MS = 500; // Slightly faster fade transition to match the snappy feel
 
 export default function FadePreloader({
   onExitStart,
@@ -17,35 +17,7 @@ export default function FadePreloader({
 }: FadePreloaderProps) {
   const [visible, setVisible] = useState(true);
   const [fading, setFading] = useState(false);
-
   const rootRef = useRef<HTMLDivElement>(null);
-  const orbRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!orbRef.current) return;
-
-    // Create a GSAP matchMedia instance
-    const mm = gsap.matchMedia();
-
-    // Only run the animation on desktop (screens wider than 1024px)
-    mm.add("(min-width: 1025px)", () => {
-      gsap.fromTo(
-        orbRef.current,
-        {
-          y: "-20vh",
-        },
-        {
-          y: "140vh",
-          duration: 2.5,
-          ease: "power2.out",
-          force3D: true,
-        }
-      );
-    });
-
-    // Cleanup matchMedia when component unmounts
-    return () => mm.revert();
-  }, []);
 
   useEffect(() => {
     const fadeTimer = setTimeout(() => {
@@ -62,7 +34,6 @@ export default function FadePreloader({
 
     const handleEnd = (e: TransitionEvent) => {
       if (e.propertyName !== "opacity") return;
-
       onComplete?.();
       setVisible(false);
     };
@@ -92,7 +63,7 @@ export default function FadePreloader({
         pointerEvents: "none",
       }}
     >
-      {/* Background */}
+      {/* Background Gradient */}
       <div
         className="absolute inset-0"
         style={{
@@ -100,21 +71,37 @@ export default function FadePreloader({
         }}
       />
 
-      {/* Moving Glow - Hidden by default on mobile/tablet, shown on desktop */}
-      <div
-        ref={orbRef}
-        className="hidden lg:block absolute rounded-full"
+      {/* SVG Static Glow Orb */}
+      <svg
+        className="absolute"
+        width="900"
+        height="900"
+        viewBox="0 0 900 900"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
         style={{
-          width: "900px",
-          height: "900px",
-          top: "-500px",
+          top: "-300px",
           right: "-150px",
-          background: "#7C8C2D",
-          filter: "blur(220px)",
           opacity: 0.9,
-          willChange: "transform",
         }}
-      />
+      >
+        <g filter="url(#blur-glow)">
+          <circle cx="450" cy="450" r="230" fill="#7C8C2D" />
+        </g>
+        <defs>
+          <filter
+            id="blur-glow"
+            x="0"
+            y="0"
+            width="900"
+            height="900"
+            filterUnits="userSpaceOnUse"
+            colorInterpolationFilters="sRGB"
+          >
+            <feGaussianBlur stdDeviation="110" result="effect1_foregroundBlur" />
+          </filter>
+        </defs>
+      </svg>
     </div>
   );
 }

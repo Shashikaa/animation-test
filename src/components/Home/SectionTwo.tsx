@@ -1,18 +1,25 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-// 1. Swapped import from WaterBackground to LiquidCanvas
-import LiquidCanvas from "../LiquidCanvas";
+import WaveCanvas from "../WaveCanvas";
 
 export default function SectionTwo() {
   const sectionRef = useRef<HTMLElement>(null);
   const [offscreen, setOffscreen] = useState(false);
-  // 2. Track asset initialization to prevent un-cached canvas flickering
-  const [assetsLoaded, setAssetsLoaded] = useState(false);
+  const [canvasLoaded, setCanvasLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // ── PRELOAD HIGH-PRIORITY WEBGL TEXTURES ──
   useEffect(() => {
-    const desktopSrc = "/sectwo.webp";
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    const desktopSrc = "/sectiontwo.webp";
     const mobileSrc = "/marvin-van-mobile.webp";
 
     const preloadImage = (src: string) => {
@@ -20,16 +27,13 @@ export default function SectionTwo() {
         const img = new Image();
         img.src = src;
         img.onload = () => resolve();
-        img.onerror = () => resolve(); // Fallback smoothly if block fails
+        img.onerror = () => resolve(); 
       });
     };
 
-    Promise.all([preloadImage(desktopSrc), preloadImage(mobileSrc)]).then(() => {
-      setAssetsLoaded(true);
-    });
+    Promise.all([preloadImage(desktopSrc), preloadImage(mobileSrc)]).then(() => {});
   }, []);
 
-  // Pause canvas animations when off-screen
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
@@ -41,29 +45,34 @@ export default function SectionTwo() {
     return () => observer.disconnect();
   }, []);
 
+  const activeBgImage = isMobile ? "/marvin-van-mobile.webp" : "/sectiontwo.webp";
+
   return (
     <section
       ref={sectionRef}
-      className="relative w-full h-full overflow-hidden"
+      className="relative w-full h-full overflow-hidden "
       style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
     >
-      {/* Dynamic Link Preload Tags injected into Head on-the-fly */}
-      <link rel="preload" href="/sectwo.webp" as="image" type="image/webp" />
-      <link rel="preload" href="/marvin-van-mobile.webp" as="image" type="image/webp" />
-
-      {/* 3. Liquid Canvas Background — Handles responsive source swap inside WebGL */}
-      <div 
-        className="s2-bg absolute inset-0 z-0 transition-opacity duration-300"
-        style={{ opacity: assetsLoaded ? 1 : 0 }}
-      >
-        {assetsLoaded && (
-          <LiquidCanvas 
-            imageSrc={typeof window !== "undefined" && window.innerWidth < 768 ? "/marvin-van-mobile.webp" : "/sectwo.webp"} 
-        // Passing down the intersection observer state if LiquidCanvas supports it
+      {/* Background Layer Group */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        
+        {/* WebGL Wave Canvas Container — Rendered at full opacity since mixing happens on-GPU */}
+        <div 
+          className="absolute inset-0 w-full h-full transition-opacity duration-700"
+          style={{ 
+            zIndex: 1,
+            opacity: canvasLoaded ? 1 : 0, 
+          }}
+        >
+          <WaveCanvas 
+            imageSrc={activeBgImage} 
+            onReady={() => setCanvasLoaded(true)} 
           />
-        )}
+        </div>
+        
       </div>
 
+      {/* Content Overlay */}
       <div className="section-container relative z-[2] h-full flex flex-col justify-between pb-10 md:pb-14 lg:pb-16">
         {/* TOP */}
         <div className="flex flex-col !mt-44">

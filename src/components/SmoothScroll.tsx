@@ -20,13 +20,14 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const lenisRef = useRef<Lenis | null>(null);
 
+  // 1. Unified Lenis Lifecycle Management Lifecycle
   useEffect(() => {
-    if (ScrollTrigger.isTouch > 0 || !preloaderDone) return;
+    if (ScrollTrigger.isTouch > 0) return;
 
     const lenis = new Lenis({
-duration: 0.9,          // 🌟 Dropped from 1.1: Makes the scroll stop quicker and feel tighter
-  wheelMultiplier: 1.2,  // 🌟 Raised from 1.0: Gives you that heavy, responsive push per wheel click
-  touchMultiplier: 1.0,
+      duration: 0.9,      
+      wheelMultiplier: 1.2,  
+      touchMultiplier: 1.0,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     });
 
@@ -83,6 +84,13 @@ duration: 0.9,          // 🌟 Dropped from 1.1: Makes the scroll stop quicker 
 
     lenis.on("scroll", handleScroll);
 
+    // Dynamic Scroll Suspension matching Application Preloader States
+    if (!preloaderDone) {
+      lenis.stop();
+    } else {
+      lenis.start();
+    }
+
     return () => {
       clearTimeout(scrollTimerRef.current);
       setScrollVelocity(0);
@@ -92,16 +100,19 @@ duration: 0.9,          // 🌟 Dropped from 1.1: Makes the scroll stop quicker 
         smootherRef.current = null;
       }
     };
-  }, [preloaderDone, smootherRef]);
+  }, [smootherRef, preloaderDone]);
 
+  // 2. Structural Synchronizations on Page Routing
   useEffect(() => {
     if (!preloaderDone || !lenisRef.current) return;
+    
     lenisRef.current.scrollTo(0, { immediate: true });
     
-    // Ensure ScrollTrigger evaluates geometry after DOM modifications settle
-    setTimeout(() => {
+    const refreshTimeout = setTimeout(() => {
       ScrollTrigger.refresh();
     }, 50);
+
+    return () => clearTimeout(refreshTimeout);
   }, [pathname, preloaderDone]);
 
   return (

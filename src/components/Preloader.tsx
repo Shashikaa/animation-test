@@ -332,7 +332,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[9999] h-full overflow-hidden" style={layerStyle}>
-      <motion.div
+<motion.div
         className="absolute inset-0 pointer-events-none"
         style={{ zIndex: 1, opacity: bgOpacity, ...layerStyle }}
         initial={{ opacity: 1 }}
@@ -341,12 +341,17 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
           className="absolute inset-0 w-full h-full"
           style={{ background: "linear-gradient(135deg, #162D24 0%, #094146 100%)" }}
         >
-          <div 
-            className="absolute inset-0 w-full h-full"
-            style={{ mixBlendMode: "screen", opacity: 0.15 }}
-          >
-            <WaveCanvas />
-          </div>
+          <video
+            src="/videos/pool-waves.mp4"
+            loop
+            muted
+            playsInline
+            autoPlay
+            preload="auto"
+            crossOrigin="anonymous"
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ opacity: 0.15, mixBlendMode: "screen" }}
+          />
         </div>
       </motion.div>
 

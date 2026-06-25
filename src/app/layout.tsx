@@ -6,20 +6,22 @@ import { SiteProvider } from "../app/context/SiteContext";
 import HeaderWrapper from "../components/HeaderWrapper";
 import NavMenuWrapper from "../components/NavMenuWrapper";
 import PreloaderToggle from "../components/PreloaderToggle";
-import SmoothScroll from "../components/SmoothScroll"; // Import your updated Lenis component
+import SmoothScroll from "../components/SmoothScroll";
 
 const instrumentSans = Instrument_Sans({
-  subsets:  ["latin"],
-  weight:   ["400", "500", "600", "700"],
-  style:    ["normal", "italic"],
-  variable: "--font-body",
+  subsets:   ["latin"],
+  weight:    ["400", "500", "600", "700"],
+  style:     ["normal", "italic"],
+  variable:  "--font-body",
+  display:   "swap" // Layout performance optimization
 });
 
 const cormorantGaramond = Cormorant_Garamond({
-  subsets:  ["latin"],
-  weight:   ["300", "400", "500", "600", "700"],
-  style:    ["normal", "italic"],
-  variable: "--font-cormorant",
+  subsets:   ["latin"],
+  weight:    ["300", "400", "500", "600", "700"],
+  style:     ["normal", "italic"],
+  variable:  "--font-cormorant",
+  display:   "swap" 
 });
 
 const canelaText = localFont({
@@ -41,7 +43,6 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased`}>
-      {/* Add suppressHydrationWarning here */}
       <body className="flex flex-col min-h-screen preloading" suppressHydrationWarning>
         <SiteProvider>
           <SmoothScroll>

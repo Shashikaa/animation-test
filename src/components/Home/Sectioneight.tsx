@@ -1,8 +1,11 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-// 1. Swapped imports from WaterBackground to LiquidCanvas
-import LiquidCanvas from "../LiquidCanvas"; 
+import dynamic from "next/dynamic";
+
+const LiquidCanvas = dynamic(() => import("../LiquidCanvas"), {
+  ssr: false,
+});
 
 export default function SectionEight() {
   const sectionRef   = useRef<HTMLDivElement>(null);
@@ -10,7 +13,6 @@ export default function SectionEight() {
   const personRef    = useRef<HTMLDivElement>(null);
 
   const [offscreen, setOffscreen] = useState(false);
-  // Track asset initialization to prevent un-cached canvas flickering
   const [assetsLoaded, setAssetsLoaded] = useState(false);
 
   // ── PRELOAD HIGH-PRIORITY WEBGL TEXTURES ──
@@ -23,7 +25,7 @@ export default function SectionEight() {
         const img = new Image();
         img.src = src;
         img.onload = () => resolve();
-        img.onerror = () => resolve(); // Fallback smoothly if block fails
+        img.onerror = () => resolve(); 
       });
     };
 
@@ -94,7 +96,6 @@ export default function SectionEight() {
       className="relative w-full h-full overflow-hidden"
       style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
     >
-      {/* Dynamic Link Preload Tags injected into Head on-the-fly */}
       <link rel="preload" href="/Forest.webp" as="image" type="image/webp" />
       <link rel="preload" href="/ForestMob.webp" as="image" type="image/webp" />
 
@@ -102,7 +103,6 @@ export default function SectionEight() {
           MOBILE + TABLET LAYOUT
       ══════════════════════════════════════ */}
       <div className="lg:!hidden !absolute !inset-0 !overflow-hidden section-container">
-        {/* Mobile liquid canvas wrapper */}
         <div 
           className="absolute inset-0 z-10 transition-opacity duration-300"
           style={{ opacity: assetsLoaded ? 1 : 0 }}
@@ -110,7 +110,6 @@ export default function SectionEight() {
           {assetsLoaded && <LiquidCanvas imageSrc="/ForestMob.webp" />}
         </div>
 
-        {/* Text — top right */}
         <div className="!absolute !top-0 !right-0 !z-20 !flex !flex-col !items-end !gap-4 !pt-[27vh] !px-5">
           <h2 className="!text-[#F4EEDF] !text-right font-display">
             Water as Sanctuary.
@@ -123,7 +122,7 @@ export default function SectionEight() {
       </div>
 
       {/* ══════════════════════════════════════
-          DESKTOP LAYOUT
+          DESKTOP LAYOUT (Preserves your structural panels)
       ══════════════════════════════════════ */}
       <div ref={containerRef} className="hidden lg:block absolute inset-0" style={{ overflow: "hidden" }}>
 
