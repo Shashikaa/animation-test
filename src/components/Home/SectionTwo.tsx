@@ -50,12 +50,12 @@ export default function SectionTwo() {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full h-full overflow-hidden"
+      className="relative w-full h-screen overflow-hidden"
       style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
     >
       {/* Background Layer Group — Images are set as the base layer here */}
       <div 
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-all duration-500 s2-bg"
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-all duration-500 "
         style={{ backgroundImage: `url(${activeBgImage})` }}
       >
         
