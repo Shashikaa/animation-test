@@ -45,8 +45,13 @@ export default function HomeDesktop() {
       gsap.set(".hero-gradient-bg", { opacity: 1, visibility: "visible" });
 
       gsap.set(".section-2", { display: "block", clipPath: "none", zIndex: 25, opacity: 1 });
-      gsap.set(".section-3", { display: "none", clipPath: "inset(0% 100% 0% 0%)", zIndex: 30 });
+      gsap.set(".s2-right-img-frame", { clipPath: "inset(100% 0% 0% 0%)" });
+      gsap.set(".s2-right-img-frame-under", { clipPath: "inset(100% 0% 0% 0%)" });
+      
+      // Positioned completely offscreen from the top window boundary layout calculations
+      gsap.set(".s2-scroll-content", { yPercent: 100, y: 0, opacity: 0 });
 
+      gsap.set(".section-3", { display: "none", clipPath: "inset(0% 100% 0% 0%)", zIndex: 30 });
       gsap.set(".section-4", { yPercent: 100, display: "block", zIndex: 40 });
       gsap.set(".section-5", { yPercent: 100, display: "block", zIndex: 50 });
       gsap.set(".section-6", { display: "block", clipPath: "inset(0% 0% 0% 100%)", zIndex: 55 });
@@ -83,7 +88,7 @@ export default function HomeDesktop() {
 
       const performanceTargets = [
         ".hero", ".hero-bg-wrapper", ".hero-bg", ".hero-gradient-bg", ".hero-secondary-para", ".hero-right-text",
-        ".section-2", ".section-3", ".section-4", ".section-5",
+        ".section-2", ".s2-right-img-frame", ".s2-right-img-frame-under", ".s2-scroll-content", ".section-3", ".section-4", ".section-5",
         ".section-6", ".section-7", ".section-8", ".section-9", ".section-10",
         ".s4-bg-img", ".s4-img", ".s7-bg-img", ".s8-bg-img",
         ".s9-bg-img", ".s10-bg-img", ".s10-static-bg"
@@ -101,7 +106,7 @@ export default function HomeDesktop() {
 
       gsap.set(".s5-card", { scale: 1, transformOrigin: "center center" });
       gsap.set(".s4-scroll-body", { y: 0 });
-      gsap.set(".s4-img", { yPercent: 15 });
+      gsap.set(".s4-img", { yPercent: -15 });
       gsap.set(".s4-bg-img", { yPercent: 8 });
       gsap.set(".s10-card", { clipPath: "inset(100% 0% 0% 0%)" });
       gsap.set(".s10-card-body", { clipPath: "inset(100% 0% 0% 0%)" });
@@ -184,7 +189,6 @@ export default function HomeDesktop() {
               duration: 2.5
             }, "heroStart")
 
-            // Keeps your required hero dimensions layout intact 
             .to(".hero-bg-wrapper", {
               clipPath: "inset(0% 8% 12% 50%)",
               duration: 4.5
@@ -202,15 +206,12 @@ export default function HomeDesktop() {
             .set([".s2-title-main", ".s2-title-sub"], { opacity: 0 }, "heroExit")
             .to([".s2-title-main", ".s2-title-sub"], { opacity: 1, duration: 2.0 }, "heroExit")
 
-            // FIXED: Fades out bottom-to-top from its EXACT current size parameters 
-            // (keeps the left/right/top padding structural matching perfectly so size doesn't pop)
             .to(".hero-bg-wrapper", {
               clipPath: "inset(0% 8% 100% 50%)",
               duration: 3.8,
               ease: "power1.inOut"
             }, "heroExit")
 
-            // Smoothly drops visibility right as the bottom mask reaches the top edge
             .to([".hero-bg-wrapper", ".hero-gradient-bg"], { 
               opacity: 0, 
               duration: 2.0, 
@@ -218,17 +219,19 @@ export default function HomeDesktop() {
             }, "heroExit+=1.2")
 
             .to(".hero-secondary-para", {
-              y: () => {
-                const startEl = document.querySelector(".hero-secondary-text-wrap") as HTMLElement;
-                const targetEl = document.querySelector(".s2-body") as HTMLElement;
-                if (!startEl || !targetEl) return 0;
-                return targetEl.getBoundingClientRect().top - startEl.getBoundingClientRect().top;
-              },
               x: () => {
                 const startEl = document.querySelector(".hero-secondary-text-wrap") as HTMLElement;
                 const targetEl = document.querySelector(".s2-body") as HTMLElement;
                 if (!startEl || !targetEl) return 0;
-                return targetEl.getBoundingClientRect().left - startEl.getBoundingClientRect().left;
+                const currentTransform = gsap.getProperty(startEl, "x") as number;
+                return targetEl.getBoundingClientRect().left - (startEl.getBoundingClientRect().left - currentTransform);
+              },
+              y: () => {
+                const startEl = document.querySelector(".hero-secondary-text-wrap") as HTMLElement;
+                const targetEl = document.querySelector(".s2-body") as HTMLElement;
+                if (!startEl || !targetEl) return 0;
+                const currentTransform = gsap.getProperty(startEl, "y") as number;
+                return targetEl.getBoundingClientRect().top - (startEl.getBoundingClientRect().top - currentTransform);
               },
               duration: 3.8,
               ease: "power1.inOut"
@@ -236,10 +239,54 @@ export default function HomeDesktop() {
 
             .addLabel("textLanding", "heroExit+=3.8");
 
+          // ── SECTION 2 INNER ANIMATION ──
+          tl.addLabel("s2InnerAnimation", "textLanding")
+            
+            // 1. Initial Right Image slides up into view (from 100% down to 0%)
+            .to(".s2-right-img-frame", {
+              clipPath: "inset(0% 0% 0% 0%)",
+              duration: 4.0,
+              ease: "power2.inOut"
+            }, "s2InnerAnimation")
+
+            // 2. Simultaneously fade out the original landing fly text
+            .to(".hero-secondary-para", {
+              opacity: 0,
+              duration: 1.5,
+              ease: "power1.out"
+            }, "s2InnerAnimation")
+
+            // 3. Left content moves up from below
+            .to(".s2-scroll-content", {
+              yPercent: 0,
+              opacity: 1,
+              duration: 5.0,
+              ease: "power2.out"
+            }, "s2InnerAnimation+=1.0")
+            
+            // 4. Synchronized reveal of the underlying second image from bottom to top
+            .to(".s2-right-img-frame", {
+              clipPath: "inset(0% 0% 100% 0%)",
+              duration: 4.0,
+              ease: "power2.inOut"
+            }, "s2InnerAnimation+=3.5")
+
+            .to(".s2-right-img-frame-under", {
+              clipPath: "inset(0% 0% 0% 0%)",
+              duration: 4.0,
+              ease: "power2.inOut"
+            }, "s2InnerAnimation+=3.5")
+
+            // Seamless dynamic viewport crawl tracking
+            .to(".s2-scroll-content", {
+              y: -500,
+              duration: 6.0,
+              ease: "none"
+            }, "s2InnerAnimation+=5.0");
+
           // ── SECTION 3 REVEAL ──
           tl.addLabel("sec3Start")
             .set(".section-3", { display: "block" })
-            .to(".hero-secondary-para", { opacity: 0, duration: 1.0 }, "sec3Start")
             .to(".section-3", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 }, "sec3Start")
             .to(".section-2", { scale: 1.0, duration: 3.8 }, "sec3Start")
             .to({}, { duration: 0.2 })
@@ -252,7 +299,7 @@ export default function HomeDesktop() {
 
           tl.addLabel("sec4ContentStart", "sec4Start+=4.5")
             .to(".s4-content", { y: () => vvHeight() * -0.45, duration: 4.5 }, "sec4ContentStart")
-            .to(".s4-img", { yPercent: -15, duration: 4.5 }, "sec4ContentStart")
+            .to(".s4-img", { yPercent: 15, duration: 4.5 }, "sec4ContentStart")
             .to(".s4-bg-img", { yPercent: 0, duration: 4.5 }, "sec4ContentStart")
             .addLabel("sec4ContentEnd");
 
@@ -379,7 +426,7 @@ export default function HomeDesktop() {
 
           const totalDuration = tl.totalDuration();
           const labelNames = [
-            "heroStart", "heroExit", "textLanding", "sec3Start", "sec4Start",
+            "heroStart", "heroExit", "textLanding", "s2InnerAnimation", "sec3Start", "sec4Start",
             "sec4ContentStart", "sec4ContentEnd", "sec5Start", "sec6Start",
             "sec10Start", "sec10TextHide", "sec10CardReveal", "sec10VideoTransition",
             "sec10FinalScroll", "sec7Start", "sec8Start", "sec9Start",
