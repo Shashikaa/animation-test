@@ -256,7 +256,7 @@ p {
 
 @media (max-width: 767px) {
   h2, h1 { font-size: 32px; }
-  p  { font-size: 12px; }
+  p  { font-size: 16px; }
 }
 
 /* ─── Reduced motion ─────────────────────────────────────────── */

@@ -7,7 +7,6 @@ import { useSite } from "./context/SiteContext";
 import dynamic from "next/dynamic";
 
 import Hero         from "../components/Home/Hero";
-import SectionOne   from "../components/Home/SectionOne";
 import SectionTwo   from "../components/Home/SectionTwo";
 import SectionThree from "../components/Home/SectionThree";
 import SectionFour  from "../components/Home/SectionFour";
@@ -20,6 +19,8 @@ const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { 
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
 const SectionNine  = dynamic(() => import("../components/Home/SectionNine"),  { ssr: false });
 const SectionTen   = dynamic(() => import("../components/Home/SectionTen"),   { ssr: false });
+
+import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -34,8 +35,13 @@ export default function HomeMobile() {
   const onScrollReady = contextValues.onScrollReady ?? (() => {});
   const scopeRef = useRef<HTMLDivElement>(null);
 
+  // ── INITIAL PRE-RENDER LAYER ARCHITECTURE ──
   useLayoutEffect(() => {
-    gsap.set(".section-1", { yPercent: 100, zIndex: 90 });
+    const ctx = gsap.context(() => {
+      gsap.set(".hero", { yPercent: 0, zIndex: 90 });
+      gsap.set(".section-2", { clipPath: "none", zIndex: 25 });
+    }, scopeRef);
+    return () => ctx.revert();
   }, []);
 
   useEffect(() => {
@@ -58,19 +64,14 @@ export default function HomeMobile() {
       const footerEl = scopeRef.current?.querySelector<HTMLElement>(`.footer`);
       const footerH  = footerEl?.offsetHeight ?? 600;
 
-      // Structural sets
-      gsap.set(".hero",    { yPercent: 0, zIndex: 5 });
+      // ── Structural Sets ────────────────────────────────────
+      gsap.set(".hero",    { yPercent: 0, zIndex: 90 });
+      gsap.set(".hero-bg-wrapper", { clipPath: "inset(0% 0% 0% 0%)" });
       gsap.set(".hero-bg", { yPercent: 0 });
-      gsap.set(".section-1", { yPercent: 100, zIndex: 90 });
-      gsap.set(".s1-bg",     { yPercent: 10,  scale: 1.0 });
-      gsap.set(".s1-card",   { yPercent: 80,  opacity: 0 });
-
-      gsap.set(".section-2", {
-        visibility: "visible",
-        clipPath:   "inset(100% 0% 0% 0%)",
-        zIndex:     95,
-      });
-      gsap.set(".s2-bg", { yPercent: 0, scale: 1.0 });
+      gsap.set(".hero h1, .hero-right-text", { opacity: 1, y: 0 });
+      
+      gsap.set(".hero-secondary-text-wrap", { height: "auto" });
+      gsap.set(".hero-secondary-para", { visibility: "hidden" });
 
       gsap.set(".section-3", {
         visibility: "hidden",
@@ -124,7 +125,6 @@ export default function HomeMobile() {
       gsap.set(".section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
       gsap.set(".footer",      { y: footerH,    zIndex: 151, visibility: "hidden" });
 
-      // FIX 1: Prevent infinite loops if components take a moment to dynamically load
       const waitForMobBgs = (cb: () => void) => {
         let framesChecked = 0;
         const check = () => {
@@ -166,22 +166,22 @@ export default function HomeMobile() {
                 const el  = document.querySelector(".s10-video-wrap") as HTMLElement;
                 if (!el) return 500;
                 return vvH - el.getBoundingClientRect().top + 20;
-              },
+                },
               clipPath: "none",
             });
 
             const tl = gsap.timeline({
-              defaults: { ease: "power1.inOut" },
+              defaults: { ease: "none" },
               scrollTrigger: {
-                trigger:             ".pin-all",
-                start:               "top top",
-                end:                 "+=14400", 
-                scrub:               0.2,       
-                pin:                 true,
-                anticipatePin:       1,
-                preventOverlaps:     true,
-                fastScrollEnd:       true,
-                invalidateOnRefresh: true,
+                trigger:              ".pin-all",
+                start:                "top top",
+                end:                  "+=12800", 
+                scrub:                0.2,       
+                pin:                  true,
+                anticipatePin:        1,
+                preventOverlaps:      true,
+                fastScrollEnd:        true,
+                invalidateOnRefresh:  true,
                 onRefresh: () => {
                   if (pinEl) pinEl.style.removeProperty("max-height");
                 }
@@ -189,22 +189,69 @@ export default function HomeMobile() {
             });
 
             tl
-              // ── Hero → Section 1 ──────────────────────────────────
-              .to(".section-1", { yPercent: 0,   duration: TRANSITION, ease: "none" })
-              .to(".hero-bg",   { yPercent: -20, duration: TRANSITION, ease: "none" }, "<")
-              .to(".s1-bg",     { yPercent: 0, scale: 1, duration: 1.8, ease: "none" }, "<")
-              .to(".s1-card",   { yPercent: 0, opacity: 1, duration: 1.8, ease: "power2.out" }, 0.3)
+              // ── Step 1: FRONT-LOADED HERO TEXT FADEOUT ──
+              .to(".hero h1, .hero-right-text", { 
+                opacity: 0, 
+                y: -40, 
+                duration: TRANSITION * 0.4, 
+                ease: "power2.in" 
+              })
+              // Trigger secondary text immediately here
+              .addLabel("heroSecondaryReveal")
+              .set(".hero-secondary-para", { visibility: "visible" }, "heroSecondaryReveal")
+              
+              // Let background animations shift over time on their own timeline track
+              .to(".hero-bg-wrapper", { 
+                clipPath: "inset(0% 0% 40% 0%)", 
+                duration: TRANSITION, 
+                ease: "power1.inOut" 
+              }, 0)
+              .to(".hero-bg", { 
+                yPercent: -25, 
+                duration: TRANSITION, 
+                ease: "power1.inOut" 
+              }, 0)
               .to({}, { duration: PAUSE })
 
-              // ── Section 1 → 2 ─────────────────────────────────────
-              .set(".section-1", { zIndex: 20 })
-              .to(".section-2", { clipPath: "inset(0% 0% 0% 0%)", duration: TRANSITION, ease: EASE })
-              .to(".s2-bg",     { yPercent: 0, scale: 1, duration: TRANSITION, ease: "power2.out" }, "<")
+              // ── Step 2: EXECUTE TEXT FLIGHT + BG FADEOUT SEQUENTIALLY AFTER HERO DONE ──
+              .addLabel("textFlightStart")
+              .set([".s2-title-main", ".s2-title-sub"], { opacity: 0 }, "textFlightStart")
+              
+              // Only fade out the images/gradients backgrounds here
+              .to([".hero-bg-wrapper", ".hero-gradient-bg"], {
+                opacity: 0,
+                duration: TRANSITION * 0.6,
+                ease: "power2.out"
+              }, "textFlightStart")
+              
+              // Fade in underneath Section Two textual content
+              .to([".s2-title-main", ".s2-title-sub"], { opacity: 1, duration: TRANSITION * 0.8 }, "textFlightStart+=0.3")
+
+              // Fly the text directly into Section Two container target coordinates
+              .to(".hero-secondary-para", {
+                y: () => {
+                  const startEl = document.querySelector(".hero-secondary-text-wrap") as HTMLElement;
+                  const targetEl = document.querySelector(".s2-body") as HTMLElement;
+                  if (!startEl || !targetEl) return 0;
+                  return targetEl.getBoundingClientRect().top - startEl.getBoundingClientRect().top;
+                },
+                x: () => {
+                  const startEl = document.querySelector(".hero-secondary-text-wrap") as HTMLElement;
+                  const targetEl = document.querySelector(".s2-body") as HTMLElement;
+                  if (!startEl || !targetEl) return 0;
+                  return targetEl.getBoundingClientRect().left - startEl.getBoundingClientRect().left;
+                },
+                duration: TRANSITION,
+                ease: "power1.inOut"
+              }, "textFlightStart")
               .to({}, { duration: PAUSE })
 
               // ── Section 2 → 3 ─────────────────────────────────────
+              .addLabel("sec3Start")
               .set(".section-3", { visibility: "visible" })
-              .to(".section-3", { yPercent: 0,  duration: TRANSITION, ease: EASE })
+              // FIXED: Removed the opacity 0 fade-out so text remains visible until Sec 3 fully overlays it
+              .to(".section-3", { yPercent: 0, duration: TRANSITION, ease: EASE }, "sec3Start")
+              .set([".section-2", ".hero"], { display: "none" }) 
               .to({}, { duration: PAUSE })
 
               // ── Section 3 → 4 ─────────────────────────────────────
@@ -257,8 +304,7 @@ export default function HomeMobile() {
                   return -card.getBoundingClientRect().top;
                 },
                 duration: 2.5, ease: "none",
-              }
-              )
+              })
               .to(".s10-card-body", { y: 30,   duration: 2.5, ease: "none" }, "<")
               .to(".s10-bg-img",    { y: "0%", duration: 2.5, ease: "none" }, "<")
               .to({}, { duration: PAUSE }) 
@@ -300,6 +346,14 @@ export default function HomeMobile() {
               .to(".s9-bg-img", { yPercent: -20, duration: TRANSITION, ease: "none" }, "<")
               .to({}, { duration: 0.4 }); 
 
+            // ── TEXT REVEAL Engine Execution ──
+            useTextReveal(scopeRef, ".hero-secondary-para", {
+              tl,
+              position: "heroSecondaryReveal",
+              duration: TRANSITION * 0.8,
+              stagger: 0.06,
+            });
+
             requestAnimationFrame(() => {
               if (pinEl) pinEl.style.removeProperty("max-height");
             });
@@ -318,7 +372,6 @@ export default function HomeMobile() {
         setTimeout(() => document.fonts.ready.then(buildTimeline), 0);
       }
 
-      // FIX 2: Safeguard fallback to force layout building if fonts or dynamic assets hang
       fallbackTimeout = setTimeout(() => {
         if (!timelineInitialized) {
           buildTimeline();
@@ -330,20 +383,20 @@ export default function HomeMobile() {
     return () => {
       vvCleanup?.();
       if (fallbackTimeout) clearTimeout(fallbackTimeout);
+      if (scopeRef.current) {
+        restoreTextReveal(scopeRef.current, ".hero-secondary-para");
+      }
       ctx.revert();
     };
   }, [preloaderDone]);
 
   return (
     <div ref={scopeRef}>
-      <div className="pin-all relative overflow-hidden">
-        <div className="section-1 absolute inset-0 z-[90]">
-          <SectionOne />
-        </div>
-        <div className="section-2 absolute inset-0 z-[95]" style={{  visibility: "hidden" }}>
+      <div className="pin-all relative overflow-hidden bg-black">
+        <div className="section-2 absolute inset-0 z-[25]">
           <SectionTwo />
         </div>
-        <div className="section-3 absolute inset-0 z-[100]" style={{ pointerEvents: "none", visibility: "hidden" }}>
+        <div className="section-3 absolute inset-0 z-[30]" style={{ pointerEvents: "none", display: "none" }}>
           <SectionThree />
         </div>
         <div className="section-4 absolute inset-0 z-[105]" style={{ overflow: "visible", pointerEvents: "none", visibility: "hidden" }}>
@@ -361,16 +414,13 @@ export default function HomeMobile() {
         <div className="section-9 absolute inset-0 z-[121]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionNine />
         </div>
-        
-        {/* FIX 3: Turned pointerEvents to "none" here to stop background canvas hijacking scroll loops */}
         <div className="section-8 absolute inset-0 z-[128]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionEight />
         </div>
-
         <div className="section-7 absolute inset-0 z-[130]" style={{ pointerEvents: "none", visibility: "hidden" }}>
           <SectionSeven />
         </div>
-        <div className="hero absolute inset-0 z-[5]" style={{ pointerEvents: "none" }}>
+        <div className="hero absolute inset-0 z-[90]" style={{ pointerEvents: "none" }}>
           <Hero />
         </div>
         <div

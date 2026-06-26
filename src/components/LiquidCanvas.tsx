@@ -100,7 +100,6 @@ export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
         let lastDropTime = 0;
         appInstance.interaction.onMove = () => {
           const now = performance.now();
-          // Throttle mouse moves to 60fps limit max
           if (now - lastDropTime < 16) return;
           lastDropTime = now;
 
@@ -189,10 +188,9 @@ export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
   // ── STEP 3: CLEAN RENDERING STRATEGY ──
   if (isMobile) {
     return (
-      <img 
-        src={imageSrc} 
-        alt="Background" 
-        className="h-full w-full object-cover select-none pointer-events-none"
+      <div 
+        style={{ backgroundImage: `url(${imageSrc})` }}
+        className="h-full w-full bg-cover bg-center bg-no-repeat select-none pointer-events-none"
       />
     );
   }
@@ -200,7 +198,8 @@ export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
   return (
     <canvas 
       ref={canvasRef} 
-      className={`h-full w-full block transition-opacity duration-300 ease-in-out ${
+      style={{ backgroundImage: `url(${imageSrc})` }}
+      className={`h-full w-full block bg-cover bg-center bg-no-repeat transition-opacity duration-300 ease-in-out ${
         isReady ? "opacity-100" : "opacity-0"
       }`}
     />
