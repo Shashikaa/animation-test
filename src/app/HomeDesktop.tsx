@@ -9,9 +9,6 @@ import dynamic from "next/dynamic";
 import Hero from "../components/Home/Hero";
 import SectionTwo from "../components/Home/SectionTwo";
 import SectionThree from "../components/Home/SectionThree";
-import SectionFour from "../components/Home/SectionFour";
-import SectionFive from "../components/Home/SectionFive";
-import SectionSix from "../components/Home/SectionSix";
 import SectionCTA from "../components/SectionCTA";
 import Footer from "../components/Footer";
 
@@ -19,6 +16,7 @@ const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { 
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
 const SectionNine = dynamic(() => import("../components/Home/SectionNine"), { ssr: false });
 const SectionTen = dynamic(() => import("../components/Home/SectionTen"), { ssr: false });
+const SectionReviews = dynamic(() => import("../components/Home/SectionReviews"), { ssr: false });
 
 import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
 
@@ -26,39 +24,40 @@ gsap.registerPlugin(ScrollTrigger);
 
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
-const vvHeight = () =>
-  (typeof visualViewport !== "undefined" && visualViewport != null
-    ? visualViewport.height
-    : null) ?? window.innerHeight;
-
 export default function HomeDesktop() {
   const contextValues = useSite() as any;
   const preloaderDone = contextValues.preloaderDone;
   const onScrollReady = contextValues.onScrollReady ?? (() => {});
   const scopeRef = useRef<HTMLDivElement>(null);
 
-  // ── INITIAL STATE SETTING (PRE-RENDER RUN) ──
+  // ── INITIAL STATE SETTING ──
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       gsap.set(".hero", { yPercent: 0, zIndex: 90, display: "block", opacity: 1 });
       gsap.set(".hero-bg-wrapper", { opacity: 1, visibility: "visible" });
       gsap.set(".hero-gradient-bg", { opacity: 1, visibility: "visible" });
 
-      gsap.set(".section-2", { display: "block", clipPath: "none", zIndex: 25, opacity: 1 });
+      gsap.set(".section-2", { display: "block", clipPath: "none", zIndex: 45, opacity: 1 });
       gsap.set(".s2-right-img-frame", { clipPath: "inset(100% 0% 0% 0%)" });
       gsap.set(".s2-right-img-frame-under", { clipPath: "inset(100% 0% 0% 0%)" });
-      
-      // Positioned completely offscreen from the top window boundary layout calculations
       gsap.set(".s2-scroll-content", { yPercent: 100, y: 0, opacity: 0 });
 
-      gsap.set(".section-3", { display: "none", clipPath: "inset(0% 100% 0% 0%)", zIndex: 30 });
-      gsap.set(".section-4", { yPercent: 100, display: "block", zIndex: 40 });
-      gsap.set(".section-5", { yPercent: 100, display: "block", zIndex: 50 });
-      gsap.set(".section-6", { display: "block", clipPath: "inset(0% 0% 0% 100%)", zIndex: 55 });
-      gsap.set(".section-10", { display: "none", clipPath: "inset(100% 0% 0% 0%)", zIndex: 65 });
-      gsap.set(".section-7", { display: "block", yPercent: 100, zIndex: 75 });
-      gsap.set(".section-8", { display: "none", clipPath: "inset(100% 0% 0% 0%)", zIndex: 80 });
-      gsap.set(".section-9", { display: "none", opacity: 1, zIndex: 79 });
+      // ── SECTION 3 HARD INITIAL STATE MASKED AT BOTTOM ──
+      gsap.set(".section-3", { display: "block", clipPath: "inset(100% 0% 0% 0%)", opacity: 1, zIndex: 40, yPercent: 0 });
+      
+      // ── SECTION 10 SLIDE UP INITIAL STATE ──
+      gsap.set(".section-10", { display: "block", yPercent: 100, opacity: 1, zIndex: 60 });
+      gsap.set([".s10-title", ".s10-title-sub", ".s10-para-top"], { opacity: 0, y: 80 });
+      
+      gsap.set(".s10-img-right-wrap", { opacity: 0, yPercent: 120, y: 0, clipPath: "inset(0% 0% 0% 0%)", display: "block" });
+      gsap.set(".s10-content-wrap", { opacity: 0, yPercent: 120, y: 0 });
+
+      // ── SECTION REVIEWS INITIAL HIDE STATE ──
+      gsap.set(".section-reviews", { display: "none", clipPath: "inset(100% 0% 0% 0%)", opacity: 1, zIndex: 65 });
+
+      gsap.set(".section-7", { display: "block", yPercent: 100, zIndex: 70 });
+      gsap.set(".section-8", { display: "none", clipPath: "inset(100% 0% 0% 0%)", zIndex: 75 });
+      gsap.set(".section-9", { display: "none", opacity: 1, zIndex: 28 });
       gsap.set(".section-cta", { yPercent: 100, zIndex: 95, display: "none" });
       gsap.set(".footer", { yPercent: 100, zIndex: 96, display: "none" });
 
@@ -68,7 +67,7 @@ export default function HomeDesktop() {
     return () => ctx.revert();
   }, []);
 
-  // ── MAIN RUNTIME SCROLLTRIGGER ENGINE ──
+  // ── MAIN RUNTIME ENGINE ──
   useEffect(() => {
     if (!preloaderDone) return;
 
@@ -88,10 +87,9 @@ export default function HomeDesktop() {
 
       const performanceTargets = [
         ".hero", ".hero-bg-wrapper", ".hero-bg", ".hero-gradient-bg", ".hero-secondary-para", ".hero-right-text",
-        ".section-2", ".s2-right-img-frame", ".s2-right-img-frame-under", ".s2-scroll-content", ".section-3", ".section-4", ".section-5",
-        ".section-6", ".section-7", ".section-8", ".section-9", ".section-10",
-        ".s4-bg-img", ".s4-img", ".s7-bg-img", ".s8-bg-img",
-        ".s9-bg-img", ".s10-bg-img", ".s10-static-bg"
+        ".section-2", ".s2-right-img-frame", ".s2-right-img-frame-under", ".s2-scroll-content", ".section-3",
+        ".section-7", ".section-8", ".section-9", ".section-10", ".section-reviews",
+        ".s7-bg-img", ".s8-bg-img", ".s9-bg-img", ".s10-bg-img", ".s10-static-bg", ".s10-img-right-wrap"
       ];
 
       performanceTargets.forEach(selector => {
@@ -104,15 +102,8 @@ export default function HomeDesktop() {
 
       const scrubValue = 0.8;
 
-      gsap.set(".s5-card", { scale: 1, transformOrigin: "center center" });
-      gsap.set(".s4-scroll-body", { y: 0 });
-      gsap.set(".s4-img", { yPercent: -15 });
-      gsap.set(".s4-bg-img", { yPercent: 8 });
-      gsap.set(".s10-card", { clipPath: "inset(100% 0% 0% 0%)" });
-      gsap.set(".s10-card-body", { clipPath: "inset(100% 0% 0% 0%)" });
-      gsap.set(".s10-video-wrap", { clipPath: "inset(0% 0% 100% 0%)" });
       gsap.set(".s10-bg-img", { y: "100%" });
-      gsap.set(".s10-static-bg", { yPercent: 20 });
+      gsap.set(".s10-static-bg", { yPercent: 12 });
       gsap.set(".s7-bg-img", { yPercent: 20 });
       gsap.set(".s8-bg-img", { yPercent: 20 });
       gsap.set(".s9-bg-img", { yPercent: 0, scale: 1.15 });
@@ -149,8 +140,7 @@ export default function HomeDesktop() {
             defaults: { ease: "none" },
             scrollTrigger: {
               trigger: ".pin-all",
-              start: "top top",
-              end: "+=28400",
+              end: "+=26000",
               scrub: scrubValue,
               pin: true,
               anticipatePin: 1,
@@ -181,43 +171,37 @@ export default function HomeDesktop() {
             },
           });
 
-          // ── HERO SCROLL OVERLAYS & SUB-ANIMATIONS ──
+          // ── HERO SCROLL OVERLAYS ──
           tl.addLabel("heroStart")
             .to(".hero h1, .hero [class*='bottom-8'], .hero-right-text", {
               opacity: 0,
               y: -40,
               duration: 2.5
             }, "heroStart")
-
             .to(".hero-bg-wrapper", {
               clipPath: "inset(0% 8% 12% 50%)",
               duration: 4.5
             }, "heroStart")
-
             .to(".hero-bg", {
               scale: 1.0,
               duration: 4.5
             }, "heroStart")
-
             .to({}, { duration: 1.2 });
 
-          // ── CHOREOGRAPHED EXIT & TRANSITION INTO SECTION 2 ──
+          // ── HERO EXIT INTO SECTION 2 ──
           tl.addLabel("heroExit")
             .set([".s2-title-main", ".s2-title-sub"], { opacity: 0 }, "heroExit")
             .to([".s2-title-main", ".s2-title-sub"], { opacity: 1, duration: 2.0 }, "heroExit")
-
             .to(".hero-bg-wrapper", {
               clipPath: "inset(0% 8% 100% 50%)",
               duration: 3.8,
               ease: "power1.inOut"
             }, "heroExit")
-
             .to([".hero-bg-wrapper", ".hero-gradient-bg"], { 
               opacity: 0, 
               duration: 2.0, 
               ease: "power2.out" 
             }, "heroExit+=1.2")
-
             .to(".hero-secondary-para", {
               x: () => {
                 const startEl = document.querySelector(".hero-secondary-text-wrap") as HTMLElement;
@@ -236,127 +220,146 @@ export default function HomeDesktop() {
               duration: 3.8,
               ease: "power1.inOut"
             }, "heroExit")
-
             .addLabel("textLanding", "heroExit+=3.8");
 
           // ── SECTION 2 INNER ANIMATION ──
           tl.addLabel("s2InnerAnimation", "textLanding")
-            
-            // 1. Initial Right Image slides up into view (from 100% down to 0%)
             .to(".s2-right-img-frame", {
               clipPath: "inset(0% 0% 0% 0%)",
               duration: 4.0,
               ease: "power2.inOut"
             }, "s2InnerAnimation")
-
-            // 2. Simultaneously fade out the original landing fly text
             .to(".hero-secondary-para", {
               opacity: 0,
               duration: 1.5,
               ease: "power1.out"
             }, "s2InnerAnimation")
-
-            // 3. Left content moves up from below
             .to(".s2-scroll-content", {
               yPercent: 0,
               opacity: 1,
               duration: 5.0,
               ease: "power2.out"
             }, "s2InnerAnimation+=1.0")
-            
-            // 4. Synchronized reveal of the underlying second image from bottom to top
             .to(".s2-right-img-frame", {
               clipPath: "inset(0% 0% 100% 0%)",
               duration: 4.0,
               ease: "power2.inOut"
             }, "s2InnerAnimation+=3.5")
-
             .to(".s2-right-img-frame-under", {
               clipPath: "inset(0% 0% 0% 0%)",
               duration: 4.0,
               ease: "power2.inOut"
             }, "s2InnerAnimation+=3.5")
-
-            // Seamless dynamic viewport crawl tracking
             .to(".s2-scroll-content", {
               y: -500,
               duration: 6.0,
               ease: "none"
             }, "s2InnerAnimation+=5.0");
 
-          // ── SECTION 3 REVEAL ──
+          // ── SECTION 2 TO 3 REVEAL WIPE ──
           tl.addLabel("sec3Start")
-            .set(".section-3", { display: "block" })
-            .to(".section-3", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 }, "sec3Start")
-            .to(".section-2", { scale: 1.0, duration: 3.8 }, "sec3Start")
-            .to({}, { duration: 0.2 })
-            .set([".section-2", ".hero"], { display: "none" });
-
-          // ── SECTION 4 REVEAL ──
-          tl.addLabel("sec4Start")
-            .to(".section-4", { yPercent: 0, duration: 4.5 }, "sec4Start")
-            .set(".section-3", { display: "none" });
-
-          tl.addLabel("sec4ContentStart", "sec4Start+=4.5")
-            .to(".s4-content", { y: () => vvHeight() * -0.45, duration: 4.5 }, "sec4ContentStart")
-            .to(".s4-img", { yPercent: 15, duration: 4.5 }, "sec4ContentStart")
-            .to(".s4-bg-img", { yPercent: 0, duration: 4.5 }, "sec4ContentStart")
-            .addLabel("sec4ContentEnd");
-
-          // ── SECTION 5 REVEAL ──
-          tl.addLabel("sec5Start")
-            .to(".section-5", { yPercent: 0, duration: 4.2 }, "sec5Start")
-            .set(".section-4", { display: "none" });
-
-          // ── SECTION 6 REVEAL ──
-          tl.addLabel("sec6Start")
-            .to(".section-6", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 }, "sec6Start")
-            .to(".section-5", { scale: 1.05, duration: 3.8 }, "sec6Start")
-            .to({}, { duration: 0.2 })
-            .set(".section-5", { display: "none" });
-
-          // ── SECTION 10 REVEAL ──
-          tl.addLabel("sec10Start")
-            .set(".section-10", { display: "block" })
-            .to(".section-10", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.8 }, "sec10Start")
-            .to(".section-6", { scale: 1.05, duration: 3.8 }, "sec10Start")
-            .to(".s10-static-bg", { yPercent: 0, duration: 3.8 }, "sec10Start")
-
-            .addLabel("sec10TextHide")
-            .to(".s10-title", { opacity: 0, y: -50, duration: 1.0 })
-            .to(".s10-title-sub", { opacity: 0, y: -40, duration: 1.0 }, "<")
-            .to(".s10-para-top", { opacity: 0, y: -50, duration: 1.0 }, "<")
-
-            .addLabel("sec10CardReveal")
-            .to(".s10-card", { clipPath: "inset(0% 0% 0% 0%)", duration: 2.0 })
-            .to(".s10-card-body", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.5 }, "<")
-
-            .addLabel("sec10VideoTransition")
-            .to(".s10-video-wrap", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.5 })
-            .to(".s10-video-wrap", { clipPath: "inset(0% 0% 100% 0%)", duration: 1.2 })
-            .set(".s10-video-wrap", { display: "none" })
-
-            .addLabel("sec10FinalScroll")
-            .to(".s10-card", {
-              y: () => {
-                const card = document.querySelector(".s10-card") as HTMLElement;
-                if (!card) return -vvHeight() * 0.7;
-                return -card.getBoundingClientRect().top;
+            .set(".section-3", { zIndex: 50, display: "block" }, "sec3Start")
+            .fromTo(".section-3",
+              { clipPath: "inset(100% 0% 0% 0%)" },
+              {
+                clipPath: "inset(0% 0% 0% 0%)",
+                duration: 5.0,
+                ease: "power2.inOut",
+                clearProps: "clipPath"
               },
-              duration: 2.5,
-            }, "<+0.2")
-            .to(".s10-card-body", { y: 50, duration: 2.5 }, "<")
-            .to(".s10-bg-img", { y: "0%", duration: 2.5 }, "<")
-            .to({}, { duration: 0.2 })
-            .set(".section-6", { display: "none" });
+              "sec3Start"
+            )
+            .to(".s2-scroll-content, .s2-title-main, .s2-title-sub", { opacity: 0, duration: 2.0 }, "sec3Start")
+            .to(".section-3 .s3-services-nav", { x: 0, opacity: 1, duration: 2.5, ease: "power2.out" }, "sec3Start+=1.8")
+            .to(".section-3 .s3-text-content-wrapper", { opacity: 1, y: 0, duration: 2.0, ease: "power2.out" }, "sec3Start+=2.0")
+            .set(".section-2", { display: "none" }, "sec3Start+=5.0")
+            .set([".section-2", ".hero"], { display: "none" })
+            .to({}, { duration: 0.2 });
 
-          // ── SECTION 7 REVEAL ──
+          // ── SECTION 3 TO 10 SLIDE UP OVER 3 ──
+          tl.addLabel("sec10Start")
+            .set(".section-10", { zIndex: 60, display: "block" }, "sec10Start")
+            .fromTo(".section-10", 
+              { yPercent: 100 },
+              { 
+                yPercent: 0, 
+                duration: 6.0, 
+                ease: "power2.inOut"
+              }, 
+              "sec10Start"
+            )
+            .fromTo(".s10-static-bg", { yPercent: 12 }, { yPercent: 0, duration: 6.0, ease: "power2.out" }, "sec10Start")
+            .set(".section-3", { display: "none" }, "sec10Start+=6.0")
+            .set([".s10-content-wrap", ".s10-img-right-wrap"], { opacity: 0, yPercent: 120 }, "sec10Start")
+            .to([".s10-title", ".s10-title-sub", ".s10-para-top"], {
+              opacity: 1,
+              y: 0,
+              duration: 3.0,
+              stagger: 0.1,
+              ease: "power2.out"
+            }, "sec10Start+=3.2")
+            .addLabel("sec10TextHide")
+            .to([".s10-title", ".s10-title-sub", ".s10-para-top"], {
+              opacity: 0,
+              y: -80,
+              duration: 2.5,
+              stagger: 0.05,
+              ease: "power2.in"
+            }, "sec10TextHide")
+            .addLabel("sec10ContentReveal")
+            .fromTo([".s10-content-wrap", ".s10-img-right-wrap"], 
+              { opacity: 0, yPercent: 120 },
+              {
+                opacity: 1,
+                yPercent: 0,
+                y: 0,
+                clearProps: "yPercent", 
+                duration: 5.0,
+                stagger: 0.15,
+                ease: "power2.out"
+              }, 
+              "sec10TextHide+=1.8"
+            )
+            .to({}, { duration: 4.5 })
+            .addLabel("sec10ExitSequence")
+            .to(".s10-img-right-wrap", { 
+              clipPath: "inset(0% 0% 100% 0%)", 
+              y: -60,                                   
+              opacity: 0,
+              duration: 5.5,
+              ease: "power2.inOut"
+            }, "sec10ExitSequence")
+            .to(".s10-content-wrap", { 
+              opacity: 0, 
+              y: -100, 
+              duration: 5.0,
+              ease: "power2.inOut"
+            }, "sec10ExitSequence")
+            .addLabel("sec10FinalScroll")
+            .to({}, { duration: 0.2 });
+
+          // ── SECTION 10 TO CUSTOMER REVIEWS WIPE ──
+          tl.addLabel("secReviewsStart")
+            .set(".section-reviews", { zIndex: 65, display: "block" }, "secReviewsStart")
+            .fromTo(".section-reviews",
+              { clipPath: "inset(100% 0% 0% 0%)" },
+              {
+                clipPath: "inset(0% 0% 0% 0%)",
+                duration: 6.0,
+                ease: "power2.inOut",
+                clearProps: "clipPath"
+              },
+              "secReviewsStart"
+            )
+            .set(".section-10", { display: "none" }, "secReviewsStart+=6.0")
+            .to({}, { duration: 5.0 });
+
+          // ── SECTION 7 SLIDE UP (Reviews remains normal/no scale down) ──
           tl.addLabel("sec7Start")
             .to(".section-7", { yPercent: 0, duration: 4.2 }, "sec7Start")
-            .to(".section-10", { scale: 1.05, duration: 4.2 }, "sec7Start")
             .to(".s7-bg-img", { yPercent: 0, duration: 4.2 }, "sec7Start")
             .to({}, { duration: 0.2 })
-            .set(".section-10", { display: "none" });
+            .set(".section-reviews", { display: "none" });
 
           // ── SECTION 8 REVEAL ──
           tl.addLabel("sec8Start")
@@ -373,10 +376,8 @@ export default function HomeDesktop() {
             .to(".s8-panel-left", { clipPath: "inset(0% 50% 100% 0%)", duration: 3.8 }, "sec9Start")
             .to(".s8-panel-right", { clipPath: "inset(100% 0% 0% 50%)", duration: 3.8 }, "sec9Start")
             .to(".s9-bg-img", { yPercent: 0, scale: 1, duration: 3.8 }, "sec9Start")
-
             .addLabel("sec9TitleFade")
             .to(".s9-title", { opacity: 1, duration: 2.0 }, "sec9Start+=1.2")
-
             .addLabel("sec9TitleMove")
             .to(".s9-title", {
               x: () => {
@@ -410,15 +411,8 @@ export default function HomeDesktop() {
             .to(".footer", { yPercent: 0, duration: 5.5 }, "footerStart")
             .to(".section-9", { scale: 1.05, duration: 5.5 }, "footerStart");
 
+          // ── REMAINING TEXT REVEALS ──
           useTextReveal(scopeRef, ".hero-secondary-para", { tl, position: "heroStart+=2.5", duration: 0.5, stagger: 0.06 });
-          useTextReveal(scopeRef, ".s4-title", { tl, position: "sec4Start+=2.0", duration: 0.4, stagger: 0.05 });
-          useTextReveal(scopeRef, ".s4-para", { tl, position: "sec4Start+=2.0", duration: 0.4, stagger: 0.05 });
-          useTextReveal(scopeRef, ".s4-cta", { tl, position: ">+0.2", duration: 0.4, stagger: 0.04 });
-          useTextReveal(scopeRef, ".s5-title", { tl, position: "sec5Start+=2.8", duration: 0.4, stagger: 0.05 });
-          useTextReveal(scopeRef, ".s5-body", { tl, position: "sec5Start+=2.8", duration: 0.4, stagger: 0.05 });
-          useTextReveal(scopeRef, ".s10-title", { tl, position: "sec10Start+=1.9", duration: 0.4, stagger: 0.05 });
-          useTextReveal(scopeRef, ".s10-title-sub", { tl, position: "sec10Start+=1.8", duration: 0.4, stagger: 0.04 });
-          useTextReveal(scopeRef, ".s10-para-top", { tl, position: "sec10Start+=1.0", duration: 0.4, stagger: 0.04 });
           useTextReveal(scopeRef, ".s7-title", { tl, position: "sec7Start+=1.7", duration: 0.4, stagger: 0.05, yOffset: -10 });
           useTextReveal(scopeRef, ".s7-para", { tl, position: "sec7Start+=1.7", duration: 0.4, stagger: 0.05, yOffset: -10 });
           useTextReveal(scopeRef, ".s8-heading", { tl, position: "sec8Start+=1.9", duration: 0.4, stagger: 0.05 });
@@ -426,11 +420,10 @@ export default function HomeDesktop() {
 
           const totalDuration = tl.totalDuration();
           const labelNames = [
-            "heroStart", "heroExit", "textLanding", "s2InnerAnimation", "sec3Start", "sec4Start",
-            "sec4ContentStart", "sec4ContentEnd", "sec5Start", "sec6Start",
-            "sec10Start", "sec10TextHide", "sec10CardReveal", "sec10VideoTransition",
-            "sec10FinalScroll", "sec7Start", "sec8Start", "sec9Start",
-            "sec9TitleFade", "sec9TitleMove", "ctaStart", "footerStart"
+            "heroStart", "heroExit", "textLanding", "s2InnerAnimation", "sec3Start",
+            "sec10Start", "sec10TextHide", "sec10ContentReveal", "sec10ExitSequence", "sec10FinalScroll", 
+            "secReviewsStart", "sec7Start", "sec8Start", "sec9Start", "sec9TitleFade", "sec9TitleMove", 
+            "ctaStart", "footerStart"
           ];
           cachedProgressLabels = [0, ...labelNames.map(name => tl.labels[name] / totalDuration), 1];
 
@@ -462,9 +455,6 @@ export default function HomeDesktop() {
           [
             ".hero-secondary-para",
             ".s2-title-main", ".s2-title-sub", ".s2-body",
-            ".s4-title", ".s4-para", ".s4-cta",
-            ".s5-title", ".s5-body",
-            ".s10-title", ".s10-title-sub", ".s10-para-top",
             ".s7-title", ".s7-para",
             ".s8-heading", ".s8-para",
           ].join(",")
@@ -477,24 +467,21 @@ export default function HomeDesktop() {
   return (
     <div ref={scopeRef}>
       <div className="pin-all relative h-screen w-screen overflow-hidden bg-black">
+        
         <div className="section-2 absolute inset-0 h-full w-full structural-layer">
           <SectionTwo />
         </div>
         <div className="section-3 absolute inset-0 h-full w-full structural-layer">
           <SectionThree />
         </div>
-        <div className="section-4 absolute inset-0 h-full w-full structural-layer" style={{ overflow: "visible" }}>
-          <SectionFour />
-        </div>
-        <div className="section-5 absolute inset-0 h-full w-full structural-layer">
-          <SectionFive />
-        </div>
-        <div className="section-6 absolute inset-0 h-full w-full structural-layer">
-          <SectionSix />
-        </div>
         <div className="section-10 absolute inset-0 h-full w-full structural-layer">
           <SectionTen />
         </div>
+
+        <div className="section-reviews absolute inset-0 h-full w-full structural-layer">
+          <SectionReviews />
+        </div>
+
         <div className="section-7 absolute inset-0 h-full w-full structural-layer">
           <SectionSeven />
         </div>

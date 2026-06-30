@@ -49,12 +49,7 @@ export default function SectionSeven() {
 
         <div
           className="flex flex-col gap-0.5 !px-[32px] !py-[30px] max-w-[340px] !mt-2 "
-          style={{
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            background: "radial-gradient(100% 100% at 0% 0%, rgba(25,33,28,0.64) 0%, rgba(25,33,28,0.24) 100%)",
-            boxShadow: "-5px -5px 25px rgba(255,255,255,0.02) inset, 0 4px 4px rgba(0,0,0,0.25)",
-          }}
+
         >
           <p className="s7-para font-body text-[#F4EEDF] text-[14px] font-normal">Lachlan Deleeuw</p>
           <p className="s7-para text-[#F4EEDF] text-[14px] mt-2">Founder – Grand Pools</p>
@@ -65,7 +60,7 @@ export default function SectionSeven() {
       </div>
 
       {/* ── Desktop: Partners ── */}
-      <div className="hidden lg:flex absolute bottom-9 right-12 flex-col items-end gap-5">
+      <div className="hidden lg:flex absolute bottom-22 right-12 flex-col items-end gap-5">
         <p className="font-body text-[#F4EBE4] text-sm">Our Partners</p>
         <div
           className="overflow-hidden w-[520px]"

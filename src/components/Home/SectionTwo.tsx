@@ -54,8 +54,8 @@ export default function SectionTwo() {
       <div className="absolute inset-0 z-20 grid grid-cols-1 md:grid-cols-2 w-full h-full pointer-events-none">
         
         {/* LEFT COLUMN: LANDING REFERENCE */}
-        <div className="relative h-full overflow-hidden !pt-12 md:!pt-36 lg:!pt-36">
-          <div className="s2-body w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px] !mb-33 md:!mb-80 lg:!mb-0 h-[100px] !ml-14 " />
+        <div className="relative h-full overflow-hidden !pt-28 md:!pt-36 lg:!pt-36">
+          <div className="s2-body w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px] !mb-33 md:!mb-80 lg:!mb-0 h-[100px] !ml-[20px] lg:!ml-[30px] lg:!ml-[65px]" />
         </div>
 
         {/* RIGHT COLUMN: DOUBLE LAYER STACK */}

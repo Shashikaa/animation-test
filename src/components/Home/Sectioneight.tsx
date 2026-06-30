@@ -1,18 +1,13 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import dynamic from "next/dynamic";
-
-const LiquidCanvas = dynamic(() => import("../LiquidCanvas"), {
-  ssr: false,
-});
+import WaveCanvas from "../WaveCanvas";
 
 export default function SectionEight() {
   const sectionRef   = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const personRef    = useRef<HTMLDivElement>(null);
 
-  const [offscreen, setOffscreen] = useState(false);
   const [assetsLoaded, setAssetsLoaded] = useState(false);
 
   // ── PRELOAD HIGH-PRIORITY WEBGL TEXTURES ──
@@ -38,7 +33,7 @@ export default function SectionEight() {
     const el = sectionRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
-      ([entry]) => setOffscreen(!entry.isIntersecting),
+      ([entry]) => {},
       { threshold: 0 }
     );
     observer.observe(el);
@@ -103,11 +98,18 @@ export default function SectionEight() {
           MOBILE + TABLET LAYOUT
       ══════════════════════════════════════ */}
       <div className="lg:!hidden !absolute !inset-0 !overflow-hidden section-container">
+        {/* Layer 1: Static Background Image */}
         <div 
-          className="absolute inset-0 z-10 transition-opacity duration-300"
-          style={{ opacity: assetsLoaded ? 1 : 0 }}
-        >
-          {assetsLoaded && <LiquidCanvas imageSrc="/ForestMob.webp" />}
+          className="absolute inset-0 bg-cover bg-center transition-opacity duration-300"
+          style={{ 
+            backgroundImage: "url('/ForestMob.webp')",
+            opacity: assetsLoaded ? 1 : 0 
+          }}
+        />
+        
+        {/* Layer 2: Wave Canvas Layer on Top with reduced opacity */}
+        <div className="absolute inset-0 z-[1] opacity-10 pointer-events-none w-full h-full">
+          {assetsLoaded && <WaveCanvas imageSrc="/ForestMob.webp" />}
         </div>
 
         <div className="!absolute !top-0 !right-0 !z-20 !flex !flex-col !items-end !gap-4 !pt-[27vh] !px-5">
@@ -122,7 +124,7 @@ export default function SectionEight() {
       </div>
 
       {/* ══════════════════════════════════════
-          DESKTOP LAYOUT (Preserves your structural panels)
+          DESKTOP LAYOUT (Preserves structural panels)
       ══════════════════════════════════════ */}
       <div ref={containerRef} className="hidden lg:block absolute inset-0" style={{ overflow: "hidden" }}>
 
@@ -131,21 +133,24 @@ export default function SectionEight() {
           className="s8-panel-left absolute inset-0"
           style={{ clipPath: "inset(0% 50% 0% 0%)" }}
         >
+          {/* Container syncing your GSAP 120% moving layers */}
           <div
-            className="s8-bg-img absolute transition-opacity duration-300"
+            className="s8-bg-img absolute left-0 w-full bg-cover bg-top transition-opacity duration-300"
             style={{
-              top: 0, left: 0, width: "100%", height: "120%",
+              backgroundImage: "url('/Forest.webp')",
+              top: 0, height: "120%",
               willChange: "transform",
               opacity: assetsLoaded ? 1 : 0
             }}
           >
-            {assetsLoaded && <LiquidCanvas imageSrc="/Forest.webp" />}
+            {/* Wave Canvas Layer on Top with reduced opacity */}
+            <div className="absolute inset-0 z-[1] opacity-14 pointer-events-none w-full h-full">
+              {assetsLoaded && <WaveCanvas imageSrc="/Forest.webp" />}
+            </div>
           </div>
-          <div
-            className="absolute inset-0 z-10 pointer-events-none"
-            style={{ background: "linear-gradient(94.35deg, #162D24 -1.26%, #094146 100%)", opacity: 0.10 }}
-          />
-          <div className="absolute inset-0 z-10 pointer-events-none" style={{ background: "#0000007A" }} />
+          
+
+          <div className="absolute inset-0 z-10 pointer-events-none opacity-70" style={{ background: "#0000007A" }} />
           
           <div
             ref={personRef}
@@ -161,7 +166,7 @@ export default function SectionEight() {
               style={{
                 width: "100%", height: "100%", objectFit: "contain",
                 objectPosition: "bottom left", mixBlendMode: "screen",
-                display: "block", transform: "scaleX(-1)", opacity: 0.9,
+                display: "block", transform: "scaleX(-1)", zIndex: 100,
               }}
             />
           </div>
@@ -172,21 +177,24 @@ export default function SectionEight() {
           className="s8-panel-right absolute inset-0"
           style={{ clipPath: "inset(0% 0% 0% 50%)" }}
         >
+          {/* Container syncing your GSAP 120% moving layers */}
           <div
-            className="s8-bg-img absolute transition-opacity duration-300"
+            className="s8-bg-img absolute left-0 w-full bg-cover bg-top transition-opacity duration-300"
             style={{
-              top: 0, left: 0, width: "100%", height: "120%",
+              backgroundImage: "url('/Forest.webp')",
+              top: 0, height: "120%",
               willChange: "transform",
               opacity: assetsLoaded ? 1 : 0
             }}
           >
-            {assetsLoaded && <LiquidCanvas imageSrc="/Forest.webp" />}
+            {/* Wave Canvas Layer on Top with reduced opacity */}
+            <div className="absolute inset-0 z-[1] opacity-14 pointer-events-none w-full h-full">
+              {assetsLoaded && <WaveCanvas imageSrc="/Forest.webp" />}
+            </div>
           </div>
-          <div
-            className="absolute inset-0 z-10 pointer-events-none"
-            style={{ background: "linear-gradient(94.35deg, #162D24 -1.26%, #094146 100%)", opacity: 0.10 }}
-          />
-          <div className="absolute inset-0 z-10 pointer-events-none" style={{ background: "#0000007A" }} />
+          
+
+          <div className="absolute inset-0 z-10 pointer-events-none opacity-70" style={{ background: "#0000007A" }} />
           
           <div
             className="absolute z-20 pointer-events-none"

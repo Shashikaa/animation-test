@@ -39,9 +39,9 @@ export default function SectionFive() {
             opacity: canvasLoaded ? 1 : 0, 
           }}
         >
-          {/* If your liquid background helper supports an explicit pause flag, you can conditionally pass offscreen here */}
+
           <WaveCanvas 
-            imageSrc="/IntroReveal.webp" 
+
             onReady={() => setCanvasLoaded(true)} 
           />
         </div>
