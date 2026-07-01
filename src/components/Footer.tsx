@@ -1,4 +1,3 @@
-// components/Footer.tsx
 "use client";
 
 import { useSite } from "../app/context/SiteContext"; // adjust path if needed
@@ -7,19 +6,19 @@ const SOCIAL_LINKS = [
   { label: "Instagram", href: "https://www.instagram.com/grandpools_aus/", src: "/ig.svg" },
   { label: "Facebook",  href: "https://facebook.com",  src: "/Facebook.svg" },
   { label: "LinkedIn",  href: "https://linkedin.com",  src: "/linkedin.svg" },
-  { label: "YouTube",   href: "https://youtube.com",   src: "/yt.svg" },
+  { label: "YouTube",   href: "https://youtube.com",  src: "/yt.svg" },
 ];
 
 export default function Footer() {
-const { smootherRef } = useSite();
+  const { smootherRef } = useSite();
 
-const scrollToTop = () => {
-  if (smootherRef?.current) {
-    smootherRef.current.scrollTo(0, true); // true = smooth
-  } else {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-};
+  const scrollToTop = () => {
+    if (smootherRef?.current) {
+      smootherRef.current.scrollTo(0, true); // true = smooth
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   return (
     <footer
@@ -30,271 +29,18 @@ const scrollToTop = () => {
         boxSizing: "border-box",
       }}
     >
-      {/* Glassmorphic block */}
+      {/* Background / Container */}
       <div
         style={{
           width: "100%",
-          background: "linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)",
-          backdropFilter: "blur(18px)",
-          WebkitBackdropFilter: "blur(18px)",
-          borderBottom: "2px solid rgba(255,255,255,0.10)",
-
-          boxShadow: "0 8px 48px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08)",
           overflow: "hidden",
+          padding: "56px 56px 32px",
         }}
+        className="px-6 md:px-14"
       >
         {/* ══════════════════════════════════════
-            DESKTOP — Top section: Nav | Contact+Socials | Scroll-to-top
+            ROW 1: Big Logo Wordmark Centered
         ══════════════════════════════════════ */}
-        <div
-          className="hidden md:grid"
-          style={{
-            gridTemplateColumns: "1fr 1fr 1fr",
-            alignItems: "start",
-            padding: "56px 56px 80px",
-            gap: 32,
-          }}
-        >
-          {/* Left — Nav links */}
-          <nav style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {["Home", "Services", "Projects", "Contact"].map((item) => (
-                  <a
-                key={item}
-                href="#"
-                style={{
-                  color: "#F4EBE4",
-                  fontSize: 16,
-                  textDecoration: "none",
-                  fontFamily: "var(--font-body)",
-                  transition: "color 0.2s ease",
-                }}
-              >
-                {item}
-              </a>
-            ))}
-          </nav>
-
-          {/* Center — Contact details + Social icons below */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
-                <a
-              href="tel:0422630394"
-              style={{
-                color: "#F4EBE4",
-                fontSize: 16,
-                textDecoration: "none",
-                fontFamily: "var(--font-body)",
-              }}
-            >
-              0422 630 394
-            </a>
-                <a
-              href="mailto:admin@grandpools.com.au"
-              style={{
-                color: "#F4EBE4",
-                fontSize: 16,
-                textDecoration: "none",
-                fontFamily: "var(--font-body)",
-              }}
-            >
-              admin@grandpools.com.au
-            </a>
-
-            {/* Social icons — now under contact details */}
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 12 }}>
-              {SOCIAL_LINKS.map(({ label, href, src }) => (
-                <SocialLink key={label} href={href} label={label} src={src} />
-              ))}
-            </div>
-          </div>
-
-          {/* Right — Scroll-to-top button */}
-          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "flex-start" }}>
-            <ScrollTopButton onClick={scrollToTop} size={44} />
-          </div>
-        </div>
-
-        {/* ══════════════════════════════════════
-            MOBILE — Top section:
-            Row 1: Scroll-to-top button
-            Row 2: Nav links
-            Row 3: Contact + Socials
-        ══════════════════════════════════════ */}
-        <div
-          className="flex md:hidden"
-          style={{
-            flexDirection: "column",
-            padding: "32px 24px 56px",
-            gap: 28,
-          }}
-        >
-          {/* Row 1 — scroll-to-top button */}
-          <div style={{ display: "flex", justifyContent: "flex-end", width: "100%" }}>
-            <ScrollTopButton onClick={scrollToTop} size={36} />
-          </div>
-
-          {/* Row 2 — Nav links | Contact details + Social icons */}
-          <div style={{ display: "flex", justifyContent: "space-between", width: "100%", gap: 24 }}>
-            <nav style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {["Home", "Services", "Projects", "Contact"].map((item) => (
-                    <a
-                  key={item}
-                  href="#"
-                  style={{
-                    color: "#F4EBE4",
-                    fontSize: 15,
-                    textDecoration: "none",
-                    fontFamily: "var(--font-body)",
-                  }}
-                >
-                  {item}
-                </a>
-              ))}
-            </nav>
-
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-                  <a
-                href="tel:0422630394"
-                style={{
-                  color: "#F4EBE4",
-                  fontSize: 15,
-                  textDecoration: "none",
-                  fontFamily: "var(--font-body)",
-                  textAlign: "right",
-                }}
-              >
-                0422 630 394
-              </a>
-                  <a
-                href="mailto:admin@grandpools.com.au"
-                style={{
-                  color: "#F4EBE4",
-                  fontSize: 15,
-                  textDecoration: "none",
-                  fontFamily: "var(--font-body)",
-                  textAlign: "right",
-                }}
-              >
-                admin@grandpools.com.au
-              </a>
-              <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 8 }}>
-                {SOCIAL_LINKS.map(({ label, href, src }) => (
-                  <SocialLink key={label} href={href} label={label} src={src} size={20} />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Divider — shared */}
-        <div
-          className="hidden md:block"
-          style={{ height: 1, margin: "0 48px", background: "#F4EBE4" }}
-        />
-        <div
-          className="block md:hidden"
-          style={{ height: 1, margin: "0 24px", background: "#F4EBE4" }}
-        />
-
-        {/* ══════════════════════════════════════
-            DESKTOP — Bottom bar
-        ══════════════════════════════════════ */}
-        <div
-          className="hidden md:flex"
-          style={{
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "18px 48px",
-            flexWrap: "wrap",
-            gap: 12,
-          }}
-        >
-          <span style={{ color: "#F4EBE4", fontSize: 16, fontFamily: "var(--font-body)" }}>
-            © 2026 Grand Pools. All rights reserved.
-          </span>
-
-          <div style={{ display: "flex", gap: 24, alignItems: "center", color: "#F4EBE4", fontSize: 16 }}>
-            <BottomLink href="#">Terms of Use</BottomLink>
-            <BottomLink href="#">Privacy Policy</BottomLink>
-          </div>
-
-          <span
-            style={{
-              color: "#F4EBE4",
-              fontSize: 16,
-              fontFamily: "var(--font-body)",
-              letterSpacing: "0.03em",
-            }}
-          >
-            Design &amp; Development by{" "}
-                <a
-              href="#"
-              style={{ color: "#F4EBE4", textDecoration: "none", transition: "color 0.2s ease", fontWeight: 500 }}
-            >
-              Tactik
-            </a>
-          </span>
-        </div>
-
-        {/* ══════════════════════════════════════
-            MOBILE — Bottom bar
-        ══════════════════════════════════════ */}
-        <div
-          className="flex md:hidden"
-          style={{
-            flexDirection: "column",
-            alignItems: "flex-start",
-            padding: "20px 24px",
-            gap: 16,
-          }}
-        >
-          {/* Row 1: Terms/Privacy (left) | Copyright (right) */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-              width: "100%",
-              gap: 22,
-            }}
-          >
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <BottomLink href="#">Terms of Use</BottomLink>
-              <BottomLink href="#">Privacy Policy</BottomLink>
-            </div>
-
-            <span
-              style={{
-                color: "#F4EBE4",
-                fontSize: 14,
-                fontFamily: "var(--font-body)",
-                textAlign: "right",
-                width: "40%",
-              }}
-            >
-              © 2026 Grand Pools. All rights reserved.
-            </span>
-          </div>
-
-          {/* Row 2: Design & Development by Tactik */}
-          <span
-            style={{
-              color: "#F4EBE4",
-              fontSize: 14,
-              fontFamily: "var(--font-body)",
-              marginTop: "32px",
-            }}
-          >
-            Design &amp; Development by{" "}
-                <a
-              href="#"
-              style={{ color: "#F4EBE4", textDecoration: "none", fontWeight: 500 }}
-            >
-              Tactik
-            </a>
-          </span>
-        </div>
-
-        {/* Large Footer Logo Wordmark — shared */}
         <div
           style={{
             width: "100%",
@@ -302,22 +48,176 @@ const scrollToTop = () => {
             alignItems: "center",
             justifyContent: "center",
             overflow: "hidden",
-            marginTop: 32,
+            marginBottom: 48,
           }}
         >
           <img
-            src="/Footer-Logo.svg"
+            src="/Footer.svg"
             alt="Grand Pools"
             style={{
-              width: "94%",
-              maxWidth: "80%",
+              width: "100%",
+              maxWidth: "1920px",
               height: "auto",
               display: "block",
-              verticalAlign: "bottom",
               pointerEvents: "none",
               userSelect: "none",
             }}
           />
+        </div>
+
+        {/* ══════════════════════════════════════
+            ROW 2: Link Column Grid
+        ══════════════════════════════════════ */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "start",
+            gap: "20%", /* Adjusts the space between Column 1 and Column 2 */
+            marginBottom: 48,
+          }}
+        >
+          {/* Col 1 — Main Nav links */}
+          <nav style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
+            {[
+              { item: "Home", href: "/" },
+              { item: "Services", href: "/services" },
+              { item: "Projects", href: "/projects" },
+              { item: "Contact", href: "/contact" },
+              { item: "About", href: "/about" }
+            ].map(({ item, href }) => (
+              <a
+                key={item}
+                href={href}
+                style={{
+                  color: "#F4EBE4",
+                  fontSize: 15,
+                  textDecoration: "none",
+                  fontFamily: "var(--font-body)",
+                  transition: "opacity 0.2s ease",
+                  width: "fit-content",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+              >
+                {item}
+              </a>
+            ))}
+          </nav>
+
+          {/* Col 2 — Service Capabilities list (Perfectly Left Aligned alongside Col 1) */}
+          <nav style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
+            {[
+              { item: "New Pool Construction", href: "/services/new-pool-construction" },
+              { item: "Concrete Pool Renovations", href: "/services/concrete-pool-renovations" },
+              { item: "Pool Equipment & Installation", href: "/services/pool-equipment-and-installation" },
+              { item: "Commercial Pool Construction", href: "/services/commercial-pool-construction" },
+            ].map(({ item, href }) => (
+              <a
+                key={item}
+                href={href}
+                style={{
+                  color: "#F4EBE4",
+                  fontSize: 16,
+                  textDecoration: "none",
+                  fontFamily: "var(--font-body)",
+                  transition: "opacity 0.2s ease",
+                  width: "fit-content",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+              >
+                {item}
+              </a>
+            ))}
+          </nav>
+
+          {/* Col 3 — Contact Info & Social Icons (Pushed entirely to the Right edge) */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", marginLeft: "auto", gap: 8 }}>
+            <a
+              href="tel:0422630394"
+              style={{
+                color: "#F4EBE4",
+                fontSize: 16,
+                textDecoration: "none",
+                fontFamily: "var(--font-body)",
+                textAlign: "right",
+                transition: "opacity 0.2s ease",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+            >
+              0422 630 394
+            </a>
+            <a
+              href="mailto:admin@grandpools.com.au"
+              style={{
+                color: "#F4EBE4",
+                fontSize: 16,
+                textDecoration: "none",
+                fontFamily: "var(--font-body)",
+                textAlign: "right",
+                transition: "opacity 0.2s ease",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+            >
+              admin@grandpools.com.au
+            </a>
+
+            {/* Social icons row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 12 }}>
+              {SOCIAL_LINKS.map(({ label, href, src }) => (
+                <SocialLink key={label} href={href} label={label} src={src} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Divider Line */}
+        <div
+          style={{ height: "1px", background: "#F4EBE4", marginBottom: 20 }}
+          className="w-full"
+        />
+
+        {/* ══════════════════════════════════════
+            ROW 3: Legal Terms & Author Attribution
+        ══════════════════════════════════════ */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 16,
+          }}
+          className="text-xs md:text-sm"
+        >
+          <span style={{ color: "#F4EBE4",  fontFamily: "var(--font-body)" }}>
+            © 2026 Grand Pools. All rights reserved.
+          </span>
+
+          <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
+            <BottomLink href="/terms-of-use">Terms of Use</BottomLink>
+            <BottomLink href="/privacy-policy">Privacy Policy</BottomLink>
+          </div>
+
+          <span
+            style={{
+              color: "#F4EBE4",
+              fontFamily: "var(--font-body)",
+            }}
+          >
+            Design &amp; Development by{" "}
+            <a
+              href="#"
+              style={{ color: "#F4EBE4", textDecoration: "none", fontWeight: 500, opacity: 1, transition: "opacity 0.2s ease" }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+            >
+              Tactik
+            </a>
+          </span>
         </div>
       </div>
     </footer>
@@ -326,7 +226,7 @@ const scrollToTop = () => {
 
 /* ── Helper components ── */
 
-function ScrollTopButton({ onClick, size = 50 }: { onClick: () => void; size?: number }) {
+function ScrollTopButton({ onClick, size = 44 }: { onClick: () => void; size?: number }) {
   return (
     <button
       onClick={onClick}
@@ -334,35 +234,26 @@ function ScrollTopButton({ onClick, size = 50 }: { onClick: () => void; size?: n
       style={{
         width: size,
         height: size,
-
         background: "transparent",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         cursor: "pointer",
-        pointerEvents: "auto",
-        flexShrink: 0,
         padding: 0,
+        border: "none"
       }}
     >
-      <img
-        src="/scrolltop.svg"
-        alt=""
-        aria-hidden
-        style={{
-          width: "60%",
-          height: "60%",
-          objectFit: "contain",
-          pointerEvents: "none",
-        }}
-      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '24px' }}>
+        <span style={{ display: 'block', height: '2px', width: '100%', background: '#F4EBE4' }}></span>
+        <span style={{ display: 'block', height: '2px', width: '100%', background: '#F4EBE4' }}></span>
+      </div>
     </button>
   );
 }
 
-function SocialLink({ href, label, src, size = 22 }: { href: string; label: string; src: string; size?: number }) {
+function SocialLink({ href, label, src, size = 20 }: { href: string; label: string; src: string; size?: number }) {
   return (
-        <a
+    <a
       href={href}
       aria-label={label}
       target="_blank"
@@ -375,7 +266,6 @@ function SocialLink({ href, label, src, size = 22 }: { href: string; label: stri
         height: size,
         textDecoration: "none",
         transition: "opacity 0.2s ease",
-        flexShrink: 0,
       }}
       onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
       onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
@@ -388,7 +278,6 @@ function SocialLink({ href, label, src, size = 22 }: { href: string; label: stri
           height: "100%",
           objectFit: "contain",
           display: "block",
-          pointerEvents: "none",
         }}
       />
     </a>
@@ -401,11 +290,12 @@ function BottomLink({ href, children }: { href: string; children: React.ReactNod
       href={href}
       style={{
         color: "#F4EBE4",
-        fontSize: 16,
         fontFamily: "var(--font-body)",
         textDecoration: "none",
-        transition: "color 0.2s ease",
+        transition: "opacity 0.2s ease",
       }}
+      onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
+      onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
     >
       {children}
     </a>

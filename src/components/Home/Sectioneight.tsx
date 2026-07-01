@@ -29,17 +29,7 @@ export default function SectionEight() {
     });
   }, []);
 
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {},
-      { threshold: 0 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
+  // ── MOUSE PARALLAX EFFECT ──
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -98,25 +88,15 @@ export default function SectionEight() {
           MOBILE + TABLET LAYOUT
       ══════════════════════════════════════ */}
       <div className="lg:!hidden !absolute !inset-0 !overflow-hidden section-container">
-        {/* Layer 1: Static Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center transition-opacity duration-300"
-          style={{ 
-            backgroundImage: "url('/ForestMob.webp')",
-            opacity: assetsLoaded ? 1 : 0 
-          }}
-        />
-        
-        {/* Layer 2: Wave Canvas Layer on Top with reduced opacity */}
-        <div className="absolute inset-0 z-[1] opacity-10 pointer-events-none w-full h-full">
+        <div className="absolute inset-0 z-[1] pointer-events-none w-full h-full">
           {assetsLoaded && <WaveCanvas imageSrc="/ForestMob.webp" />}
         </div>
 
         <div className="!absolute !top-0 !right-0 !z-20 !flex !flex-col !items-end !gap-4 !pt-[27vh] !px-5">
-          <h2 className="!text-[#F4EEDF] !text-right font-display">
+          <h2 className="s8-heading !text-[#F4EEDF] !text-right font-display" style={{ opacity: 0 }}>
             Water as Sanctuary.
           </h2>
-          <p className="!text-[#F4EEDF] !text-right !text-[14px] !leading-snug font-body !max-w-[260px]">
+          <p className="s8-para !text-[#F4EEDF] !text-right !text-[14px] !leading-snug font-body !max-w-[260px]" style={{ opacity: 0 }}>
             Designed to disappear into the landscape, not announce itself.
             The result isn't a pool. It's a quiet room you walk outside to find.
           </p>
@@ -124,7 +104,7 @@ export default function SectionEight() {
       </div>
 
       {/* ══════════════════════════════════════
-          DESKTOP LAYOUT (Preserves structural panels)
+          DESKTOP LAYOUT
       ══════════════════════════════════════ */}
       <div ref={containerRef} className="hidden lg:block absolute inset-0" style={{ overflow: "hidden" }}>
 
@@ -133,23 +113,19 @@ export default function SectionEight() {
           className="s8-panel-left absolute inset-0"
           style={{ clipPath: "inset(0% 50% 0% 0%)" }}
         >
-          {/* Container syncing your GSAP 120% moving layers */}
           <div
-            className="s8-bg-img absolute left-0 w-full bg-cover bg-top transition-opacity duration-300"
+            className="s8-bg-img absolute left-0 w-full transition-opacity duration-300"
             style={{
-              backgroundImage: "url('/Forest.webp')",
               top: 0, height: "120%",
               willChange: "transform",
               opacity: assetsLoaded ? 1 : 0
             }}
           >
-            {/* Wave Canvas Layer on Top with reduced opacity */}
-            <div className="absolute inset-0 z-[1] opacity-14 pointer-events-none w-full h-full">
+            <div className="absolute inset-0 z-[1] pointer-events-none w-full h-full">
               {assetsLoaded && <WaveCanvas imageSrc="/Forest.webp" />}
             </div>
           </div>
           
-
           <div className="absolute inset-0 z-10 pointer-events-none opacity-70" style={{ background: "#0000007A" }} />
           
           <div
@@ -177,23 +153,19 @@ export default function SectionEight() {
           className="s8-panel-right absolute inset-0"
           style={{ clipPath: "inset(0% 0% 0% 50%)" }}
         >
-          {/* Container syncing your GSAP 120% moving layers */}
           <div
-            className="s8-bg-img absolute left-0 w-full bg-cover bg-top transition-opacity duration-300"
+            className="s8-bg-img absolute left-0 w-full transition-opacity duration-300"
             style={{
-              backgroundImage: "url('/Forest.webp')",
               top: 0, height: "120%",
               willChange: "transform",
               opacity: assetsLoaded ? 1 : 0
             }}
           >
-            {/* Wave Canvas Layer on Top with reduced opacity */}
-            <div className="absolute inset-0 z-[1] opacity-14 pointer-events-none w-full h-full">
+            <div className="absolute inset-0 z-[1] pointer-events-none w-full h-full">
               {assetsLoaded && <WaveCanvas imageSrc="/Forest.webp" />}
             </div>
           </div>
           
-
           <div className="absolute inset-0 z-10 pointer-events-none opacity-70" style={{ background: "#0000007A" }} />
           
           <div
@@ -210,10 +182,10 @@ export default function SectionEight() {
             }}
           >
             <div className="flex flex-col gap-5 text-left">
-              <h2 className="s8-heading text-[#F4EEDF] font-display">
+              <h2 className="s8-heading text-[#F4EEDF] font-display" style={{ opacity: 0 }}>
                 Water as Sanctuary.
               </h2>
-              <p className="s8-para text-[#F4EEDF] max-w-[300px] font-body">
+              <p className="s8-para text-[#F4EEDF] max-w-[300px] font-body" style={{ opacity: 0 }}>
                 Designed to disappear into the landscape, not announce itself.
                 The result isn't a pool. It's a quiet room you walk outside to find.
               </p>

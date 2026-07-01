@@ -8,9 +8,9 @@ export default function SectionNine() {
       <div
         className="s9-bg-img absolute bg-cover bg-center hidden lg:block"
         style={{
-          backgroundImage: "url('/murray-st-prahran.webp')",
-          top:        0,
-          left:       0,
+          backgroundImage: "url('/secnine.webp')",
+          top:         0,
+          left:        0,
           width:      "100%",
           height:     "120%",
           willChange: "transform",
@@ -21,29 +21,20 @@ export default function SectionNine() {
       <div
         className="s9-bg-img absolute bg-cover bg-center block lg:hidden"
         style={{
-          backgroundImage: "url('/murray-st-prahran-mobile.webp')",
-          top:        0,
-          left:       0,
+          backgroundImage: "url('/secnine.webp')",
+          top:         0,
+          left:        0,
           width:      "100%",
           height:     "120%",
           willChange: "transform",
         }}
       />
 
-      {/* Desktop overlays — unchanged */}
-      <div
-        className="absolute inset-0 hidden lg:block"
-        style={{
-          background: "radial-gradient(100% 100% at 0% 0%, rgba(25,33,28,0.9) 0%, rgba(25,33,28,0) 100%)",
-        }}
-      />
-      <div className="absolute inset-0 z-10 hidden lg:block" style={{ background: "#19211C8F" }} />
-
-      {/* Desktop title — unchanged */}
+      {/* Desktop title */}
       <h2
-        className="s9-title absolute z-20 text-[#F4EEDF] font-display pointer-events-none hidden lg:block"
+        className="s9-title absolute z-20 text-[#F4EEDF] font-display pointer-events-none hidden lg:block " 
         style={{
-          top:        "50%",
+          top:        "47%",
           left:       "50%",
           transform:  "translate(-50%, -50%)",
           fontSize:   "46px",
@@ -54,18 +45,19 @@ export default function SectionNine() {
           opacity:    0,
         }}
       >
-        Do you feel like diving in?
+        Ready to dive in?
       </h2>
 
-      {/* Desktop para — unchanged */}
+      {/* Desktop para */}
       <p
-        className="s9-para absolute z-20 text-[#F4EEDF] font-body pointer-events-none hidden lg:block"
+        className="s9-para-desktop absolute z-20 text-[#F4EEDF] font-body pointer-events-none hidden lg:block "
         style={{
           right:     "4rem",
           bottom:    "8rem",
-          maxWidth:  "376px",
+          maxWidth:  "400px",
           textAlign: "right",
-          opacity:   0,
+          lineHeight: 1.0,
+          opacity: 0 
         }}
       >
         Don't hold back. As you swim along the sun-drenched water, delight in
@@ -81,7 +73,6 @@ export default function SectionNine() {
           top:        "8rem",
           right:      "1.5rem",
           maxWidth:   "300px",
-
           textAlign:  "right",
           margin:     0,
           padding:    0,
@@ -93,14 +84,14 @@ export default function SectionNine() {
 
       {/* Mobile para */}
       <p
-        className="s9-para absolute z-20 text-[#F4EEDF] font-body pointer-events-none block lg:hidden md:!mt-10"
+        className="s9-para-mobile absolute z-20 text-[#F4EEDF] font-body pointer-events-none block lg:hidden md:!mt-10"
         style={{
           top:        "calc(8rem + 90px)",
           right:      "1.5rem",
           maxWidth:   "300px",
           textAlign:  "right",
-
-          opacity:    0,
+          // Keep opacity 0 here since mobile won't run line split splits
+          opacity:    0, 
         }}
       >
         Don't hold back. As you swim along the sun-drenched water, delight in

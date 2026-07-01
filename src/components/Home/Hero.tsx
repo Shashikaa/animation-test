@@ -24,33 +24,32 @@ export default function Hero() {
 
       {/* Targetable Background wrapper layer for the collapsing animation */}
       <div
-        className="hero-bg-wrapper absolute inset-0 w-full h-full will-change-[clip-path]"
+        className="hero-bg-wrapper absolute inset-0 w-full h-full will-change-[clip-path] z-21"
         style={{ clipPath: "inset(0% 0% 0% 0%)" }}
       >
         <div
-          className="hero-bg absolute inset-0 bg-cover bg-center bg-[url('/heroHome.webp')] will-change-transform"
+          className="hero-bg absolute inset-0 bg-cover bg-center bg-[url('/heroHome.webp')] will-change-transform "
           style={{ transform: "scale(1.15)", transformOrigin: "center center" }}
         />
       </div>
 
       {/* Main Content Layer */}
-      <div className="section-container relative z-10 h-full w-full flex flex-col justify-end items-start lg:flex-row lg:items-end lg:justify-between !pb-[100px] md:!pb-[140px] lg:!pb-30 gap-8">
+      <div className="section-container relative h-full w-full flex flex-col justify-end items-start lg:flex-row lg:items-end lg:justify-between !pb-[100px] md:!pb-[140px] lg:!pb-30 gap-8">
 
         {/* Isolated content stack for the Left Side */}
         <div className="max-w-xl lg:max-w-4xl flex flex-col justify-end overflow-visible relative">
 
           {/* Title Block */}
-          <div className="block h-fit overflow-visible relative">
+          <div className="block h-fit overflow-visible relative z-22">
             <h1 className="text-[#F4EEDF] text-display text-[36px] sm:text-[48px] lg:!text-[80px] font-[100] text-left will-change-[transform,opacity] m-0 p-0 select-none leading-tight">
               Refined Pools <br /> for Modern Living
             </h1>
           </div>
 
           {/* Secondary Text Wrapper */}
-          {/* FIXED: Max width updated to 340px to align exactly with Section Two */}
           <div className="hero-secondary-text-wrap w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px] absolute bottom-10 lg:bottom-30 left-0 translate-y-full z-20 overflow-visible pt-4">
             <p
-              /* FIXED: Added font-body, matching font-size constraints, and leading rules to match section two perfectly */
+
               className="hero-secondary-para font-body text-[#F4EEDF] text-left text-sm sm:text-base leading-relaxed m-0 p-0"
               style={{ visibility: "hidden" }}
             >
@@ -60,7 +59,7 @@ export default function Hero() {
         </div>
 
         {/* Right Text Block */}
-        <div className="hero-right-text max-w-[310px] md:max-w-[280px] lg:max-w-[320px] text-left mt-4 lg:mt-0 lg:!pb-25">
+        <div className="hero-right-text max-w-[310px] md:max-w-[280px] lg:max-w-[320px] text-left mt-4 lg:mt-0 lg:!pb-25 z-22">
           <p className="text-[#F4EEDF] font-normal leading-relaxed text-sm sm:text-base">
             Premium pools with refined wellness infrastructure, designed for private outdoor living.
           </p>

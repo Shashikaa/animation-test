@@ -1,7 +1,7 @@
 // components/SectionCTA.tsx
 "use client";
-import { useState } from "react";
-import WaterBackground from "./Ripplecanvas";
+import { useState, useRef, useEffect } from "react";
+import WaveCanvas from "./WaveCanvas"; // Path verified matching Section 10
 
 export default function SectionCTA() {
   return (
@@ -14,44 +14,16 @@ export default function SectionCTA() {
         overflow: "hidden",
       }}
     >
-      {/* ── Placeholder colour fix ── */}
-      <style>{`
-        .cta-select.is-placeholder {
-          color: rgba(244, 238, 223, 0.698) !important;
-        }
-        .cta-select:not(.is-placeholder) {
-          color: #F4EEDF !important;
-        }
-      `}</style>
-
-      {/* ── Background image ── */}
-      <img
-        src="/CTA-FORM.webp"
-        alt=""
-        aria-hidden
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          objectPosition: "top 20%",
-          transform: "scale(1.08)",
-          filter: "blur(4px)",
-          zIndex: 0,
-        }}
-      />
-
-      {/* ── Water canvas ── */}
-      <div style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}>
-        <WaterBackground />
+      {/* ── Background WebGL Layer ── */}
+      <div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full">
+        <WaveCanvas imageSrc="/CTA.webp" />
       </div>
 
       {/* ══════════════════════════════════════════
           DESKTOP layout — unchanged, now starts at lg
-      ══════════════════════════════════════════ */}
+          ══════════════════════════════════════════ */}
       <div
-        className="hidden lg:flex section-container"
+        className="hidden lg:flex section-container cta-inner-desktop "
         style={{
           position: "relative",
           zIndex: 10,
@@ -65,13 +37,13 @@ export default function SectionCTA() {
         }}
       >
         {/* LEFT */}
-        <div style={{ flex: "0 0 auto", maxWidth: 420, display: "flex", flexDirection: "column", gap: 24 }}>
+        <div style={{ flex: "0 0 auto", maxWidth: 620, display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <h2
               className="font-display"
-              style={{ color: "#F4EEDF", fontSize: "40px", fontWeight: 400, lineHeight: 1.2, margin: 0 }}
+              style={{ color: "#F4EEDF",  fontWeight: 100,  margin: 0 }}
             >
-              Ready to Build Your Dream Pool?
+              Ready to Build Your Dream 
             </h2>
           </div>
           <p
@@ -86,19 +58,19 @@ export default function SectionCTA() {
         {/* RIGHT: Form */}
         <div style={{ flex: "1 1 auto", maxWidth: 560, display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 72 }}>
-            <CtaInput placeholder="Full Name" />
-            <CtaInput placeholder="Email" type="email" />
+            <CtaInput placeholder="Full Name" name="fullName" />
+            <CtaInput placeholder="Email" type="email" name="email" />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 72 }}>
-            <CtaInput placeholder="Phone No." type="tel" />
-            <CtaInput placeholder="Post Code" />
+            <CtaInput placeholder="Phone No." type="tel" name="phone" />
+            <CtaInput placeholder="Post Code" name="postCode" />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 72 }}>
-            <CtaSelect placeholder="Budget Type" options={["Residential", "Commercial", "Mixed Use"]} />
-            <CtaSelect placeholder="Budget Range" options={["$10k – $30k", "$30k – $75k", "$75k – $150k", "$150k+"]} />
+            <CtaSelect placeholder="Budget Type" options={["Residential", "Commercial", "Mixed Use"]} name="budgetType" />
+            <CtaSelect placeholder="Budget Range" options={["$10k – $30k", "$30k – $75k", "$75k – $150k", "$150k+"]} name="budgetRange" />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 72 }}>
-            <CtaSelect placeholder="Preferred Contract Method" options={["Fixed Price", "Cost Plus", "Design & Build", "Negotiated"]} />
+            <CtaSelect placeholder="Preferred Contract Method" options={["Fixed Price", "Cost Plus", "Design & Build", "Negotiated"]} name="contractMethod" />
             <div />
           </div>
           <div style={{ marginTop: 18 }}>
@@ -109,9 +81,7 @@ export default function SectionCTA() {
 
       {/* ══════════════════════════════════════════
           MOBILE + TABLET layout — matches Figma
-          Vertical stack: title → para → form fields (single col) → submit
-          Now applies up to lg breakpoint (covers tablets too)
-      ══════════════════════════════════════════ */}
+          ══════════════════════════════════════════ */}
       <div
         className="flex lg:hidden"
         style={{
@@ -164,13 +134,13 @@ export default function SectionCTA() {
             width: "80%",
           }}
         >
-          <CtaInput placeholder="Full Name" />
-          <CtaInput placeholder="Email" type="email" />
-          <CtaInput placeholder="Phone No" type="tel" />
-          <CtaInput placeholder="Post Code" />
-          <CtaSelect placeholder="Budget Type" options={["Residential", "Commercial", "Mixed Use"]} />
-          <CtaSelect placeholder="Budget Range" options={["$10k – $30k", "$30k – $75k", "$75k – $150k", "$150k+"]} />
-          <CtaSelect placeholder="Preferred Contract Method" options={["Fixed Price", "Cost Plus", "Design & Build", "Negotiated"]} />
+          <CtaInput placeholder="Full Name" name="fullName_mobile" />
+          <CtaInput placeholder="Email" type="email" name="email_mobile" />
+          <CtaInput placeholder="Phone No" type="tel" name="phone_mobile" />
+          <CtaInput placeholder="Post Code" name="postCode_mobile" />
+          <CtaSelect placeholder="Budget Type" options={["Residential", "Commercial", "Mixed Use"]} name="budgetType_mobile" />
+          <CtaSelect placeholder="Budget Range" options={["$10k – $30k", "$30k – $75k", "$75k – $150k", "$150k+"]} name="budgetRange_mobile" />
+          <CtaSelect placeholder="Preferred Contract Method" options={["Fixed Price", "Cost Plus", "Design & Build", "Negotiated"]} name="contractMethod_mobile" />
         </div>
 
         {/* Submit */}
@@ -182,7 +152,7 @@ export default function SectionCTA() {
   );
 }
 
-/* ── Submit button — shared ── */
+/* ── Submit button ── */
 function SubmitButton() {
   return (
     <button
@@ -221,10 +191,11 @@ function SubmitButton() {
 }
 
 /* ── Input ── */
-function CtaInput({ placeholder, type = "text" }: { placeholder: string; type?: string }) {
+function CtaInput({ placeholder, type = "text", name }: { placeholder: string; type?: string; name?: string }) {
   return (
     <input
       type={type}
+      name={name}
       placeholder={placeholder}
       style={{
         background: "transparent",
@@ -245,51 +216,110 @@ function CtaInput({ placeholder, type = "text" }: { placeholder: string; type?: 
   );
 }
 
-/* ── Select ── */
-function CtaSelect({ placeholder, options }: { placeholder: string; options: string[] }) {
-  const [hasValue, setHasValue] = useState(false);
+/* ── Custom Dropdown Menu with Figma Gradient ── */
+function CtaSelect({ placeholder, options, name }: { placeholder: string; options: string[]; name?: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedValue, setSelectedValue] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
-    <div style={{ position: "relative" }}>
-      <select
-        defaultValue=""
-        className={`cta-select ${hasValue ? "" : "is-placeholder"}`}
-        onChange={(e) => setHasValue(e.target.value !== "")}
+    <div ref={dropdownRef} style={{ position: "relative", width: "100%" }}>
+      <input type="hidden" name={name} value={selectedValue} />
+
+      <div
+        onClick={() => setIsOpen(!isOpen)}
         style={{
-          appearance: "none",
-          WebkitAppearance: "none",
           background: "transparent",
-          border: "none",
-          borderBottom: "1px solid rgba(244, 238, 223, 0.35)",
+          borderBottom: isOpen ? "1px solid rgba(244,238,223,0.75)" : "1px solid rgba(244, 238, 223, 0.35)",
           fontSize: 14,
           padding: "10px 24px 10px 0",
-          outline: "none",
           width: "100%",
           fontFamily: "inherit",
-
           cursor: "pointer",
+          letterSpacing: "0.02em",
+          color: selectedValue ? "#F4EEDF" : "rgba(244, 238, 223, 0.4)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          userSelect: "none",
           transition: "border-color 0.25s",
         }}
-        onFocus={(e) => ((e.target as HTMLSelectElement).style.borderColor = "rgba(244,238,223,0.75)")}
-        onBlur={(e) => ((e.target as HTMLSelectElement).style.borderColor = "rgba(244,238,223,0.35)")}
       >
-        <option value="" disabled style={{ background: "#0d1f15", color: "#888" }}>
-          {placeholder}
-        </option>
-        {options.map((o) => (
-          <option key={o} value={o} style={{ background: "#0d1f15", color: "#F4EEDF" }}>
-            {o}
-          </option>
-        ))}
-      </select>
+        <span style={{ flexGrow: 1 }}>{selectedValue || placeholder}</span>
+        
+        <svg
+          style={{
+            transform: `rotate(${isOpen ? "180deg" : "0deg"})`,
+            opacity: isOpen ? 0.9 : 0.5,
+            transition: "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s",
+          }}
+          width="11" height="7" viewBox="0 0 11 7" fill="none"
+        >
+          <path d="M1 1.5L5.5 5.5L10 1.5" stroke="#F4EEDF" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
 
-      {/* chevron */}
-      <svg
-        style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", opacity: 0.6 }}
-        width="14" height="8" viewBox="0 0 14 8" fill="none"
-      >
-        <path d="M1 1L7 7L13 1" stroke="#F4EEDF" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
+      {/* Floating Panel Menu with exact Figma Linear Gradient */}
+      {isOpen && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            marginTop: "6px",
+            // Exact Linear Gradient extracted from your selection panel stops (162D24 -> 094146)
+            background: "linear-gradient(135deg, #162D24 0%, #094146 100%)",
+
+        
+            boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
+            zIndex: 100,
+            overflow: "hidden",
+            maxHeight: "220px",
+            overflowY: "auto",
+          }}
+        >
+          {options.map((option) => (
+            <div
+              key={option}
+              onClick={() => {
+                setSelectedValue(option);
+                setIsOpen(false);
+              }}
+              style={{
+                padding: "12px 16px",
+                color: selectedValue === option ? "#162D24" : "#F4EEDF",
+                background: selectedValue === option ? "#F4EEDF" : "transparent",
+                fontSize: 14,
+                cursor: "pointer",
+                transition: "background 0.15s ease, color 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                if (selectedValue !== option) {
+                  e.currentTarget.style.background = "rgba(244, 238, 223, 0.08)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (selectedValue !== option) {
+                  e.currentTarget.style.background = "transparent";
+                }
+              }}
+            >
+              {option}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

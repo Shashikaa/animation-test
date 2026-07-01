@@ -103,7 +103,7 @@ export default function SectionTwo() {
         <p className="text-[#F4EEDF] font-body text-sm leading-relaxed !text-left max-w-[290px] !mt-[140px]">
            Expert Craftsmanship <br/>Built with precision using high-quality materials and techniques.
         </p>
-        <p className="text-[#F4EEDF] font-body text-sm leading-relaxed !text-left max-w-[230px] !self-end !mt-[200px]">
+        <p className="text-[#F4EEDF] font-body text-sm leading-relaxed !text-left max-w-[230px] !self-end !mt-[100px]">
           Seamless Process<br/>From consultation to completion, we make it easy  stress-free.
         </p>
       </div>

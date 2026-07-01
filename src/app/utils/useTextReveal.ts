@@ -1,48 +1,26 @@
-/**
- * useTextReveal
- *
- * Splits every element matching `selector` inside `scope` into
- * per-line <span> wrappers, then animates each line:
- *   - translateY: 30px → 0
- *   - opacity:    0    → 1
- *
- * Pass `static: true` (mobile) to skip splitting entirely and just
- * make the element visible at the timeline position — text stays
- * static, arriving with its section.
- */
+"use client";
 
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { RefObject } from "react";
 
-// ❌ REMOVED: gsap.registerPlugin(ScrollTrigger)
-// registerPlugin is called inside useEffect in HomeDesktop/HomeMobile,
-// which are ssr:false. Calling it here runs during SSR prerender and
-// crashes with "document is not defined".
-
 export interface TextRevealOptions {
-  /** Pixels to slide up from (default: 30) */
   yOffset?: number;
-  /** Stagger between lines in seconds (default: 0.04) */
   stagger?: number;
-  /** Ease for each line (default: "power2.out") */
   ease?: string;
-  /** Duration per line in timeline units (default: 0.35) */
   duration?: number;
-  /** If provided, lines are appended to this timeline */
   tl?: gsap.core.Timeline;
-  /** Position in the parent timeline (default: ">") */
   position?: gsap.Position;
-  /**
-   * When true: skip the line-split animation entirely.
-   * The element is hidden until the timeline reaches `position`,
-   * then made visible instantly — text arrives with its section.
-   * Use this on mobile where section slides are the reveal.
-   */
   static?: boolean;
+  immediate?: boolean;
+  scrollTrigger?: gsap.DOMTarget | ScrollTrigger.Vars;
 }
 
 function splitIntoLines(el: HTMLElement): HTMLElement[] {
+  // ── GUARD CLAUSE: If already split, do not re-split ──
+  if (el.dataset.originalHtml !== undefined) {
+    return Array.from(el.querySelectorAll<HTMLElement>(".gs-line-inner"));
+  }
+
   el.dataset.originalHtml = el.innerHTML;
   el.style.transform = "none";
 
@@ -107,13 +85,15 @@ export function useTextReveal(
   options: TextRevealOptions = {}
 ) {
   const {
-    yOffset  = 30,
-    stagger  = 0.04,
-    ease     = "power2.out",
+    yOffset   = 30,
+    stagger   = 0.04,
+    ease      = "power2.out",
     duration = 0.35,
     tl,
     position = ">",
     static: isStatic = false,
+    immediate = false,
+    scrollTrigger,
   } = options;
 
   const scope = scopeRef.current;
@@ -134,27 +114,43 @@ export function useTextReveal(
     }
 
     el.style.visibility = "hidden";
-
     const lineInners = splitIntoLines(el);
-    gsap.set(lineInners, { y: yOffset, opacity: 0 });
+    
+    // Safety check: Only apply initialization defaults if we aren't mid-timeline scrub
+    if (!tl) {
+      gsap.set(lineInners, { y: yOffset, opacity: 0 });
+    }
 
     if (tl) {
-      tl
-        .set(el, { visibility: "visible" }, position)
-        .to(
-          lineInners,
-          { y: 0, opacity: 1, duration, ease, stagger },
-          position
-        );
+      tl.set(el, { visibility: "visible" }, position)
+        .to(lineInners, {
+          y: 0,
+          opacity: 1,
+          stagger,
+          duration,
+          ease
+        }, position);
+    } else if (immediate) {
+      gsap.to(lineInners, {
+        y: 0,
+        opacity: 1,
+        duration,
+        ease,
+        stagger,
+        onStart: () => { el.style.visibility = "visible"; }
+      });
     } else {
       gsap.to(lineInners, {
-        y: 0, opacity: 1, duration, ease, stagger,
+        y: 0, 
+        opacity: 1, 
+        duration, 
+        ease, 
+        stagger,
         onStart: () => { el.style.visibility = "visible"; },
-        scrollTrigger: {
-          trigger:       el,
-          start:         "top 85%",
-          end:           "top 50%",
-          toggleActions: "play none none reverse",
+        scrollTrigger: scrollTrigger || {
+          trigger: el,
+          start: "top 85%",
+          once: true, 
         },
       });
     }
