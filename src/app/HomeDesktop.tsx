@@ -55,7 +55,6 @@ export default function HomeDesktop() {
       gsap.set(".section-10", { display: "block", yPercent: 100, opacity: 1, zIndex: 60 });
       gsap.set([".s10-title", ".s10-title-sub", ".s10-para-top"], { opacity: 0 });
       
-      // 🟢 FIX: Use direct viewport height 'y: "150vh"' to physically force them beneath the screen boundary on load
       gsap.set(".s10-img-right-wrap", { opacity: 1, yPercent: 0, y: "150vh", clipPath: "inset(0% 0% 0% 0%)", display: "block" });
       gsap.set(".s10-content-wrap", { opacity: 1, yPercent: 0, y: "150vh" });
 
@@ -225,7 +224,7 @@ export default function HomeDesktop() {
               duration: 3.8,
               ease: "power1.inOut"
             }, "heroExit")
-            .to([".hero-bg-wrapper", ".hero-gradient-bg"], { 
+            .to(".hero-gradient-bg", { 
               opacity: 0, 
               duration: 2.0, 
               ease: "power2.out" 
@@ -320,7 +319,6 @@ export default function HomeDesktop() {
             .fromTo(".s10-static-bg", { yPercent: 12 }, { yPercent: 0, duration: 6.0, ease: "power2.out" }, "sec10Start")
             .set(".section-3", { display: "none" }, "sec10Start+=6.0")
             
-            // 🟢 FORCE DOWN: Ensure these remain strictly at y: "100vh" while the first stage text is appearing
             .set([".s10-content-wrap", ".s10-img-right-wrap"], { opacity: 1, yPercent: 0, y: "100vh" }, "sec10Start")
             
             .to({}, {
@@ -336,7 +334,8 @@ export default function HomeDesktop() {
               }
             }, "sec10Start+=3.0")
 
-            .addLabel("sec10TextHide", "sec10Start+=6.0")
+          // ── SECTION 10 CONTENT TRANSITION & EXIT ──
+          tl.addLabel("sec10TextHide", "sec10Start+=6.0")
             .to([".s10-title", ".s10-title-sub", ".s10-para-top"], {
               opacity: 0,
               y: -100,
@@ -346,7 +345,6 @@ export default function HomeDesktop() {
             }, "sec10TextHide")
             
             .addLabel("sec10ContentReveal", "sec10TextHide+=0.2")
-            // 🟢 PURE SCROLL SLIDE: Smoothly slide up from 150vh into view at 0 position with opacity locked to 1
             .fromTo([".s10-content-wrap", ".s10-img-right-wrap"], 
               { opacity: 1, y: "150vh" },
               {
@@ -362,7 +360,7 @@ export default function HomeDesktop() {
             .addLabel("sec10ExitSequence", "sec10ContentReveal+=5.0")
             .to(".s10-img-right-wrap", { 
               clipPath: "inset(0% 0% 100% 0%)", 
-              y: -60,                                  
+              y: -60,                                    
               opacity: 0,
               duration: 5.5,
               ease: "power2.inOut"
@@ -372,11 +370,10 @@ export default function HomeDesktop() {
               y: -100, 
               duration: 5.0,
               ease: "power2.inOut"
-            }, "sec10ExitSequence")
-            .addLabel("sec10FinalScroll", "sec10ExitSequence+=5.5");
+            }, "sec10ExitSequence");
 
           // ── SECTION 10 TO CUSTOMER REVIEWS WIPE ──
-          tl.addLabel("secReviewsStart", "sec10FinalScroll")
+          tl.addLabel("secReviewsStart", "sec10ExitSequence+=0.5")
             .set(".section-reviews", { zIndex: 65, display: "block" }, "secReviewsStart")
             .fromTo(".section-reviews",
               { clipPath: "inset(100% 0% 0% 0%)" },
@@ -434,14 +431,21 @@ export default function HomeDesktop() {
           tl.addLabel("sec9Start", "sec8Start+=5.5")
             .set(".section-7", { display: "none" })
             .set(".section-9", { display: "block" })
+            // Keep the clean zoom out on split entry layout
             .to(".s8-panel-left", { clipPath: "inset(0% 50% 100% 0%)", duration: 3.8 }, "sec9Start")
             .to(".s8-panel-right", { clipPath: "inset(100% 0% 0% 50%)", duration: 3.8 }, "sec9Start")
-            .to(".s9-bg-img", { yPercent: 0, scale: 1, duration: 3.8 }, "sec9Start")
+            .to(".s9-bg-img", { yPercent: 0, scale: 1.0, duration: 3.8 }, "sec9Start")
             
-            .addLabel("sec9TitleFade", "sec9Start+=1.2")
+            .addLabel("sec9TitleFade", "sec9Start+=3.8") // Adjusted to resolve snap sync mismatch
             .to(".s9-title", { opacity: 1, duration: 2.0 }, "sec9TitleFade")
             
-            .addLabel("sec9TitleMove", "sec9TitleFade+2.0")
+            .addLabel("sec9MainTrack", "sec9TitleFade+=2.0")
+            // Zoom back inside flight coordinates
+            .to(".s9-bg-img", { 
+              scale: 1.15, 
+              duration: 3.5, 
+              ease: "none" 
+            }, "sec9MainTrack")
             .to(".s9-title", {
               x: () => {
                 const el = document.querySelector(".s9-title") as HTMLElement;
@@ -453,10 +457,10 @@ export default function HomeDesktop() {
                 const el = document.querySelector(".s9-title") as HTMLElement;
                 const para = document.querySelector(".s9-para-desktop") as HTMLElement;
                 if (!el || !para) return 0;
-                return para.getBoundingClientRect().top - 24 - el.getBoundingClientRect().bottom;
+                return para.getBoundingClientRect().top - 44 - el.getBoundingClientRect().bottom;
               },
               duration: 3.5,
-            }, "sec9TitleMove")
+            }, "sec9MainTrack")
             
             .to({}, {
               duration: 0.1,
@@ -468,11 +472,12 @@ export default function HomeDesktop() {
                   useTextReveal(scopeRef, ".s9-para-mobile", { static: true });
                 }
               }
-            }, "sec9TitleMove+=3.5")
-            .set(".section-8", { display: "none" }, "sec9TitleMove+=3.5");
+            }, "sec9MainTrack+=3.5")
+            .set(".section-8", { display: "none" }, "sec9MainTrack+=3.5");
 
-          // ── CTA REVEAL ──
-          tl.addLabel("ctaStart", "sec9TitleMove+=4.5")
+          // ── CTA REVEAL (DEAD SCROLL REMOVED) ──
+          // Snaps directly to ctaStart the exact moment paragraph reveal finishes!
+          tl.addLabel("ctaStart", "sec9MainTrack+=3.5")
             .set(".section-cta", { display: "block" })
             .to(".section-cta", { yPercent: 0, duration: 4.8 }, "ctaStart")
             .to(".section-9", { scale: 1.05, duration: 4.8 }, "ctaStart");
@@ -487,9 +492,9 @@ export default function HomeDesktop() {
           const totalDuration = tl.totalDuration();
           const labelNames = [
             "heroStart", "heroExit", "textLanding", "s2InnerAnimation", "s2InnerMidpoint", "s2InnerSplitReveal", "sec3Start",
-            "sec10Start", "sec10TextHide", "sec10ContentReveal", "sec10ExitSequence", "sec10FinalScroll", 
+            "sec10Start", "sec10TextHide", "sec10ContentReveal", "sec10ExitSequence", 
             "secReviewsStart", "sec7Start", "sec8Start", "sec9Start", 
-            "sec9TitleFade", "sec9TitleMove", "ctaStart", "footerStart"
+            "sec9TitleFade", "sec9MainTrack", "ctaStart", "footerStart"
           ];
           cachedProgressLabels = [0, ...labelNames.map(name => tl.labels[name] / totalDuration), 1];
 

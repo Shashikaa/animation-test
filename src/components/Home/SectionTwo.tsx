@@ -65,7 +65,7 @@ export default function SectionTwo() {
           <div className="s2-right-img-frame-under absolute inset-0 w-full h-full z-10">
             <div className="w-full h-full relative overflow-hidden shadow-2xl">
               <img 
-                src="/sectiontwo-right-under.webp" // Replace with your new underlying image path
+                src="/sectiontwo-right-under.webp" 
                 alt="Premium pool design structural layout" 
                 className="w-full h-full object-cover"
               />
@@ -86,13 +86,14 @@ export default function SectionTwo() {
         </div>
       </div>
 
-      {/* SCROLLING WORKSPACE GRID CONTAINER */}
-      <div className="s2-scroll-content absolute left-4 md:left-8 lg:left-16 top-0 flex flex-col w-full max-w-[40%] z-30 pointer-events-none pt-[20vh] pb-32">
+      {/* DESKTOP SCROLLING WORKSPACE GRID CONTAINER */}
+      <div className="s2-scroll-content hidden md:flex absolute left-4 md:left-8 lg:left-16 top-0 flex-col w-full max-w-[40%] z-30 pointer-events-none pt-[20vh] pb-32">
         <p className="text-[#F4EEDF] font-body text-base leading-relaxed !text-left max-w-[290px]">
           Since 2021, Grand Pools has been creating custom swimming pools with a focus on refined design, quality craftsmanship, and a smooth building experience.
         </p>
         <p className="text-[#F4EEDF] font-body text-base leading-relaxed !text-left max-w-[230px] !self-end !mt-[200px]">
-          Tailor-Made Designs — Custom pools shaped around your space, style, and lifestyle</p>
+          Tailor-Made Designs — Custom pools shaped around your space, style, and lifestyle
+        </p>
         <div className="w-full aspect-[4/3] max-w-[400px] overflow-hidden !mt-[64px]">
           <img 
             src="/sectiontwo-left-sub.webp" 
@@ -107,6 +108,61 @@ export default function SectionTwo() {
           Seamless Process<br/>From consultation to completion, we make it easy  stress-free.
         </p>
       </div>
-</section>
+
+      {/* ── MOBILE SCROLL CONTAINER USING YOUR CUSTOM PADDING CLASS ── */}
+      <div 
+        className="s2-mob-scroll-wrapper section-container md:hidden absolute inset-0 w-full h-full flex flex-col justify-between py-[12vh] z-40 pointer-events-none"
+        style={{ visibility: "hidden" }}
+      >
+        {/* Core Layout Track matching Figma Frame 2 exactly */}
+        <div className="w-full flex flex-col justify-between h-full items-start">
+          
+          {/* Row 1: Top-Left Paragraph text */}
+          <p className="s2-mob-row1 text-[#F4EEDF]/90 font-body text-[14px] leading-relaxed max-w-[75%] text-left">
+            Since 2021, Grand Pools has been creating custom swimming pools with a focus on refined design, quality craftsmanship, and a smooth building experience.
+          </p>
+
+          {/* Row 2: Image aligned perfectly based on mockups */}
+          <div className="s2-mob-row2 w-full aspect-[4/3] overflow-hidden my-auto shadow-xl">
+            <img 
+              src="/sectiontwo-left-sub.webp" 
+              alt="Architectural swimming details" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* Row 3: Bottom-Left Title & Sub text block */}
+          <div className="s2-mob-row3 flex flex-col gap-1 max-w-[80%] text-left">
+            <h4 className="text-[#F4EEDF] font-display text-[16px] tracking-wide font-medium">
+              Tailor-Made Designs
+            </h4>
+            <p className="text-[#F4EEDF]/70 font-body text-[13px] leading-relaxed">
+              Custom pools shaped around your space, style, and lifestyle.
+            </p>
+          </div>
+        </div>
+
+        {/* Dynamic Secondary Layout Track (Revealed Top/Bottom elements after row 1-3 fades out) */}
+        <div className="absolute inset-0 section-container flex flex-col justify-between py-[14vh] pointer-events-none">
+          <div className="s2-mob-final-top opacity-0 flex flex-col gap-1 max-w-[80%] text-left">
+            <h4 className="text-[#F4EEDF] font-display text-[16px] tracking-wide font-medium">
+              Expert Craftsmanship
+            </h4>
+            <p className="text-[#F4EEDF]/70 font-body text-[13px] leading-relaxed">
+              Built with precision using high-quality materials and techniques.
+            </p>
+          </div>
+
+          <div className="s2-mob-final-bottom opacity-0 flex flex-col gap-1 max-w-[80%] text-left">
+            <h4 className="text-[#F4EEDF] font-display text-[16px] tracking-wide font-medium">
+              Seamless Process
+            </h4>
+            <p className="text-[#F4EEDF]/70 font-body text-[13px] leading-relaxed">
+              From consultation to completion, we make your journey easy and stress-free.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

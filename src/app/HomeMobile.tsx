@@ -175,7 +175,7 @@ export default function HomeMobile() {
               scrollTrigger: {
                 trigger:              ".pin-all",
                 start:                "top top",
-                end:                  "+=12800", 
+                end:                  "+=14800", 
                 scrub:                0.2,       
                 pin:                  true,
                 anticipatePin:        1,
@@ -196,11 +196,9 @@ export default function HomeMobile() {
                 duration: TRANSITION * 0.4, 
                 ease: "power2.in" 
               })
-              // Trigger secondary text immediately here
               .addLabel("heroSecondaryReveal")
               .set(".hero-secondary-para", { visibility: "visible" }, "heroSecondaryReveal")
               
-              // Let background animations shift over time on their own timeline track
               .to(".hero-bg-wrapper", { 
                 clipPath: "inset(0% 0% 40% 0%)", 
                 duration: TRANSITION, 
@@ -217,17 +215,14 @@ export default function HomeMobile() {
               .addLabel("textFlightStart")
               .set([".s2-title-main", ".s2-title-sub"], { opacity: 0 }, "textFlightStart")
               
-              // Only fade out the images/gradients backgrounds here
               .to([".hero-bg-wrapper", ".hero-gradient-bg"], {
                 opacity: 0,
                 duration: TRANSITION * 0.6,
                 ease: "power2.out"
               }, "textFlightStart")
               
-              // Fade in underneath Section Two textual content
               .to([".s2-title-main", ".s2-title-sub"], { opacity: 1, duration: TRANSITION * 0.8 }, "textFlightStart+=0.3")
 
-              // Fly the text directly into Section Two container target coordinates
               .to(".hero-secondary-para", {
                 y: () => {
                   const startEl = document.querySelector(".hero-secondary-text-wrap") as HTMLElement;
@@ -246,10 +241,45 @@ export default function HomeMobile() {
               }, "textFlightStart")
               .to({}, { duration: PAUSE })
 
+              // ── NEW MOBILE SCROLL RUNWAY TIMELINE INTERACTION ──
+              .addLabel("s2MobileScrollStart")
+              // Fade out both original flown text and right bottom titles
+              .to([".hero-secondary-para", ".s2-title-main", ".s2-title-sub"], {
+                opacity: 0,
+                y: -30,
+                duration: TRANSITION * 0.6,
+                ease: "power2.in"
+              }, "s2MobileScrollStart")
+              
+              // Trigger mobile custom container layout to move in seamlessly
+              .set(".s2-mob-scroll-wrapper", { visibility: "visible" }, "s2MobileScrollStart")
+              .fromTo(".s2-mob-scroll-wrapper", 
+                { y: "100vh" }, 
+                { y: "0vh", duration: TRANSITION * 1.5, ease: "power1.out" }, 
+                "s2MobileScrollStart+=0.2"
+              )
+              .to({}, { duration: PAUSE })
+
+              // Fade out the 3 row block data structure
+              .addLabel("s2MobileSubTextsReveal")
+              .to([".s2-mob-row1", ".s2-mob-row2", ".s2-mob-row3"], {
+                opacity: 0,
+                y: -40,
+                duration: TRANSITION * 0.6,
+                ease: "power1.in"
+              }, "s2MobileSubTextsReveal")
+
+              // Reveal remaining 2 textual tracks sequentially
+              .fromTo([".s2-mob-final-top", ".s2-mob-final-bottom"], 
+                { opacity: 0, y: 40 },
+                { opacity: 1, y: 0, duration: TRANSITION * 0.8, stagger: 0.2, ease: "power2.out" },
+                "s2MobileSubTextsReveal+=0.4"
+              )
+              .to({}, { duration: PAUSE * 2 })
+
               // ── Section 2 → 3 ─────────────────────────────────────
               .addLabel("sec3Start")
               .set(".section-3", { visibility: "visible" })
-              // FIXED: Removed the opacity 0 fade-out so text remains visible until Sec 3 fully overlays it
               .to(".section-3", { yPercent: 0, duration: TRANSITION, ease: EASE }, "sec3Start")
               .set([".section-2", ".hero"], { display: "none" }) 
               .to({}, { duration: PAUSE })
@@ -275,7 +305,7 @@ export default function HomeMobile() {
               .to(".s10-static-bg", { yPercent: 0,    duration: TRANSITION, ease: "power2.out" }, "<")
               .to({}, { duration: PAUSE })
 
-              .set(".s10-title",     { opacity: 1, y: 0 })
+              .set(".s10-title",      { opacity: 1, y: 0 })
               .set(".s10-title-sub", { opacity: 1, y: 0 })
               .set(".s10-para-top",  { opacity: 1, y: 0 })
 
