@@ -95,7 +95,7 @@ export default function SectionCTA() {
           flexDirection: "column",
           justifyContent: "center",
           height: "100%",
-          padding: "0 24px",
+          padding: "0 20px",
           margin: 0,
           gap: 0,
         }}
@@ -106,7 +106,7 @@ export default function SectionCTA() {
           style={{
             color: "#F4EEDF",
             margin: 0,
-            marginBottom: 32,
+            marginBottom: 20,
           }}
         >
           Ready to Build Your Dream 
@@ -118,7 +118,7 @@ export default function SectionCTA() {
           style={{
             color: "#F4EEDF",
             margin: 0,
-            marginBottom: 62,
+            marginBottom: 24,
           }}
         >
           Let&apos;s bring your vision to life with a custom-designed pool
@@ -145,7 +145,7 @@ export default function SectionCTA() {
         </div>
 
         {/* Submit — Centered via self-center */}
-        <div style={{ marginTop: 68 }} className="self-center md:!self-start">
+        <div style={{ marginTop: 44 }} className="self-center md:!self-start">
           <SubmitButton />
         </div>
       </div>
@@ -228,7 +228,7 @@ function CtaInput({
           borderBottom: `1px solid rgba(244, 238, 223, ${borderOpacity})`,
           color: "#F4EEDF",
           fontSize: 14,
-          padding: "20px 10px 10px 0",
+          padding: "10px 10px 10px 0",
           outline: "none",
           width: "100%",
           fontFamily: "inherit",
@@ -285,7 +285,7 @@ function CtaSelect({
           background: "transparent",
           borderBottom: isOpen ? "1px solid rgba(244,238,223,0.75)" : `1px solid rgba(244, 238, 223, ${borderOpacity})`,
           fontSize: 14,
-          padding: "20px 10px 10px 0",
+          padding: "10px 10px 10px 0",
           width: "100%",
           fontFamily: "inherit",
           cursor: "pointer",

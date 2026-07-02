@@ -120,7 +120,7 @@ export default function SectionTwo() {
           </p>
 
           {/* Row 2: Image aligned right */}
-          <div className="s2-mob-row2 w-full max-w-[80%] h-64 md:h-80 overflow-hidden self-end">
+          <div className="s2-mob-row2 w-full max-w-[80%] !h-[250px] md:!h-[380px] overflow-hidden self-end">
             <img 
               src="/sectiontwo-left-sub.webp" 
               alt="Architectural swimming details" 
@@ -143,7 +143,7 @@ export default function SectionTwo() {
           </div>
 
           {/* Row 5: Stacked Images Layout Container */}
-          <div className="s2-mob-row5-container relative w-full max-w-[100%] h-110 md:h-140 self-end overflow-hidden">
+          <div className="s2-mob-row5-container relative w-full max-w-[100%] !h-[270px] md:!h-[380px] self-end overflow-hidden">
             {/* UNDERNEATH LAYER */}
             <div className="s2-mob-row5-under absolute inset-0 w-full h-full z-10">
               <img 

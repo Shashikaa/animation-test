@@ -112,7 +112,7 @@ export default function SectionReviews() {
 
 
             {/* 3. Central Review Statement Paragraph */}
-            <p className="font-body text-[#F4EEDF] !text-left whitespace-pre-line w-full">
+            <p className="font-body text-[#F4EEDF] !text-left whitespace-pre-line w-full !text-[12px] md:!text-[16px]">
               {REVIEWS_DATA[activeIndex].text}
             </p>
 
