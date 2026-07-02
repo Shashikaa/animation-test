@@ -1,18 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 export default function Hero() {
-  const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setVisible(window.scrollY < 50);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <section className="hero relative w-full h-screen overflow-hidden bg-transparent">
 
@@ -34,14 +22,14 @@ export default function Hero() {
       </div>
 
       {/* Main Content Layer */}
-      <div className="section-container relative h-full w-full flex flex-col justify-end items-start lg:flex-row lg:items-end lg:justify-between !pb-[100px] md:!pb-[140px] lg:!pb-30 gap-8">
+      <div className="section-container relative h-full w-full flex flex-col justify-end items-start lg:flex-row lg:items-end lg:justify-between !pb-[100px] md:!pb-[140px] lg:!pb-30 gap-8 z-30">
 
         {/* Isolated content stack for the Left Side */}
         <div className="max-w-xl lg:max-w-4xl flex flex-col justify-end overflow-visible relative">
 
           {/* Title Block */}
-          <div className="block h-fit overflow-visible relative z-22">
-            <h1 className="text-[#F4EEDF] text-display text-[36px] sm:text-[48px] lg:!text-[80px] font-[100] text-left will-change-[transform,opacity] m-0 p-0 select-none leading-tight">
+          <div className="block h-fit overflow-visible relative z-30">
+            <h1 className="hero-title text-[#F4EEDF] text-display text-[36px] sm:text-[48px] lg:!text-[80px] font-[100] text-left will-change-[transform,opacity] m-0 p-0 select-none leading-tight relative z-30">
               Refined Pools <br /> for Modern Living
             </h1>
           </div>
@@ -49,7 +37,6 @@ export default function Hero() {
           {/* Secondary Text Wrapper */}
           <div className="hero-secondary-text-wrap w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px] absolute bottom-10 lg:bottom-30 left-0 translate-y-full z-20 overflow-visible pt-4">
             <p
-
               className="hero-secondary-para font-body text-[#F4EEDF] text-left text-sm sm:text-base leading-relaxed m-0 p-0"
               style={{ visibility: "hidden" }}
             >
@@ -59,7 +46,7 @@ export default function Hero() {
         </div>
 
         {/* Right Text Block */}
-        <div className="hero-right-text max-w-[310px] md:max-w-[280px] lg:max-w-[320px] text-left mt-4 lg:mt-0 lg:!pb-25 z-22">
+        <div className="hero-right-text max-w-[310px] md:max-w-[280px] lg:max-w-[320px] text-left mt-4 lg:mt-0 lg:!pb-25 z-30 relative">
           <p className="text-[#F4EEDF] font-normal leading-relaxed text-sm sm:text-base">
             Premium pools with refined wellness infrastructure, designed for private outdoor living.
           </p>
@@ -67,11 +54,7 @@ export default function Hero() {
       </div>
 
       {/* Scroll Indicator */}
-      <div
-        className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 pointer-events-none transition-opacity duration-[400ms] ${
-          visible ? "opacity-100" : "opacity-0"
-        }`}
-      >
+      <div className="hero-scroll-indicator absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 pointer-events-none transition-opacity duration-[400ms]">
         <span className="text-[#F4EEDF] text-[10px] font-light tracking-[0.2em] uppercase [text-shadow:0_1px_6px_rgba(0,0,0,0.8)]">
           Scroll
         </span>

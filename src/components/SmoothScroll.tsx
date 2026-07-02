@@ -38,9 +38,12 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     }
 
     // Initialize Lenis. 
-    // Optimization: If on mobile touch, sync using native configurations to avoid fighting the 13,000px GSAP pin
     const lenis = new Lenis({
-      duration: isTouchDevice ? 0 : 0.9,       // 0 completely bypasses programmatic touch interception on mobile for pure buttery native scrolling
+      // OPTIMIZATION: Stop Lenis from watching or simulating touch events on mobile.
+      // This hands complete execution back to native Android/iOS viewport scrolling threads.
+      syncTouch: false,
+      touchMultiplier: 0,
+      duration: isTouchDevice ? 0 : 0.9,
       wheelMultiplier: 1.2,  
       infinite: false,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -57,15 +60,15 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       lenis.raf(time * 1000);
     };
     gsap.ticker.add(tickerCallback);
-    gsap.ticker.lagSmoothing(0);
+    
+    // Maintain a consistent fallback thread frame tracking
+    gsap.ticker.lagSmoothing(50, 16);
 
     let lastY = 0;
     let lastTime = performance.now();
     let thumbVisible = false;
 
-    // Unified scroll execution thread
     const handleScroll = (e: any) => {
-      // Keep ScrollTrigger calculated positions up to date
       ScrollTrigger.update();
 
       const now = performance.now();
@@ -77,7 +80,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       lastY = y;
       lastTime = now;
 
-      // Skip custom desktop scrollbar updates if running on a touch device
       if (!thumbRef.current || isTouchDevice) return;
       
       const limit = lenis.limit;
@@ -103,7 +105,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     lenis.on("scroll", handleScroll);
 
-    // Structural Preloader Gate
     if (!preloaderDone) {
       lenis.stop();
     } else {
@@ -123,7 +124,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     };
   }, [smootherRef, preloaderDone, onScrollReady]);
 
-  // Handle route change layout recalculation safely
   useEffect(() => {
     if (!preloaderDone) return;
     
@@ -135,7 +135,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     
     const refreshTimeout = setTimeout(() => {
       ScrollTrigger.refresh();
-    }, 100); // 100ms provides a safer thread window for Next.js structural render hydration before refreshing triggers
+    }, 100);
 
     return () => clearTimeout(refreshTimeout);
   }, [pathname, preloaderDone]);
@@ -146,7 +146,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
         {children}
       </div>
 
-      {/* Custom desktop scrollbar thumb track */}
       <div
         style={{
           position: "fixed",

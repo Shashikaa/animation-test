@@ -41,11 +41,19 @@ export default function HomeMobile() {
       gsap.set(".hero", { yPercent: 0, zIndex: 90 });
       gsap.set(".hero-bg-wrapper", { clipPath: "inset(0% 0% 0% 0%)" });
       gsap.set(".hero-bg", { yPercent: 0, scale: 1.3, transformOrigin: "center center" });
-      gsap.set(".hero h1, .hero-right-text", { opacity: 1, y: 0 });
+      
+      // Explicit target paths forced visible instantly on mount lifecycle
+      gsap.set([".hero-title", ".hero-right-text", ".hero-scroll-indicator"], { 
+        opacity: 1, 
+        y: 0, 
+        visibility: "visible" 
+      });
+      
       gsap.set(".hero-secondary-text-wrap", { height: "auto" });
       gsap.set(".hero-secondary-para", { visibility: "hidden" });
 
       gsap.set(".section-2", { clipPath: "none", zIndex: 25 });
+      gsap.set(".s2-mob-scroll-wrapper", { opacity: 0, y: "100vh" });
       gsap.set(".s2-mob-row5", { clipPath: "inset(0% 0% 0% 0%)" });
       gsap.set(".s2-mob-row5-under", { opacity: 1 });
 
@@ -91,7 +99,6 @@ export default function HomeMobile() {
     let timelineInitialized = false;
 
     const ctx = gsap.context(() => {
-      // Adjusted lagSmoothing settings for better mobile translation consistency
       gsap.ticker.lagSmoothing(50, 16);
 
       ScrollTrigger.config({
@@ -144,11 +151,11 @@ export default function HomeMobile() {
                 trigger:               ".pin-all",
                 start:                 "top top",
                 end:                   "+=11000",
-                scrub:                 1, // FIXED: Added a slight catch-up scrub value (e.g., 1s) to damp and completely eliminate raw touch input jitters on mobile browsers
+                scrub:                 true, 
                 pin:                   true,
                 anticipatePin:         1,
-                preventOverlaps:       false, // FIXED: Turned off to prevent calculation skips during rapid scrolls
-                fastScrollEnd:         false, // FIXED: Turned off to avoid sudden snapping transitions
+                preventOverlaps:       true, 
+                fastScrollEnd:         true, 
                 invalidateOnRefresh:   true,
                 onRefresh: (self) => {
                   if (pinEl) pinEl.style.removeProperty("max-height");
@@ -163,20 +170,22 @@ export default function HomeMobile() {
               },
             });
 
+            // Delayed offset execution window protects early viewport visibility mapping 
             tl
-              .to(".hero h1, .hero-right-text", { 
+              .to([".hero-title", ".hero-right-text", ".hero-scroll-indicator"], { 
                 opacity: 0, 
                 y: -40, 
                 duration: ACTION * 0.5 
-              })
-              .addLabel("heroSecondaryReveal")
-              .set(".hero-secondary-para", { visibility: "visible" }, "heroSecondaryReveal")
+              }, 0.2)
               
               // Phase 1 Clipping
               .to(".hero-bg-wrapper", { clipPath: "inset(0% 0% 40% 0%)", duration: ACTION }, 0)
               .to(".hero-bg", { yPercent: -25, scale: 1.15, duration: ACTION }, 0)
 
-              .addLabel("textFlightStart", ">")
+              .addLabel("heroSecondaryReveal", ACTION * 0.4)
+              .set(".hero-secondary-para", { visibility: "visible" }, "heroSecondaryReveal")
+
+              .addLabel("textFlightStart", ACTION)
               
               // Phase 2 Clipping
               .to(".hero-bg-wrapper", { clipPath: "inset(0% 0% 100% 0%)", duration: ACTION }, "textFlightStart")
@@ -192,11 +201,18 @@ export default function HomeMobile() {
               
               // Section 2 Scroll Sequence
               .addLabel("s2MobileScrollStart", ">")
-              .set(".s2-mob-scroll-wrapper", { visibility: "visible" }, "s2MobileScrollStart")
+              .to(".s2-mob-scroll-wrapper", { opacity: 1, duration: ACTION * 0.1 }, "s2MobileScrollStart")
               .fromTo(".s2-mob-scroll-wrapper", 
-                { y: "100vh" }, 
+                { y: () => window.innerHeight }, 
                 { 
-                  y: () => (window.innerWidth >= 768 ? "-55vh" : "-65vh"), 
+                  y: () => {
+                    const scrollWrapper = document.querySelector(".s2-mob-scroll-wrapper") as HTMLElement;
+                    if (scrollWrapper) {
+                      // Measures total scroll track height minus viewport window buffer so layout never stops early
+                      return -(scrollWrapper.offsetHeight - window.innerHeight * 0.85);
+                    }
+                    return window.innerWidth >= 768 ? -window.innerHeight * 0.55 : -window.innerHeight * 0.65;
+                  },
                   duration: ACTION 
                 }, 
                 "s2MobileScrollStart"
@@ -243,6 +259,9 @@ export default function HomeMobile() {
               .to(".section-reviews", { yPercent: -100, duration: ACTION }, "clipRevealStart")
               .to(".section-7", { clipPath: "inset(0% 0% 100% 0%)", duration: ACTION }, "clipRevealStart")
               .to(".s8-mob-bg", { scale: 1,        duration: ACTION }, "clipRevealStart")
+              
+              .to(".s8-panel-left", { clipPath: "inset(0% 100% 0% 0%)", duration: ACTION }, "clipRevealStart")
+              .to(".s8-panel-right", { clipPath: "inset(0% 0% 0% 100%)", duration: ACTION }, "clipRevealStart")
               
               .set([".section-7", ".section-reviews"], { visibility: "hidden" }, ">")
 
@@ -317,15 +336,17 @@ export default function HomeMobile() {
 
   return (
     <div ref={scopeRef}>
-      {/* 
-        FIXED: Added global CSS optimization inside this view context.
-        This forces browsers to pass section transitions directly to the GPU layer. 
-      */}
       <style jsx global>{`
         .pin-all > div {
           will-change: transform, clip-path;
           backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
           transform: translate3d(0,0,0);
+        }
+        .pin-all img, .pin-all section, .pin-all div {
+          transform: translateZ(0);
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
         }
       `}</style>
 

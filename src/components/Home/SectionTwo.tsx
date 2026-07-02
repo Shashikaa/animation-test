@@ -126,14 +126,14 @@ export default function SectionTwo() {
 
       {/* ── MOBILE & TABLET SCROLL CONTAINER ── */}
       <div 
-        className="s2-mob-scroll-wrapper section-container lg:hidden relative w-full h-auto z-40 pointer-events-none"
+        className="s2-mob-scroll-wrapper section-container lg:hidden relative w-full h-auto z-40 pointer-events-auto"
         style={{ 
-          visibility: "hidden", 
+          opacity: 0,
           willChange: "transform", 
-          transform: "translate3d(0,0,0)" 
+          transform: "translate3d(0, 100vh, 0)" 
         }}
       >
-        <div className="w-full flex flex-col gap-22 md:gap-32 py-[14vh] items-start pointer-events-auto">
+        <div className="w-full flex flex-col gap-22 md:gap-32 py-[14vh] items-start">
           
           {/* Row 1: Top-Left Paragraph text */}
           <p className="s2-mob-row1 text-[#F4EEDF] font-body max-w-[330px] text-left">
