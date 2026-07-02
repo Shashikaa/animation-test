@@ -42,7 +42,6 @@ export default function HomeMobile() {
       gsap.set(".hero-bg-wrapper", { clipPath: "inset(0% 0% 0% 0%)" });
       gsap.set(".hero-bg", { yPercent: 0, scale: 1.3, transformOrigin: "center center" });
       
-      // Explicit target paths forced visible instantly on mount lifecycle
       gsap.set([".hero-title", ".hero-right-text", ".hero-scroll-indicator"], { 
         opacity: 1, 
         y: 0, 
@@ -55,7 +54,6 @@ export default function HomeMobile() {
       gsap.set(".section-2", { clipPath: "none", zIndex: 25 });
       gsap.set(".s2-mob-scroll-wrapper", { opacity: 0, y: "100vh" });
       
-      // Modified to use clean Opacity configuration instead of Clip-Paths
       gsap.set(".s2-mob-row5", { opacity: 0, clipPath: "none" });
       gsap.set(".s2-mob-row5-under", { opacity: 1 });
 
@@ -68,7 +66,8 @@ export default function HomeMobile() {
       gsap.set(".section-reviews", { visibility: "hidden", yPercent: 100, zIndex: 115 });
       gsap.set(".reviews-bg-img", { scale: 1.35, transformOrigin: "center center" });
 
-      gsap.set(".section-7", { visibility: "hidden", yPercent: 100, zIndex: 130, clipPath: "inset(0% 0% 0% 0%)" });
+      // Stacking configuration: Place Section 7 directly above Section 8 to hide it
+      gsap.set(".section-7", { visibility: "hidden", yPercent: 100, zIndex: 135, clipPath: "inset(0% 0% 0% 0%)" });
       gsap.set(".s7-bg-img", { yPercent: 20 });
       gsap.set(".s7-mob-bg", { scale: 1.35, transformOrigin: "center center" });
 
@@ -80,9 +79,6 @@ export default function HomeMobile() {
       gsap.set(".s9-bg-img", { yPercent: 20, scale: 1.35, transformOrigin: "center center" });
       gsap.set(".s9-title", { opacity: 0 });
       gsap.set(".s9-para", { opacity: 0 });
-
-      gsap.set(".s8-panel-left", { clipPath: "inset(0% 50% 0% 0%)", zIndex: 145 });
-      gsap.set(".s8-panel-right", { clipPath: "inset(0% 0% 0% 50%)", zIndex: 145 });
 
       gsap.set(".section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
       gsap.set([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
@@ -107,13 +103,13 @@ export default function HomeMobile() {
         autoRefreshEvents: "visibilitychange,DOMContentLoaded,load", 
       });
 
-      // Normalize scroll mechanics for mobile touchscreen engines (resolves Android Chrome jitter)
       if (ScrollTrigger.isTouch === 1) {
         ScrollTrigger.normalizeScroll({ allowNestedScroll: true });
       }
 
-      const ACTION = 2.0; 
-      const EASE   = "none"; 
+      const ACTION      = 2.0; 
+      const DEAD_SCROLL = 0.4; // Reduced significantly to remove excessive sticky feeling
+      const EASE        = "none"; 
 
       const waitForMobBgs = (cb: () => void) => {
         let framesChecked = 0;
@@ -157,7 +153,7 @@ export default function HomeMobile() {
               scrollTrigger: {
                 trigger:               ".pin-all",
                 start:                 "top top",
-                end:                   "+=11000",
+                end:                   "+=14500", // Normalized track height
                 scrub:                 true, 
                 pin:                   true,
                 anticipatePin:         1,
@@ -177,7 +173,8 @@ export default function HomeMobile() {
               },
             });
 
-            // Delayed offset execution window protects early viewport visibility mapping 
+            tl.addLabel("heroStart", 0);
+
             tl
               .to([".hero-title", ".hero-right-text", ".hero-scroll-indicator"], { 
                 opacity: 0, 
@@ -185,16 +182,16 @@ export default function HomeMobile() {
                 duration: ACTION * 0.5 
               }, 0.2)
               
-              // Phase 1 Clipping
               .to(".hero-bg-wrapper", { clipPath: "inset(0% 0% 40% 0%)", duration: ACTION }, 0)
               .to(".hero-bg", { yPercent: -25, scale: 1.15, duration: ACTION }, 0)
 
               .addLabel("heroSecondaryReveal", ACTION * 0.4)
               .set(".hero-secondary-para", { visibility: "visible" }, "heroSecondaryReveal")
 
-              .addLabel("textFlightStart", ACTION)
-              
-              // Phase 2 Clipping
+              // Dead scroll gap after Hero completes
+              .to({}, { duration: DEAD_SCROLL })
+
+              .addLabel("textFlightStart", ">")
               .to(".hero-bg-wrapper", { clipPath: "inset(0% 0% 100% 0%)", duration: ACTION }, "textFlightStart")
               .to(".hero-bg", { scale: 1, duration: ACTION }, "textFlightStart")
               .to(".hero-gradient-bg", { opacity: 0, duration: ACTION }, "textFlightStart")
@@ -202,11 +199,13 @@ export default function HomeMobile() {
               .to([".s2-title-main", ".s2-title-sub"], { opacity: 1, duration: ACTION }, "textFlightStart+=0.2")
               .to(".hero-secondary-para", { y: () => cachedFlightY, x: () => cachedFlightX, duration: ACTION }, "textFlightStart")
 
+              // Dead scroll gap after flight settles on Section 2 text
+              .to({}, { duration: DEAD_SCROLL })
+
               .addLabel("s2TextDismissal", ">")
               .to(".hero-secondary-para", { opacity: 0, y: () => cachedFlightY - 60, duration: ACTION }, "s2TextDismissal")
               .to([".s2-title-main", ".s2-title-sub"], { opacity: 0, y: -60, duration: ACTION }, "s2TextDismissal")
               
-              // Section 2 Scroll Sequence
               .addLabel("s2MobileScrollStart", ">")
               .to(".s2-mob-scroll-wrapper", { opacity: 1, duration: ACTION * 0.1 }, "s2MobileScrollStart")
               .fromTo(".s2-mob-scroll-wrapper", 
@@ -215,7 +214,6 @@ export default function HomeMobile() {
                   y: () => {
                     const scrollWrapper = document.querySelector(".s2-mob-scroll-wrapper") as HTMLElement;
                     if (scrollWrapper) {
-                      // Measures total scroll track height minus viewport window buffer so layout never stops early
                       return -(scrollWrapper.offsetHeight - window.innerHeight * 0.85);
                     }
                     return window.innerWidth >= 768 ? -window.innerHeight * 0.55 : -window.innerHeight * 0.65;
@@ -225,32 +223,36 @@ export default function HomeMobile() {
                 "s2MobileScrollStart"
               )
               
-              // Smooth absolute Opacity Cross-Fade logic instead of clip-path masks
               .to(".s2-mob-row5", { opacity: 1, duration: ACTION }, ">")
 
-              // Section 3 Slide Up
+              // REMOVED EXTRA DEAD SCROLL gap right here to allow Section 2 to transition instantly into Section 3 without pausing
+
               .addLabel("sec3Start", ">")
               .set(".section-3", { visibility: "visible" }, "sec3Start")
               .to(".section-3", { yPercent: 0, duration: ACTION }, "sec3Start")
 
-              // Section 10 Slide Up
+              // Dead scroll gap holding Section 3 cleanly in frame
+              .to({}, { duration: DEAD_SCROLL })
+
               .addLabel("sec10Start", ">")
               .set(".section-10", { visibility: "visible" }, "sec10Start")
               .fromTo(".section-10", { yPercent: 100 }, { yPercent: 0, duration: ACTION }, "sec10Start")
               
               .to(".s10-title, .s10-title-sub, .s10-para-top", { y: "-100vh", duration: ACTION }, ">")
-              
-              // Section 10 internal pan
               .fromTo(".s10-scrollable-container", { y: "0vh" }, { y: "-84vh", duration: ACTION }, "<")
 
-              // Reviews Slide Up
+              // Dead scroll gap after Section 10 moves into view
+              .to({}, { duration: DEAD_SCROLL })
+
               .addLabel("reviewsStart", ">")
               .set(".section-reviews", { visibility: "visible", pointerEvents: "auto" }, "reviewsStart")
               .to(".section-reviews", { yPercent: 0, duration: ACTION }, "reviewsStart")
               .to(".section-10", { yPercent: -10, duration: ACTION }, "reviewsStart")
               .to(".reviews-bg-img", { scale: 1, duration: ACTION }, "reviewsStart")
 
-              // Section 7 & 8 Slide Up sequence adjustment
+              // Dead scroll gap to experience the Reviews area
+              .to({}, { duration: DEAD_SCROLL })
+
               .addLabel("sec78Start", ">")
               .set(".section-7",    { visibility: "visible" }, "sec78Start") 
               .to(".section-7",     { yPercent: 0, duration: ACTION }, "sec78Start")
@@ -262,18 +264,20 @@ export default function HomeMobile() {
               .to(".section-8",     { yPercent: 0, duration: ACTION }, "sec78Start")
               .to(".s8-bg-img",     { yPercent: 0, duration: ACTION }, "sec78Start")
 
-              // Clip Reveal Transition
+              // Dead scroll gap before Section 7 gets masked out
+              .to({}, { duration: DEAD_SCROLL })
+
+              // Clean Bottom-to-Top Clip Reveal Execution Window
               .addLabel("clipRevealStart", ">")
               .to(".section-reviews", { yPercent: -100, duration: ACTION }, "clipRevealStart")
+              .to(".s8-mob-bg",       { scale: 1,       duration: ACTION }, "clipRevealStart")
               .to(".section-7", { clipPath: "inset(0% 0% 100% 0%)", duration: ACTION }, "clipRevealStart")
-              .to(".s8-mob-bg", { scale: 1,        duration: ACTION }, "clipRevealStart")
-              
-              .to(".s8-panel-left", { clipPath: "inset(0% 100% 0% 0%)", duration: ACTION }, "clipRevealStart")
-              .to(".s8-panel-right", { clipPath: "inset(0% 0% 0% 100%)", duration: ACTION }, "clipRevealStart")
               
               .set([".section-7", ".section-reviews"], { visibility: "hidden" }, ">")
 
-              // Section 9 Slide Up
+              // Dead scroll gap to look at the newly uncovered Section 8
+              .to({}, { duration: DEAD_SCROLL })
+
               .addLabel("sec9Start", ">")
               .set(".section-9", { visibility: "visible" }, "sec9Start")
               .set(".section-8", { visibility: "visible", yPercent: 0 }, "sec9Start")
@@ -285,13 +289,17 @@ export default function HomeMobile() {
               .to(".s9-title",  { opacity: 1,  duration: ACTION * 0.5 }, "sec9Start+=0.3")
               .to(".s9-para",   { opacity: 1,  duration: ACTION * 0.5 }, "sec9Start+=0.3")
 
-              // CTA Arrival
+              // Dead scroll gap for reading Section 9 content
+              .to({}, { duration: DEAD_SCROLL })
+
               .addLabel("ctaStart", ">")
               .set(".section-cta", { visibility: "visible" }, "ctaStart")
               .to(".section-cta", { yPercent: 0,    duration: ACTION }, "ctaStart") 
               .to(".s9-bg-img",   { yPercent: -10, duration: ACTION }, "ctaStart")
 
-              // Footer Slide Up
+              // Dead scroll gap before hitting footer
+              .to({}, { duration: DEAD_SCROLL })
+
               .addLabel("footerStart", ">")
               .to([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { opacity: 0, duration: ACTION * 0.3 }, "footerStart")
               
@@ -344,7 +352,6 @@ export default function HomeMobile() {
 
   return (
     <div ref={scopeRef}>
-      {/* Target hardware-acceleration selectively across core views to prevent excessive VRAM layer caching on Android */}
       <style jsx global>{`
         .pin-all > div[class*="section-"],
         .pin-all > .hero,
@@ -353,6 +360,9 @@ export default function HomeMobile() {
           backface-visibility: hidden;
           -webkit-backface-visibility: hidden;
           transform: translate3d(0,0,0);
+        }
+        .section-7 {
+          will-change: clip-path, transform;
         }
       `}</style>
 
@@ -384,7 +394,7 @@ export default function HomeMobile() {
           <SectionEight />
         </div>
 
-        <div className="section-7 absolute inset-0 z-[130]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        <div className="section-7 absolute inset-0 z-[135]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionSeven />
         </div>
 

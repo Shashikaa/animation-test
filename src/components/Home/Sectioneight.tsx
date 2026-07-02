@@ -86,41 +86,37 @@ export default function SectionEight() {
 
       {/* ══════════════════════════════════════
           MOBILE + TABLET LAYOUT
-      ══════════════════════════════════════ */}
-{/* ══════════════════════════════════════
-    MOBILE + TABLET LAYOUT
-══════════════════════════════════════ */}
-<div className="lg:!hidden !absolute !inset-0 !overflow-hidden section-container">
-  {/* The container below now has .s8-mob-bg for GSAP to target */}
-  <div className="s8-mob-bg absolute inset-0 z-[1] w-full h-full overflow-hidden">
-    <img 
-      src="/ForestMob.webp" 
-      alt="Forest" 
-      className="w-full h-full object-cover" 
-      style={{ 
-        width: "100%", 
-        height: "100%", 
-        objectFit: "cover",
-        opacity: assetsLoaded ? 1 : 0,
-        transition: "opacity 0.3s"
-      }}
-    />
-  </div>
+         ══════════════════════════════════════ */}
+      <div className="lg:!hidden !absolute !inset-0 !overflow-hidden section-container">
+        <div className="s8-mob-bg absolute inset-0 z-[1] w-full h-full overflow-hidden">
+          <img 
+            src="/ForestMob.webp" 
+            alt="Forest" 
+            className="w-full h-full object-cover" 
+            style={{ 
+              width: "100%", 
+              height: "100%", 
+              objectFit: "cover",
+              opacity: assetsLoaded ? 1 : 0,
+              transition: "opacity 0.3s"
+            }}
+          />
+        </div>
 
-  <div className="!absolute !top-0 !left-0 !z-20 !flex !flex-col !items-start !gap-7 !pt-[12vh] !px-5">
-    <h2 className="s8-heading !text-[#F4EEDF] !text-left font-display">
-      Water as Sanctuary.
-    </h2>
-    <p className="s8-para !text-[#F4EEDF] !text-left font-body max-w-[300px]">
-      Designed to disappear into the landscape, not announce itself.
-      The result isn't a pool. It's a quiet room you walk outside to find.
-    </p>
-  </div>
-</div>
+        <div className="!absolute !top-0 !left-0 !z-20 !flex !flex-col !items-start !gap-7 !pt-[12vh] !px-5">
+          <h2 className="s8-heading !text-[#F4EEDF] !text-left font-display">
+            Water as Sanctuary.
+          </h2>
+          <p className="s8-para !text-[#F4EEDF] !text-left font-body max-w-[300px]">
+            Designed to disappear into the landscape, not announce itself.
+            The result isn't a pool. It's a quiet room you walk outside to find.
+          </p>
+        </div>
+      </div>
 
       {/* ══════════════════════════════════════
           DESKTOP LAYOUT
-      ══════════════════════════════════════ */}
+         ══════════════════════════════════════ */}
       <div ref={containerRef} className="hidden lg:block absolute inset-0" style={{ overflow: "hidden" }}>
 
         {/* ══ LEFT panel ══ */}
