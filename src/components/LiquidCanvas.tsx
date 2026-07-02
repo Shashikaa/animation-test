@@ -23,7 +23,7 @@ export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
       const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent
       );
-      const isSmallScreen = window.innerWidth < 768;
+      const isSmallScreen = window.innerWidth < 1024;
       return isMobileUA || isSmallScreen;
     };
 

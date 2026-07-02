@@ -15,8 +15,8 @@ import SectionReviews from "../components/Home/SectionReviews";
 
 const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { ssr: false });
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
-const SectionNine  = dynamic(() => import("../components/Home/SectionNine"),  { ssr: false });
-const SectionTen   = dynamic(() => import("../components/Home/SectionTen"),   { ssr: false });
+const SectionNine  = dynamic(() => import("../components/Home/SectionNine"),   { ssr: false });
+const SectionTen   = dynamic(() => import("../components/Home/SectionTen"),    { ssr: false });
 
 import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
 
@@ -44,10 +44,11 @@ export default function HomeMobile() {
     let timelineInitialized = false;
 
     const ctx = gsap.context(() => {
+      // FIX: Removed the non-existent clearScrollVelocityTracking function
       gsap.ticker.lagSmoothing(0);
 
       ScrollTrigger.config({
-        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize",
+        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load", 
       });
 
       const TRANSITION = 2.0;
@@ -105,6 +106,14 @@ export default function HomeMobile() {
       gsap.set([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
       gsap.set(".footer",      { yPercent: 100, zIndex: 151, visibility: "hidden" });
 
+      // Force heavy layout sections to GPU hardware layers natively
+      gsap.set([
+        ".hero-bg-wrapper", ".hero-bg", ".s2-mob-row5", ".section-3", ".section-10", 
+        ".s10-img-right-wrap", ".s10-scrollable-container", ".section-reviews", 
+        ".section-7", ".s7-bg-img", ".s7-mob-bg", ".section-8", ".s8-bg-img", 
+        ".s8-mob-bg", ".section-9", ".s9-bg-img", ".section-cta", ".footer"
+      ], { force3D: true });
+
       const waitForMobBgs = (cb: () => void) => {
         let framesChecked = 0;
         const check = () => {
@@ -139,25 +148,26 @@ export default function HomeMobile() {
             gsap.set(".s7-mob-bg", { scale: 1.15, transformOrigin: "center center" });
             gsap.set(".s8-mob-bg", { scale: 1.15, transformOrigin: "center center" });
 
-const tl = gsap.timeline({
-  defaults: { ease: "none" },
-  scrollTrigger: {
-    trigger:              ".pin-all",
-    start:                "top top",
-    end:                  "+=14000",
-    // FIX: Changed from 0.2 to true (or 0.5) for mobile. 
-    // 'true' links animation directly to touch position without heavy lag catches.
-    scrub:                true,  
-    pin:                  true,
-    anticipatePin:        1,
-    preventOverlaps:      true,
-    fastScrollEnd:        true,
-    invalidateOnRefresh:  true,
-    onRefresh: () => {
-      if (pinEl) pinEl.style.removeProperty("max-height");
-    }
-  },
-});
+            const tl = gsap.timeline({
+              defaults: { 
+                ease: "none",
+                lazy: true 
+              },
+              scrollTrigger: {
+                trigger:              ".pin-all",
+                start:                "top top",
+                end:                  "+=14000",
+                scrub:                true,  
+                pin:                  true,
+                anticipatePin:        1,
+                preventOverlaps:      true,
+                fastScrollEnd:        true,
+                invalidateOnRefresh:  true,
+                onRefresh: () => {
+                  if (pinEl) pinEl.style.removeProperty("max-height");
+                }
+              },
+            });
 
             let calculatedFlightY = 0;
 
@@ -277,8 +287,6 @@ const tl = gsap.timeline({
                 "<"
               )
 
-              // DELAYED CLIP OUT: Shifted from `<+1.0` to `<+2.0` so it rolls out later 
-              // and changed the easing to 'power2.inOut' for a smoother transition as it exits the bottom/middle area
               .to(".s10-img-right-wrap", {
                 clipPath: "inset(0% 0% 100% 0%)",
                 duration: TRANSITION * 1.0,

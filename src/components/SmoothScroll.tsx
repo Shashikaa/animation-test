@@ -20,99 +20,92 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const lenisRef = useRef<Lenis | null>(null);
 
-  // 1. Unified Lenis Lifecycle Management Lifecycle
-// 1. Unified Lenis Lifecycle Management Lifecycle
-useEffect(() => {
-  // Check if we are on a mobile device
-  const isMobile = typeof window !== "undefined" && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  useEffect(() => {
+    const isMobile = typeof window !== "undefined" && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
-  // OPTION A: If you want to bypass Lenis entirely on mobile for ultimate native performance:
-  // if (isMobile) return; 
+    if (ScrollTrigger.isTouch > 0) return;
 
-  if (ScrollTrigger.isTouch > 0) return;
+    const lenis = new Lenis({
+      duration: 0.9,      
+      wheelMultiplier: 1.2,  
+      touchMultiplier: 1.0,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    });
 
-  const lenis = new Lenis({
-    duration: 0.9,      
-    wheelMultiplier: 1.2,  
-    touchMultiplier: 1.0,
-    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-  });
+    lenisRef.current = lenis;
 
-  lenisRef.current = lenis;
-
-  if (smootherRef) {
-    smootherRef.current = lenis;
-  }
-
-  lenis.on("scroll", ScrollTrigger.update);
-  
-  const tickerCallback = (time: number) => {
-    lenis.raf(time * 1000);
-  };
-  gsap.ticker.add(tickerCallback);
-  gsap.ticker.lagSmoothing(0);
-
-  let lastY = 0;
-  let lastTime = performance.now();
-  let thumbVisible = false;
-
-  const handleScroll = (e: any) => {
-    const now = performance.now();
-    const dt = now - lastTime || 1;
-    const y = e.scroll; 
-
-    // FIX: Only update React state on desktop. 
-    // Android/Mobile layouts don't read this high-frequency state update well mid-scroll.
-    if (!isMobile) {
-      setScrollVelocity(Math.abs((y - lastY) / dt) * 1000);
-    }
-    
-    lastY = y;
-    lastTime = now;
-
-    if (!thumbRef.current) return;
-    
-    const limit = lenis.limit;
-    const trackH = window.innerHeight;
-    const thumbH = Math.max((trackH / (limit + trackH)) * trackH, 40);
-    const maxTop = trackH - thumbH;
-    const top = limit > 0 ? (y / limit) * maxTop : 0;
-
-    thumbRef.current.style.height = `${thumbH}px`;
-    thumbRef.current.style.transform = `translateY(${top}px)`;
-
-    if (y > 1 && !thumbVisible) {
-      thumbVisible = true;
-      thumbRef.current.style.opacity = "1";
-    }
-    
-    clearTimeout(scrollTimerRef.current);
-    scrollTimerRef.current = setTimeout(() => {
-      thumbVisible = false;
-      if (thumbRef.current) thumbRef.current.style.opacity = "0";
-    }, 800);
-  };
-
-  lenis.on("scroll", handleScroll);
-
-  if (!preloaderDone) {
-    lenis.stop();
-  } else {
-    lenis.start();
-  }
-
-  return () => {
-    clearTimeout(scrollTimerRef.current);
-    if (!isMobile) setScrollVelocity(0);
-    gsap.ticker.remove(tickerCallback);
-    lenis.destroy();
     if (smootherRef) {
-      smootherRef.current = null;
+      smootherRef.current = lenis;
     }
-  };
-}, [smootherRef, preloaderDone]);
 
-  // 2. Structural Synchronizations on Page Routing
+    lenis.on("scroll", ScrollTrigger.update);
+    
+    const tickerCallback = (time: number) => {
+      lenis.raf(time * 1000);
+    };
+    gsap.ticker.add(tickerCallback);
+    gsap.ticker.lagSmoothing(0);
+
+    let lastY = 0;
+    let lastTime = performance.now();
+    let thumbVisible = false;
+
+    const handleScroll = (e: any) => {
+      const now = performance.now();
+      const dt = now - lastTime || 1;
+      const y = e.scroll; 
+
+      // Only run state logic on Desktop to avoid breaking mobile main render-thread
+      if (!isMobile) {
+        setScrollVelocity(Math.abs((y - lastY) / dt) * 1000);
+      }
+      
+      lastY = y;
+      lastTime = now;
+
+      if (!thumbRef.current) return;
+      
+      const limit = lenis.limit;
+      const trackH = window.innerHeight;
+      const thumbH = Math.max((trackH / (limit + trackH)) * trackH, 40);
+      const maxTop = trackH - thumbH;
+      const top = limit > 0 ? (y / limit) * maxTop : 0;
+
+      // Use direct style updates over React states for scrollbar transformation
+      thumbRef.current.style.height = `${thumbH}px`;
+      thumbRef.current.style.transform = `translateY(${top}px)`;
+
+      if (y > 1 && !thumbVisible) {
+        thumbVisible = true;
+        thumbRef.current.style.opacity = "1";
+      }
+      
+      clearTimeout(scrollTimerRef.current);
+      scrollTimerRef.current = setTimeout(() => {
+        thumbVisible = false;
+        if (thumbRef.current) thumbRef.current.style.opacity = "0";
+      }, 800);
+    };
+
+    lenis.on("scroll", handleScroll);
+
+    if (!preloaderDone) {
+      lenis.stop();
+    } else {
+      lenis.start();
+    }
+
+    return () => {
+      clearTimeout(scrollTimerRef.current);
+      if (!isMobile) setScrollVelocity(0);
+      gsap.ticker.remove(tickerCallback);
+      lenis.destroy();
+      if (smootherRef) {
+        smootherRef.current = null;
+      }
+    };
+  }, [smootherRef, preloaderDone]);
+
   useEffect(() => {
     if (!preloaderDone || !lenisRef.current) return;
     
@@ -144,7 +137,6 @@ useEffect(() => {
         }}
       >
         <div
-          ref={thumbRef}
           style={{
             position: "absolute",
             top: 0,
