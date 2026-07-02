@@ -220,7 +220,7 @@ className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[30px] "
 
         {/* Divider Line */}
         <div
-          style={{ height: "2px", background: "#F4EBE4", marginBottom: 30 }}
+          style={{ height: "1px", background: "#F4EBE4", marginBottom: 30 }}
           className="w-full"
         />
 

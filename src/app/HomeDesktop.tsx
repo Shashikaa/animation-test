@@ -301,14 +301,12 @@ export default function HomeDesktop() {
               },
               "sec3Start"
             )
-            // Single-run logic handles BOTH the text rows and the right side nav links together
             .to({}, {
               duration: 0.1,
               onStart: () => {
                 if (!textTriggersRef.current.sec3 && tl.scrollTrigger && tl.scrollTrigger.direction > 0) {
                   textTriggersRef.current.sec3 = true;
                   
-                  // 1. Reveal slider main text lines
                   gsap.to(".section-3 .s3-text-1 .gs-line-inner", {
                     yPercent: 0,
                     opacity: 1,
@@ -318,7 +316,6 @@ export default function HomeDesktop() {
                     overwrite: "auto"
                   });
 
-                  // 2. Reveal right navigation menu list exactly once here
                   gsap.to(".section-3 .s3-services-nav", { 
                     x: 0, 
                     opacity: 1, 
@@ -416,6 +413,7 @@ export default function HomeDesktop() {
 
           // ── SECTION 7 SLIDE UP ──
           tl.addLabel("sec7Start", "secReviewsStart+=6.0")
+            .set(".section-7", { display: "block" }, "sec7Start")
             .to(".section-7", { yPercent: 0, duration: 4.5 }, "sec7Start")
             .to(".s7-bg-img", { yPercent: 0, duration: 4.5 }, "sec7Start")
             .to({}, {
@@ -462,10 +460,13 @@ export default function HomeDesktop() {
             .to(".s8-panel-right", { clipPath: "inset(100% 0% 0% 50%)", duration: 3.8 }, "sec9Start")
             .to(".s9-bg-img", { yPercent: 0, scale: 1.0, duration: 3.8 }, "sec9Start")
             
-            .addLabel("sec9TitleFade", "sec9Start+=3.8")
-            .to(".s9-title", { opacity: 1, duration: 2.0 }, "sec9TitleFade")
+            // 1. Instantly sets title opacity when background reveal finishes
+            .set(".s9-title", { opacity: 1 }, "sec9Start+=3.8")
             
-            .addLabel("sec9MainTrack", "sec9TitleFade+=2.0")
+            // 2. Critical Fix: Empty space tween acts as a timeline buffer so snapping engine doesn't break
+            .to({}, { duration: 2.0 }, "sec9Start+=3.8")
+            
+            .addLabel("sec9MainTrack", "sec9Start+=5.8")
             .to(".s9-bg-img", { 
               scale: 1.15, 
               duration: 3.5, 
@@ -487,17 +488,11 @@ export default function HomeDesktop() {
               duration: 3.5,
             }, "sec9MainTrack")
             
-            .to({}, {
-              duration: 0.1,
-              onStart: () => {
-                if (!textTriggersRef.current.sec9 && tl.scrollTrigger && tl.scrollTrigger.direction > 0) {
-                  textTriggersRef.current.sec9 = true;
-                  gsap.set([".s9-para-desktop", ".s9-para-mobile"], { opacity: 1 });
-                  useTextReveal(scopeRef, ".s9-para-desktop", { duration: 0.4, stagger: 0.04 });
-                  useTextReveal(scopeRef, ".s9-para-mobile", { static: true });
-                }
-              }
-            }, "sec9MainTrack+=3.5")
+            .fromTo([".s9-para-desktop", ".s9-para-mobile"], 
+              { opacity: 0 }, 
+              { opacity: 1, duration: 1.0, ease: "power2.out" }, 
+              "sec9MainTrack+=3.5"
+            )
             .set(".section-8", { display: "none" }, "sec9MainTrack+=3.5");
 
           // ── CTA REVEAL ──
@@ -518,7 +513,7 @@ export default function HomeDesktop() {
             "heroStart", "heroExit", "textLanding", "s2InnerAnimation", "s2InnerMidpoint", "s2InnerSplitReveal", "sec3Start",
             "sec10Start", "sec10TextHide", "sec10ContentReveal", "sec10ExitSequence", 
             "secReviewsStart", "sec7Start", "sec8Start", "sec9Start", 
-            "sec9TitleFade", "sec9MainTrack", "ctaStart", "footerStart"
+            "sec9MainTrack", "ctaStart", "footerStart"
           ];
           cachedProgressLabels = [0, ...labelNames.map(name => tl.labels[name] / totalDuration), 1];
 

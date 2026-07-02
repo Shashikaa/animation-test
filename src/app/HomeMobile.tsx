@@ -6,7 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSite } from "./context/SiteContext";
 import dynamic from "next/dynamic";
 
-import Hero         from "../components/Home/Hero";
+import Hero          from "../components/Home/Hero";
 import SectionTwo   from "../components/Home/SectionTwo";
 import SectionThree from "../components/Home/SectionThree";
 import SectionCTA   from "../components/SectionCTA";
@@ -20,7 +20,9 @@ const SectionTen   = dynamic(() => import("../components/Home/SectionTen"),    {
 
 import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
 
-gsap.registerPlugin(ScrollTrigger);
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export default function HomeMobile() {
   const contextValues = useSite() as any;
@@ -93,7 +95,7 @@ export default function HomeMobile() {
       });
       gsap.set(".s8-bg-img", { yPercent: 20 });
 
-      // Section 9 Setup (Higher z-index than Section 8 for overlapping slide up)
+      // Section 9 Setup
       gsap.set(".section-9", { visibility: "hidden", yPercent: 100, zIndex: 135 });
       gsap.set(".s9-bg-img", { yPercent: 20 });
       gsap.set(".s9-title",  { opacity: 0 });
@@ -107,7 +109,7 @@ export default function HomeMobile() {
       gsap.set([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
       gsap.set(".footer",      { yPercent: 100, zIndex: 151, visibility: "hidden" });
 
-      // Force heavy layout sections to GPU hardware layers natively
+      // Hardware acceleration optimizations
       gsap.set([
         ".hero-bg-wrapper", ".hero-bg", ".s2-mob-row5", ".s2-mob-scroll-wrapper", ".section-3", ".section-10", 
         ".s10-img-right-wrap", ".s10-scrollable-container", ".section-reviews", 
@@ -158,7 +160,7 @@ export default function HomeMobile() {
                 trigger:              ".pin-all",
                 start:                "top top",
                 end:                  "+=14000",
-                scrub:                true,  
+                scrub:                1.0,  // Changed from true to 1.0 to interpolate variations in touch gestures seamlessly
                 pin:                  true,
                 anticipatePin:        1,
                 preventOverlaps:      true,
@@ -244,7 +246,6 @@ export default function HomeMobile() {
                 ease: "power2.in"
               }, "s2TextDismissal")
               
-              // Optimized Section 2 scroll mapping to fix performance lag
               .addLabel("s2MobileScrollStart", ">")
               .set(".s2-mob-scroll-wrapper", { visibility: "visible" }, "s2MobileScrollStart")
               .fromTo(".s2-mob-scroll-wrapper", 
@@ -270,7 +271,7 @@ export default function HomeMobile() {
               .to(".section-3", { yPercent: 0, duration: TRANSITION, ease: EASE })
               .to({}, { duration: PAUSE })
 
-              // Section 10 Animation Adjustments
+              // Section 10
               .set(".section-10", { visibility: "visible" })
               .to(".section-10", { yPercent: 0, duration: TRANSITION * 1.5, ease: "power1.inOut" })
               
@@ -302,7 +303,7 @@ export default function HomeMobile() {
               .to({}, { duration: PAUSE })
               .to({}, { duration: PAUSE * 0.4 })
 
-              // Section 7 & 8 Arrival
+              // Section 7 & 8
               .set(".section-8", { visibility: "visible" })
               .to(".section-7",    { yPercent: 0, duration: TRANSITION, ease: "power3.out" })
               .to(".section-8",    { yPercent: 0, duration: TRANSITION, ease: "power3.out" }, "<")
@@ -311,7 +312,7 @@ export default function HomeMobile() {
               .to(".s7-mob-bg",    { scale: 1,    duration: TRANSITION, ease: "power2.out" }, "<")
               .to({}, { duration: PAUSE })
 
-              // Bottom-to-Top Clip Reveal
+              // Clip Reveal
               .to(".section-reviews", { yPercent: -100, duration: TRANSITION, ease: EASE })
               .to(".section-7", { clipPath: "inset(0% 0% 100% 0%)", duration: TRANSITION, ease: EASE }, "<")
               .to(".s8-mob-bg", { scale: 1,        duration: TRANSITION, ease: "power2.out" }, "<")
@@ -319,7 +320,7 @@ export default function HomeMobile() {
 
               .set([".section-7", ".section-reviews"], { visibility: "hidden" })
 
-              // Section 8 to 9 Slide Up Transition Overlap
+              // Section 8 to 9
               .set(".section-9", { visibility: "visible" })
               .to(".section-9", { yPercent: 0, duration: TRANSITION, ease: EASE })
               .to(".s9-bg-img", { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
@@ -327,16 +328,15 @@ export default function HomeMobile() {
               .to(".s9-para",   { opacity: 1,  duration: 1.2, ease: "power3.out" }, "<")
               .to({}, { duration: PAUSE })
 
-              // ── CTA ARRIVAL ──
+              // CTA ARRIVAL
               .addLabel("ctaStart")
               .set(".section-cta", { visibility: "visible" }, "ctaStart")
               .to(".section-cta", { yPercent: 0,   duration: TRANSITION, ease: "power3.out" }, "ctaStart") 
               .to(".s9-bg-img",   { yPercent: -10, duration: TRANSITION, ease: "none" }, "ctaStart")
               .to({}, { duration: PAUSE }) 
 
-              // ── FOOTER SLIDE UP + CTA INNER CONTENT FADEOUT ──
+              // FOOTER
               .addLabel("footerStart")
-              
               .to([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { 
                 opacity: 0, 
                 duration: 0.3, 
