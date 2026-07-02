@@ -107,6 +107,11 @@ export default function HomeMobile() {
         autoRefreshEvents: "visibilitychange,DOMContentLoaded,load", 
       });
 
+      // Normalize scroll mechanics for mobile touchscreen engines (resolves Android Chrome jitter)
+      if (ScrollTrigger.isTouch === 1) {
+        ScrollTrigger.normalizeScroll({ allowNestedScroll: true });
+      }
+
       const ACTION = 2.0; 
       const EASE   = "none"; 
 
@@ -339,17 +344,15 @@ export default function HomeMobile() {
 
   return (
     <div ref={scopeRef}>
+      {/* Target hardware-acceleration selectively across core views to prevent excessive VRAM layer caching on Android */}
       <style jsx global>{`
-        .pin-all > div {
-          will-change: transform, clip-path;
+        .pin-all > div[class*="section-"],
+        .pin-all > .hero,
+        .pin-all > .footer {
+          will-change: transform;
           backface-visibility: hidden;
           -webkit-backface-visibility: hidden;
           transform: translate3d(0,0,0);
-        }
-        .pin-all img, .pin-all section, .pin-all div {
-          transform: translateZ(0);
-          backface-visibility: hidden;
-          -webkit-backface-visibility: hidden;
         }
       `}</style>
 

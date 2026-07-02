@@ -31,19 +31,21 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     // Detect touch-first environments cleanly
     const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
-    // If it's mobile, completely hide custom desktop scroll track layout
-    if (isTouchDevice && thumbRef.current) {
-      const parentTrack = thumbRef.current.parentElement;
-      if (parentTrack) parentTrack.style.display = "none";
+    // If it's a mobile touch device, cleanly back out and let the native viewport thread run smoothly.
+    if (isTouchDevice) {
+      if (thumbRef.current) {
+        const parentTrack = thumbRef.current.parentElement;
+        if (parentTrack) parentTrack.style.display = "none";
+      }
+      onScrollReady?.();
+      return;
     }
 
-    // Initialize Lenis. 
+    // Initialize Lenis strictly for Desktop layouts
     const lenis = new Lenis({
-      // OPTIMIZATION: Stop Lenis from watching or simulating touch events on mobile.
-      // This hands complete execution back to native Android/iOS viewport scrolling threads.
       syncTouch: false,
       touchMultiplier: 0,
-      duration: isTouchDevice ? 0 : 0.9,
+      duration: 0.9,
       wheelMultiplier: 1.2,  
       infinite: false,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -80,7 +82,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       lastY = y;
       lastTime = now;
 
-      if (!thumbRef.current || isTouchDevice) return;
+      if (!thumbRef.current) return;
       
       const limit = lenis.limit;
       const trackH = window.innerHeight;
