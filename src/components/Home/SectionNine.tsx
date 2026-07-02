@@ -70,28 +70,27 @@ export default function SectionNine() {
       <h2
         className="s9-title absolute z-20 text-[#F4EEDF] font-display pointer-events-none block lg:hidden"
         style={{
-          top:        "8rem",
+          top:        "10rem",
           right:      "1.5rem",
-          maxWidth:   "300px",
+          maxWidth:   "400px",
           textAlign:  "right",
           margin:     0,
           padding:    0,
-          opacity:    0,
+   
         }}
       >
-        Do you feel like diving in?
+    Ready to dive in?
       </h2>
 
       {/* Mobile para */}
       <p
-        className="s9-para-mobile absolute z-20 text-[#F4EEDF] font-body pointer-events-none block lg:hidden md:!mt-10"
+        className="s9-para-mobile absolute z-20 text-[#F4EEDF] font-body pointer-events-none block lg:hidden md:!mt-10 max-w-[300px] md:max-w-[400px"
         style={{
-          top:        "calc(8rem + 90px)",
+          top:        "calc(10rem + 80px)",
           right:      "1.5rem",
-          maxWidth:   "300px",
+          
           textAlign:  "right",
-          // Keep opacity 0 here since mobile won't run line split splits
-          opacity:    0, 
+
         }}
       >
         Don't hold back. As you swim along the sun-drenched water, delight in

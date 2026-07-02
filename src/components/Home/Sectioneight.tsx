@@ -92,11 +92,11 @@ export default function SectionEight() {
           {assetsLoaded && <WaveCanvas imageSrc="/ForestMob.webp" />}
         </div>
 
-        <div className="!absolute !top-0 !right-0 !z-20 !flex !flex-col !items-end !gap-4 !pt-[27vh] !px-5">
-          <h2 className="s8-heading !text-[#F4EEDF] !text-right font-display" style={{ opacity: 0 }}>
+        <div className="!absolute !top-0 !left-0 !z-20 !flex !flex-col !items-start !gap-7 !pt-[12vh] !px-5">
+          <h2 className="s8-heading !text-[#F4EEDF] !text-left font-display" >
             Water as Sanctuary.
           </h2>
-          <p className="s8-para !text-[#F4EEDF] !text-right !text-[14px] !leading-snug font-body !max-w-[260px]" style={{ opacity: 0 }}>
+          <p className="s8-para !text-[#F4EEDF] !text-left  font-body max-w-[300px]" >
             Designed to disappear into the landscape, not announce itself.
             The result isn't a pool. It's a quiet room you walk outside to find.
           </p>
@@ -182,10 +182,10 @@ export default function SectionEight() {
             }}
           >
             <div className="flex flex-col gap-5 text-left">
-              <h2 className="s8-heading text-[#F4EEDF] font-display" style={{ opacity: 0 }}>
+              <h2 className="s8-heading text-[#F4EEDF] font-display lg:opacity-0" >
                 Water as Sanctuary.
               </h2>
-              <p className="s8-para text-[#F4EEDF] max-w-[300px] font-body" style={{ opacity: 0 }}>
+              <p className="s8-para text-[#F4EEDF] max-w-[300px] font-body lg:opacity-0" >
                 Designed to disappear into the landscape, not announce itself.
                 The result isn't a pool. It's a quiet room you walk outside to find.
               </p>

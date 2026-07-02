@@ -32,6 +32,7 @@ export default function HomeDesktop() {
 
   const textTriggersRef = useRef({
     hero: false,
+    sec3: false, 
     sec10: false,
     sec7: false,
     sec8: false,
@@ -180,7 +181,7 @@ export default function HomeDesktop() {
             },
           });
 
-          textTriggersRef.current = { hero: false, sec10: false, sec7: false, sec8: false, sec9: false };
+          textTriggersRef.current = { hero: false, sec3: false, sec10: false, sec7: false, sec8: false, sec9: false };
 
           // ── HERO SCROLL OVERLAYS ──
           tl.addLabel("heroStart")
@@ -249,7 +250,7 @@ export default function HomeDesktop() {
             }, "heroExit")
             .addLabel("textLanding", "heroExit+=3.8");
 
-          // ── SECTION 2 INNER ANIMATION & SNAP REGISTRATION ──
+          // ── SECTION 2 INNER ANIMATION ──
           tl.addLabel("s2InnerAnimation", "textLanding")
             .to(".s2-right-img-frame", {
               clipPath: "inset(0% 0% 0% 0%)",
@@ -300,8 +301,34 @@ export default function HomeDesktop() {
               },
               "sec3Start"
             )
-            .to(".section-3 .s3-services-nav", { x: 0, opacity: 1, duration: 2.5, ease: "power2.out" }, "sec3Start+=1.8")
-            .to(".section-3 .s3-text-content-wrapper", { opacity: 1, y: 0, duration: 2.0, ease: "power2.out" }, "sec3Start+=2.0")
+            // Single-run logic handles BOTH the text rows and the right side nav links together
+            .to({}, {
+              duration: 0.1,
+              onStart: () => {
+                if (!textTriggersRef.current.sec3 && tl.scrollTrigger && tl.scrollTrigger.direction > 0) {
+                  textTriggersRef.current.sec3 = true;
+                  
+                  // 1. Reveal slider main text lines
+                  gsap.to(".section-3 .s3-text-1 .gs-line-inner", {
+                    yPercent: 0,
+                    opacity: 1,
+                    stagger: 0.04,
+                    duration: 0.6,
+                    ease: "power3.out",
+                    overwrite: "auto"
+                  });
+
+                  // 2. Reveal right navigation menu list exactly once here
+                  gsap.to(".section-3 .s3-services-nav", { 
+                    x: 0, 
+                    opacity: 1, 
+                    duration: 2.5, 
+                    ease: "power2.out",
+                    overwrite: "auto"
+                  });
+                }
+              }
+            }, "sec3Start+=2.0")
             .set([".section-2", ".hero"], { display: "none" }, "sec3Start+=5.0");
 
           // ── SECTION 3 TO 10 SLIDE UP ──
@@ -360,7 +387,7 @@ export default function HomeDesktop() {
             .addLabel("sec10ExitSequence", "sec10ContentReveal+=5.0")
             .to(".s10-img-right-wrap", { 
               clipPath: "inset(0% 0% 100% 0%)", 
-              y: -60,                                    
+              y: -60,                                   
               opacity: 0,
               duration: 5.5,
               ease: "power2.inOut"
@@ -431,16 +458,14 @@ export default function HomeDesktop() {
           tl.addLabel("sec9Start", "sec8Start+=5.5")
             .set(".section-7", { display: "none" })
             .set(".section-9", { display: "block" })
-            // Keep the clean zoom out on split entry layout
             .to(".s8-panel-left", { clipPath: "inset(0% 50% 100% 0%)", duration: 3.8 }, "sec9Start")
             .to(".s8-panel-right", { clipPath: "inset(100% 0% 0% 50%)", duration: 3.8 }, "sec9Start")
             .to(".s9-bg-img", { yPercent: 0, scale: 1.0, duration: 3.8 }, "sec9Start")
             
-            .addLabel("sec9TitleFade", "sec9Start+=3.8") // Adjusted to resolve snap sync mismatch
+            .addLabel("sec9TitleFade", "sec9Start+=3.8")
             .to(".s9-title", { opacity: 1, duration: 2.0 }, "sec9TitleFade")
             
             .addLabel("sec9MainTrack", "sec9TitleFade+=2.0")
-            // Zoom back inside flight coordinates
             .to(".s9-bg-img", { 
               scale: 1.15, 
               duration: 3.5, 
@@ -475,8 +500,7 @@ export default function HomeDesktop() {
             }, "sec9MainTrack+=3.5")
             .set(".section-8", { display: "none" }, "sec9MainTrack+=3.5");
 
-          // ── CTA REVEAL (DEAD SCROLL REMOVED) ──
-          // Snaps directly to ctaStart the exact moment paragraph reveal finishes!
+          // ── CTA REVEAL ──
           tl.addLabel("ctaStart", "sec9MainTrack+=3.5")
             .set(".section-cta", { display: "block" })
             .to(".section-cta", { yPercent: 0, duration: 4.8 }, "ctaStart")
@@ -526,6 +550,7 @@ export default function HomeDesktop() {
           [
             ".hero-secondary-para",
             ".s2-title-main", ".s2-title-sub", ".s2-body",
+            ".s3-text-1 .gs-line-inner", 
             ".s10-title", ".s10-title-sub", ".s10-para-top",
             ".s7-title", ".s7-para",
             ".s8-heading", ".s8-para",

@@ -9,11 +9,9 @@ import dynamic from "next/dynamic";
 import Hero         from "../components/Home/Hero";
 import SectionTwo   from "../components/Home/SectionTwo";
 import SectionThree from "../components/Home/SectionThree";
-import SectionFour  from "../components/Home/SectionFour";
-import SectionFive  from "../components/Home/SectionFive";
-import SectionSix   from "../components/Home/SectionSix";
 import SectionCTA   from "../components/SectionCTA";
 import Footer       from "../components/Footer";
+import SectionReviews from "../components/Home/SectionReviews"; 
 
 const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { ssr: false });
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
@@ -24,18 +22,12 @@ import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const vvHeight = () =>
-  (typeof visualViewport !== "undefined" && visualViewport != null
-    ? visualViewport.height
-    : null) ?? window.innerHeight;
-
 export default function HomeMobile() {
   const contextValues = useSite() as any;
   const preloaderDone = contextValues.preloaderDone;
   const onScrollReady = contextValues.onScrollReady ?? (() => {});
   const scopeRef = useRef<HTMLDivElement>(null);
 
-  // ── INITIAL PRE-RENDER LAYER ARCHITECTURE ──
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       gsap.set(".hero", { yPercent: 0, zIndex: 90 });
@@ -60,11 +52,9 @@ export default function HomeMobile() {
 
       const TRANSITION = 2.0;
       const EASE       = "power2.inOut";
-      const PAUSE      = 0.4; 
-      const footerEl = scopeRef.current?.querySelector<HTMLElement>(`.footer`);
-      const footerH  = footerEl?.offsetHeight ?? 600;
+      const PAUSE      = 0.5; 
 
-      // ── Structural Sets ────────────────────────────────────
+      // Initial Setup States
       gsap.set(".hero",    { yPercent: 0, zIndex: 90 });
       gsap.set(".hero-bg-wrapper", { clipPath: "inset(0% 0% 0% 0%)" });
       gsap.set(".hero-bg", { yPercent: 0 });
@@ -73,40 +63,28 @@ export default function HomeMobile() {
       gsap.set(".hero-secondary-text-wrap", { height: "auto" });
       gsap.set(".hero-secondary-para", { visibility: "hidden" });
 
+      gsap.set(".s2-mob-row5", { clipPath: "inset(0% 0% 0% 0%)" });
+      gsap.set(".s2-mob-row5-under", { opacity: 1 });
+
       gsap.set(".section-3", {
         visibility: "hidden",
         yPercent:   100,
         zIndex:     100,
       });
 
-      gsap.set(".section-4", { yPercent: 100, visibility: "visible", zIndex: 105 });
-      gsap.set(".s5-card",   { scale: 1, transformOrigin: "center center" });
-      gsap.set(".s4-content", { y: 0 });
-      gsap.set(".s4-bg-img",   { yPercent: 8 });
-      gsap.set(".s4-img-mob", { y: 60 });
+      // Section 10 Initial Reset States
+      gsap.set(".section-10", { visibility: "hidden", yPercent: 100, zIndex: 112 });
+      gsap.set(".s10-img-right-wrap", { clipPath: "inset(0% 0% 0% 0%)" });
+      gsap.set(".s10-scrollable-container", { y: "0vh" });
 
-      gsap.set(".section-5", {
-        yPercent:   0,
-        clipPath:   "inset(100% 0% 0% 0%)",
-        zIndex:     110,
-        visibility: "visible",
-      });
+      // Reviews Section Initial Position
+      gsap.set(".section-reviews", { visibility: "hidden", yPercent: 100, zIndex: 115 });
 
-      gsap.set(".section-6", {
-        visibility: "visible",
-        yPercent:   100,
-        zIndex:     115,
-      });
-
-      gsap.set(".section-10",    { visibility: "hidden", yPercent: 0, zIndex: 112 });
-      gsap.set(".s10-card",      { clipPath: "inset(100% 0% 0% 0%)" });
-      gsap.set(".s10-card-body", { clipPath: "inset(100% 0% 0% 0%)" });
-      gsap.set(".s10-bg-img",    { y: "100%" });
-      gsap.set(".s10-static-bg", { yPercent: 20 });
-
-      gsap.set(".section-7", { visibility: "visible", yPercent: 100, zIndex: 130 });
+      // Section 7 Setup
+      gsap.set(".section-7", { visibility: "visible", yPercent: 100, zIndex: 130, clipPath: "inset(0% 0% 0% 0%)" });
       gsap.set(".s7-bg-img", { yPercent: 20 });
 
+      // Section 8 Setup
       gsap.set(".section-8", {
         visibility: "hidden",
         yPercent:   100,
@@ -122,8 +100,10 @@ export default function HomeMobile() {
       gsap.set(".s8-panel-left",  { clipPath: "inset(0% 50% 0% 0%)", zIndex: 145 });
       gsap.set(".s8-panel-right", { clipPath: "inset(0% 0% 0% 50%)", zIndex: 145 });
 
+      // Layer setups
       gsap.set(".section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
-      gsap.set(".footer",      { y: footerH,    zIndex: 151, visibility: "hidden" });
+      gsap.set([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
+      gsap.set(".footer",      { yPercent: 100, zIndex: 151, visibility: "hidden" });
 
       const waitForMobBgs = (cb: () => void) => {
         let framesChecked = 0;
@@ -131,7 +111,6 @@ export default function HomeMobile() {
           framesChecked++;
           const hasS7 = document.querySelector(".s7-mob-bg");
           const hasS8 = document.querySelector(".s8-mob-bg");
-          
           if ((hasS7 && hasS8) || framesChecked > 60) {
             cb();
           } else {
@@ -160,22 +139,12 @@ export default function HomeMobile() {
             gsap.set(".s7-mob-bg", { scale: 1.15, transformOrigin: "center center" });
             gsap.set(".s8-mob-bg", { scale: 1.15, transformOrigin: "center center" });
 
-            gsap.set(".s10-video-wrap", {
-              y: () => {
-                const vvH = vvHeight();
-                const el  = document.querySelector(".s10-video-wrap") as HTMLElement;
-                if (!el) return 500;
-                return vvH - el.getBoundingClientRect().top + 20;
-                },
-              clipPath: "none",
-            });
-
             const tl = gsap.timeline({
               defaults: { ease: "none" },
               scrollTrigger: {
                 trigger:              ".pin-all",
                 start:                "top top",
-                end:                  "+=14800", 
+                end:                  "+=14000",
                 scrub:                0.2,       
                 pin:                  true,
                 anticipatePin:        1,
@@ -188,8 +157,9 @@ export default function HomeMobile() {
               },
             });
 
+            let calculatedFlightY = 0;
+
             tl
-              // ── Step 1: FRONT-LOADED HERO TEXT FADEOUT ──
               .to(".hero h1, .hero-right-text", { 
                 opacity: 0, 
                 y: -40, 
@@ -211,12 +181,17 @@ export default function HomeMobile() {
               }, 0)
               .to({}, { duration: PAUSE })
 
-              // ── Step 2: EXECUTE TEXT FLIGHT + BG FADEOUT SEQUENTIALLY AFTER HERO DONE ──
               .addLabel("textFlightStart")
               .set([".s2-title-main", ".s2-title-sub"], { opacity: 0 }, "textFlightStart")
               
-              .to([".hero-bg-wrapper", ".hero-gradient-bg"], {
-                opacity: 0,
+              .to(".hero-bg-wrapper", {
+                clipPath: "inset(0% 0% 100% 0%)", 
+                duration: TRANSITION * 0.8,
+                ease: "power2.inOut"
+              }, "textFlightStart")
+              
+              .to(".hero-gradient-bg", {
+                opacity: 0, 
                 duration: TRANSITION * 0.6,
                 ease: "power2.out"
               }, "textFlightStart")
@@ -228,7 +203,8 @@ export default function HomeMobile() {
                   const startEl = document.querySelector(".hero-secondary-text-wrap") as HTMLElement;
                   const targetEl = document.querySelector(".s2-body") as HTMLElement;
                   if (!startEl || !targetEl) return 0;
-                  return targetEl.getBoundingClientRect().top - startEl.getBoundingClientRect().top;
+                  calculatedFlightY = targetEl.getBoundingClientRect().top - startEl.getBoundingClientRect().top;
+                  return calculatedFlightY;
                 },
                 x: () => {
                   const startEl = document.querySelector(".hero-secondary-text-wrap") as HTMLElement;
@@ -241,122 +217,96 @@ export default function HomeMobile() {
               }, "textFlightStart")
               .to({}, { duration: PAUSE })
 
-              // ── NEW MOBILE SCROLL RUNWAY TIMELINE INTERACTION ──
-              .addLabel("s2MobileScrollStart")
-              // Fade out both original flown text and right bottom titles
-              .to([".hero-secondary-para", ".s2-title-main", ".s2-title-sub"], {
+              .addLabel("s2TextDismissal")
+              .to(".hero-secondary-para", {
                 opacity: 0,
-                y: -30,
-                duration: TRANSITION * 0.6,
+                y: () => calculatedFlightY - 60, 
+                duration: TRANSITION * 0.8,
                 ease: "power2.in"
-              }, "s2MobileScrollStart")
+              }, "s2TextDismissal")
+              .to([".s2-title-main", ".s2-title-sub"], {
+                opacity: 0,
+                y: -60, 
+                duration: TRANSITION * 0.8,
+                ease: "power2.in"
+              }, "s2TextDismissal")
               
-              // Trigger mobile custom container layout to move in seamlessly
+              .addLabel("s2MobileScrollStart", ">")
               .set(".s2-mob-scroll-wrapper", { visibility: "visible" }, "s2MobileScrollStart")
               .fromTo(".s2-mob-scroll-wrapper", 
                 { y: "100vh" }, 
-                { y: "0vh", duration: TRANSITION * 1.5, ease: "power1.out" }, 
-                "s2MobileScrollStart+=0.2"
+                { 
+                  y: () => (window.innerWidth >= 768 ? "-60vh" : "-70vh"), 
+                  duration: TRANSITION * 3.5, 
+                  ease: "power1.out" 
+                }, 
+                "s2MobileScrollStart"
               )
+              
+              .to(".s2-mob-row5", {
+                clipPath: "inset(0% 100% 0% 0%)", 
+                duration: TRANSITION * 1.2,
+                ease: "power2.inOut"
+              }, "s2MobileScrollStart+=2.8")
+
+              // Section 3
+              .addLabel("sec3Start", ">")
+              .set(".section-3", { visibility: "visible" }, "sec3Start")
+              .to(".section-3", { yPercent: 0, duration: TRANSITION, ease: EASE })
               .to({}, { duration: PAUSE })
 
-              // Fade out the 3 row block data structure
-              .addLabel("s2MobileSubTextsReveal")
-              .to([".s2-mob-row1", ".s2-mob-row2", ".s2-mob-row3"], {
-                opacity: 0,
-                y: -40,
-                duration: TRANSITION * 0.6,
-                ease: "power1.in"
-              }, "s2MobileSubTextsReveal")
-
-              // Reveal remaining 2 textual tracks sequentially
-              .fromTo([".s2-mob-final-top", ".s2-mob-final-bottom"], 
-                { opacity: 0, y: 40 },
-                { opacity: 1, y: 0, duration: TRANSITION * 0.8, stagger: 0.2, ease: "power2.out" },
-                "s2MobileSubTextsReveal+=0.4"
-              )
-              .to({}, { duration: PAUSE * 2 })
-
-              // ── Section 2 → 3 ─────────────────────────────────────
-              .addLabel("sec3Start")
-              .set(".section-3", { visibility: "visible" })
-              .to(".section-3", { yPercent: 0, duration: TRANSITION, ease: EASE }, "sec3Start")
-              .set([".section-2", ".hero"], { display: "none" }) 
-              .to({}, { duration: PAUSE })
-
-              // ── Section 3 → 4 ─────────────────────────────────────
-              .to(".section-4",  { yPercent: 0,    duration: TRANSITION, ease: EASE })
-              .to(".section-3",  { yPercent: -100, duration: TRANSITION, ease: EASE }, "-=1.2")
-              .to(".s4-img-mob", { y: -60,         duration: TRANSITION, ease: "none" }, "<")
-              .to({}, { duration: PAUSE })
-
-              // ── Section 4 → 5 ─────────────────────────────────────
-              .to(".section-5", { clipPath: "inset(0% 0% 0% 0%)", duration: TRANSITION, ease: EASE })
-              .to({}, { duration: PAUSE })
-
-              // ── Section 5 → 6 ─────────────────────────────────────
-              .to(".section-6", { yPercent: 0, duration: TRANSITION, ease: EASE })
-              .to(".section-5", { scale: 1.0,  duration: TRANSITION, ease: EASE }, "<")
-              .to({}, { duration: PAUSE }) 
-
-              // ── Section 6 → 10 ────────────────────────────────────
+              // Section 10 Animation Adjustments
               .set(".section-10", { visibility: "visible" })
-              .to(".section-6",     { yPercent: -100, duration: TRANSITION, ease: EASE })
-              .to(".s10-static-bg", { yPercent: 0,    duration: TRANSITION, ease: "power2.out" }, "<")
+              .to(".section-10", { yPercent: 0, duration: TRANSITION * 1.5, ease: "power1.inOut" })
+              
+              .to(".s10-title, .s10-title-sub, .s10-para-top", {
+                y: "-100vh",
+                duration: TRANSITION * 2.2,
+                ease: "none"
+              }, ">-=0.5")
+
+              .fromTo(".s10-scrollable-container", 
+                { y: "0vh" },
+                {
+                  y: "-100vh", 
+                  duration: TRANSITION * 2.5,
+                  ease: "none"
+                },
+                "<"
+              )
+
+              // DELAYED CLIP OUT: Shifted from `<+1.0` to `<+2.0` so it rolls out later 
+              // and changed the easing to 'power2.inOut' for a smoother transition as it exits the bottom/middle area
+              .to(".s10-img-right-wrap", {
+                clipPath: "inset(0% 0% 100% 0%)",
+                duration: TRANSITION * 1.0,
+                ease: "power2.inOut"
+              }, "<+2.0")
+
+              // Reviews Section
+              .set(".section-reviews", { visibility: "visible", pointerEvents: "auto" })
+              .to(".section-reviews", { yPercent: 0, duration: TRANSITION, ease: EASE })
               .to({}, { duration: PAUSE })
+              .to({}, { duration: PAUSE * 0.4 })
 
-              .set(".s10-title",      { opacity: 1, y: 0 })
-              .set(".s10-title-sub", { opacity: 1, y: 0 })
-              .set(".s10-para-top",  { opacity: 1, y: 0 })
-
-              .to(".s10-title",      { opacity: 0, y: -60, duration: 1.5, ease: "none" })
-              .to(".s10-title-sub",  { opacity: 0, y: -40, duration: 1.5, ease: "none" }, "<")
-              .to(".s10-para-top",   { opacity: 0, y: -50, duration: 1.5, ease: "none" }, "<")
-              .to(".s10-video-wrap", { y: 40,               duration: TRANSITION, ease: "none" }, "<")
-              .addLabel("s10VideoCentered")
-              .to({}, { duration: PAUSE }) 
-              .to(".s10-card",      { clipPath: "inset(0% 0% 0% 0%)", duration: 1.6, ease: "power2.out" })
-              .to(".s10-card-body", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.4, ease: "power2.out" }, "<+0.2")
-              .to(".s10-video-wrap", {
-                y: () => {
-                  const el = document.querySelector(".s10-video-wrap") as HTMLElement;
-                  if (!el) return -vvHeight() * 0.55;
-                  return -(el.getBoundingClientRect().top - 80);
-                },
-                duration: 1.8, ease: "none",
-              }, "s10VideoCentered")
-              .to(".s10-video-wrap", { clipPath: "inset(0% 0% 100% 0%)", duration: 1.2, ease: "none" }, "<+0.2")
-              .set(".s10-video-wrap", { visibility: "hidden" })
-              .to(".s10-card", {
-                y: () => {
-                  const card = document.querySelector(".s10-card") as HTMLElement;
-                  if (!card) return -vvHeight() * 0.7;
-                  return -card.getBoundingClientRect().top;
-                },
-                duration: 2.5, ease: "none",
-              })
-              .to(".s10-card-body", { y: 30,   duration: 2.5, ease: "none" }, "<")
-              .to(".s10-bg-img",    { y: "0%", duration: 2.5, ease: "none" }, "<")
-              .to({}, { duration: PAUSE }) 
-
-              // ── Section 7 + 8 slide in ────────────────────────────
+              // Section 7 & 8 Arrival
               .set(".section-8", { visibility: "visible" })
-              .to(".section-7",  { yPercent: 0, duration: TRANSITION, ease: "power3.out" })
-              .to(".section-8",  { yPercent: 0, duration: TRANSITION, ease: "power3.out" }, "<")
-              .to(".s7-bg-img",  { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
-              .to(".s8-bg-img",  { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
-              .to(".s7-mob-bg",  { scale: 1,    duration: TRANSITION, ease: "power2.out" }, "<")
+              .to(".section-7",    { yPercent: 0, duration: TRANSITION, ease: "power3.out" })
+              .to(".section-8",    { yPercent: 0, duration: TRANSITION, ease: "power3.out" }, "<")
+              .to(".s7-bg-img",    { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
+              .to(".s8-bg-img",    { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
+              .to(".s7-mob-bg",    { scale: 1,    duration: TRANSITION, ease: "power2.out" }, "<")
               .to({}, { duration: PAUSE })
 
-              // ── Section 7 exits, 8 stays ──────────────────────────
-              .to(".section-7", { yPercent: -100, duration: TRANSITION, ease: EASE })
-              .to(".s8-mob-bg", { scale: 1,       duration: TRANSITION, ease: "power2.out" }, "<")
-              .set(".section-8", { clipPath: "inset(0% 0% 0% 0%)" })
+              // Bottom-to-Top Clip Reveal
+              .to(".section-reviews", { yPercent: -100, duration: TRANSITION, ease: EASE })
+              .to(".section-7", { clipPath: "inset(0% 0% 100% 0%)", duration: TRANSITION, ease: EASE }, "<")
+              .to(".s8-mob-bg", { scale: 1,        duration: TRANSITION, ease: "power2.out" }, "<")
               .to({}, { duration: PAUSE })
 
-              .set(".section-7", { visibility: "hidden" })
+              .set([".section-7", ".section-reviews"], { visibility: "hidden" })
 
-              // ── Section 8 → 9 ─────────────────────────────────────
+              // Section 8 to 9
               .set(".section-9", { visibility: "visible" })
               .to(".section-8", { clipPath: "inset(0% 0% 100% 0%)", duration: TRANSITION, ease: EASE })
               .to(".s9-bg-img", { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
@@ -364,19 +314,27 @@ export default function HomeMobile() {
               .to(".s9-para",   { opacity: 1,  duration: 1.2, ease: "power3.out" }, "<")
               .to({}, { duration: PAUSE })
 
-              // ── Section 9 → CTA ───────────────────────────────────
-              .set(".section-cta", { visibility: "visible" })
-              .to(".section-cta", { yPercent: 0,   duration: TRANSITION, ease: "power3.out" }) 
-              .to(".s9-bg-img",   { yPercent: -10, duration: TRANSITION, ease: "none" }, "<")
+              // ── CTA ARRIVAL ──
+              .addLabel("ctaStart")
+              .set(".section-cta", { visibility: "visible" }, "ctaStart")
+              .to(".section-cta", { yPercent: 0,   duration: TRANSITION, ease: "power3.out" }, "ctaStart") 
+              .to(".s9-bg-img",   { yPercent: -10, duration: TRANSITION, ease: "none" }, "ctaStart")
               .to({}, { duration: PAUSE }) 
 
-              // ── Footer ────────────────────────────────────────────
-              .set(".footer", { visibility: "visible" })
-              .to(".footer",    { y: 0,          duration: TRANSITION, ease: "power3.out" }) 
-              .to(".s9-bg-img", { yPercent: -20, duration: TRANSITION, ease: "none" }, "<")
+              // ── FOOTER SLIDE UP + CTA INNER CONTENT FADEOUT ──
+              .addLabel("footerStart")
+              
+              .to([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { 
+                opacity: 0, 
+                duration: 0.3, 
+                ease: "power2.out" 
+              }, "footerStart")
+              
+              .set(".footer", { visibility: "visible" }, "footerStart+=0.1")
+              .to(".footer",    { yPercent: 0,          duration: TRANSITION, ease: "power2.out" }, "footerStart+=0.1") 
+              .to(".s9-bg-img", { yPercent: -20, duration: TRANSITION, ease: "none" }, "footerStart+=0.1")
               .to({}, { duration: 0.4 }); 
 
-            // ── TEXT REVEAL Engine Execution ──
             useTextReveal(scopeRef, ".hero-secondary-para", {
               tl,
               position: "heroSecondaryReveal",
@@ -426,42 +384,43 @@ export default function HomeMobile() {
         <div className="section-2 absolute inset-0 z-[25]">
           <SectionTwo />
         </div>
-        <div className="section-3 absolute inset-0 z-[30]" style={{ pointerEvents: "none", display: "none" }}>
+        
+        <div 
+          className="section-3 absolute inset-0 z-[100]" 
+          style={{ pointerEvents: "auto", visibility: "hidden", transform: "translateY(100%)" }}
+        >
           <SectionThree />
         </div>
-        <div className="section-4 absolute inset-0 z-[105]" style={{ overflow: "visible", pointerEvents: "none", visibility: "hidden" }}>
-          <SectionFour />
-        </div>
-        <div className="section-5 absolute inset-0 z-[110]" style={{ pointerEvents: "none", visibility: "hidden" }}>
-          <SectionFive />
-        </div>
-        <div className="section-10 absolute inset-0 z-[112]" style={{ pointerEvents: "none", visibility: "hidden" }}>
+
+        <div className="section-10 absolute inset-0 z-[112]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionTen />
         </div>
-        <div className="section-6 absolute inset-0 z-[115]" style={{ pointerEvents: "none", visibility: "hidden" }}>
-          <SectionSix />
+        
+        <div className="section-reviews absolute inset-0 z-[115]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+          <SectionReviews />
         </div>
-        <div className="section-9 absolute inset-0 z-[121]" style={{ pointerEvents: "none", visibility: "hidden" }}>
+
+        <div className="section-9 absolute inset-0 z-[121]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionNine />
         </div>
-        <div className="section-8 absolute inset-0 z-[128]" style={{ pointerEvents: "none", visibility: "hidden" }}>
+        <div className="section-8 absolute inset-0 z-[128]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionEight />
         </div>
-        <div className="section-7 absolute inset-0 z-[130]" style={{ pointerEvents: "none", visibility: "hidden" }}>
+        <div className="section-7 absolute inset-0 z-[130]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionSeven />
         </div>
-        <div className="hero absolute inset-0 z-[90]" style={{ pointerEvents: "none" }}>
+        <div className="hero absolute inset-0 z-[90]" style={{ pointerEvents: "auto" }}>
           <Hero />
         </div>
         <div
           className="section-cta absolute inset-0 z-[150]"
-          style={{ pointerEvents: "none", visibility: "hidden" }}
+          style={{ pointerEvents: "auto", visibility: "hidden" }}
         >
           <SectionCTA />
         </div>
         <div
-          className="footer absolute left-0 w-full z-[151]"
-          style={{ bottom: 0, pointerEvents: "none", visibility: "hidden" }}
+          className="footer absolute left-0 bottom-0 w-full z-[151]"
+          style={{ pointerEvents: "auto", visibility: "hidden" }}
         >
           <Footer />
         </div>

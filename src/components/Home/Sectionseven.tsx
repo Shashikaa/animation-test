@@ -29,7 +29,7 @@ export default function SectionSeven() {
       <div
         className="s7-mob-bg absolute bg-cover bg-center block lg:hidden"
         style={{
-          backgroundImage: "url('/team-photo-mobile.webp')",
+          backgroundImage: "url('/sectionseven-mobile.webp')",
           top: 0, left: 0, width: "100%", height: "100%",
           willChange: "transform",
         }}
@@ -87,29 +87,24 @@ export default function SectionSeven() {
       {/* ════════════════════
           MOBILE + TABLET LAYOUT
       ════════════════════ */}
-      <div className="lg:!hidden !flex !absolute !inset-0 !flex-col !justify-between !py-[72px] !px-5 !m-0 !max-w-none !w-full">
+      <div className="lg:!hidden !flex !absolute !inset-0 !flex-col !justify-between !py-[72px]  !m-0 !max-w-none !w-full">
 
-        {/* Title + Glass card — right-aligned */}
-        <div className="!flex !flex-col !items-end !gap-4">
+        {/* Title +  card — right-aligned */}
+        <div className="!flex !flex-col !items-left !gap-4 !pl-14">
           <h2
-            className="!text-[#F4EEDF] !font-[100] !text-right !text-[clamp(1.8rem,9vw,2.8rem)] !m-0  md:!mt-24"
+            className="!text-[#F4EEDF] !font-[100] !text-left  !m-0 !mt-12"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Meet The Expert
           </h2>
 
           <div
-            className="!w-[76%] !max-w-[340px] !flex !flex-col !px-6 !py-6 !mt-2 "
-            style={{
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-              background: "radial-gradient(100% 100% at 0% 0%, rgba(25,33,28,0.64) 0%, rgba(25,33,28,0.24) 100%)",
-              boxShadow: "-5px -5px 25px rgba(255,255,255,0.02) inset, 0 4px 4px rgba(0,0,0,0.25)",
-            }}
+            className="!w-[76%] !max-w-[340px] !flex !flex-col !mt-2 "
+
           >
-            <p className="!text-[#F4EEDF] !text-[12px] !font-normal !m-0">Lachlan Deleeuw</p>
-            <p className="!text-[#F4EEDF] !text-[12px] !mt-1.5 !mb-0">Founder – Grand Pools</p>
-            <p className="!text-[#F4EBE4] !text-[12px] !font-normal !leading-snug !mt-4 !mb-0">
+            <p className="!text-[#F4EEDF] !text-[14px] !font-normal !m-0">Lachlan Deleeuw</p>
+            <p className="!text-[#F4EEDF] !text-[14px] !mt-2.5 !mb-0">Founder – Grand Pools</p>
+            <p className="!text-[#F4EBE4] !text-[14px] !font-normal !leading-snug !mt-4 !mb-0">
               Lachlan Deleeuw brings expert craftsmanship and tailored creativity to
               luxury pool builds, transforming backyards across Melbourne and the
               Bayside Region.
@@ -118,8 +113,8 @@ export default function SectionSeven() {
         </div>
 
         {/* Partners — bottom */}
-        <div className="!flex !flex-col !items-end !gap-3">
-          <p className="!text-[#F4EBE4] !text-[12px] !m-0">Our Partners</p>
+        <div className="!flex !flex-col !items-end !gap-3 !px-6">
+          <p className="!text-[#F4EBE4] !text-[16px] !m-0">Our Partners</p>
           <div
             className="!overflow-hidden !w-full"
             style={{
@@ -131,7 +126,7 @@ export default function SectionSeven() {
               {PARTNERS_LOOP.map((p, i) => (
                 <div key={i} className="!flex-shrink-0">
                   <img src={p.logo} alt={p.name}
-                    className="!block !w-[64px] !h-[16px] !object-contain"
+                    className="!block !w-[84px] !h-[26px] !object-contain"
                     style={{ filter: "brightness(0) invert(1)" }} />
                 </div>
               ))}

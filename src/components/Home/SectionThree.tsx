@@ -2,6 +2,9 @@
 
 import { useRef, useState, useCallback, useLayoutEffect } from "react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const slides = [
   {
@@ -29,18 +32,131 @@ const slides = [
 
 const CLIP_DURATION = 1.0;
 
+function splitIntoLines(el: HTMLElement): HTMLElement[] {
+  if (el.dataset.originalHtml !== undefined) {
+    return Array.from(el.querySelectorAll<HTMLElement>(".gs-line-inner"));
+  }
+
+  el.dataset.originalHtml = el.innerHTML;
+  el.style.transform = "none";
+
+  el.innerHTML = el.innerHTML.replace(/(\S+)/g, '<span class="gs-word">$1</span>');
+  const words = Array.from(el.querySelectorAll<HTMLElement>(".gs-word"));
+
+  const lineMap = new Map<number, HTMLElement[]>();
+  words.forEach((w) => {
+    const top = Math.round(w.getBoundingClientRect().top);
+    if (!lineMap.has(top)) lineMap.set(top, []);
+    lineMap.get(top)!.push(w);
+  });
+
+  const lines = Array.from(lineMap.values());
+  el.innerHTML = "";
+
+  const lineInners: HTMLElement[] = [];
+
+  lines.forEach((group) => {
+    const lineOuter = document.createElement("span");
+    lineOuter.className = "gs-line";
+    lineOuter.style.cssText =
+      "display:block; overflow:hidden; padding-bottom:0.12em; margin-bottom:-0.12em;";
+
+    const lineInner = document.createElement("span");
+    lineInner.className = "gs-line-inner";
+    lineInner.style.cssText =
+      "display:block; will-change:transform,opacity;";
+
+    group.forEach((w, i) => {
+      lineInner.appendChild(w);
+      if (i < group.length - 1) {
+        lineInner.appendChild(document.createTextNode(" "));
+      }
+    });
+
+    lineOuter.appendChild(lineInner);
+    el.appendChild(lineOuter);
+    lineInners.push(lineInner);
+  });
+
+  return lineInners;
+}
+
 export default function SectionThree() {
   const containerRef = useRef<HTMLDivElement>(null);
   const currentRef = useRef<number>(0);
   const [current, setCurrent] = useState(0);
   const animating = useRef<boolean>(false);
   const indicatorRef = useRef<HTMLDivElement>(null);
+  const slideLinesCache = useRef<HTMLElement[][]>([]);
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      // Offset layout components initially for timeline entrance
-      gsap.set(".s3-services-nav", { x: 40, opacity: 0 });
-      gsap.set(".s3-text-content-wrapper", { opacity: 0, y: 20 });
+      const isMobile = window.innerWidth < 1024;
+      
+      if (isMobile) {
+        // MOBILE INITIAL LOAD: Run line split setups EXACTLY like desktop now
+        gsap.set(".s3-services-nav", { x: 0, opacity: 1 });
+        gsap.set(".s3-text-content-wrapper", { opacity: 1, y: 0 });
+        
+        slides.forEach((_, index) => {
+          const slideContainer = containerRef.current!.querySelector(`.s3-text-${index + 1}`);
+          if (slideContainer) {
+            const textElements = slideContainer.querySelectorAll("h2, p, .s3-counter") as NodeListOf<HTMLElement>;
+            const linesForThisSlide: HTMLElement[] = [];
+            
+            textElements.forEach((el) => {
+              linesForThisSlide.push(...splitIntoLines(el));
+            });
+            
+            slideLinesCache.current[index] = linesForThisSlide;
+          }
+        });
+
+        slides.forEach((_, index) => {
+          const slideContainer = containerRef.current!.querySelector(`.s3-text-${index + 1}`);
+          if (index === 0) {
+            // Mobile initial load sets texts cleanly visible but builds cache structure smoothly
+            gsap.set(slideLinesCache.current[0], { yPercent: 0, opacity: 1 });
+            gsap.set(slideContainer, { visibility: "visible", opacity: 1 });
+          } else {
+            if (slideLinesCache.current[index]) {
+              gsap.set(slideLinesCache.current[index], { yPercent: 105, opacity: 0 });
+            }
+            gsap.set(slideContainer, { visibility: "hidden", opacity: 0 });
+          }
+        });
+      } else {
+        // DESKTOP INITIAL LOAD: Left completely untouched
+        gsap.set(".s3-services-nav", { x: 40, opacity: 0 });
+        gsap.set(".s3-text-content-wrapper", { opacity: 1, y: 0 });
+
+        slides.forEach((_, index) => {
+          const slideContainer = containerRef.current!.querySelector(`.s3-text-${index + 1}`);
+          if (slideContainer) {
+            const textElements = slideContainer.querySelectorAll("h2, p, .s3-counter") as NodeListOf<HTMLElement>;
+            const linesForThisSlide: HTMLElement[] = [];
+            
+            textElements.forEach((el) => {
+              linesForThisSlide.push(...splitIntoLines(el));
+            });
+            
+            slideLinesCache.current[index] = linesForThisSlide;
+          }
+        });
+
+        slides.forEach((_, index) => {
+          const slideContainer = containerRef.current!.querySelector(`.s3-text-${index + 1}`);
+          if (index === 0) {
+            gsap.set(slideLinesCache.current[0], { yPercent: 105, opacity: 0 });
+            gsap.set(slideContainer, { visibility: "visible", opacity: 1 });
+          } else {
+            gsap.set(slideContainer, { visibility: "hidden", opacity: 0 });
+          }
+        });
+      }
+
+      ScrollTrigger.refresh();
+
     }, containerRef);
 
     return () => ctx.revert();
@@ -51,14 +167,13 @@ export default function SectionThree() {
     if (animating.current || next === prev || !containerRef.current) return;
     animating.current = true;
 
-    const isMobile = window.innerWidth < 768;
     currentRef.current = next;
     setCurrent(next);
 
     if (indicatorRef.current) {
       const segmentWidthPercentage = 100 / slides.length;
       const targetLeftPosition = next * segmentWidthPercentage;
-      
+
       gsap.to(indicatorRef.current, {
         left: `${targetLeftPosition}%`,
         duration: CLIP_DURATION,
@@ -68,7 +183,7 @@ export default function SectionThree() {
 
     const incomingClipStart = direction === "next" ? "inset(0 100% 0 0)" : "inset(0 0% 0 100%)";
     const incomingClipEnd = "inset(0 0% 0 0%)";
-    const contextPrefix = isMobile ? ".s3-mobile-section" : ".s3-desktop-section";
+    const contextPrefix = ".s3-main-section";
 
     gsap.set(`${contextPrefix} .s3-bg-${next + 1}`, {
       clipPath: incomingClipStart,
@@ -92,28 +207,72 @@ export default function SectionThree() {
       },
     });
 
-    // ── STANDARD SLIDER CROSS-FADE SWITCH ──
-    slides.forEach((_, i) => {
-      const textBlocks = containerRef.current!.querySelectorAll(`.s3-text-${i + 1}`) as NodeListOf<HTMLElement>;
-      textBlocks.forEach((textBlock) => {
-        if (textBlock) {
-          if (i === next) {
-            gsap.fromTo(textBlock, 
-              { opacity: 0, visibility: "visible" }, 
-              { opacity: 1, duration: 0.4, ease: "power2.out", overwrite: "auto" }
-            );
-          } else {
-            gsap.to(textBlock, {
-              opacity: 0,
-              visibility: "hidden",
-              duration: 0.3,
-              ease: "power2.in",
-              overwrite: "auto"
-            });
-          }
-        }
-      });
-    });
+    const prevContainer = containerRef.current.querySelector(`.s3-text-${prev + 1}`) as HTMLElement;
+    const nextContainer = containerRef.current.querySelector(`.s3-text-${next + 1}`) as HTMLElement;
+
+    const isMobile = window.innerWidth < 768;
+
+    if (isMobile) {
+      // MOBILE SLIDER REVEAL: Changed to use the EXACT SAME line-reveal animation configuration as Desktop
+      const prevInners = slideLinesCache.current[prev] || [];
+      const nextInners = slideLinesCache.current[next] || [];
+
+      if (prevContainer && nextContainer) {
+        gsap.to(prevInners, {
+          yPercent: -40,
+          opacity: 0,
+          duration: 0.35,
+          ease: "power2.in",
+          overwrite: "auto",
+          onComplete: () => {
+            gsap.set(prevContainer, { visibility: "hidden", opacity: 0 });
+          },
+        });
+
+        gsap.set(nextContainer, { visibility: "visible", opacity: 1 });
+        gsap.set(nextInners, { yPercent: 105, opacity: 0 });
+
+        gsap.to(nextInners, {
+          yPercent: 0,
+          opacity: 1,
+          duration: 0.6,
+          stagger: 0.04,
+          ease: "power3.out",
+          delay: 0.15,
+          overwrite: "auto",
+        });
+      }
+    } else {
+      // DESKTOP SLIDER REVEAL: Left completely untouched
+      const prevInners = slideLinesCache.current[prev] || [];
+      const nextInners = slideLinesCache.current[next] || [];
+
+      if (prevContainer && nextContainer) {
+        gsap.to(prevInners, {
+          yPercent: -40,
+          opacity: 0,
+          duration: 0.35,
+          ease: "power2.in",
+          overwrite: "auto",
+          onComplete: () => {
+            gsap.set(prevContainer, { visibility: "hidden", opacity: 0 });
+          },
+        });
+
+        gsap.set(nextContainer, { visibility: "visible", opacity: 1 });
+        gsap.set(nextInners, { yPercent: 105, opacity: 0 });
+
+        gsap.to(nextInners, {
+          yPercent: 0,
+          opacity: 1,
+          duration: 0.6,
+          stagger: 0.04,
+          ease: "power3.out",
+          delay: 0.15,
+          overwrite: "auto",
+        });
+      }
+    }
 
     gsap.delayedCall(CLIP_DURATION, () => {
       animating.current = false;
@@ -128,9 +287,8 @@ export default function SectionThree() {
 
   return (
     <div ref={containerRef} className="w-full h-full">
-      {/* ── DESKTOP LAYOUT ── */}
       <section
-        className="s3-desktop-section hidden md:block w-full min-h-screen relative overflow-hidden z-30"
+        className="s3-main-section w-full min-h-screen relative overflow-hidden z-30"
         style={{ pointerEvents: "auto" }}
       >
         {slides.map((slide, i) => (
@@ -157,24 +315,23 @@ export default function SectionThree() {
           style={{
             position: "absolute",
             inset: 0,
-            background: "rgba(0, 0, 0, 0.32)",
+            background: "rgba(0, 0, 0, 0.4)",
             zIndex: 2,
           }}
         />
 
-        {/* Right Floating Nav Tab List */}
+        {/* Navigation Menu Links */}
         <div
-          className="s3-services-nav"
+          className="s3-services-nav flex text-right items-end md:items-start"
           style={{
             position: "absolute",
-            right: "6%",
-            top: "50%",
+            right: "5%",
+            top: "43%",
             transform: "translateY(-50%)",
-            zIndex: 20,
-            display: "flex",
+            zIndex: 40,
             flexDirection: "column",
-            gap: "28px",
-            minWidth: "300px",
+            gap: "20px",
+            maxWidth: "400px",
           }}
         >
           {slides.map((slide, i) => (
@@ -182,25 +339,23 @@ export default function SectionThree() {
               key={slide.id}
               type="button"
               onClick={() => handleTab(i)}
-              className="s3-card-btn font-display text-left transition-all duration-300 hover:!opacity-100"
+              className="s3-card-btn font-display text-right transition-opacity duration-300 text-[14px] md:text-[16px]"
               style={{
                 background: "none",
                 border: "none",
                 padding: 0,
                 cursor: "pointer",
-                fontSize: "18px",
-                fontWeight: current === i ? "500" : "400",
                 color: "#F4EEDF",
-                transform: current === i ? "translateX(8px)" : "translateX(0)",
                 opacity: current === i ? 1 : 0.5,
               }}
+           
             >
-              {slide.label}
+              <span>{slide.label}</span>
             </button>
           ))}
         </div>
 
-        {/* Main Content Layout Wrapper */}
+        {/* Text Area */}
         <div
           className="w-full"
           style={{
@@ -211,223 +366,47 @@ export default function SectionThree() {
             zIndex: 10,
             display: "flex",
             flexDirection: "column",
-            paddingBottom: "55px",
           }}
         >
-          {/* Bottom Left Descriptive Blocks */}
           <div
-            className="section-container w-full"
+            className="section-container w-full px-6 md:pl-[5%] md:pr-[42%] pb-[45px]"
             style={{
               display: "flex",
               alignItems: "flex-end",
               justifyContent: "space-between",
-              paddingLeft: "5%",
-              paddingRight: "10%",
-              paddingBottom: "35px",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", flex: 1 }}>
-              <div className="s3-text-content-wrapper" style={{ position: "relative", flex: 1, minHeight: "220px" }}>
+              <div className="s3-text-content-wrapper w-full relative min-h-[240px] md:min-h-[180px] md:!mb-16 lg:!mb-10">
                 {slides.map((slide, i) => (
                   <div
                     key={slide.id}
                     className={`s3-text s3-text-${i + 1}`}
                     style={{
                       position: "absolute",
-                      top: 0,
+                      top: 30,
                       left: 0,
                       display: "flex",
                       flexDirection: "column",
                       width: "100%",
-                      visibility: i === 0 ? "visible" : "hidden",
-                      opacity: i === 0 ? 1 : 0,
                     }}
                   >
-                    <span className="font-body text-[14px] text-[#F4EEDF] block mb-2 tracking-widest">
+                    <span className="s3-counter font-body text-[12px] md:text-[14px] text-[#F4EEDF] block !mb-1 md:!mb-2">
                       (0{i + 1})
                     </span>
-                    
-                    <h2 className="font-display text-[#F4EEDF] text-[48px] leading-[1.1] max-w-[650px]">
-                      {slide.label} 
+
+                    <h2 className="font-display text-[#F4EEDF] text-3xl md:text-5xl font-bold">
+                      {slide.label}
                     </h2>
 
-                    <p className="!mt-4 max-w-[440px] font-body text-[15px] leading-relaxed text-[#F4EEDF]">
+                    <p className="!mt-2 lg:!mt-4 max-w-[440px] font-body text-[#F4EEDF] text-sm md:text-base">
                       {slide.desc}
                     </p>
                   </div>
                 ))}
               </div>
             </div>
-
-            <a
-              href="/contact"
-              style={{
-                position: "relative",
-                display: "inline-block",
-                width: "fit-content",
-                paddingBottom: 8,
-                fontSize: 14,
-                fontWeight: 500,
-                textTransform: "uppercase",
-                color: "#F4EEDF",
-                textDecoration: "none",
-                flexShrink: 0,
-                marginLeft: 40,
-                letterSpacing: "0.1em",
-              }}
-              className="group transition-opacity duration-200 hover:opacity-70 font-body"
-            >
-              CONTACT US
-              <span
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: 1,
-                  background: "#F4EEDF",
-                  transition: "transform 0.2s ease",
-                }}
-                className="group-hover:-translate-y-[2px]"
-              />
-            </a>
           </div>
-        </div>
-      </section>
-
-      {/* ── MOBILE LAYOUT ── */}
-      <section
-        className="s3-mobile-section flex md:hidden flex-col section-container w-full min-h-screen relative overflow-hidden z-30"
-        style={{
-          pointerEvents: "auto",
-          background: "#19211C",
-        }}
-      >
-        <div style={{ position: "relative", width: "100%", height: "45vh", overflow: "hidden", marginTop: 32 }}>
-          {slides.map((slide, i) => (
-            <img
-              key={slide.id}
-              className={`s3-bg s3-bg-${i + 1}`}
-              src={slide.img}
-              alt=""
-              aria-hidden
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                zIndex: 1,
-                clipPath: i === 0 ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
-              }}
-            />
-          ))}
-
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              zIndex: 2,
-              background: "linear-gradient(2.13deg, #19211C 6.01%, rgba(21,40,31,0) 59.11%)",
-              pointerEvents: "none",
-            }}
-          />
-
-          <div
-            style={{
-              position: "absolute",
-              bottom: 20,
-              left: 20,
-              right: 0,
-              zIndex: 3,
-              display: "flex",
-              overflowX: "auto",
-              paddingRight: 20,
-              gap: 24,
-              scrollbarWidth: "none",
-            }}
-            className="no-scrollbar"
-          >
-            {slides.map((slide, i) => (
-              <button
-                key={slide.id}
-                type="button"
-                onClick={() => handleTab(i)}
-                className="font-body text-left"
-                style={{
-                  background: "none",
-                  border: "none",
-                  padding: 0,
-                  paddingBottom: 6,
-                  cursor: "pointer",
-                  fontSize: 13,
-                  flexShrink: 0,
-                  color: current === i ? "#F4EEDF" : "rgba(244,238,223,0.4)",
-                  borderBottom: current === i ? "1.5px solid #F4EEDF" : "1.5px solid transparent",
-                  transition: "color 0.25s, border-color 0.25s",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {slide.tab}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ position: "relative", flexGrow: 1, minHeight: "220px" }}>
-          {slides.map((slide, i) => (
-            <div
-              key={slide.id}
-              className={`s3-text s3-text-${i + 1}`}
-              style={{
-                position: "absolute",
-                top: "30px",
-                left: "0",
-                right: "20px",
-                display: "flex",
-                flexDirection: "column",
-                visibility: i === 0 ? "visible" : "hidden",
-                opacity: i === 0 ? 1 : 0,
-              }}
-            >
-              <h2 className="font-display text-[#F4EEDF] text-[32px] leading-tight">
-                {slide.label} 
-              </h2>
-
-              <p className="font-body text-[#F4EEDF]/90 mt-3 text-[14px] leading-relaxed">
-                {slide.desc}
-              </p>
-
-              <div style={{ marginTop: 24 }}>
-                <a
-                  href="/services"
-                  className="font-body"
-                  style={{
-                    position: "relative",
-                    display: "inline-block",
-                    paddingBottom: 6,
-                    fontSize: 13,
-                    fontWeight: 500,
-                    textTransform: "uppercase",
-                    color: "#F4EEDF",
-                    textDecoration: "none",
-                  }}
-                >
-                  LEARN MORE
-                  <span
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      height: 1,
-                      background: "#F4EEDF",
-                    }}
-                  />
-                </a>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
     </div>

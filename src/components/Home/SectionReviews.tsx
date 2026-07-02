@@ -61,75 +61,101 @@ export default function SectionReviews() {
   };
 
   return (
-    <section className="relative w-full h-full min-h-screen overflow-hidden bg-[#0A1410] flex items-center justify-center !pb-32 !pt-12">
+    <section className="section-container relative min-h-screen overflow-hidden bg-[#0A1410] flex flex-col items-center justify-center">
       
       {/* BACKGROUND IMAGE - Dark ambient water environment matched to Figma */}
       <div className="absolute inset-0 z-0">
         <img
           src="/section-reviews-bg.webp" 
           alt="Grand Pools background scenery"
-          className="w-full h-full object-cover "
+          className="w-full h-full object-cover"
         />
       </div>
 
-      {/* CORE WORKSPACE CONTENT PANEL */}
-      <div className="relative z-10 w-full max-w-[660px] mx-auto px-6 md:px-12 flex flex-col items-center">
+      {/* CORE WORKSPACE CONTENT PANEL WITH SIDE ARROWS */}
+      <div className="relative z-10 w-full max-w-[850px] flex items-center justify-between  flex-1">
         
-        {/* Active Review Box */}
-        <div className="transition-opacity duration-500 ease-in-out w-full flex flex-col items-center max-w-[700px] gap-6 md:gap-8">
-          
-          {/* 1. 5-Star Rating Indicator - Centered */}
-          <div className="flex justify-center gap-1">
-            {Array.from({ length: REVIEWS_DATA[activeIndex].stars }).map((_, i) => (
-              <span key={i} className="text-[#E0D3B2] !text-[24px] tracking-widest">★</span>
-            ))}
-          </div>
+        {/* Left Arrow Button (SVG Chevron) */}
+        <button 
+          onClick={prevReview}
+          className="text-[#F4EEDF]/40 hover:text-[#F4EEDF] transition-colors p-2 select-none cursor-pointer "
+          aria-label="Previous review"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 md:w-8 md:h-8">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
 
-          {/* 2. Author Profile - Appears above text on Mobile, and inside the baseline on Desktop */}
-          <div className="flex items-center gap-4 w-full justify-center md:hidden">
-            <img
-              src={REVIEWS_DATA[activeIndex].avatar}
-              alt={REVIEWS_DATA[activeIndex].author}
-              className="w-9 h-9 rounded-full object-cover"
-            />
-            <span className="font-display text-[#F4EEDF] text-2xl">
-              {REVIEWS_DATA[activeIndex].author}
-            </span>
-          </div>
-
-          {/* 3. Central Review Statement Paragraph */}
-          <p className="font-body text-[#F4EEDF] !text-left whitespace-pre-line w-full text-base leading-relaxed">
-            {REVIEWS_DATA[activeIndex].text}
-          </p>
-
-          {/* 4. Desktop Footer / Mobile Date Display Row */}
-          <div className="w-full flex items-center justify-between !pt-8">
+        {/* Active Review Box Container */}
+        <div className="w-full max-w-[660px] mx-auto flex flex-col items-center pb-12">
+          <div className="transition-opacity duration-500 ease-in-out w-full flex flex-col items-center gap-8 md:gap-12">
             
-            {/* Author (Only visible on Desktop to avoid duplicate renders) */}
-            <div className="hidden md:flex items-center gap-3">
+            {/* 1. 5-Star Rating Indicator - Centered */}
+            <div className="flex justify-center gap-1">
+              {Array.from({ length: REVIEWS_DATA[activeIndex].stars }).map((_, i) => (
+                <span key={i} className="text-[#E0D3B2] !text-[28px] tracking-widest">★</span>
+              ))}
+            </div>
+
+            {/* 2. Author Profile - Appears above text on Mobile, and inside the baseline on Desktop */}
+            <div className="flex items-center gap-4 w-full justify-start md:hidden">
               <img
                 src={REVIEWS_DATA[activeIndex].avatar}
                 alt={REVIEWS_DATA[activeIndex].author}
-                className="w-9 h-9 rounded-full object-cover"
+                className="w-12 h-12 rounded-full object-cover"
               />
-              <span className="font-display text-[#F4EEDF] text-2xl md:text-3xl">
+              <span className="font-display text-[#F4EEDF] text-3xl">
                 {REVIEWS_DATA[activeIndex].author}
               </span>
             </div>
 
-            {/* Date Display Timestamp - Aligns left on mobile via 'w-full text-left', adapts on desktop */}
-            <div className="text-[#F4EEDF]/60 font-body text-sm w-full text-left md:w-auto md:text-right">
-              {REVIEWS_DATA[activeIndex].date}
-            </div>
-            
-          </div>
 
+
+            {/* 3. Central Review Statement Paragraph */}
+            <p className="font-body text-[#F4EEDF] !text-left whitespace-pre-line w-full">
+              {REVIEWS_DATA[activeIndex].text}
+            </p>
+
+            {/* 4. Desktop Footer / Mobile Date Display Row */}
+            <div className="w-full flex items-center justify-between lg:!pt-8">
+              
+              {/* Author (Only visible on Desktop to avoid duplicate renders) */}
+              <div className="hidden md:flex items-center gap-3">
+                <img
+                  src={REVIEWS_DATA[activeIndex].avatar}
+                  alt={REVIEWS_DATA[activeIndex].author}
+                  className="w-9 h-9 rounded-full object-cover"
+                />
+                <span className="font-display text-[#F4EEDF] text-2xl md:text-3xl">
+                  {REVIEWS_DATA[activeIndex].author}
+                </span>
+              </div>
+
+              {/* Date Display Timestamp */}
+              <div className="text-[#F4EEDF] font-body text-sm w-full text-left md:w-auto md:text-right">
+                {REVIEWS_DATA[activeIndex].date}
+              </div>
+              
+            </div>
+
+          </div>
         </div>
+
+        {/* Right Arrow Button (SVG Chevron) */}
+        <button 
+          onClick={nextReview}
+          className="text-[#F4EEDF]/40 hover:text-[#F4EEDF] transition-colors p-2 select-none cursor-pointer"
+          aria-label="Next review"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 md:w-8 md:h-8">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </button>
 
       </div>
 
       {/* FIXED BOTTOM INDICATOR */}
-      <div className="!absolute !bottom-22 !left-1/2 !-translate-x-1/2 z-20 w-full max-w-[740px] px-6">
+      <div className="absolute bottom-[64px] left-1/2 -translate-x-1/2 z-20 w-full max-w-[90%] lg:max-w-[720px]">
         <div 
           onClick={handleBarClick}
           className="w-full h-[2px] bg-[#F4EEDF]/20 relative overflow-hidden cursor-pointer"
