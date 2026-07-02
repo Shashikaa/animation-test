@@ -44,7 +44,6 @@ export default function HomeMobile() {
     let timelineInitialized = false;
 
     const ctx = gsap.context(() => {
-      // FIX: Removed the non-existent clearScrollVelocityTracking function
       gsap.ticker.lagSmoothing(0);
 
       ScrollTrigger.config({
@@ -90,10 +89,12 @@ export default function HomeMobile() {
         visibility: "hidden",
         yPercent:   100,
         zIndex:     128,
+        clipPath:   "none"
       });
       gsap.set(".s8-bg-img", { yPercent: 20 });
 
-      gsap.set(".section-9", { visibility: "hidden", yPercent: 0, zIndex: 121 });
+      // Section 9 Setup (Higher z-index than Section 8 for overlapping slide up)
+      gsap.set(".section-9", { visibility: "hidden", yPercent: 100, zIndex: 135 });
       gsap.set(".s9-bg-img", { yPercent: 20 });
       gsap.set(".s9-title",  { opacity: 0 });
       gsap.set(".s9-para",   { opacity: 0 });
@@ -108,11 +109,11 @@ export default function HomeMobile() {
 
       // Force heavy layout sections to GPU hardware layers natively
       gsap.set([
-        ".hero-bg-wrapper", ".hero-bg", ".s2-mob-row5", ".section-3", ".section-10", 
+        ".hero-bg-wrapper", ".hero-bg", ".s2-mob-row5", ".s2-mob-scroll-wrapper", ".section-3", ".section-10", 
         ".s10-img-right-wrap", ".s10-scrollable-container", ".section-reviews", 
         ".section-7", ".s7-bg-img", ".s7-mob-bg", ".section-8", ".s8-bg-img", 
         ".s8-mob-bg", ".section-9", ".s9-bg-img", ".section-cta", ".footer"
-      ], { force3D: true });
+      ], { force3D: true, willChange: "transform" });
 
       const waitForMobBgs = (cb: () => void) => {
         let framesChecked = 0;
@@ -243,12 +244,14 @@ export default function HomeMobile() {
                 ease: "power2.in"
               }, "s2TextDismissal")
               
+              // Optimized Section 2 scroll mapping to fix performance lag
               .addLabel("s2MobileScrollStart", ">")
               .set(".s2-mob-scroll-wrapper", { visibility: "visible" }, "s2MobileScrollStart")
               .fromTo(".s2-mob-scroll-wrapper", 
-                { y: "100vh" }, 
+                { yPercent: 100, y: 0 }, 
                 { 
-                  y: () => (window.innerWidth >= 768 ? "-60vh" : "-70vh"), 
+                  yPercent: () => (window.innerWidth >= 768 ? -60 : -70),
+                  y: 0,
                   duration: TRANSITION * 3.5, 
                   ease: "power1.out" 
                 }, 
@@ -316,9 +319,9 @@ export default function HomeMobile() {
 
               .set([".section-7", ".section-reviews"], { visibility: "hidden" })
 
-              // Section 8 to 9
+              // Section 8 to 9 Slide Up Transition Overlap
               .set(".section-9", { visibility: "visible" })
-              .to(".section-8", { clipPath: "inset(0% 0% 100% 0%)", duration: TRANSITION, ease: EASE })
+              .to(".section-9", { yPercent: 0, duration: TRANSITION, ease: EASE })
               .to(".s9-bg-img", { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
               .to(".s9-title",  { opacity: 1,  duration: 1.2, ease: "power2.out" }, "<+1.0")
               .to(".s9-para",   { opacity: 1,  duration: 1.2, ease: "power3.out" }, "<")
@@ -410,7 +413,10 @@ export default function HomeMobile() {
           <SectionReviews />
         </div>
 
-        <div className="section-9 absolute inset-0 z-[121]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        <div 
+          className="section-9 absolute inset-0 z-[135]" 
+          style={{ pointerEvents: "auto", visibility: "hidden", transform: "translateY(100%)" }}
+        >
           <SectionNine />
         </div>
         <div className="section-8 absolute inset-0 z-[128]" style={{ pointerEvents: "auto", visibility: "hidden" }}>

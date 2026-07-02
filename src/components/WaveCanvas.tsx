@@ -27,39 +27,28 @@ const vertexShader = `
   }
 `;
 
-// UNTOUCHED: Keeping your exact original shader and color blending math
 const fragmentShader = `
-  uniform sampler2D map;             // Pure, Untouched Background Image Texture
-  uniform sampler2D videoMap;        // Caustics Video Texture
-  uniform sampler2D displacementMap; // Fluid Sim Layer
+  uniform sampler2D map;             
+  uniform sampler2D videoMap;        
+  uniform sampler2D displacementMap; 
   uniform vec2 uvMapScale;
   uniform float displacementScale;
   varying vec2 vUv;
 
   void main() {
-    // 1. Sample displacement map for the fluid ripple geometry
     vec4 disp = texture2D(displacementMap, vUv);
     vec3 normal = vec3(disp.b, disp.a, sqrt(max(0.0, 1.0 - dot(disp.ba, disp.ba))));
 
-    // 2. Map coordinates safely using aspect correction and wave displacement
     vec2 dUv = normal.xy * displacementScale * 0.04;
     vec2 newUv = ((vUv - 0.5) * uvMapScale) + 0.5 + dUv;
 
-    // 3. Sample Base Image (Pure, unaltered original pixel values)
     vec4 baseColor = texture2D(map, newUv);
-
-    // 4. Sample Caustics Video 
     vec4 videoColor = texture2D(videoMap, newUv);
 
-    // Calculate light luminance of the video overlay
     float videoLuminance = dot(videoColor.rgb, vec3(0.299, 0.587, 0.114));
-
-    // Define overlay opacity (Adjust this value up or down to change water intensity)
     float causticsStrength = 0.08; 
 
-    // 5. Pure additive overlay: Only reflects light, never dulls or darkens background values
     vec3 finalColor = baseColor.rgb + (videoColor.rgb * videoLuminance * causticsStrength);
-
     gl_FragColor = vec4(finalColor, baseColor.a);
   }
 `;
@@ -67,29 +56,36 @@ const fragmentShader = `
 export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState<boolean | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const appInstanceRef = useRef<any>(null);
   const hasFiredReady = useRef(false);
 
   useEffect(() => {
-    const checkMobile = () => {
+    const handleResize = () => {
       const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent
       );
-      const isSmallScreen = window.innerWidth < 1024;
-      return isMobileUA || isSmallScreen;
+      // 1024px effectively catches mobile devices and standard tablets (iPad, etc.)
+      const isSmallScreen = window.innerWidth <= 1024;
+      
+      setIsMobileOrTablet(isMobileUA || isSmallScreen);
     };
 
-    if (checkMobile()) {
-      setIsMobile(true);
-      setIsReady(true);
-      onReady?.();
-    }
-  }, [onReady]);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
-    if (isMobile) return;
+    if (isMobileOrTablet === null) return;
+
+    if (isMobileOrTablet) {
+      setIsReady(true);
+      onReady?.();
+      return;
+    }
+
     if (!canvasRef.current || !videoRef.current) return;
 
     let destroyed = false;
@@ -149,7 +145,6 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
     THREE.PMREMGenerator.prototype.fromScene = originalFromScene;
     appInstance.three.resize();
 
-    // UNTOUCHED: Keeping your exact working color rendering properties
     const renderer = appInstance.three.renderer;
     renderer.toneMapping = NoToneMapping;
     renderer.outputColorSpace = LinearSRGBColorSpace; 
@@ -245,25 +240,22 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
       };
     }
 
-    // ── STEP 1: Update attenuation to match your LiquidCanvas wave physics decay
     if (appInstance.liquidPlane.attenuation !== undefined) {
       appInstance.liquidPlane.attenuation = 0.95; 
     }
 
-    // ── STEP 2: Update interaction settings to match your LiquidCanvas tracking properties
     if (appInstance.interaction) {
       let lastDropTime = 0;
       appInstance.interaction.onMove = () => {
         const now = performance.now();
-        // Lower interval constraint (from 35ms down to 16ms) for smoother interactive trails
         if (now - lastDropTime < 16) return; 
         lastDropTime = now;
 
         appInstance.liquidPlane.addDrop(
           appInstance.interaction.nPosition.x,
           appInstance.interaction.nPosition.y,
-          0.04, // Updated drop radius size
-          0.004 // Updated splash wave force weight
+          0.04, 
+          0.004 
         );
       };
     }
@@ -301,31 +293,36 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
         appInstanceRef.current = null;
       }
     };
-  }, [isMobile, imageSrc]);
+  }, [isMobileOrTablet, imageSrc]);
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-black">
-      <video
-        ref={videoRef}
-        src="/videos/Pool-Water-Reflect.mp4"
-        loop
-        muted
-        playsInline
-        autoPlay
-        preload="auto"
-        crossOrigin="anonymous"
-        className="hidden"
-      />
+      {/* Heavy Video Element only loads if it's a desktop setup */}
+      {!isMobileOrTablet && (
+        <video
+          ref={videoRef}
+          src="/videos/Pool-Water-Reflect.mp4"
+          loop
+          muted
+          playsInline
+          autoPlay
+          preload="auto"
+          crossOrigin="anonymous"
+          className="hidden"
+        />
+      )}
 
-      {isMobile && imageSrc && (
+      {/* Pure, original image output for Mobile & Tablets */}
+      {isMobileOrTablet && imageSrc && (
         <img
           src={imageSrc}
-          alt="Static Mobile Fallback Background"
+          alt="Static Background"
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
         />
       )}
       
-      {!isMobile && (
+      {/* Interactive WebGL Canvas for Desktop Only */}
+      {!isMobileOrTablet && isMobileOrTablet !== null && (
         <canvas
           ref={canvasRef}
           className={`absolute inset-0 w-full h-full block transition-opacity duration-500 ease-out ${

@@ -13,29 +13,30 @@ const globalTextureCache: Record<string, any> = {};
 
 export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState<boolean | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const appInstanceRef = useRef<any>(null);
 
-  // ── STEP 1: MOBILE DETECTION ──
+  // ── STEP 1: MOBILE & TABLET DETECTION ──
   useEffect(() => {
-    const checkMobile = () => {
+    const handleResize = () => {
       const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent
       );
-      const isSmallScreen = window.innerWidth < 1024;
-      return isMobileUA || isSmallScreen;
+      // 1024px captures smartphones and standard tablets (portrait/landscape)
+      const isSmallScreen = window.innerWidth <= 1024;
+      
+      setIsMobileOrTablet(isMobileUA || isSmallScreen);
     };
 
-    if (checkMobile()) {
-      setIsMobile(true);
-      setIsReady(true); // Show fallback immediately
-    }
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // ── HOOK 1: ENGINE INITIALIZATION ──
   useEffect(() => {
-    if (isMobile || !canvasRef.current) return;
+    if (isMobileOrTablet === null || isMobileOrTablet || !canvasRef.current) return;
 
     let destroyed = false;
 
@@ -136,11 +137,11 @@ export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
         appInstanceRef.current = null;
       }
     };
-  }, [isMobile]);
+  }, [isMobileOrTablet]);
 
   // ── HOOK 2: HARDWARE ACCELERATED TEXTURE INSTANCING ──
   useEffect(() => {
-    if (isMobile) return;
+    if (isMobileOrTablet === null || isMobileOrTablet) return;
     
     let active = true;
     let rafId: number;
@@ -183,10 +184,15 @@ export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
       active = false;
       cancelAnimationFrame(rafId);
     };
-  }, [imageSrc, isMobile]);
+  }, [imageSrc, isMobileOrTablet]);
 
   // ── STEP 3: CLEAN RENDERING STRATEGY ──
-  if (isMobile) {
+  
+  // Render nothing until screen layout state initializes safely
+  if (isMobileOrTablet === null) return null;
+
+  // Render pure, lightweight original background style for handhelds/tabs
+  if (isMobileOrTablet) {
     return (
       <div 
         style={{ backgroundImage: `url(${imageSrc})` }}
@@ -195,6 +201,7 @@ export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
     );
   }
 
+  // Interactive WebGL Canvas for Desktop layouts
   return (
     <canvas 
       ref={canvasRef} 

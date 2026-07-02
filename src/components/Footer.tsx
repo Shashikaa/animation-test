@@ -83,7 +83,7 @@ className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[30px] "
             alignItems: "center",
             justifyContent: "center",
             overflow: "hidden",
-            marginBottom: 48,
+            marginBottom: 0,
           }}
         >
           <img
@@ -91,7 +91,7 @@ className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[30px] "
             alt="Grand Pools"
             style={{
               width: "100%",
-              maxWidth: "1920px",
+              maxWidth: "1140px",
               height: "auto",
               display: "block",
               pointerEvents: "none",
