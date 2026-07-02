@@ -166,20 +166,20 @@ export default function SectionTwo() {
 
           {/* Row 5: Stacked Images Layout Container */}
           <div className="s2-mob-row5-container relative w-full max-w-[100%] !h-[270px] md:!h-[380px] self-end overflow-hidden" style={{ transform: "translate3d(0,0,0)" }}>
-            {/* UNDERNEATH LAYER */}
+            {/* BASE / INITIAL IMAGE LAYER */}
             <div className="s2-mob-row5-under absolute inset-0 w-full h-full z-10">
               <img 
-                src="/sectiontwo-right-under.webp" 
-                alt="Premium pool design structural layout" 
+                src="/sectiontwo-right.webp" 
+                alt="Premium overview pool structural layout" 
                 className="w-full h-full object-cover"
                 loading="eager"
               />
             </div>
-            {/* TOP INITIAL LAYER */}
-            <div className="s2-mob-row5 absolute inset-0 w-full h-full z-20" style={{ clipPath: "inset(0% 0% 0% 0%)", transform: "translate3d(0,0,0)" }}>
+            {/* NEW TARGET IMAGE FADING IN ON TOP */}
+            <div className="s2-mob-row5 absolute inset-0 w-full h-full z-20" style={{ opacity: 0, transform: "translate3d(0,0,0)" }}>
               <img 
-                src="/sectiontwo-right.webp" 
-                alt="Premium overview pool structural layout" 
+                src="/sectiontwo-right-under.webp" 
+                alt="Premium pool design structural layout" 
                 className="w-full h-full object-cover"
                 loading="eager"
               />

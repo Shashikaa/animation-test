@@ -54,7 +54,9 @@ export default function HomeMobile() {
 
       gsap.set(".section-2", { clipPath: "none", zIndex: 25 });
       gsap.set(".s2-mob-scroll-wrapper", { opacity: 0, y: "100vh" });
-      gsap.set(".s2-mob-row5", { clipPath: "inset(0% 0% 0% 0%)" });
+      
+      // Modified to use clean Opacity configuration instead of Clip-Paths
+      gsap.set(".s2-mob-row5", { opacity: 0, clipPath: "none" });
       gsap.set(".s2-mob-row5-under", { opacity: 1 });
 
       gsap.set(".section-3", { visibility: "hidden", yPercent: 100, zIndex: 100 });
@@ -218,7 +220,8 @@ export default function HomeMobile() {
                 "s2MobileScrollStart"
               )
               
-              .to(".s2-mob-row5", { clipPath: "inset(0% 100% 0% 0%)", duration: ACTION }, ">")
+              // Smooth absolute Opacity Cross-Fade logic instead of clip-path masks
+              .to(".s2-mob-row5", { opacity: 1, duration: ACTION }, ">")
 
               // Section 3 Slide Up
               .addLabel("sec3Start", ">")
@@ -280,7 +283,7 @@ export default function HomeMobile() {
               // CTA Arrival
               .addLabel("ctaStart", ">")
               .set(".section-cta", { visibility: "visible" }, "ctaStart")
-              .to(".section-cta", { yPercent: 0,   duration: ACTION }, "ctaStart") 
+              .to(".section-cta", { yPercent: 0,    duration: ACTION }, "ctaStart") 
               .to(".s9-bg-img",   { yPercent: -10, duration: ACTION }, "ctaStart")
 
               // Footer Slide Up
@@ -350,7 +353,7 @@ export default function HomeMobile() {
         }
       `}</style>
 
-      <div className="pin-all relative overflow-hidden bg-black">
+      <div className="pin-all relative overflow-hidden ">
         <div className="section-2 absolute inset-0 z-[25]">
           <SectionTwo />
         </div>

@@ -4,15 +4,25 @@ export default function Hero() {
   return (
     <section className="hero relative w-full h-screen overflow-hidden bg-transparent">
 
-      {/* Gradient layer — sits underneath the image, faded independently */}
+      {/* Gradient layer — sits underneath everything at the absolute bottom */}
       <div
-        className="hero-gradient-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#10221C] to-[#0A4145] will-change-[opacity]"
+        className="hero-gradient-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#10221C] to-[#0A4145] will-change-[opacity] z-10"
         style={{ opacity: 1 }}
       />
 
-      {/* Targetable Background wrapper layer for the collapsing animation */}
+      {/* NEW LOCATION: Secondary Text Wrapper placed UNDER the background image layer */}
+      <div className="hero-secondary-text-wrap w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px] absolute bottom-[140px] md:bottom-[180px] lg:bottom-40 left-6 sm:left-12 lg:left-24 z-15 overflow-visible pt-4">
+        <p
+          className="hero-secondary-para font-body text-[#F4EEDF] text-left text-sm sm:text-base leading-relaxed m-0 p-0"
+          style={{ visibility: "hidden" }}
+        >
+          From renovations to new builds, we design and construct pools that combine style, functionality, and durability.
+        </p>
+      </div>
+
+      {/* Targetable Background wrapper layer — now sits on top of the secondary text (z-20) */}
       <div
-        className="hero-bg-wrapper absolute inset-0 w-full h-full will-change-[clip-path] z-21"
+        className="hero-bg-wrapper absolute inset-0 w-full h-full will-change-[clip-path] z-20"
         style={{ clipPath: "inset(0% 0% 0% 0%)" }}
       >
         <div
@@ -21,28 +31,19 @@ export default function Hero() {
         />
       </div>
 
-      {/* Main Content Layer */}
+      {/* Main Content Layer (Titles and Indicators stay strictly on top at z-30) */}
       <div className="section-container relative h-full w-full flex flex-col justify-end items-start lg:flex-row lg:items-end lg:justify-between !pb-[100px] md:!pb-[140px] lg:!pb-30 gap-8 z-30">
 
         {/* Isolated content stack for the Left Side */}
         <div className="max-w-xl lg:max-w-4xl flex flex-col justify-end overflow-visible relative">
-
           {/* Title Block */}
           <div className="block h-fit overflow-visible relative z-30">
             <h1 className="hero-title text-[#F4EEDF] text-display text-[36px] sm:text-[48px] lg:!text-[80px] font-[100] text-left will-change-[transform,opacity] m-0 p-0 select-none leading-tight relative z-30">
               Refined Pools <br /> for Modern Living
             </h1>
           </div>
-
-          {/* Secondary Text Wrapper */}
-          <div className="hero-secondary-text-wrap w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px] absolute bottom-10 lg:bottom-30 left-0 translate-y-full z-20 overflow-visible pt-4">
-            <p
-              className="hero-secondary-para font-body text-[#F4EEDF] text-left text-sm sm:text-base leading-relaxed m-0 p-0"
-              style={{ visibility: "hidden" }}
-            >
-              From renovations to new builds, we design and construct pools that combine style, functionality, and durability.
-            </p>
-          </div>
+          
+          {/* Note: The secondary paragraph container was moved completely outside this container to manage z-index cleanly */}
         </div>
 
         {/* Right Text Block */}
