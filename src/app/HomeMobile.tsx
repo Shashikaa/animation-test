@@ -6,7 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSite } from "./context/SiteContext";
 import dynamic from "next/dynamic";
 
-import Hero          from "../components/Home/Hero";
+import Hero           from "../components/Home/Hero";
 import SectionTwo    from "../components/Home/SectionTwo";
 import SectionThree  from "../components/Home/SectionThree";
 import SectionCTA    from "../components/SectionCTA";
@@ -102,8 +102,12 @@ export default function HomeMobile() {
         autoRefreshEvents: "visibilitychange,DOMContentLoaded,load", 
       });
 
-      // 🔴 OPTIMIZATION: Removed ScrollTrigger.normalizeScroll from here.
-      // This stops JS from intercepting native touch frames, eliminating the lag/slow feel.
+      // 🟢 OPTIMIZATION FIXED: Normalize native touch scrolling container with JS timelines.
+      // This enforces fluid scrollbar matching across mobile browser engines.
+      ScrollTrigger.normalizeScroll({
+        allowNestedScroll: true,
+        debounce: false
+      });
 
       const ACTION      = 2.0; 
       const DEAD_SCROLL = 0.4; 
@@ -140,8 +144,10 @@ export default function HomeMobile() {
             screen.orientation?.addEventListener("change", onOrientationChange);
             vvCleanup = () => screen.orientation?.removeEventListener("change", onOrientationChange);
 
+            // 🟢 OPTIMIZATION FIXED: Cached values declarations to block layout thrashing
             let cachedFlightY = 0;
             let cachedFlightX = 0;
+            let cachedScrollWrapperY = 0;
 
             const tl = gsap.timeline({
               defaults: { 
@@ -166,6 +172,14 @@ export default function HomeMobile() {
                   if (startEl && targetEl) {
                     cachedFlightY = targetEl.getBoundingClientRect().top - startEl.getBoundingClientRect().top;
                     cachedFlightX = targetEl.getBoundingClientRect().left - startEl.getBoundingClientRect().left;
+                  }
+
+                  // 🟢 OPTIMIZATION FIXED: Heavy layout querying is performed once here instead of mid-scroll ticks
+                  const scrollWrapper = document.querySelector(".s2-mob-scroll-wrapper") as HTMLElement;
+                  if (scrollWrapper) {
+                    cachedScrollWrapperY = -(scrollWrapper.offsetHeight - window.innerHeight * 0.85);
+                  } else {
+                    cachedScrollWrapperY = window.innerWidth >= 768 ? -window.innerHeight * 0.55 : -window.innerHeight * 0.65;
                   }
                 }
               },
@@ -207,13 +221,7 @@ export default function HomeMobile() {
               .fromTo(".s2-mob-scroll-wrapper", 
                 { y: () => window.innerHeight }, 
                 { 
-                  y: () => {
-                    const scrollWrapper = document.querySelector(".s2-mob-scroll-wrapper") as HTMLElement;
-                    if (scrollWrapper) {
-                      return -(scrollWrapper.offsetHeight - window.innerHeight * 0.85);
-                    }
-                    return window.innerWidth >= 768 ? -window.innerHeight * 0.55 : -window.innerHeight * 0.65;
-                  },
+                  y: () => cachedScrollWrapperY, // 🟢 FIXED: Reads fast static pre-cached coordinates
                   duration: ACTION 
                 }, 
                 "s2MobileScrollStart"
@@ -338,25 +346,14 @@ export default function HomeMobile() {
 
   return (
     <div ref={scopeRef}>
-      {/* 🔴 OPTIMIZATION: Updated .pin-all to dynamic heights for address bars */}
+      {/* 🟢 OPTIMIZATION FIXED: Removed global layout promotions (`will-change: transform`) which cause intense Mobile VRAM leaks. */}
       <style jsx global>{`
         .pin-all {
           height: 100lvh; 
         }
-        .pin-all > div[class*="section-"],
-        .pin-all > .hero,
-        .pin-all > .footer {
-          will-change: transform;
-          backface-visibility: hidden;
-          -webkit-backface-visibility: hidden;
-          transform: translate3d(0,0,0);
-        }
-        .section-7 {
-          will-change: clip-path, transform;
-        }
       `}</style>
 
-      <div className="pin-all relative overflow-hidden ">
+      <div className="pin-all relative overflow-hidden">
         <div className="section-2 absolute inset-0 z-[25]">
           <SectionTwo />
         </div>
