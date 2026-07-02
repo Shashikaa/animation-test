@@ -9,33 +9,51 @@ const LiquidCanvas = dynamic(() => import("../LiquidCanvas"), {
 
 export default function SectionTwo() {
   const sectionRef = useRef<HTMLElement>(null);
+  const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 1025);
+      setIsMobile(window.innerWidth < 1024);
     };
+    
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const activeBgImage = isMobile ? "/marvin-van-mobile.webp" : "/sectiontwo.webp";
-
   return (
     <section
       ref={sectionRef}
       className="relative w-full h-full overflow-hidden bg-[#0A1410]"
-      style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
+      style={{ 
+        transform: "translate3d(0, 0, 0)", 
+        backfaceVisibility: "hidden" 
+      }}
     >
       <link rel="preload" href="/sectiontwo.webp" as="image" type="image/webp" />
       <link rel="preload" href="/marvin-van-mobile.webp" as="image" type="image/webp" />
 
-      {/* Canvas wrapper layer */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute inset-0 w-full h-[100%]" style={{ willChange: "transform" }}>
-          <LiquidCanvas imageSrc={activeBgImage} />
-        </div>
+      {/* BACKGROUND LAYER RULE */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        {mounted && !isMobile ? (
+          // DESKTOP: Interactive Liquid WebGL Canvas
+          <div className="absolute inset-0 w-full h-full" style={{ willChange: "transform" }}>
+            <LiquidCanvas imageSrc="/sectiontwo.webp" />
+          </div>
+        ) : (
+          // MOBILE / SSR FALLBACK: Flat High-Performance Static Image Layer
+          <img
+            src="/marvin-van-mobile.webp"
+            alt="Background track mobile"
+            className="w-full h-full object-cover"
+            style={{ 
+              willChange: "transform",
+              transform: "translate3d(0,0,0)" 
+            }}
+          />
+        )}
       </div>
 
       {/* CONTENT BLOCK OVERLAY */}
@@ -52,7 +70,6 @@ export default function SectionTwo() {
 
       {/* CORE WORKSPACE GRID */}
       <div className="absolute inset-0 z-20 grid grid-cols-1 lg:grid-cols-2 w-full h-full pointer-events-none">
-        
         {/* LEFT COLUMN: LANDING REFERENCE */}
         <div className="relative h-full overflow-hidden !pt-58 md:!pt-66 lg:!pt-36">
           <div className="s2-body w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px] !mb-33 md:!mb-80 lg:!mb-0 h-[100px] !ml-[20px] md:!ml-[30px] lg:!ml-[65px]" />
@@ -110,7 +127,11 @@ export default function SectionTwo() {
       {/* ── MOBILE & TABLET SCROLL CONTAINER ── */}
       <div 
         className="s2-mob-scroll-wrapper section-container lg:hidden relative w-full h-auto z-40 pointer-events-none"
-        style={{ visibility: "hidden" }}
+        style={{ 
+          visibility: "hidden", 
+          willChange: "transform", 
+          transform: "translate3d(0,0,0)" 
+        }}
       >
         <div className="w-full flex flex-col gap-22 md:gap-32 py-[14vh] items-start pointer-events-auto">
           
@@ -120,11 +141,12 @@ export default function SectionTwo() {
           </p>
 
           {/* Row 2: Image aligned right */}
-          <div className="s2-mob-row2 w-full max-w-[80%] !h-[250px] md:!h-[380px] overflow-hidden self-end">
+          <div className="s2-mob-row2 w-full max-w-[80%] !h-[250px] md:!h-[380px] overflow-hidden self-end" style={{ transform: "translate3d(0,0,0)" }}>
             <img 
               src="/sectiontwo-left-sub.webp" 
               alt="Architectural swimming details" 
               className="w-full h-full object-cover"
+              loading="eager"
             />
           </div>
 
@@ -143,21 +165,23 @@ export default function SectionTwo() {
           </div>
 
           {/* Row 5: Stacked Images Layout Container */}
-          <div className="s2-mob-row5-container relative w-full max-w-[100%] !h-[270px] md:!h-[380px] self-end overflow-hidden">
+          <div className="s2-mob-row5-container relative w-full max-w-[100%] !h-[270px] md:!h-[380px] self-end overflow-hidden" style={{ transform: "translate3d(0,0,0)" }}>
             {/* UNDERNEATH LAYER */}
             <div className="s2-mob-row5-under absolute inset-0 w-full h-full z-10">
               <img 
                 src="/sectiontwo-right-under.webp" 
                 alt="Premium pool design structural layout" 
                 className="w-full h-full object-cover"
+                loading="eager"
               />
             </div>
             {/* TOP INITIAL LAYER */}
-            <div className="s2-mob-row5 absolute inset-0 w-full h-full z-20" style={{ clipPath: "inset(0% 0% 0% 0%)" }}>
+            <div className="s2-mob-row5 absolute inset-0 w-full h-full z-20" style={{ clipPath: "inset(0% 0% 0% 0%)", transform: "translate3d(0,0,0)" }}>
               <img 
                 src="/sectiontwo-right.webp" 
                 alt="Premium overview pool structural layout" 
                 className="w-full h-full object-cover"
+                loading="eager"
               />
             </div>
           </div>

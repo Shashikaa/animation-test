@@ -49,7 +49,6 @@ export default function SectionReviews() {
     setActiveIndex((prev) => (prev - 1 + REVIEWS_DATA.length) % REVIEWS_DATA.length);
   };
 
-  // Handles skipping directly to the clicked review block partition
   const handleBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
@@ -63,22 +62,19 @@ export default function SectionReviews() {
   return (
     <section className="section-container relative min-h-screen overflow-hidden bg-[#0A1410] flex flex-col items-center justify-center">
       
-      {/* BACKGROUND IMAGE - Dark ambient water environment matched to Figma */}
+      {/* BACKGROUND IMAGE - Target for GSAP scale effect */}
       <div className="absolute inset-0 z-0">
         <img
           src="/section-reviews-bg.webp" 
           alt="Grand Pools background scenery"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover reviews-bg-img"
         />
       </div>
 
-      {/* CORE WORKSPACE CONTENT PANEL WITH SIDE ARROWS */}
-      <div className="relative z-10 w-full max-w-[850px] flex items-center justify-between  flex-1">
-        
-        {/* Left Arrow Button (SVG Chevron) */}
+      <div className="relative z-10 w-full max-w-[850px] flex items-center justify-between flex-1">
         <button 
           onClick={prevReview}
-          className="text-[#F4EEDF]/40 hover:text-[#F4EEDF] transition-colors p-2 select-none cursor-pointer "
+          className="text-[#F4EEDF]/40 hover:text-[#F4EEDF] transition-colors p-2 select-none cursor-pointer"
           aria-label="Previous review"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 md:w-8 md:h-8">
@@ -86,18 +82,15 @@ export default function SectionReviews() {
           </svg>
         </button>
 
-        {/* Active Review Box Container */}
         <div className="w-full max-w-[660px] mx-auto flex flex-col items-center pb-12">
           <div className="transition-opacity duration-500 ease-in-out w-full flex flex-col items-center gap-8 md:gap-12">
             
-            {/* 1. 5-Star Rating Indicator - Centered */}
             <div className="flex justify-center gap-1">
               {Array.from({ length: REVIEWS_DATA[activeIndex].stars }).map((_, i) => (
                 <span key={i} className="text-[#E0D3B2] !text-[28px] tracking-widest">★</span>
               ))}
             </div>
 
-            {/* 2. Author Profile - Appears above text on Mobile, and inside the baseline on Desktop */}
             <div className="flex items-center gap-4 w-full justify-start md:hidden">
               <img
                 src={REVIEWS_DATA[activeIndex].avatar}
@@ -109,17 +102,11 @@ export default function SectionReviews() {
               </span>
             </div>
 
-
-
-            {/* 3. Central Review Statement Paragraph */}
             <p className="font-body text-[#F4EEDF] !text-left whitespace-pre-line w-full !text-[12px] md:!text-[16px]">
               {REVIEWS_DATA[activeIndex].text}
             </p>
 
-            {/* 4. Desktop Footer / Mobile Date Display Row */}
             <div className="w-full flex items-center justify-between lg:!pt-8">
-              
-              {/* Author (Only visible on Desktop to avoid duplicate renders) */}
               <div className="hidden md:flex items-center gap-3">
                 <img
                   src={REVIEWS_DATA[activeIndex].avatar}
@@ -131,17 +118,14 @@ export default function SectionReviews() {
                 </span>
               </div>
 
-              {/* Date Display Timestamp */}
               <div className="text-[#F4EEDF] font-body text-sm w-full text-left md:w-auto md:text-right">
                 {REVIEWS_DATA[activeIndex].date}
               </div>
-              
             </div>
 
           </div>
         </div>
 
-        {/* Right Arrow Button (SVG Chevron) */}
         <button 
           onClick={nextReview}
           className="text-[#F4EEDF]/40 hover:text-[#F4EEDF] transition-colors p-2 select-none cursor-pointer"
@@ -151,10 +135,8 @@ export default function SectionReviews() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
           </svg>
         </button>
-
       </div>
 
-      {/* FIXED BOTTOM INDICATOR */}
       <div className="absolute bottom-[64px] left-1/2 -translate-x-1/2 z-20 w-full max-w-[90%] lg:max-w-[720px]">
         <div 
           onClick={handleBarClick}

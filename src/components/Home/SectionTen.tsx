@@ -29,34 +29,34 @@ export default function SectionTen() {
       </div>
 
       {/* ── FIRST STAGE ELEMENTS ── */}
-<h2
-  className="s10-title absolute !font-[100] text-[#FFFFFF] pointer-events-none lg:opacity-0"
-  style={{
-    fontFamily: "var(--font-display)",
-    zIndex: 10,
-  }}
->
-  Built for Quality
-</h2> 
+      <h2
+        className="s10-title absolute !font-[100] text-[#FFFFFF] pointer-events-none lg:opacity-0"
+        style={{
+          fontFamily: "var(--font-display)",
+          zIndex: 10,
+        }}
+      >
+        Built for Quality
+      </h2> 
 
-<p
-  className="s10-title-sub absolute font-body text-[#FFFFFF] pointer-events-none !mt-3 lg:opacity-0"
-  style={{ zIndex: 10 }} 
->
-  Designed For You
-</p>
+      <p
+        className="s10-title-sub absolute font-body text-[#FFFFFF] pointer-events-none !mt-3 lg:opacity-0"
+        style={{ zIndex: 10 }} 
+      >
+        Designed For You
+      </p>
 
-<p
-  className="s10-para-top absolute font-body text-[#FFFFFF] pointer-events-none lg:opacity-0"
-  style={{
-    zIndex: 10,
-  }}
->
-  At Grand Pools, we create exceptional pools built
-  for lasting enjoyment. Combining quality
-  craftsmanship, durability, and innovation, we
-  deliver beautiful, functional spaces.
-</p>
+      <p
+        className="s10-para-top absolute font-body text-[#FFFFFF] pointer-events-none lg:opacity-0"
+        style={{
+          zIndex: 10,
+        }}
+      >
+        At Grand Pools, we create exceptional pools built
+        for lasting enjoyment. Combining quality
+        craftsmanship, durability, and innovation, we
+        deliver beautiful, functional spaces.
+      </p>
 
       {/* ── MOBILE & TABLET SCROLLABLE STRUCTURAL CONTAINER ── */}
       <div className="s10-scrollable-container">
@@ -145,19 +145,20 @@ export default function SectionTen() {
             height: auto;
           }
         }
-                  @media (max-width: 767px) {
+        
+        @media (max-width: 767px) {
           .s10-title { top: clamp(200px, 15vh, 160px); left: 20px; }
           .s10-title-sub { top: clamp(236px, 20vh, 200px); left: 20px; }
           .s10-para-top { bottom: 180px; left: 40px; right: 20px; text-align: right; }
           
           .s10-scrollable-container {
             position: absolute;
-            top: 110vh;
+            top: 100vh;
             left: 20px;
             right: 20px;
             display: flex;
             flex-direction: column;
-            gap: 110px; 
+            gap: 190px; 
             z-index: 60;
           }
 

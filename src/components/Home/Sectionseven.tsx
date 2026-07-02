@@ -26,11 +26,14 @@ export default function SectionSeven() {
       />
 
       {/* ── Mobile/Tablet BG ── */}
+      {/* FIX: Ensure transform and transformOrigin are defined here so GSAP initializes the values seamlessly */}
       <div
         className="s7-mob-bg absolute bg-cover bg-center block lg:hidden"
         style={{
           backgroundImage: "url('/sectionseven-mobile.webp')",
           top: 0, left: 0, width: "100%", height: "100%",
+          transform: "scale(1.35)",
+          transformOrigin: "center center",
           willChange: "transform",
         }}
       />
@@ -89,7 +92,7 @@ export default function SectionSeven() {
       ════════════════════ */}
       <div className="lg:!hidden !flex !absolute !inset-0 !flex-col !justify-between !py-[72px]  !m-0 !max-w-none !w-full">
 
-        {/* Title +  card — right-aligned */}
+        {/* Title + card — left-aligned */}
         <div className="!flex !flex-col !items-left !gap-4 !pl-14">
           <h2
             className="!text-[#F4EEDF] !font-[100] !text-left  !m-0 !mt-12"
@@ -100,7 +103,6 @@ export default function SectionSeven() {
 
           <div
             className="!w-[76%] !max-w-[340px] !flex !flex-col !mt-2 "
-
           >
             <p className="!text-[#F4EEDF] !text-[14px] !font-normal !m-0">Lachlan Deleeuw</p>
             <p className="!text-[#F4EEDF] !text-[14px] !mt-2.5 !mb-0">Founder – Grand Pools</p>

@@ -20,9 +20,7 @@ const SectionTen   = dynamic(() => import("../components/Home/SectionTen"),    {
 
 import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
 
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
+gsap.registerPlugin(ScrollTrigger);
 
 export default function HomeMobile() {
   const contextValues = useSite() as any;
@@ -30,14 +28,61 @@ export default function HomeMobile() {
   const onScrollReady = contextValues.onScrollReady ?? (() => {});
   const scopeRef = useRef<HTMLDivElement>(null);
 
+  // 1. INITIAL STATES RESET
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
+      gsap.set([
+        ".hero-bg-wrapper", ".hero-bg", ".s2-mob-row5", ".section-3", ".section-10", 
+        ".s10-img-right-wrap", ".s10-scrollable-container", ".section-reviews", ".reviews-bg-img",
+        ".section-7", ".s7-bg-img", ".s7-mob-bg", ".section-8", ".s8-bg-img", 
+        ".s8-mob-bg", ".section-9", ".s9-bg-img", ".section-cta", ".footer"
+      ], { force3D: true });
+
       gsap.set(".hero", { yPercent: 0, zIndex: 90 });
+      gsap.set(".hero-bg-wrapper", { clipPath: "inset(0% 0% 0% 0%)" });
+      gsap.set(".hero-bg", { yPercent: 0, scale: 1.3, transformOrigin: "center center" });
+      gsap.set(".hero h1, .hero-right-text", { opacity: 1, y: 0 });
+      gsap.set(".hero-secondary-text-wrap", { height: "auto" });
+      gsap.set(".hero-secondary-para", { visibility: "hidden" });
+
       gsap.set(".section-2", { clipPath: "none", zIndex: 25 });
+      gsap.set(".s2-mob-row5", { clipPath: "inset(0% 0% 0% 0%)" });
+      gsap.set(".s2-mob-row5-under", { opacity: 1 });
+
+      gsap.set(".section-3", { visibility: "hidden", yPercent: 100, zIndex: 100 });
+
+      gsap.set(".section-10", { visibility: "hidden", yPercent: 0, zIndex: 112 });
+      gsap.set(".s10-img-right-wrap", { clipPath: "inset(0% 0% 0% 0%)" });
+      gsap.set(".s10-scrollable-container", { y: "0vh" });
+
+      gsap.set(".section-reviews", { visibility: "hidden", yPercent: 100, zIndex: 115 });
+      gsap.set(".reviews-bg-img", { scale: 1.35, transformOrigin: "center center" });
+
+      gsap.set(".section-7", { visibility: "hidden", yPercent: 100, zIndex: 130, clipPath: "inset(0% 0% 0% 0%)" });
+      gsap.set(".s7-bg-img", { yPercent: 20 });
+      gsap.set(".s7-mob-bg", { scale: 1.35, transformOrigin: "center center" });
+
+      gsap.set(".section-8", { visibility: "hidden", yPercent: 100, zIndex: 128 });
+      gsap.set(".s8-bg-img", { yPercent: 20 });
+      gsap.set(".s8-mob-bg", { scale: 1.35, transformOrigin: "center center" });
+
+      gsap.set(".section-9", { visibility: "hidden", yPercent: 100, zIndex: 140 });
+      gsap.set(".s9-bg-img", { yPercent: 20, scale: 1.35, transformOrigin: "center center" });
+      gsap.set(".s9-title", { opacity: 0 });
+      gsap.set(".s9-para", { opacity: 0 });
+
+      gsap.set(".s8-panel-left", { clipPath: "inset(0% 50% 0% 0%)", zIndex: 145 });
+      gsap.set(".s8-panel-right", { clipPath: "inset(0% 0% 0% 50%)", zIndex: 145 });
+
+      gsap.set(".section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
+      gsap.set([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
+      gsap.set(".footer", { yPercent: 100, zIndex: 151, visibility: "hidden" });
     }, scopeRef);
+
     return () => ctx.revert();
   }, []);
 
+  // 2. MAIN TIMELINE DRIVER
   useEffect(() => {
     if (!preloaderDone) return;
 
@@ -46,76 +91,15 @@ export default function HomeMobile() {
     let timelineInitialized = false;
 
     const ctx = gsap.context(() => {
-      gsap.ticker.lagSmoothing(0);
+      // Adjusted lagSmoothing settings for better mobile translation consistency
+      gsap.ticker.lagSmoothing(50, 16);
 
       ScrollTrigger.config({
         autoRefreshEvents: "visibilitychange,DOMContentLoaded,load", 
       });
 
-      const TRANSITION = 2.0;
-      const EASE       = "power2.inOut";
-      const PAUSE      = 0.5; 
-
-      // Initial Setup States
-      gsap.set(".hero",    { yPercent: 0, zIndex: 90 });
-      gsap.set(".hero-bg-wrapper", { clipPath: "inset(0% 0% 0% 0%)" });
-      gsap.set(".hero-bg", { yPercent: 0 });
-      gsap.set(".hero h1, .hero-right-text", { opacity: 1, y: 0 });
-      
-      gsap.set(".hero-secondary-text-wrap", { height: "auto" });
-      gsap.set(".hero-secondary-para", { visibility: "hidden" });
-
-      gsap.set(".s2-mob-row5", { clipPath: "inset(0% 0% 0% 0%)" });
-      gsap.set(".s2-mob-row5-under", { opacity: 1 });
-
-      gsap.set(".section-3", {
-        visibility: "hidden",
-        yPercent:   100,
-        zIndex:     100,
-      });
-
-      // Section 10 Initial Reset States
-      gsap.set(".section-10", { visibility: "hidden", yPercent: 100, zIndex: 112 });
-      gsap.set(".s10-img-right-wrap", { clipPath: "inset(0% 0% 0% 0%)" });
-      gsap.set(".s10-scrollable-container", { y: "0vh" });
-
-      // Reviews Section Initial Position
-      gsap.set(".section-reviews", { visibility: "hidden", yPercent: 100, zIndex: 115 });
-
-      // Section 7 Setup
-      gsap.set(".section-7", { visibility: "visible", yPercent: 100, zIndex: 130, clipPath: "inset(0% 0% 0% 0%)" });
-      gsap.set(".s7-bg-img", { yPercent: 20 });
-
-      // Section 8 Setup
-      gsap.set(".section-8", {
-        visibility: "hidden",
-        yPercent:   100,
-        zIndex:     128,
-        clipPath:   "none"
-      });
-      gsap.set(".s8-bg-img", { yPercent: 20 });
-
-      // Section 9 Setup
-      gsap.set(".section-9", { visibility: "hidden", yPercent: 100, zIndex: 135 });
-      gsap.set(".s9-bg-img", { yPercent: 20 });
-      gsap.set(".s9-title",  { opacity: 0 });
-      gsap.set(".s9-para",   { opacity: 0 });
-
-      gsap.set(".s8-panel-left",  { clipPath: "inset(0% 50% 0% 0%)", zIndex: 145 });
-      gsap.set(".s8-panel-right", { clipPath: "inset(0% 0% 0% 50%)", zIndex: 145 });
-
-      // Layer setups
-      gsap.set(".section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
-      gsap.set([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
-      gsap.set(".footer",      { yPercent: 100, zIndex: 151, visibility: "hidden" });
-
-      // Hardware acceleration optimizations
-      gsap.set([
-        ".hero-bg-wrapper", ".hero-bg", ".s2-mob-row5", ".s2-mob-scroll-wrapper", ".section-3", ".section-10", 
-        ".s10-img-right-wrap", ".s10-scrollable-container", ".section-reviews", 
-        ".section-7", ".s7-bg-img", ".s7-mob-bg", ".section-8", ".s8-bg-img", 
-        ".s8-mob-bg", ".section-9", ".s9-bg-img", ".section-cta", ".footer"
-      ], { force3D: true, willChange: "transform" });
+      const ACTION = 2.0; 
+      const EASE   = "none"; 
 
       const waitForMobBgs = (cb: () => void) => {
         let framesChecked = 0;
@@ -148,210 +132,150 @@ export default function HomeMobile() {
             screen.orientation?.addEventListener("change", onOrientationChange);
             vvCleanup = () => screen.orientation?.removeEventListener("change", onOrientationChange);
 
-            gsap.set(".s7-mob-bg", { scale: 1.15, transformOrigin: "center center" });
-            gsap.set(".s8-mob-bg", { scale: 1.15, transformOrigin: "center center" });
+            let cachedFlightY = 0;
+            let cachedFlightX = 0;
 
             const tl = gsap.timeline({
               defaults: { 
-                ease: "none",
+                ease: EASE,
                 lazy: true 
               },
               scrollTrigger: {
-                trigger:              ".pin-all",
-                start:                "top top",
-                end:                  "+=14000",
-                scrub:                1.0,  // Changed from true to 1.0 to interpolate variations in touch gestures seamlessly
-                pin:                  true,
-                anticipatePin:        1,
-                preventOverlaps:      true,
-                fastScrollEnd:        true,
-                invalidateOnRefresh:  true,
-                onRefresh: () => {
+                trigger:               ".pin-all",
+                start:                 "top top",
+                end:                   "+=11000",
+                scrub:                 1, // FIXED: Added a slight catch-up scrub value (e.g., 1s) to damp and completely eliminate raw touch input jitters on mobile browsers
+                pin:                   true,
+                anticipatePin:         1,
+                preventOverlaps:       false, // FIXED: Turned off to prevent calculation skips during rapid scrolls
+                fastScrollEnd:         false, // FIXED: Turned off to avoid sudden snapping transitions
+                invalidateOnRefresh:   true,
+                onRefresh: (self) => {
                   if (pinEl) pinEl.style.removeProperty("max-height");
+                  
+                  const startEl = document.querySelector(".hero-secondary-text-wrap") as HTMLElement;
+                  const targetEl = document.querySelector(".s2-body") as HTMLElement;
+                  if (startEl && targetEl) {
+                    cachedFlightY = targetEl.getBoundingClientRect().top - startEl.getBoundingClientRect().top;
+                    cachedFlightX = targetEl.getBoundingClientRect().left - startEl.getBoundingClientRect().left;
+                  }
                 }
               },
             });
-
-            let calculatedFlightY = 0;
 
             tl
               .to(".hero h1, .hero-right-text", { 
                 opacity: 0, 
                 y: -40, 
-                duration: TRANSITION * 0.4, 
-                ease: "power2.in" 
+                duration: ACTION * 0.5 
               })
               .addLabel("heroSecondaryReveal")
               .set(".hero-secondary-para", { visibility: "visible" }, "heroSecondaryReveal")
               
-              .to(".hero-bg-wrapper", { 
-                clipPath: "inset(0% 0% 40% 0%)", 
-                duration: TRANSITION, 
-                ease: "power1.inOut" 
-              }, 0)
-              .to(".hero-bg", { 
-                yPercent: -25, 
-                duration: TRANSITION, 
-                ease: "power1.inOut" 
-              }, 0)
-              .to({}, { duration: PAUSE })
+              // Phase 1 Clipping
+              .to(".hero-bg-wrapper", { clipPath: "inset(0% 0% 40% 0%)", duration: ACTION }, 0)
+              .to(".hero-bg", { yPercent: -25, scale: 1.15, duration: ACTION }, 0)
 
-              .addLabel("textFlightStart")
-              .set([".s2-title-main", ".s2-title-sub"], { opacity: 0 }, "textFlightStart")
+              .addLabel("textFlightStart", ">")
               
-              .to(".hero-bg-wrapper", {
-                clipPath: "inset(0% 0% 100% 0%)", 
-                duration: TRANSITION * 0.8,
-                ease: "power2.inOut"
-              }, "textFlightStart")
+              // Phase 2 Clipping
+              .to(".hero-bg-wrapper", { clipPath: "inset(0% 0% 100% 0%)", duration: ACTION }, "textFlightStart")
+              .to(".hero-bg", { scale: 1, duration: ACTION }, "textFlightStart")
+              .to(".hero-gradient-bg", { opacity: 0, duration: ACTION }, "textFlightStart")
               
-              .to(".hero-gradient-bg", {
-                opacity: 0, 
-                duration: TRANSITION * 0.6,
-                ease: "power2.out"
-              }, "textFlightStart")
-              
-              .to([".s2-title-main", ".s2-title-sub"], { opacity: 1, duration: TRANSITION * 0.8 }, "textFlightStart+=0.3")
+              .to([".s2-title-main", ".s2-title-sub"], { opacity: 1, duration: ACTION }, "textFlightStart+=0.2")
+              .to(".hero-secondary-para", { y: () => cachedFlightY, x: () => cachedFlightX, duration: ACTION }, "textFlightStart")
 
-              .to(".hero-secondary-para", {
-                y: () => {
-                  const startEl = document.querySelector(".hero-secondary-text-wrap") as HTMLElement;
-                  const targetEl = document.querySelector(".s2-body") as HTMLElement;
-                  if (!startEl || !targetEl) return 0;
-                  calculatedFlightY = targetEl.getBoundingClientRect().top - startEl.getBoundingClientRect().top;
-                  return calculatedFlightY;
-                },
-                x: () => {
-                  const startEl = document.querySelector(".hero-secondary-text-wrap") as HTMLElement;
-                  const targetEl = document.querySelector(".s2-body") as HTMLElement;
-                  if (!startEl || !targetEl) return 0;
-                  return targetEl.getBoundingClientRect().left - startEl.getBoundingClientRect().left;
-                },
-                duration: TRANSITION,
-                ease: "power1.inOut"
-              }, "textFlightStart")
-              .to({}, { duration: PAUSE })
-
-              .addLabel("s2TextDismissal")
-              .to(".hero-secondary-para", {
-                opacity: 0,
-                y: () => calculatedFlightY - 60, 
-                duration: TRANSITION * 0.8,
-                ease: "power2.in"
-              }, "s2TextDismissal")
-              .to([".s2-title-main", ".s2-title-sub"], {
-                opacity: 0,
-                y: -60, 
-                duration: TRANSITION * 0.8,
-                ease: "power2.in"
-              }, "s2TextDismissal")
+              .addLabel("s2TextDismissal", ">")
+              .to(".hero-secondary-para", { opacity: 0, y: () => cachedFlightY - 60, duration: ACTION }, "s2TextDismissal")
+              .to([".s2-title-main", ".s2-title-sub"], { opacity: 0, y: -60, duration: ACTION }, "s2TextDismissal")
               
+              // Section 2 Scroll Sequence
               .addLabel("s2MobileScrollStart", ">")
               .set(".s2-mob-scroll-wrapper", { visibility: "visible" }, "s2MobileScrollStart")
               .fromTo(".s2-mob-scroll-wrapper", 
-                { yPercent: 100, y: 0 }, 
+                { y: "100vh" }, 
                 { 
-                  yPercent: () => (window.innerWidth >= 768 ? -60 : -70),
-                  y: 0,
-                  duration: TRANSITION * 3.5, 
-                  ease: "power1.out" 
+                  y: () => (window.innerWidth >= 768 ? "-55vh" : "-65vh"), 
+                  duration: ACTION 
                 }, 
                 "s2MobileScrollStart"
               )
               
-              .to(".s2-mob-row5", {
-                clipPath: "inset(0% 100% 0% 0%)", 
-                duration: TRANSITION * 1.2,
-                ease: "power2.inOut"
-              }, "s2MobileScrollStart+=2.8")
+              .to(".s2-mob-row5", { clipPath: "inset(0% 100% 0% 0%)", duration: ACTION }, ">")
 
-              // Section 3
+              // Section 3 Slide Up
               .addLabel("sec3Start", ">")
               .set(".section-3", { visibility: "visible" }, "sec3Start")
-              .to(".section-3", { yPercent: 0, duration: TRANSITION, ease: EASE })
-              .to({}, { duration: PAUSE })
+              .to(".section-3", { yPercent: 0, duration: ACTION }, "sec3Start")
 
-              // Section 10
-              .set(".section-10", { visibility: "visible" })
-              .to(".section-10", { yPercent: 0, duration: TRANSITION * 1.5, ease: "power1.inOut" })
+              // Section 10 Slide Up
+              .addLabel("sec10Start", ">")
+              .set(".section-10", { visibility: "visible" }, "sec10Start")
+              .fromTo(".section-10", { yPercent: 100 }, { yPercent: 0, duration: ACTION }, "sec10Start")
               
-              .to(".s10-title, .s10-title-sub, .s10-para-top", {
-                y: "-100vh",
-                duration: TRANSITION * 2.2,
-                ease: "none"
-              }, ">-=0.5")
+              .to(".s10-title, .s10-title-sub, .s10-para-top", { y: "-100vh", duration: ACTION }, ">")
+              
+              // Section 10 internal pan
+              .fromTo(".s10-scrollable-container", { y: "0vh" }, { y: "-84vh", duration: ACTION }, "<")
 
-              .fromTo(".s10-scrollable-container", 
-                { y: "0vh" },
-                {
-                  y: "-100vh", 
-                  duration: TRANSITION * 2.5,
-                  ease: "none"
-                },
-                "<"
-              )
+              // Reviews Slide Up
+              .addLabel("reviewsStart", ">")
+              .set(".section-reviews", { visibility: "visible", pointerEvents: "auto" }, "reviewsStart")
+              .to(".section-reviews", { yPercent: 0, duration: ACTION }, "reviewsStart")
+              .to(".section-10", { yPercent: -10, duration: ACTION }, "reviewsStart")
+              .to(".reviews-bg-img", { scale: 1, duration: ACTION }, "reviewsStart")
 
-              .to(".s10-img-right-wrap", {
-                clipPath: "inset(0% 0% 100% 0%)",
-                duration: TRANSITION * 1.0,
-                ease: "power2.inOut"
-              }, "<+2.0")
+              // Section 7 & 8 Slide Up sequence adjustment
+              .addLabel("sec78Start", ">")
+              .set(".section-7",    { visibility: "visible" }, "sec78Start") 
+              .to(".section-7",     { yPercent: 0, duration: ACTION }, "sec78Start")
+              .to(".section-reviews", { yPercent: -10, duration: ACTION }, "sec78Start")
+              .to(".s7-bg-img",     { yPercent: 0, duration: ACTION }, "sec78Start")
+              .to(".s7-mob-bg",     { scale: 1,    duration: ACTION }, "sec78Start") 
+              
+              .set(".section-8",    { visibility: "visible" }, "sec78Start")
+              .to(".section-8",     { yPercent: 0, duration: ACTION }, "sec78Start")
+              .to(".s8-bg-img",     { yPercent: 0, duration: ACTION }, "sec78Start")
 
-              // Reviews Section
-              .set(".section-reviews", { visibility: "visible", pointerEvents: "auto" })
-              .to(".section-reviews", { yPercent: 0, duration: TRANSITION, ease: EASE })
-              .to({}, { duration: PAUSE })
-              .to({}, { duration: PAUSE * 0.4 })
+              // Clip Reveal Transition
+              .addLabel("clipRevealStart", ">")
+              .to(".section-reviews", { yPercent: -100, duration: ACTION }, "clipRevealStart")
+              .to(".section-7", { clipPath: "inset(0% 0% 100% 0%)", duration: ACTION }, "clipRevealStart")
+              .to(".s8-mob-bg", { scale: 1,        duration: ACTION }, "clipRevealStart")
+              
+              .set([".section-7", ".section-reviews"], { visibility: "hidden" }, ">")
 
-              // Section 7 & 8
-              .set(".section-8", { visibility: "visible" })
-              .to(".section-7",    { yPercent: 0, duration: TRANSITION, ease: "power3.out" })
-              .to(".section-8",    { yPercent: 0, duration: TRANSITION, ease: "power3.out" }, "<")
-              .to(".s7-bg-img",    { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
-              .to(".s8-bg-img",    { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
-              .to(".s7-mob-bg",    { scale: 1,    duration: TRANSITION, ease: "power2.out" }, "<")
-              .to({}, { duration: PAUSE })
+              // Section 9 Slide Up
+              .addLabel("sec9Start", ">")
+              .set(".section-9", { visibility: "visible" }, "sec9Start")
+              .set(".section-8", { visibility: "visible", yPercent: 0 }, "sec9Start")
+              
+              .fromTo(".section-9", { yPercent: 100 }, { yPercent: 0, duration: ACTION }, "sec9Start")
+              .to(".section-8", { yPercent: -10, duration: ACTION }, "sec9Start")
+              .to(".s9-bg-img", { scale: 1, yPercent: 0, duration: ACTION }, "sec9Start")
+              
+              .to(".s9-title",  { opacity: 1,  duration: ACTION * 0.5 }, "sec9Start+=0.3")
+              .to(".s9-para",   { opacity: 1,  duration: ACTION * 0.5 }, "sec9Start+=0.3")
 
-              // Clip Reveal
-              .to(".section-reviews", { yPercent: -100, duration: TRANSITION, ease: EASE })
-              .to(".section-7", { clipPath: "inset(0% 0% 100% 0%)", duration: TRANSITION, ease: EASE }, "<")
-              .to(".s8-mob-bg", { scale: 1,        duration: TRANSITION, ease: "power2.out" }, "<")
-              .to({}, { duration: PAUSE })
-
-              .set([".section-7", ".section-reviews"], { visibility: "hidden" })
-
-              // Section 8 to 9
-              .set(".section-9", { visibility: "visible" })
-              .to(".section-9", { yPercent: 0, duration: TRANSITION, ease: EASE })
-              .to(".s9-bg-img", { yPercent: 0, duration: TRANSITION, ease: "power2.out" }, "<")
-              .to(".s9-title",  { opacity: 1,  duration: 1.2, ease: "power2.out" }, "<+1.0")
-              .to(".s9-para",   { opacity: 1,  duration: 1.2, ease: "power3.out" }, "<")
-              .to({}, { duration: PAUSE })
-
-              // CTA ARRIVAL
-              .addLabel("ctaStart")
+              // CTA Arrival
+              .addLabel("ctaStart", ">")
               .set(".section-cta", { visibility: "visible" }, "ctaStart")
-              .to(".section-cta", { yPercent: 0,   duration: TRANSITION, ease: "power3.out" }, "ctaStart") 
-              .to(".s9-bg-img",   { yPercent: -10, duration: TRANSITION, ease: "none" }, "ctaStart")
-              .to({}, { duration: PAUSE }) 
+              .to(".section-cta", { yPercent: 0,   duration: ACTION }, "ctaStart") 
+              .to(".s9-bg-img",   { yPercent: -10, duration: ACTION }, "ctaStart")
 
-              // FOOTER
-              .addLabel("footerStart")
-              .to([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { 
-                opacity: 0, 
-                duration: 0.3, 
-                ease: "power2.out" 
-              }, "footerStart")
+              // Footer Slide Up
+              .addLabel("footerStart", ">")
+              .to([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { opacity: 0, duration: ACTION * 0.3 }, "footerStart")
               
               .set(".footer", { visibility: "visible" }, "footerStart+=0.1")
-              .to(".footer",    { yPercent: 0,          duration: TRANSITION, ease: "power2.out" }, "footerStart+=0.1") 
-              .to(".s9-bg-img", { yPercent: -20, duration: TRANSITION, ease: "none" }, "footerStart+=0.1")
-              .to({}, { duration: 0.4 }); 
+              .to(".footer",    { yPercent: 0,          duration: ACTION }, "footerStart+=0.1") 
+              .to(".s9-bg-img", { yPercent: -20, duration: ACTION }, "footerStart+=0.1");
 
             useTextReveal(scopeRef, ".hero-secondary-para", {
               tl,
               position: "heroSecondaryReveal",
-              duration: TRANSITION * 0.8,
+              duration: ACTION * 0.5,
               stagger: 0.06,
             });
 
@@ -393,6 +317,18 @@ export default function HomeMobile() {
 
   return (
     <div ref={scopeRef}>
+      {/* 
+        FIXED: Added global CSS optimization inside this view context.
+        This forces browsers to pass section transitions directly to the GPU layer. 
+      */}
+      <style jsx global>{`
+        .pin-all > div {
+          will-change: transform, clip-path;
+          backface-visibility: hidden;
+          transform: translate3d(0,0,0);
+        }
+      `}</style>
+
       <div className="pin-all relative overflow-hidden bg-black">
         <div className="section-2 absolute inset-0 z-[25]">
           <SectionTwo />
@@ -400,7 +336,11 @@ export default function HomeMobile() {
         
         <div 
           className="section-3 absolute inset-0 z-[100]" 
-          style={{ pointerEvents: "auto", visibility: "hidden", transform: "translateY(100%)" }}
+          style={{ 
+            pointerEvents: "auto", 
+            visibility: "hidden", 
+            transform: "translateY(100%)"
+          }}
         >
           <SectionThree />
         </div>
@@ -413,27 +353,32 @@ export default function HomeMobile() {
           <SectionReviews />
         </div>
 
-        <div 
-          className="section-9 absolute inset-0 z-[135]" 
-          style={{ pointerEvents: "auto", visibility: "hidden", transform: "translateY(100%)" }}
-        >
-          <SectionNine />
-        </div>
         <div className="section-8 absolute inset-0 z-[128]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionEight />
         </div>
+
         <div className="section-7 absolute inset-0 z-[130]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionSeven />
         </div>
+
+        <div 
+          className="section-9 absolute inset-0 z-[140]" 
+          style={{ pointerEvents: "auto", visibility: "hidden" }}
+        >
+          <SectionNine />
+        </div>
+
         <div className="hero absolute inset-0 z-[90]" style={{ pointerEvents: "auto" }}>
           <Hero />
         </div>
+        
         <div
           className="section-cta absolute inset-0 z-[150]"
           style={{ pointerEvents: "auto", visibility: "hidden" }}
         >
           <SectionCTA />
         </div>
+        
         <div
           className="footer absolute left-0 bottom-0 w-full z-[151]"
           style={{ pointerEvents: "auto", visibility: "hidden" }}
