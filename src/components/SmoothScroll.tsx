@@ -28,10 +28,10 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Detect touch-first environments cleanly
+    // Detect touch environments safely
     const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
-    // If it's a mobile touch device, cleanly back out and let the native viewport thread run smoothly.
+    // Bails cleanly on touch interactions to leave default scrolling uninhibited
     if (isTouchDevice) {
       if (thumbRef.current) {
         const parentTrack = thumbRef.current.parentElement;
@@ -41,7 +41,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       return;
     }
 
-    // Initialize Lenis strictly for Desktop layouts
+    // Lenis Engine Instance Setup - Desktop Only
     const lenis = new Lenis({
       syncTouch: false,
       touchMultiplier: 0,
@@ -57,13 +57,10 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       smootherRef.current = lenis;
     }
 
-    // Connect Lenis RAF loop into GSAP ticker
     const tickerCallback = (time: number) => {
       lenis.raf(time * 1000);
     };
     gsap.ticker.add(tickerCallback);
-    
-    // Maintain a consistent fallback thread frame tracking
     gsap.ticker.lagSmoothing(50, 16);
 
     let lastY = 0;

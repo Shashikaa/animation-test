@@ -7,10 +7,10 @@ import { useSite } from "./context/SiteContext";
 import dynamic from "next/dynamic";
 
 import Hero          from "../components/Home/Hero";
-import SectionTwo   from "../components/Home/SectionTwo";
-import SectionThree from "../components/Home/SectionThree";
-import SectionCTA   from "../components/SectionCTA";
-import Footer       from "../components/Footer";
+import SectionTwo    from "../components/Home/SectionTwo";
+import SectionThree  from "../components/Home/SectionThree";
+import SectionCTA    from "../components/SectionCTA";
+import Footer        from "../components/Footer";
 import SectionReviews from "../components/Home/SectionReviews"; 
 
 const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { ssr: false });
@@ -66,7 +66,6 @@ export default function HomeMobile() {
       gsap.set(".section-reviews", { visibility: "hidden", yPercent: 100, zIndex: 115 });
       gsap.set(".reviews-bg-img", { scale: 1.35, transformOrigin: "center center" });
 
-      // Stacking configuration: Place Section 7 directly above Section 8 to hide it
       gsap.set(".section-7", { visibility: "hidden", yPercent: 100, zIndex: 135, clipPath: "inset(0% 0% 0% 0%)" });
       gsap.set(".s7-bg-img", { yPercent: 20 });
       gsap.set(".s7-mob-bg", { scale: 1.35, transformOrigin: "center center" });
@@ -103,12 +102,11 @@ export default function HomeMobile() {
         autoRefreshEvents: "visibilitychange,DOMContentLoaded,load", 
       });
 
-      if (ScrollTrigger.isTouch === 1) {
-        ScrollTrigger.normalizeScroll({ allowNestedScroll: true });
-      }
+      // 🔴 OPTIMIZATION: Removed ScrollTrigger.normalizeScroll from here.
+      // This stops JS from intercepting native touch frames, eliminating the lag/slow feel.
 
       const ACTION      = 2.0; 
-      const DEAD_SCROLL = 0.4; // Reduced significantly to remove excessive sticky feeling
+      const DEAD_SCROLL = 0.4; 
       const EASE        = "none"; 
 
       const waitForMobBgs = (cb: () => void) => {
@@ -153,7 +151,7 @@ export default function HomeMobile() {
               scrollTrigger: {
                 trigger:               ".pin-all",
                 start:                 "top top",
-                end:                   "+=14500", // Normalized track height
+                end:                   "+=14500", 
                 scrub:                 true, 
                 pin:                   true,
                 anticipatePin:         1,
@@ -188,7 +186,6 @@ export default function HomeMobile() {
               .addLabel("heroSecondaryReveal", ACTION * 0.4)
               .set(".hero-secondary-para", { visibility: "visible" }, "heroSecondaryReveal")
 
-              // Dead scroll gap after Hero completes
               .to({}, { duration: DEAD_SCROLL })
 
               .addLabel("textFlightStart", ">")
@@ -199,7 +196,6 @@ export default function HomeMobile() {
               .to([".s2-title-main", ".s2-title-sub"], { opacity: 1, duration: ACTION }, "textFlightStart+=0.2")
               .to(".hero-secondary-para", { y: () => cachedFlightY, x: () => cachedFlightX, duration: ACTION }, "textFlightStart")
 
-              // Dead scroll gap after flight settles on Section 2 text
               .to({}, { duration: DEAD_SCROLL })
 
               .addLabel("s2TextDismissal", ">")
@@ -225,13 +221,10 @@ export default function HomeMobile() {
               
               .to(".s2-mob-row5", { opacity: 1, duration: ACTION }, ">")
 
-              // REMOVED EXTRA DEAD SCROLL gap right here to allow Section 2 to transition instantly into Section 3 without pausing
-
               .addLabel("sec3Start", ">")
               .set(".section-3", { visibility: "visible" }, "sec3Start")
               .to(".section-3", { yPercent: 0, duration: ACTION }, "sec3Start")
 
-              // Dead scroll gap holding Section 3 cleanly in frame
               .to({}, { duration: DEAD_SCROLL })
 
               .addLabel("sec10Start", ">")
@@ -241,7 +234,6 @@ export default function HomeMobile() {
               .to(".s10-title, .s10-title-sub, .s10-para-top", { y: "-100vh", duration: ACTION }, ">")
               .fromTo(".s10-scrollable-container", { y: "0vh" }, { y: "-84vh", duration: ACTION }, "<")
 
-              // Dead scroll gap after Section 10 moves into view
               .to({}, { duration: DEAD_SCROLL })
 
               .addLabel("reviewsStart", ">")
@@ -250,7 +242,6 @@ export default function HomeMobile() {
               .to(".section-10", { yPercent: -10, duration: ACTION }, "reviewsStart")
               .to(".reviews-bg-img", { scale: 1, duration: ACTION }, "reviewsStart")
 
-              // Dead scroll gap to experience the Reviews area
               .to({}, { duration: DEAD_SCROLL })
 
               .addLabel("sec78Start", ">")
@@ -264,10 +255,8 @@ export default function HomeMobile() {
               .to(".section-8",     { yPercent: 0, duration: ACTION }, "sec78Start")
               .to(".s8-bg-img",     { yPercent: 0, duration: ACTION }, "sec78Start")
 
-              // Dead scroll gap before Section 7 gets masked out
               .to({}, { duration: DEAD_SCROLL })
 
-              // Clean Bottom-to-Top Clip Reveal Execution Window
               .addLabel("clipRevealStart", ">")
               .to(".section-reviews", { yPercent: -100, duration: ACTION }, "clipRevealStart")
               .to(".s8-mob-bg",       { scale: 1,       duration: ACTION }, "clipRevealStart")
@@ -275,7 +264,6 @@ export default function HomeMobile() {
               
               .set([".section-7", ".section-reviews"], { visibility: "hidden" }, ">")
 
-              // Dead scroll gap to look at the newly uncovered Section 8
               .to({}, { duration: DEAD_SCROLL })
 
               .addLabel("sec9Start", ">")
@@ -289,7 +277,6 @@ export default function HomeMobile() {
               .to(".s9-title",  { opacity: 1,  duration: ACTION * 0.5 }, "sec9Start+=0.3")
               .to(".s9-para",   { opacity: 1,  duration: ACTION * 0.5 }, "sec9Start+=0.3")
 
-              // Dead scroll gap for reading Section 9 content
               .to({}, { duration: DEAD_SCROLL })
 
               .addLabel("ctaStart", ">")
@@ -297,7 +284,6 @@ export default function HomeMobile() {
               .to(".section-cta", { yPercent: 0,    duration: ACTION }, "ctaStart") 
               .to(".s9-bg-img",   { yPercent: -10, duration: ACTION }, "ctaStart")
 
-              // Dead scroll gap before hitting footer
               .to({}, { duration: DEAD_SCROLL })
 
               .addLabel("footerStart", ">")
@@ -352,7 +338,11 @@ export default function HomeMobile() {
 
   return (
     <div ref={scopeRef}>
+      {/* 🔴 OPTIMIZATION: Updated .pin-all to dynamic heights for address bars */}
       <style jsx global>{`
+        .pin-all {
+          height: 100lvh; 
+        }
         .pin-all > div[class*="section-"],
         .pin-all > .hero,
         .pin-all > .footer {
