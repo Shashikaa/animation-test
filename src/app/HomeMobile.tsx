@@ -139,23 +139,25 @@ export default function HomeMobile() {
             gsap.set(".s7-mob-bg", { scale: 1.15, transformOrigin: "center center" });
             gsap.set(".s8-mob-bg", { scale: 1.15, transformOrigin: "center center" });
 
-            const tl = gsap.timeline({
-              defaults: { ease: "none" },
-              scrollTrigger: {
-                trigger:              ".pin-all",
-                start:                "top top",
-                end:                  "+=14000",
-                scrub:                0.2,       
-                pin:                  true,
-                anticipatePin:        1,
-                preventOverlaps:      true,
-                fastScrollEnd:        true,
-                invalidateOnRefresh:  true,
-                onRefresh: () => {
-                  if (pinEl) pinEl.style.removeProperty("max-height");
-                }
-              },
-            });
+const tl = gsap.timeline({
+  defaults: { ease: "none" },
+  scrollTrigger: {
+    trigger:              ".pin-all",
+    start:                "top top",
+    end:                  "+=14000",
+    // FIX: Changed from 0.2 to true (or 0.5) for mobile. 
+    // 'true' links animation directly to touch position without heavy lag catches.
+    scrub:                true,  
+    pin:                  true,
+    anticipatePin:        1,
+    preventOverlaps:      true,
+    fastScrollEnd:        true,
+    invalidateOnRefresh:  true,
+    onRefresh: () => {
+      if (pinEl) pinEl.style.removeProperty("max-height");
+    }
+  },
+});
 
             let calculatedFlightY = 0;
 

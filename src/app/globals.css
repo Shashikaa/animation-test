@@ -271,3 +271,16 @@ p {
   }
 }
 
+/* ─── Android/Mobile Layer Optimizations ─── */
+.section-2,
+.section-3,
+.section-7,
+.section-8,
+.section-9,
+.section-10,
+.section-reviews,
+.hero {
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
