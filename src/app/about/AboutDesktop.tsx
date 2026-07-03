@@ -6,6 +6,7 @@ import SectionTwo from "@/src/components/About/SectionTwo";
 import SectionThree from "@/src/components/About/SectionThree";
 import SectionFour from "@/src/components/About/SectionFour";
 import SectionFive from "@/src/components/About/SectionFive";
+import SectionReviews from "../../components/SectionReviews"; // Adjust path if needed
 import SectionCTA from "@/src/components/SectionCTA";
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
@@ -58,8 +59,12 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
       gsap.set(".about-section-four", { visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)" });
       gsap.set(".s4-glass-card", { y: 80, opacity: 0 });
       gsap.set(".about-section-five", { visibility: "hidden", clipPath: "inset(0% 0% 0% 100%)" });
-      gsap.set(".about-section-cta", { visibility: "hidden", y: "100%" });
-      gsap.set(".about-footer-wrap", { visibility: "hidden", y: "100%" });
+      gsap.set(".about-section-reviews", { visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)" });
+      
+      // Adjusted initialization layers to precisely mirror Home configuration properties
+      gsap.set([".about-section-cta", ".about-footer-wrap"], { yPercent: 100, visibility: "hidden" });
+      gsap.set(".about-section-cta", { zIndex: 95 });
+      gsap.set(".about-footer-wrap", { zIndex: 96 });
     }, scopeRef);
     return () => ctx.revert();
   }, []);
@@ -94,7 +99,6 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-      // Create cache array for pre-calculated normalized snap landmarks
       let cachedProgressLabels: number[] = [];
 
       const tl = gsap.timeline({
@@ -102,41 +106,34 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         scrollTrigger: {
           trigger: ".about-pin",
           start: "top top",
-         end: "+=8800", 
+          end: "+=13500", 
           scrub: 0.8, 
           pin: true,
           pinSpacing: true,
           anticipatePin: 1,
           invalidateOnRefresh: true,
           fastScrollEnd: true,
-snap: {
-  snapTo: (progress) => {
-    if (cachedProgressLabels.length === 0) return progress;
-    if (progress <= 0) return 0;
-    if (progress >= 1) return 1;
+          snap: {
+            snapTo: (progress) => {
+              if (cachedProgressLabels.length === 0) return progress;
+              if (progress <= 0) return 0;
+              if (progress >= 1) return 1;
 
-    for (let i = 0; i < cachedProgressLabels.length - 1; i++) {
-      const start = cachedProgressLabels[i];
-      const end = cachedProgressLabels[i + 1];
+              for (let i = 0; i < cachedProgressLabels.length - 1; i++) {
+                const start = cachedProgressLabels[i];
+                const end = cachedProgressLabels[i + 1];
 
-      if (progress >= start && progress <= end) {
-        const localProgress = (progress - start) / (end - start);
-        // Kept your preferred 30% forward-snap trigger condition
-        return localProgress > 0.3 ? end : start;
-      }
-    }
-    return progress;
-  },
-  // 🌟 SLOW DOWN SPEED: Increased duration limits so the auto-scroll takes longer to arrive
-  duration: { min: 0.7, max: 1.2 }, 
-  
-  // 🌟 BREATHING ROOM: Delay before auto-scrolling kicks in (helps with smooth-scroll compatibility)
-  delay: 0.1, 
-  
-  // 🌟 GENTLE MOTION: "power2.inOut" accelerates and decelerates smoothly, 
-  // removing the sudden aggressive jerk forward or backward.
-  ease: "power2.inOut",
-},
+                if (progress >= start && progress <= end) {
+                  const localProgress = (progress - start) / (end - start);
+                  return localProgress > 0.3 ? end : start;
+                }
+              }
+              return progress;
+            },
+            duration: { min: 0.8, max: 1.4 }, 
+            delay: 0.05, 
+            ease: "power2.inOut",
+          },
         },
       });
 
@@ -220,7 +217,7 @@ snap: {
             duration: 2.0,
           },
           "sec3Start"
-        )
+         )
         .to(".s2-bg", {
           yPercent: -15,
           duration: 2.0,
@@ -300,38 +297,83 @@ snap: {
           x: 0,
           duration: 1.5,
           ease: "power2.out"
-        }, "sec5Start+=0.6")
-        .to([".s5-static-title", ".s5-static-desc"], {
-          opacity: 1,
-          y: 0,
-          duration: 1.2,
-          stagger: 0.15,
-          ease: "power2.out"
-        }, "sec5Start+=1.1");
+        }, "sec5Start+=0.6");
 
-      tl.to({}, { duration: 0.2 });
+      useTextReveal(scopeRef, ".about-section-five .s5-reveal-text", {
+        tl,
+        position: "sec5Start", 
+        yOffset: 0,            
+        stagger: 0,
+        duration: 0.01,
+      });
 
-      // ── PHASE 2: SECTION CTA REVEAL ──
+      tl.to(".about-section-five .s5-static-title", { opacity: 1, y: 0, duration: 1.0, ease: "power2.out" }, "sec5Start+=1.0")
+        .to(".about-section-five .s5-static-desc", { opacity: 1, y: 0, duration: 1.0, ease: "power2.out" }, "sec5Start+=1.2");
+
+      tl.fromTo(".s5-bg", 
+        { yPercent: 0 }, 
+        { yPercent: -20, ease: "none", duration: 6.5 }, 
+        "sec5Start"
+      );
+
+      // ── SMOOTH INTERCHANGE CONTROLS FOR DYNAMIC CARDS ──
+      tl.addLabel("sec5_card2", "sec5Start+=2.0")
+        .to(".s5-slide-card-0", { 
+          opacity: 0, 
+          y: -25, 
+          pointerEvents: "none", 
+          duration: 1.2, 
+          ease: "power2.inOut" 
+        }, "sec5_card2")
+        .fromTo(".s5-slide-card-1", 
+          { opacity: 0, y: 25 }, 
+          { opacity: 1, y: 0, pointerEvents: "auto", duration: 1.2, ease: "power2.inOut" }, 
+          "sec5_card2"
+        )
+        .to(".s5-dynamic-bg", { duration: 1.2 }, "sec5_card2");
+
+      tl.addLabel("sec5_card3", "sec5Start+=4.0")
+        .to(".s5-slide-card-1", { 
+          opacity: 0, 
+          y: -25, 
+          pointerEvents: "none", 
+          duration: 1.2, 
+          ease: "power2.inOut" 
+        }, "sec5_card3")
+        .fromTo(".s5-slide-card-2", 
+          { opacity: 0, y: 25 }, 
+          { opacity: 1, y: 0, pointerEvents: "auto", duration: 1.2, ease: "power2.inOut" }, 
+          "sec5_card3"
+        )
+        .to(".s5-dynamic-bg", { duration: 1.2 }, "sec5_card3");
+
+      tl.to({}, { duration: 1.5 });
+
+      // ── REVIEWS SECTION REVEAL (Slides up over 5th) ──
+      tl.addLabel("secReviewsStart")
+        .set(".about-section-reviews", { visibility: "visible" })
+        .to(".about-section-reviews", {
+          clipPath: "inset(0% 0% 0% 0%)",
+          duration: 2.2,
+        });
+
+      tl.to({}, { duration: 1.5 });
+
+      // ── MATCHED FROM HOME: CTA REVEAL TRACK ──
       tl.addLabel("ctaStart")
         .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
-        .to(".about-section-cta", {
-          y: "0%",
-          duration: 2.2,
-        }, "ctaStart");
+        .to(".about-section-cta", { yPercent: 0, duration: 4.8 }, "ctaStart")
+        .to(".about-section-reviews", { scale: 1.05, duration: 4.8 }, "ctaStart");
 
-      tl.to({}, { duration: 0.2 });
-
-      // ── PHASE 4: FOOTER REVEAL ──
-      tl.addLabel("footerStart")
+      // ── MATCHED FROM HOME: FOOTER REVEAL TRACK ──
+      tl.addLabel("footerStart", "ctaStart+=4.8")
         .set(".about-footer-wrap", { visibility: "visible" }, "footerStart")
-        .to(".about-footer-wrap", {
-          y: "0%",
-          duration: 2.2,
-        }, "footerStart");
+        .to(".about-footer-wrap", { yPercent: 0, duration: 5.5 }, "footerStart")
+        .to(".about-section-reviews", { scale: 1.05, duration: 5.5 }, "footerStart")
+        .to(".about-section-cta .cta-inner-desktop", { opacity: 0, duration: 4.0, ease: "power1.out" }, "footerStart");
 
-      // 🌟 THE SNAp OPTIMIZATION: Parse timeline labels dynamically ONCE after construction
       const totalDuration = tl.totalDuration();
-      const labelNames = ["sec1Start", "sec2Start", "sec3Start", "sec4Start", "sec5Start", "ctaStart", "footerStart"];
+      const labelNames = ["sec1Start", "sec2Start", "sec3Start", "sec4Start", "sec5Start", "sec5_card2", "sec5_card3", "secReviewsStart", "ctaStart", "footerStart"];
       cachedProgressLabels = [0, ...labelNames.map(name => tl.labels[name] / totalDuration), 1];
 
     }, scopeRef);
@@ -344,6 +386,7 @@ snap: {
         restoreTextReveal(scopeRef.current, ".s3-reveal-bottom");
         restoreTextReveal(scopeRef.current, ".s3-reveal-top");
         restoreTextReveal(scopeRef.current, ".s4-reveal-text");
+        restoreTextReveal(scopeRef.current, ".about-section-five .s5-reveal-text");
       }
     };
   }, [introDone]);
@@ -392,14 +435,20 @@ snap: {
           <SectionFive />
         </div>
         <div
-          className="about-section-cta absolute inset-0 w-full h-full bg-white"
-          style={{ zIndex: 70, transform: "translateY(100%)" }}
+          className="about-section-reviews absolute inset-0"
+          style={{ zIndex: 65, clipPath: "inset(100% 0% 0% 0%)" }}
+        >
+          <SectionReviews />
+        </div>
+        <div
+          className="about-section-cta absolute bottom-0 left-0 w-full structural-layer"
+          style={{ zIndex: 70 }}
         >
           <SectionCTA />
         </div>
         <div
-          className="about-footer-wrap absolute inset-0 w-full h-full flex flex-col justify-end"
-          style={{ zIndex: 80, transform: "translateY(100%)" }}
+          className="about-footer-wrap absolute left-0 bottom-0 w-full structural-layer"
+          style={{ zIndex: 80 }}
         >
           <Footer />
         </div>

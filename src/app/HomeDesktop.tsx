@@ -16,7 +16,7 @@ const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { 
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
 const SectionNine = dynamic(() => import("../components/Home/SectionNine"), { ssr: false });
 const SectionTen = dynamic(() => import("../components/Home/SectionTen"), { ssr: false });
-const SectionReviews = dynamic(() => import("../components/Home/SectionReviews"), { ssr: false });
+const SectionReviews = dynamic(() => import("../components/SectionReviews"), { ssr: false });
 
 import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
 

@@ -71,10 +71,11 @@ export default function SectionReviews() {
         />
       </div>
 
-      <div className="relative z-10 w-full max-w-[850px] flex items-center justify-between flex-1">
+      {/* CHANGED: Added px-4 (mobile side padding) and gap-4 md:gap-8 to create safe breathing room around the arrows */}
+      <div className="relative z-10 w-full max-w-[850px] flex items-center justify-between flex-1 px-4 gap-4 md:px-6 md:gap-8">
         <button 
           onClick={prevReview}
-          className="text-[#F4EEDF]/40 hover:text-[#F4EEDF] transition-colors p-2 select-none cursor-pointer"
+          className="text-[#F4EEDF]/40 hover:text-[#F4EEDF] transition-colors p-2 select-none cursor-pointer shrink-0"
           aria-label="Previous review"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 md:w-8 md:h-8">
@@ -128,7 +129,7 @@ export default function SectionReviews() {
 
         <button 
           onClick={nextReview}
-          className="text-[#F4EEDF]/40 hover:text-[#F4EEDF] transition-colors p-2 select-none cursor-pointer"
+          className="text-[#F4EEDF]/40 hover:text-[#F4EEDF] transition-colors p-2 select-none cursor-pointer shrink-0"
           aria-label="Next review"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 md:w-8 md:h-8">

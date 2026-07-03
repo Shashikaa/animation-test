@@ -9,6 +9,12 @@ interface HeroProps {
 export default function Hero({ isMobile = false }: HeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
 
+  // Define your image paths here
+  const desktopImg = "/hero-about.webp";
+  const mobileImg = "/hero-about-mobile.webp"; // <-- Add your mobile image path here
+  
+  const bgImage = isMobile ? mobileImg : desktopImg;
+
   return (
     <section ref={sectionRef} className="relative w-full h-screen overflow-hidden bg-[#111]">
       
@@ -22,7 +28,7 @@ export default function Hero({ isMobile = false }: HeroProps) {
           style={{
             top: "-10%",
             bottom: "-10%",
-            backgroundImage: "url('/hero-about.webp')",
+            backgroundImage: `url('${bgImage}')`, // <-- Dynamically switched
             willChange: "transform",                 
             backfaceVisibility: "hidden",            
           }}
@@ -39,7 +45,7 @@ export default function Hero({ isMobile = false }: HeroProps) {
           style={{
             top: "-10%",
             bottom: "-10%",
-            backgroundImage: "url('/hero-about.webp')",
+            backgroundImage: `url('${bgImage}')`, // <-- Dynamically switched
             willChange: "transform",                 
             backfaceVisibility: "hidden",            
           }}

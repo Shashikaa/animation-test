@@ -11,7 +11,7 @@ import SectionTwo    from "../components/Home/SectionTwo";
 import SectionThree  from "../components/Home/SectionThree";
 import SectionCTA    from "../components/SectionCTA";
 import Footer        from "../components/Footer";
-import SectionReviews from "../components/Home/SectionReviews"; 
+import SectionReviews from "../components/SectionReviews"; 
 
 const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { ssr: false });
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });

@@ -17,16 +17,11 @@ export default function SectionOne() {
       />
 
       {/* ── Content ── */}
-      <div className="section-container relative z-10 h-full flex items-end justify-end !pb-54">
+      <div className="section-container relative z-10 h-full flex items-start justify-start lg:!items-end !pb-24 !pt-32">
         {/* FIX: Replaced inline visibility with lg:invisible, and fixed spacing properties */}
         <div
           className="s1-card w-full max-w-[280px] md:max-w-[330px] lg:max-w-[370px] flex flex-col justify-center gap-4 will-change-transform !py-8 !p-6 md:!p-8 lg:!p-10 lg:invisible"
-          style={{
-            background: "rgba(25, 33, 28, 0.4)",
-            backdropFilter: "blur(18px)",
-            WebkitBackdropFilter: "blur(42px)",
-            boxShadow: "-5px -5px 25px rgba(255,255,255,0.02) inset",
-          }}
+
         >
           <p className="text-[#F4EEDF] s1-reveal-text">
             At Grand Pools, we design and build pools that bring families together,

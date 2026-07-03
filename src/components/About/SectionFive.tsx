@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import gsap from "gsap";
 
 const slides = [
@@ -8,174 +8,71 @@ const slides = [
     stat: "25+ years",
     label: "Industry Experience",
     desc: "Decades of knowledge in pool design and construction.",
-    glassColor: "rgba(25, 33, 28, 0.4)",
   },
   {
     stat: "100+",
     label: "Pools Built",
-    desc: "Completed Projects Stunning pools crafted for homes and businesses.",
-    glassColor: "rgba(35, 43, 38, 0.45)",
+    desc: "Completed Projects. Stunning pools crafted for homes and businesses.",
   },
   {
     stat: "100%",
     label: "Client Satisfaction",
-    desc: "Client Satisfaction Trusted for quality, service, and seamless execution.",
-    glassColor: "rgba(45, 50, 48, 0.45)",
+    desc: "Trusted for quality, service, and seamless execution.",
   },
 ];
 
-const SLIDE_DURATION = 0.5;
-
 export default function SectionFive() {
-  const currentRef = useRef<number>(0);
-  const [current, setCurrent] = useState(0);
-  const animating = useRef<boolean>(false);
-  
-  const activeBgRef = useRef<HTMLDivElement>(null);
-  const incomingBgRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
-    // We set clean starting coordinates for the parent panels. 
-    // The master scroll timeline in AboutMobile reveals them nicely without text splitting loops.
+    // Base structural positions before master scroll triggers them
     gsap.set([".s5-static-title", ".s5-static-desc"], { y: 30, opacity: 0 });
     gsap.set(".s5-main-glass-card", { x: 40, opacity: 0 });
+    
+    // Setup clean initial states for content crossfades
+    gsap.set(".s5-slide-card", { opacity: 0, y: 15, pointerEvents: "none" });
+    gsap.set(".s5-slide-card-0", { opacity: 1, y: 0, pointerEvents: "auto" });
   }, []);
-
-  const goTo = useCallback((next: number, direction: "next" | "prev") => {
-    const prev = currentRef.current;
-    if (animating.current || next === prev) return;
-    animating.current = true;
-    currentRef.current = next;
-    setCurrent(next);
-
-    const isNext = direction === "next";
-    const startX = isNext ? "100%" : "-100%";
-    const exitX = isNext ? "-100%" : "100%";
-
-    // Glass panel color slider track
-    if (activeBgRef.current && incomingBgRef.current) {
-      gsap.set(incomingBgRef.current, { 
-        backgroundColor: slides[next].glassColor,
-        x: startX,
-        display: "block"
-      });
-
-      gsap.to(activeBgRef.current, {
-        x: exitX,
-        duration: SLIDE_DURATION,
-        ease: "power2.inOut"
-      });
-
-      gsap.to(incomingBgRef.current, {
-        x: "0%",
-        duration: SLIDE_DURATION,
-        ease: "power2.inOut",
-        onComplete: () => {
-          if (activeBgRef.current) {
-            gsap.set(activeBgRef.current, { 
-              backgroundColor: slides[next].glassColor,
-              x: "0%" 
-            });
-          }
-          gsap.set(incomingBgRef.current, { display: "none" });
-          animating.current = false;
-        }
-      });
-    }
-  }, []);
-
-  const handlePrev = () => goTo((currentRef.current - 1 + slides.length) % slides.length, "prev");
-  const handleNext = () => goTo((currentRef.current + 1) % slides.length, "next");
 
   return (
     <section className="!relative !w-full !h-[100lvh] !overflow-hidden">
-      {/* Background Media */}
-      <div
-        className="s5-bg absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/parallax-image.webp')" }}
-      />
-
-      <div className="!absolute !inset-0 !pointer-events-none !z-[2] bg-black/60" />
-
+      {/* Background Media - Handled responsively via Tailwind arbitrary classes */}
+      <div className="s5-bg absolute top-0 left-0 w-full h-[100lvh] lg:h-[125lvh] bg-cover bg-center will-change-transform bg-[url('/parallax-image-about-mobile.webp')] md:bg-[url('/parallax-image-about.webp')]" />
+      
       {/* Main Container Titles */}
-      <div className="!absolute !z-10 !bottom-[60px] !left-[30px] md:!bottom-[105px] md:!left-[65px] !flex !flex-col !gap-1 !overflow-hidden">
-        <h2
-          className="s5-static-title !font-[100]  !text-[#F4EEDF] !will-change-transform"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          Decades of Expertise
-        </h2>
-        <p 
-          className="s5-static-desc !text-[#F4EEDF] !will-change-transform !mt-4" 
-          style={{ fontFamily: "var(--font-body)" }}
-        >
-          Unmatched Craftsmanship
-        </p>
-      </div>
+      {/* Added lg:!top-auto so bottom-[60px] functions properly on desktop viewports */}
+<div className="!absolute !z-10 !top-[150px] lg:!top-auto lg:!bottom-[60px] !left-[30px] md:!left-[65px] !flex !flex-col !gap-3 !overflow-hidden">
+  <h2
+    className="s5-static-title s5-reveal-text !whitespace-nowrap !font-[100] !text-[#F4EEDF] !will-change-transform"
+    style={{ fontFamily: "var(--font-display)" }}
+  >
+    Decades of Expertise
+  </h2>
+  <p 
+    className="s5-static-desc s5-reveal-text !text-[#F4EEDF] !will-change-transform" 
+    style={{ fontFamily: "var(--font-body)" }}
+  >
+    Unmatched Craftsmanship
+  </p>
+</div>
 
       {/* Dynamic Slide Deck Panel Card */}
-      <div
-        className="s5-main-glass-card !absolute !z-10 !right-[30px] md:!right-[65px] !top-1/2 !-translate-y-1/2 !w-full !max-w-[260px] md:!max-w-[300px] !flex !flex-col !gap-6 !px-5 !py-8 !overflow-hidden !will-change-transform"
-        style={{
-          backdropFilter: "blur(18px)",
-          WebkitBackdropFilter: "blur(18px)",
-          boxShadow: "-5px -5px 25px rgba(255,255,255,0.02) inset",
-        }}
-      >
-        {/* Color tracks */}
-        <div 
-          ref={activeBgRef} 
-          className="absolute inset-0 pointer-events-none z-0" 
-          style={{ backgroundColor: slides[0].glassColor }} 
-        />
-        <div ref={incomingBgRef} className="absolute inset-0 pointer-events-none z-0 hidden" />
-
+      <div 
+/* Update your className string to include lg:left-auto */
+className="s5-main-glass-card s5-dynamic-bg absolute z-10 left-[65px] md:left-1/3 lg:left-auto lg:!right-[65px] top-3/5 lg:top-1/2 -translate-y-1/2 w-full max-w-[200px] flex flex-col gap-6 px-5 py-8 overflow-hidden will-change-transform transition-colors duration-700"      >
         {/* Content Stack */}
-        <div className="!relative !z-10">
-          <div className="!relative">
-            {slides.map((slide, i) => (
-              <div
-                key={i}
-                className="!flex !flex-col !gap-2 !w-full !transition-opacity !duration-300"
-                style={{
-                  position: i === 0 ? "relative" : "absolute",
-                  top: 0,
-                  left: 0,
-                  opacity: current === i ? 1 : 0,
-                  pointerEvents: current === i ? "auto" : "none"
-                }}
-              >
-                {/* ⚡ NO MORE INNER LINE WRAPPERS OR GSAP SPLITTING TWEENS HERE ⚡ */}
-                <h3 className="!font-normal !text-white !text-3xl md:!text-[40px]">
-                  {slide.stat}
-                </h3>
-                <p className="!text-white !text-sm !mt-4" style={{ fontFamily: "var(--font-body)" }}>
-      
-                  <span className="text-white">{slide.desc}</span>
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Navigation Controls */}
-          <div className="!flex !items-center !justify-between !pt-12">
-            <button
-              type="button"
-              onClick={handlePrev}
-              className="!font-body !cursor-pointer !text-xs !text-[#F4EEDF] !flex !items-center !gap-1 !transition-opacity !duration-200 hover:!opacity-70"
+        <div className="relative z-10 min-h-[150px]">
+          {slides.map((slide, i) => (
+            <div
+              key={i}
+              className={`s5-slide-card s5-slide-card-${i} flex flex-col gap-2 w-full absolute top-0 left-0`}
             >
-              <img src="/arrow-right.svg" alt="Previous" className="!w-3 !h-3 !rotate-180" />
-              <span>Previous</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleNext}
-              className="!font-body !cursor-pointer !text-xs !text-[#F4EEDF] !flex !items-center !gap-1 !transition-opacity !duration-200 hover:!opacity-70"
-            >
-              <span>Next</span>
-              <img src="/arrow-right.svg" alt="Next" className="!w-3 !h-3" />
-            </button>
-          </div>
+              <h3 className="s5-reveal-text font-normal text-white text-3xl md:text-[40px]">
+                {slide.stat}
+              </h3>
+              <p className="s5-reveal-text text-white text-sm !mt-4" style={{ fontFamily: "var(--font-body)" }}>
+                <span>{slide.desc}</span>
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </section>

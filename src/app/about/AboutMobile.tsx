@@ -6,6 +6,7 @@ import SectionTwo from "@/src/components/About/SectionTwo";
 import SectionThree from "@/src/components/About/SectionThree";
 import SectionFour from "@/src/components/About/SectionFour";
 import SectionFive from "@/src/components/About/SectionFive";
+import SectionReviews from "../../components/SectionReviews"; 
 import SectionCTA from "@/src/components/SectionCTA";
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
@@ -40,15 +41,12 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // Initial clean structural configurations (Runs instantly before paint)
+  // Initial structural configurations (Runs instantly before paint)
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     
     const ctx = gsap.context(() => {
-      // Initialize the background image scaled up slightly for the intro timeline
       gsap.set(".about-hero-bg", { scale: 1.3 });
-      
-      // Setup hero text values to mirror Desktop initial hidden states
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
 
       gsap.set(".about-section-one", { yPercent: 100 });
@@ -60,24 +58,34 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
         WebkitClipPath: "inset(100% 0% 0% 0%)"
       });
 
-      // Section 4 sits underneath Section 3 driven by stacking index
       gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0 });
 
-      // Initialize Section 5 with clipPath stack layers instead of x positioning
       gsap.set(".about-section-five", { 
         visibility: "hidden", 
         clipPath: "inset(100% 0% 0% 0%)",
         WebkitClipPath: "inset(100% 0% 0% 0%)"
       });
 
-      gsap.set(".about-section-cta", { visibility: "hidden", y: "100%" });
-      gsap.set(".about-footer-wrap", { visibility: "hidden", y: "100%" });
+      gsap.set(".about-section-reviews", { 
+        visibility: "hidden", 
+        clipPath: "inset(100% 0% 0% 0%)",
+        WebkitClipPath: "inset(100% 0% 0% 0%)"
+      });
+
+      gsap.set(".about-section-five .s5-bg", { scale: 1.25 });
+      gsap.set([".about-section-five .s5-static-title", ".about-section-five .s5-static-desc"], { y: 30, opacity: 0 });
+      gsap.set(".about-section-five .s5-main-glass-card", { x: 40, opacity: 0 });
+
+      // ── MATCHING HOME INITIAL STATES FOR CTA & FOOTER ──
+      gsap.set(".about-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
+      gsap.set([".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
+      gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden" });
     }, scopeRef);
 
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // Hero Intro Scale & Fade Sequence (Triggers text fade-in on mobile matching desktop setup)
+  // Hero Intro Scale & Fade Sequence
   useEffect(() => {
     if (!preloaderDone || !isReady) return;
 
@@ -109,89 +117,138 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-const tl = gsap.timeline({
-  scrollTrigger: {
-    trigger: ".about-pin",
-    start: "top top",
-    end: "+=8400", // 7 sections * 1200px
-    scrub: 0.2,    // Speed up timeline lag from 0.8
-    pin: true,
-    anticipatePin: 1,
-    invalidateOnRefresh: true
-  },
-});
+      const ACTION = 2.0;
+      const DEAD_SCROLL = 0.4;
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: ".about-pin",
+          start: "top top",
+          end: "+=14500", // Expanded timeline to mirror fluid scroll footprints on Home
+          scrub: 0.2,    
+          pin: true,
+          anticipatePin: 1,
+          invalidateOnRefresh: true
+        },
+      });
 
       // Section 1
       tl.to(".about-section-one", {
         yPercent: 0,
-        duration: 2.0,
+        duration: ACTION,
         ease: "power2.inOut"
       })
       .to(".about-hero-bg", {
         scale: 1.0,
         yPercent: -10, 
-        duration: 2.0,
+        duration: ACTION,
         ease: "power2.inOut"
       }, "<");
 
-      tl.to({}, { duration: 0.2 }); // Tight mobile spacer pad
+      tl.to({}, { duration: DEAD_SCROLL }); 
 
       // Section 2
       tl.set(".about-section-two", { visibility: "visible" })
-        .to(".about-section-two", { yPercent: 0, duration: 2.0, ease: "power2.inOut" });
+        .to(".about-section-two", { yPercent: 0, duration: ACTION, ease: "power2.inOut" });
       
-      tl.to({}, { duration: 0.2 }); // Tight mobile spacer pad
+      tl.to({}, { duration: DEAD_SCROLL }); 
 
       // Section 3
       tl.set(".about-section-three", { visibility: "visible" })
         .fromTo(
           ".about-section-three",
           { clipPath: "inset(100% 0% 0% 0%)", WebkitClipPath: "inset(100% 0% 0% 0%)" },
-          { clipPath: "inset(0% 0% 0% 0%)", WebkitClipPath: "inset(0% 0% 0% 0%)", duration: 2.0, ease: "power2.inOut" }
+          { clipPath: "inset(0% 0% 0% 0%)", WebkitClipPath: "inset(0% 0% 0% 0%)", duration: ACTION, ease: "power2.inOut" }
         );
       
-      tl.to({}, { duration: 0.2 }); // Tight mobile spacer pad
+      tl.to({}, { duration: DEAD_SCROLL }); 
 
-      // Slide Section 3 up and away, revealing Section 4 underneath
+      // Section 4
       tl.set(".about-section-four", { visibility: "visible" })
         .addLabel("sec3to4Transition")
         .to(".about-section-three", {
           yPercent: -100,
-          duration: 2.0,
+          duration: ACTION,
           ease: "power2.inOut"
         }, "sec3to4Transition")
         .fromTo(".about-section-four .s4-img-bg", 
           { yPercent: 15 },
           { 
             yPercent: 0, 
-            duration: 2.0, 
+            duration: ACTION, 
             ease: "power2.inOut" 
           }, 
           "sec3to4Transition"
         );
       
-      tl.to({}, { duration: 0.2 }); // Tight mobile spacer pad
+      tl.to({}, { duration: DEAD_SCROLL }); 
 
-      // Section 4 to 5 ClipPath reveal transitions
-      tl.set(".about-section-five", { visibility: "visible" })
+      // Section 5
+      tl.addLabel("sec5Start")
+        .set(".about-section-five", { visibility: "visible" }, "sec5Start")
         .to(".about-section-five", { 
           clipPath: "inset(0% 0% 0% 0%)", 
           WebkitClipPath: "inset(0% 0% 0% 0%)", 
-          duration: 2.0, 
+          duration: 2.2, 
           ease: "power2.inOut" 
-        })
-        .to(".s5-static-title, .s5-static-desc", { y: 0, opacity: 1, duration: 1.2, ease: "power2.out" }, "0")
-        .to(".s5-main-glass-card", { x: 0, opacity: 1, duration: 1.2, ease: "power2.out" }, "<");
-      
-      tl.to({}, { duration: 0.2 }); // Tight mobile spacer pad
+        }, "sec5Start")
+        .to(".about-section-five .s5-static-title, .about-section-five .s5-static-desc", { 
+          y: 0, 
+          opacity: 1, 
+          duration: 1.2, 
+          ease: "power2.out" 
+        }, "sec5Start+=1.0")
+        .to(".about-section-five .s5-main-glass-card", { 
+          x: 0, 
+          opacity: 1, 
+          duration: 1.2, 
+          ease: "power2.out" 
+        }, "sec5Start+=1.0");
 
-      // CTA
-      tl.set(".about-section-cta", { visibility: "visible" })
-        .to(".about-section-cta", { y: "0%", duration: 1.8, ease: "power2.inOut" });
+      tl.to(".about-section-five .s5-bg", {
+        scale: 1.0,
+        ease: "none",
+        duration: 6.5
+      }, "sec5Start");
 
-      // Footer
-      tl.set(".about-footer-wrap", { visibility: "visible" })
-        .to(".about-footer-wrap", { y: "0%", duration: 1.8, ease: "power2.inOut" });
+      // Card Transitions inside Section 5
+      tl.addLabel("sec5_card2", "sec5Start+=2.0")
+        .to(".about-section-five .s5-slide-card-0", { opacity: 0, y: -25, pointerEvents: "none", duration: 1.2, ease: "power2.inOut" }, "sec5_card2")
+        .fromTo(".about-section-five .s5-slide-card-1", { opacity: 0, y: 25 }, { opacity: 1, y: 0, pointerEvents: "auto", duration: 1.2, ease: "power2.inOut" }, "sec5_card2");
+
+      tl.addLabel("sec5_card3", "sec5Start+=4.0")
+        .to(".about-section-five .s5-slide-card-1", { opacity: 0, y: -25, pointerEvents: "none", duration: 1.2, ease: "power2.inOut" }, "sec5_card3")
+        .fromTo(".about-section-five .s5-slide-card-2", { opacity: 0, y: 25 }, { opacity: 1, y: 0, pointerEvents: "auto", duration: 1.2, ease: "power2.inOut" }, "sec5_card3");
+
+      tl.to({}, { duration: 1.5 }); 
+
+      // ── REVIEWS SECTION REVEAL ──
+      tl.addLabel("reviewsStart", ">")
+        .set(".about-section-reviews", { visibility: "visible" }, "reviewsStart")
+        .to(".about-section-reviews", {
+          clipPath: "inset(0% 0% 0% 0%)",
+          WebkitClipPath: "inset(0% 0% 0% 0%)",
+          duration: ACTION,
+          ease: "power2.inOut"
+        }, "reviewsStart")
+        .to(".about-section-five", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "reviewsStart");
+
+      tl.to({}, { duration: DEAD_SCROLL });
+
+      // ── UNIFIED HOMEPAGE TRANSITION: REVIEWS -> CTA ──
+      tl.addLabel("ctaStart", ">")
+        .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
+        .to(".about-section-cta", { yPercent: 0, duration: ACTION, ease: "none" }, "ctaStart") 
+        .to(".about-section-reviews", { yPercent: -10, duration: ACTION, ease: "none" }, "ctaStart");
+
+      tl.to({}, { duration: DEAD_SCROLL });
+
+      // ── UNIFIED HOMEPAGE TRANSITION: CTA -> FOOTER ──
+      tl.addLabel("footerStart", ">")
+        .to([".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"], { opacity: 0, duration: ACTION * 0.3, ease: "none" }, "footerStart")
+        .set(".about-footer-wrap", { visibility: "visible" }, "footerStart+=0.1")
+        .to(".about-footer-wrap", { yPercent: 0, duration: ACTION, ease: "none" }, "footerStart+=0.1") 
+        .to(".about-section-reviews", { yPercent: -20, duration: ACTION, ease: "none" }, "footerStart+=0.1");
 
     }, scopeRef);
 
@@ -200,8 +257,14 @@ const tl = gsap.timeline({
 
   return (
     <div ref={scopeRef}>
+      <style jsx global>{`
+        .pin-all {
+          height: 100lvh; 
+        }
+      `}</style>
+
       <div 
-        className="about-pin pin-all relative w-full overflow-hidden "
+        className="about-pin pin-all relative w-full overflow-hidden"
         style={{ visibility: "visible" }}
       >
         <div className="about-hero-panel-left absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
@@ -242,11 +305,23 @@ const tl = gsap.timeline({
           <SectionFive />
         </div>
 
-        <div className="about-section-cta absolute inset-0 w-full h-full bg-white" style={{ zIndex: 70 }}>
+        <div 
+          className="about-section-reviews absolute inset-0 w-full h-full" 
+          style={{ 
+            zIndex: 55,
+            clipPath: "inset(100% 0% 0% 0%)",
+            WebkitClipPath: "inset(100% 0% 0% 0%)"
+          }}
+        >
+          <SectionReviews />
+        </div>
+
+        {/* Updated structure classes and z-indexes to map precisely to Home layout */}
+        <div className="about-section-cta absolute inset-0 w-full h-full z-[150]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionCTA />
         </div>
 
-        <div className="about-footer-wrap absolute inset-0 w-full h-full flex flex-col justify-end" style={{ zIndex: 80 }}>
+        <div className="about-footer-wrap absolute left-0 bottom-0 w-full z-[151]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <Footer />
         </div>
       </div>
