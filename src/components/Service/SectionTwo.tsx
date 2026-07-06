@@ -382,7 +382,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               position: "relative",
               display: "inline-block",
               width: "fit-content",
-              paddingBottom: 8,
+              paddingBottom: 4,
               fontSize: 14,
               fontWeight: 500,
               textTransform: "uppercase",
