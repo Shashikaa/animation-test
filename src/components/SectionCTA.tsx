@@ -14,15 +14,22 @@ export default function SectionCTA() {
         overflow: "hidden",
       }}
     >
-      {/* ── Background WebGL Layer (Desktop) ── */}
-      <div className="hidden lg:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
-        <WaveCanvas imageSrc="/CTA.webp" />
+<div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full">
+        {/* Show WebGL canvas only on desktop */}
+        <div className="hidden lg:block w-full h-full">
+          <WaveCanvas imageSrc="/CTA.webp" />
+        </div>
+
+        {/* Show static background image on mobile and tablet */}
+        <div className="block lg:hidden w-full h-full">
+          <img 
+            src="/CTA.webp" 
+            alt="Background" 
+            className="w-full h-full object-cover"
+          />
+        </div>
       </div>
 
-      {/* ── Background WebGL Layer (Mobile/Tablet) ── */}
-      <div className="block lg:hidden absolute inset-0 z-[1] pointer-events-auto w-full h-full">
-        <WaveCanvas imageSrc="/CTA-mobile.webp" />
-      </div>
 
       {/* ══════════════════════════════════════════
           DESKTOP layout — completely unchanged
@@ -102,7 +109,7 @@ export default function SectionCTA() {
       >
         {/* Title */}
         <h2
-          className="font-display !max-w-[260px] md:!max-w-[400px] "
+          className="font-display !max-w-[300px] md:!max-w-[430px] "
           style={{
             color: "#F4EEDF",
             margin: 0,

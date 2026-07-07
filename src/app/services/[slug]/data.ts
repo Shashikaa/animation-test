@@ -24,11 +24,7 @@ export interface FullServiceData {
   hero: SubServiceHeroData;
   sectionOne: SectionOneData;
   sectionTwo: SectionTwoData;
-  cta: {
-    title: string;
-    description: string;
-    buttonText: string;
-  };
+
 }
 
 export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
@@ -77,8 +73,8 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     sectionOne: {
       title: 'Olympic-Grade Architecture',
       paragraph: 'Our residential builds are structurally engineered to handle custom volume profiles, leveraging deep engineering methodologies to guarantee decades of flawless operational durability.',
-      bgImageUrl: '/images/single-service-8-bg.webp',
-      sideImageUrl: '/images/single-service-8.webp',
+      bgImageUrl: '//single-service-8-bg.webp',
+      sideImageUrl: '/service-1-hero.webp',
       fourParagraphs: [
         'Custom shotcrete reinforcement guarantees long-term structural load safety.',
         'Precision plumbing alignment scales spatial flow parameters optimally.',
@@ -87,26 +83,25 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       ]
     },
     sectionTwo: {
-      title: 'Structural Specifications & FAQs',
+      title: 'Everything You Need to Know',
       bgImageUrl: '/images/single-service-25.webp',
       faqs: [
-        { question: 'What is the standard build timeline?', answer: 'Most custom shotcrete pools require 8 to 12 weeks depending on site access and structural complexity.' },
-        { question: 'Do you secure local municipal permits?', answer: 'Yes, we handle all engineering submissions, environmental zoning clearances, and construction permits.' },
-        { question: 'Can smart water automation features be retrofitted later?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' }
+        { question: 'How long does new pool construction take?', answer: 'Most custom shotcrete pools require 8 to 12 weeks depending on site access and structural complexity.' },
+        { question: 'What is included in the new pool construction service?', answer: 'Yes, we handle all engineering submissions, environmental zoning clearances, and construction permits.' },
+        { question: 'Can I customise the shape and features of my pool?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' },
+             { question: 'Do you handle permits and approvals?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' },
+        { question: 'How do I get started with a new pool build?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' }
+
       ]
     },
-    cta: {
-      title: 'Everything You Need To Know',
-      description: 'Ready to break ground on a custom concrete pool design tailored explicitly to your landscape layout?',
-      buttonText: 'Get A Free Consultation'
-    }
+
   },
-  'residential-pools': {
-    slug: 'residential-pools',
+  'Pool Equipment & Installation': {
+    slug: 'pool-equipment-and-installation',
     hero: {
-      title: 'Luxury Residential',
+      title: 'Pool Equipment & Installation',
       subtitle: 'Bespoke Private Staycations',
-      bgImageUrl: '/images/residential-hero.webp',
+      bgImageUrl: '/residential-hero.webp',
       tabs: [
         {
           label: 'From Vision to Reality',
@@ -148,17 +143,13 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
         { question: 'What options do I have for internal finishes?', answer: 'We offer specialized polished aggregate blends, premium quartz formulations, and fully tiled mosaic options.' },
         { question: 'How do vanishing edge parameters perform?', answer: 'They leverage lower catch basins paired with dedicated balance valves to handle subtle pool water overflow smoothly.' }
       ]
-    },
-    cta: {
-      title: 'Let’s Design Your Oasis',
-      description: 'Consult with our principal architects to layout your backyard landscape blueprint.',
-      buttonText: 'Start Your Project'
     }
+
   },
-  'pool-renovation': {
-    slug: 'pool-renovation',
+  'Commercial Pool Construction': {
+    slug: 'commercial-pool-construction',
     hero: {
-      title: 'Pool Restorations',
+      title: 'Commercial Pool Construction',
       subtitle: 'Breathing New Life',
       bgImageUrl: '/images/renovation-hero.webp',
       tabs: [
@@ -202,12 +193,8 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
         { question: 'Can you fix cracked concrete pool shells?', answer: 'Yes, we apply high-tensile staples alongside epoxy injection loops to restore structural engineering load tolerances.' },
         { question: 'Is it possible to convert an older pool to salt chlorination?', answer: 'Absolutely. We seamlessly swap in inline electrolytic cells during the plumbing overhaul phase.' }
       ]
-    },
-    cta: {
-      title: 'Restore Your Structure',
-      description: 'Bring aging structural architecture back to pristine engineering operational standards.',
-      buttonText: 'Book Structural Inspection'
     }
+
   },
   'equipment-maintenance': {
     slug: 'equipment-maintenance',
@@ -252,10 +239,6 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
         { question: 'What are the operational impacts of UV & Ozone setups?', answer: 'They lower standard chlorine consumption profiles drastically by taking on the heavy secondary oxidation load.' }
       ]
     },
-    cta: {
-      title: 'Optimize System Performance',
-      description: 'Upgrade your mechanical setup to zero-stress automated sanitation loops.',
-      buttonText: 'Request Hardware Audit'
-    }
+
   }
 };

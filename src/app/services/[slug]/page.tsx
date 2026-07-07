@@ -39,7 +39,7 @@ export default function SubServicePage({ params }: PageProps) {
   return (
     <>
       {isMobile ? (
-        <SubServicesMobile pageData={pageData} preloaderDone={false} />
+        <SubServicesMobile pageData={pageData} preloaderDone={preloaderDone} />
       ) : (
         <SubServicesDesktop preloaderDone={preloaderDone} pageData={pageData} />
       )}

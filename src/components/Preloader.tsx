@@ -339,7 +339,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
       >
         <div 
           className="absolute inset-0 w-full h-full"
-          style={{ background: "linear-gradient(135deg, #162D24 0%, #094146 100%)" }}
+         style={{ background: "linear-gradient(145deg, #0A2B1E 0%, #0E3A28 100%)" }}
         >
           <video
             src="/videos/pool-waves.mp4"
