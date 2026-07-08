@@ -18,9 +18,35 @@ const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { 
 const SectionNine  = dynamic(() => import("../components/Home/SectionNine"),   { ssr: false });
 const SectionTen   = dynamic(() => import("../components/Home/SectionTen"),    { ssr: false });
 
-import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
-
 gsap.registerPlugin(ScrollTrigger);
+
+// Helper function implemented directly inside the file context to handle immediate raw text segmentation
+function executeInlineSplitting(selector: string) {
+  const element = document.querySelector(selector) as HTMLElement;
+  if (!element || element.dataset.splitComplete === "true") return;
+
+  const rawText = element.textContent || "";
+  const linesArray = rawText.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+  
+  element.innerHTML = "";
+  linesArray.forEach(lineText => {
+    const wrapper = document.createElement("span");
+    wrapper.className = "custom-line-wrap";
+    wrapper.style.display = "block";
+    wrapper.style.overflow = "hidden";
+    wrapper.style.position = "relative";
+
+    const inner = document.createElement("span");
+    inner.className = "custom-line-inner";
+    inner.style.display = "block";
+    inner.textContent = lineText;
+
+    wrapper.appendChild(inner);
+    element.appendChild(wrapper);
+  });
+
+  element.dataset.splitComplete = "true";
+}
 
 export default function HomeMobile() {
   const contextValues = useSite() as any;
@@ -38,27 +64,23 @@ export default function HomeMobile() {
         ".s8-mob-bg", ".section-9", ".s9-bg-img", ".section-cta", ".footer"
       ], { force3D: true });
 
-      gsap.set(".hero", { yPercent: 0, zIndex: 90 });
-      gsap.set(".hero-bg-wrapper", { clipPath: "inset(0% 0% 0% 0%)" });
-      gsap.set(".hero-bg", { yPercent: 0, scale: 1.3, transformOrigin: "center center" });
+      gsap.set(".hero", { yPercent: 0, zIndex: 90, display: "block", opacity: 1 });
+      gsap.set(".hero-bg-wrapper", { opacity: 1, visibility: "visible", clipPath: "none" });
+      gsap.set(".hero-gradient-bg", { opacity: 1, visibility: "visible" });
       
-      gsap.set([".hero-title", ".hero-right-text", ".hero-scroll-indicator"], { 
-        opacity: 1, 
-        y: 0, 
-        visibility: "visible" 
-      });
-      
+      // Load settings matching updated sequence
+      gsap.set([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 1, y: 0 });
+      gsap.set([".hero-right-text", ".hero-secondary-para"], { opacity: 1, visibility: "hidden" });
       gsap.set(".hero-secondary-text-wrap", { height: "auto" });
-      gsap.set(".hero-secondary-para", { visibility: "hidden" });
 
-      gsap.set(".section-2", { clipPath: "none", zIndex: 25 });
+      // Configured Section 2 z-index to stay above the Hero layer so it can slide on top natively
+      gsap.set(".section-2", { display: "block", clipPath: "none", zIndex: 95, yPercent: 100, opacity: 1 });
       gsap.set(".s2-mob-scroll-wrapper", { opacity: 0, y: "100vh" });
       
       gsap.set(".s2-mob-row5", { opacity: 0, clipPath: "none" });
       gsap.set(".s2-mob-row5-under", { opacity: 1 });
 
       gsap.set(".section-3", { visibility: "hidden", yPercent: 100, zIndex: 100 });
-
       gsap.set(".section-10", { visibility: "hidden", yPercent: 0, zIndex: 112 });
       gsap.set(".s10-img-right-wrap", { clipPath: "inset(0% 0% 0% 0%)" });
       gsap.set(".s10-scrollable-container", { y: "0vh" });
@@ -82,6 +104,8 @@ export default function HomeMobile() {
       gsap.set(".section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
       gsap.set([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
       gsap.set(".footer", { yPercent: 100, zIndex: 151, visibility: "hidden" });
+
+      gsap.set(".hero-bg", { scale: 1.0, transformOrigin: "center center" });
     }, scopeRef);
 
     return () => ctx.revert();
@@ -96,14 +120,13 @@ export default function HomeMobile() {
     let timelineInitialized = false;
 
     const ctx = gsap.context(() => {
-      gsap.ticker.lagSmoothing(50, 16);
+      gsap.ticker.lagSmoothing(0);
 
       ScrollTrigger.config({
-        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load", 
+        ignoreMobileResize: true,
+        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize", 
       });
 
-      // 🟢 OPTIMIZATION FIXED: Normalize native touch scrolling container with JS timelines.
-      // This enforces fluid scrollbar matching across mobile browser engines.
       ScrollTrigger.normalizeScroll({
         allowNestedScroll: true,
         debounce: false
@@ -111,7 +134,6 @@ export default function HomeMobile() {
 
       const ACTION      = 2.0; 
       const DEAD_SCROLL = 0.4; 
-      const EASE        = "none"; 
 
       const waitForMobBgs = (cb: () => void) => {
         let framesChecked = 0;
@@ -144,14 +166,16 @@ export default function HomeMobile() {
             screen.orientation?.addEventListener("change", onOrientationChange);
             vvCleanup = () => screen.orientation?.removeEventListener("change", onOrientationChange);
 
-            // 🟢 OPTIMIZATION FIXED: Cached values declarations to block layout thrashing
             let cachedFlightY = 0;
             let cachedFlightX = 0;
             let cachedScrollWrapperY = 0;
 
+            executeInlineSplitting(".hero-right-text");
+            executeInlineSplitting(".hero-secondary-para");
+
             const tl = gsap.timeline({
               defaults: { 
-                ease: EASE,
+                ease: "none",
                 lazy: true 
               },
               scrollTrigger: {
@@ -174,7 +198,6 @@ export default function HomeMobile() {
                     cachedFlightX = targetEl.getBoundingClientRect().left - startEl.getBoundingClientRect().left;
                   }
 
-                  // 🟢 OPTIMIZATION FIXED: Heavy layout querying is performed once here instead of mid-scroll ticks
                   const scrollWrapper = document.querySelector(".s2-mob-scroll-wrapper") as HTMLElement;
                   if (scrollWrapper) {
                     cachedScrollWrapperY = -(scrollWrapper.offsetHeight - window.innerHeight * 0.85);
@@ -185,35 +208,87 @@ export default function HomeMobile() {
               },
             });
 
-            tl.addLabel("heroStart", 0);
-
-            tl
-              .to([".hero-title", ".hero-right-text", ".hero-scroll-indicator"], { 
-                opacity: 0, 
-                y: -40, 
-                duration: ACTION * 0.5 
-              }, 0.2)
+            // ── HERO ENGINE SEQUENCE ──
+            tl.addLabel("heroStart", 0)
               
-              .to(".hero-bg-wrapper", { clipPath: "inset(0% 0% 40% 0%)", duration: ACTION }, 0)
-              .to(".hero-bg", { yPercent: -25, scale: 1.15, duration: ACTION }, 0)
+              // Uninterrupted continuous image zoom mapping smoothly across the entire lifecycle of the hero
+              .fromTo(".hero-bg", 
+                { scale: 1.0 },
+                { scale: 1.45, duration: ACTION * 5.0, ease: "none" }, 
+                "heroStart"
+              )
 
-              .addLabel("heroSecondaryReveal", ACTION * 0.4)
-              .set(".hero-secondary-para", { visibility: "visible" }, "heroSecondaryReveal")
+              // Setup text split layout line inner values
+              .set([".hero-right-text .custom-line-inner", ".hero-secondary-para .custom-line-inner"], {
+                opacity: 0,
+                yPercent: 100
+              }, "heroStart")
 
-              .to({}, { duration: DEAD_SCROLL })
+              // 1. Smoothly fade out initial landing titles
+              .to([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], {
+                opacity: 0,
+                y: -40,
+                duration: ACTION * 0.6,
+                ease: "power1.inOut"
+              }, "heroStart")
 
-              .addLabel("textFlightStart", ">")
-              .to(".hero-bg-wrapper", { clipPath: "inset(0% 0% 100% 0%)", duration: ACTION }, "textFlightStart")
-              .to(".hero-bg", { scale: 1, duration: ACTION }, "textFlightStart")
-              .to(".hero-gradient-bg", { opacity: 0, duration: ACTION }, "textFlightStart")
+              // 2. Line-by-Line Reveal of Right text block
+              .set(".hero-right-text", { visibility: "visible" }, `heroStart+=${ACTION * 0.5}`)
+              .addLabel("heroRightReveal", `heroStart+=${ACTION * 0.5}`)
+              .to(".hero-right-text .custom-line-inner", {
+                opacity: 1,
+                yPercent: 0,
+                stagger: 0.12,
+                duration: ACTION * 0.7,
+                ease: "power3.out"
+              }, "heroRightReveal")
+
+              // 3. Smooth Fade Out of Right Text block
+              .addLabel("heroRightHide", "heroRightReveal+=1.6")
+              .to(".hero-right-text .custom-line-inner", {
+                opacity: 0,
+                y: -30,
+                duration: ACTION * 0.5,
+                ease: "power1.in"
+              }, "heroRightHide")
+
+              // 4. Line-by-Line Reveal of Left text block 
+              .set(".hero-secondary-para", { visibility: "visible" }, `heroRightHide+=${ACTION * 0.5}`)
+              .addLabel("heroLeftReveal", `heroRightHide+=${ACTION * 0.5}`)
+              .to(".hero-secondary-para .custom-line-inner", {
+                opacity: 1,
+                yPercent: 0,
+                stagger: 0.12,
+                duration: ACTION * 0.7,
+                ease: "power3.out"
+              }, "heroLeftReveal")
+
+              // ── HERO EXIT TRACK: SECTION 2 SLIDES OVER TOP ──
+              .addLabel("heroExit", "heroLeftReveal+=1.6")
               
-              .to([".s2-title-main", ".s2-title-sub"], { opacity: 1, duration: ACTION }, "textFlightStart+=0.2")
-              .to(".hero-secondary-para", { y: () => cachedFlightY, x: () => cachedFlightX, duration: ACTION }, "textFlightStart")
+              // Move left secondary paragraph upward synchronously during exit and reverse playbacks
+              .to(".hero-secondary-para .custom-line-inner", {
+                opacity: 0,
+                y: -60,
+                duration: ACTION * 0.6,
+                ease: "power1.in"
+              }, "heroExit")
+              
+              // Target spatial position coordinates flight paths safely on backwards/forwards scrolls
+              .to(".hero-secondary-para", { y: () => cachedFlightY, x: () => cachedFlightX, duration: ACTION * 0.8 }, "heroExit")
 
-              .to({}, { duration: DEAD_SCROLL })
+              // Section 2 overlays seamlessly on top by sliding up instead of clean visibility cuts
+              .fromTo(".section-2", 
+                { yPercent: 100 }, 
+                { yPercent: 0, duration: ACTION * 0.8, ease: "power1.inOut" }, 
+                "heroExit"
+              )
+              .addLabel("textLanding", `heroExit+=${ACTION * 0.8}`);
+
+            // ── CONTINUOUS SEQUENTIAL MOBILE FLOWS UNTOUCHED ──
+            tl.to({}, { duration: DEAD_SCROLL })
 
               .addLabel("s2TextDismissal", ">")
-              .to(".hero-secondary-para", { opacity: 0, y: () => cachedFlightY - 60, duration: ACTION }, "s2TextDismissal")
               .to([".s2-title-main", ".s2-title-sub"], { opacity: 0, y: -60, duration: ACTION }, "s2TextDismissal")
               
               .addLabel("s2MobileScrollStart", ">")
@@ -221,7 +296,7 @@ export default function HomeMobile() {
               .fromTo(".s2-mob-scroll-wrapper", 
                 { y: () => window.innerHeight }, 
                 { 
-                  y: () => cachedScrollWrapperY, // 🟢 FIXED: Reads fast static pre-cached coordinates
+                  y: () => cachedScrollWrapperY, 
                   duration: ACTION 
                 }, 
                 "s2MobileScrollStart"
@@ -301,13 +376,6 @@ export default function HomeMobile() {
               .to(".footer",    { yPercent: 0,          duration: ACTION }, "footerStart+=0.1") 
               .to(".s9-bg-img", { yPercent: -20, duration: ACTION }, "footerStart+=0.1");
 
-            useTextReveal(scopeRef, ".hero-secondary-para", {
-              tl,
-              position: "heroSecondaryReveal",
-              duration: ACTION * 0.5,
-              stagger: 0.06,
-            });
-
             requestAnimationFrame(() => {
               if (pinEl) pinEl.style.removeProperty("max-height");
             });
@@ -337,16 +405,12 @@ export default function HomeMobile() {
     return () => {
       vvCleanup?.();
       if (fallbackTimeout) clearTimeout(fallbackTimeout);
-      if (scopeRef.current) {
-        restoreTextReveal(scopeRef.current, ".hero-secondary-para");
-      }
       ctx.revert();
     };
   }, [preloaderDone]);
 
   return (
     <div ref={scopeRef}>
-      {/* 🟢 OPTIMIZATION FIXED: Removed global layout promotions (`will-change: transform`) which cause intense Mobile VRAM leaks. */}
       <style jsx global>{`
         .pin-all {
           height: 100lvh; 

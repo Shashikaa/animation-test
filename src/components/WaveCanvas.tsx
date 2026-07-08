@@ -58,17 +58,20 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isMobileOrTablet, setIsMobileOrTablet] = useState<boolean | null>(null);
   const [isReady, setIsReady] = useState(false);
+  
+  // 🌟 NEW: Defer canvas initialization state
+  const [shouldInitialize, setShouldInitialize] = useState(false);
+  
   const appInstanceRef = useRef<any>(null);
   const hasFiredReady = useRef(false);
 
+  // 1. Detect device form factor
   useEffect(() => {
     const handleResize = () => {
       const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent
       );
-      // 1024px effectively catches mobile devices and standard tablets (iPad, etc.)
       const isSmallScreen = window.innerWidth <= 1024;
-      
       setIsMobileOrTablet(isMobileUA || isSmallScreen);
     };
 
@@ -77,6 +80,33 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // 2. 🌟 NEW: Lazy Activation Hook
+  // Forces the browser to wait until it is completely idle before spinning up WebGL
+  useEffect(() => {
+    if (isMobileOrTablet === null) return;
+    if (isMobileOrTablet) return; // Mobile bypasses WebGL entirely
+
+    let idleId: any;
+    let timeoutId: any;
+
+    const activateCanvas = () => {
+      setShouldInitialize(true);
+    };
+
+    if ("requestIdleCallback" in window) {
+      // Wait for a clear thread, giving up to 2 seconds max buffer limit
+      idleId = (window as any).requestIdleCallback(activateCanvas, { timeout: 2000 });
+    } else {
+      timeoutId = setTimeout(activateCanvas, 1500);
+    }
+
+    return () => {
+      if (idleId && "cancelIdleCallback" in window) (window as any).cancelIdleCallback(idleId);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isMobileOrTablet]);
+
+  // 3. Heavy WebGL Engine Setup (Now safely gated behind shouldInitialize)
   useEffect(() => {
     if (isMobileOrTablet === null) return;
 
@@ -86,7 +116,8 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
       return;
     }
 
-    if (!canvasRef.current || !videoRef.current) return;
+    // 🌟 Check if our lazy delay window is open yet
+    if (!shouldInitialize || !canvasRef.current || !videoRef.current) return;
 
     let destroyed = false;
     let animationFrameId: number;
@@ -293,12 +324,12 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
         appInstanceRef.current = null;
       }
     };
-  }, [isMobileOrTablet, imageSrc]);
+  }, [isMobileOrTablet, imageSrc, shouldInitialize]); // 🌟 Added shouldInitialize dependency
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-black">
-      {/* Heavy Video Element only loads if it's a desktop setup */}
-      {!isMobileOrTablet && (
+      {/* Elements inside are gated until shouldInitialize is active */}
+      {!isMobileOrTablet && shouldInitialize && (
         <video
           ref={videoRef}
           src="/videos/Pool-Water-Reflect.mp4"
@@ -312,7 +343,6 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
         />
       )}
 
-      {/* Pure, original image output for Mobile & Tablets */}
       {isMobileOrTablet && imageSrc && (
         <img
           src={imageSrc}
@@ -321,11 +351,10 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
         />
       )}
       
-      {/* Interactive WebGL Canvas for Desktop Only */}
-      {!isMobileOrTablet && isMobileOrTablet !== null && (
+      {!isMobileOrTablet && isMobileOrTablet !== null && shouldInitialize && (
         <canvas
           ref={canvasRef}
-          className={`absolute inset-0 w-full h-full block transition-opacity duration-500 ease-out ${
+          className={`absolute inset-0 w-full h-full block transition-opacity duration-700 ease-out ${
             isReady ? "opacity-100" : "opacity-0"
           }`}
           style={{ zIndex: 1 }}

@@ -24,6 +24,33 @@ gsap.registerPlugin(ScrollTrigger);
 
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
+function executeDesktopSplitting(selector: string) {
+  const element = document.querySelector(selector) as HTMLElement;
+  if (!element || element.dataset.splitComplete === "true") return;
+
+  const rawText = element.textContent || "";
+  const linesArray = rawText.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+  
+  element.innerHTML = "";
+  linesArray.forEach(lineText => {
+    const wrapper = document.createElement("span");
+    wrapper.className = "custom-line-wrap";
+    wrapper.style.display = "block";
+    wrapper.style.overflow = "hidden";
+    wrapper.style.position = "relative";
+
+    const inner = document.createElement("span");
+    inner.className = "custom-line-inner";
+    inner.style.display = "block";
+    inner.textContent = lineText;
+
+    wrapper.appendChild(inner);
+    element.appendChild(wrapper);
+  });
+
+  element.dataset.splitComplete = "true";
+}
+
 export default function HomeDesktop() {
   const contextValues = useSite() as any;
   const preloaderDone = contextValues.preloaderDone;
@@ -46,7 +73,11 @@ export default function HomeDesktop() {
       gsap.set(".hero-bg-wrapper", { opacity: 1, visibility: "visible" });
       gsap.set(".hero-gradient-bg", { opacity: 1, visibility: "visible" });
 
-      gsap.set(".section-2", { display: "block", clipPath: "none", zIndex: 45, opacity: 1 });
+      gsap.set([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 1, y: 0 });
+      gsap.set([".hero-right-text", ".hero-secondary-para"], { opacity: 1, visibility: "hidden" });
+      gsap.set(".hero-secondary-text-wrap", { height: "auto" });
+
+      gsap.set(".section-2", { display: "block", clipPath: "none", zIndex: 95, yPercent: 100, opacity: 1 });
       gsap.set(".s2-right-img-frame", { clipPath: "inset(100% 0% 0% 0%)" });
       gsap.set(".s2-right-img-frame-under", { clipPath: "inset(100% 0% 0% 0%)" });
       gsap.set(".s2-scroll-content", { yPercent: 100, y: 0, opacity: 0 });
@@ -73,7 +104,7 @@ export default function HomeDesktop() {
       gsap.set(".section-cta", { yPercent: 100, zIndex: 95, display: "none" });
       gsap.set(".footer", { yPercent: 100, zIndex: 96, display: "none" });
 
-      gsap.set(".hero-bg", { scale: 1.15, transformOrigin: "center center" });
+      gsap.set(".hero-bg", { scale: 1.0, transformOrigin: "center center" });
     }, scopeRef);
     return () => ctx.revert();
   }, []);
@@ -144,7 +175,11 @@ export default function HomeDesktop() {
             vvCleanup = () => vv.removeEventListener("resize", onVVResize);
           }
 
-          let cachedProgressLabels: number[] = [];
+          executeDesktopSplitting(".hero-right-text");
+          executeDesktopSplitting(".hero-secondary-para");
+
+          // Array to contain processed progress snap targets dynamically
+          let snapPointsArray: number[] = [0];
 
           const tl = gsap.timeline({
             defaults: { ease: "none" },
@@ -158,24 +193,10 @@ export default function HomeDesktop() {
               fastScrollEnd: true,
               invalidateOnRefresh: true,
               snap: {
-                snapTo: (progress) => {
-                  if (cachedProgressLabels.length === 0) return progress;
-                  if (progress <= 0) return 0;
-                  if (progress >= 1) return 1;
-
-                  for (let i = 0; i < cachedProgressLabels.length - 1; i++) {
-                    const start = cachedProgressLabels[i];
-                    const end = cachedProgressLabels[i + 1];
-
-                    if (progress >= start && progress <= end) {
-                      const localProgress = (progress - start) / (end - start);
-                      return localProgress > 0.35 ? end : start;
-                    }
-                  }
-                  return progress;
-                },
-                duration: { min: 0.6, max: 1.0 },
-                delay: 0.05,
+                // Point snap directly to the generated structural array data
+                snapTo: (val) => gsap.utils.snap(snapPointsArray, val),
+                duration: { min: 0.5, max: 0.9 },
+                delay: 0.02,
                 ease: "power2.inOut",
               },
             },
@@ -185,70 +206,71 @@ export default function HomeDesktop() {
 
           // ── HERO SCROLL OVERLAYS ──
           tl.addLabel("heroStart")
-            .to(".hero h1, .hero [class*='bottom-8'], .hero-right-text", {
+            .fromTo(".hero-bg", 
+              { scale: 1.0 },
+              { scale: 1.35, duration: 11.0, ease: "none" }, 
+              "heroStart"
+            )
+
+            .set([".hero-right-text .custom-line-inner", ".hero-secondary-para .custom-line-inner"], {
               opacity: 0,
-              y: -30,
-              duration: 2.0, 
-              ease: "power1.out"
+              yPercent: 100
             }, "heroStart")
+
+            .to([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], {
+              opacity: 0,
+              y: -40,
+              duration: 2.5,
+              ease: "power1.inOut"
+            }, "heroStart")
+            .set([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { visibility: "hidden" }, "heroStart+=2.5")
             
-            .to(".hero-bg-wrapper", {
-              clipPath: "inset(0% 8% 12% 50%)",
-              duration: 4.5,
-            }, "heroStart+=1.0")
-            .to(".hero-bg", {
-              scale: 1.0,
-              duration: 4.5
-            }, "heroStart+=1.0")
+            .set(".hero-right-text", { visibility: "visible" }, "heroStart+=2.2")
+            .addLabel("heroRightReveal", "heroStart+=2.2")
+            .to(".hero-right-text .custom-line-inner", {
+              opacity: 1,
+              yPercent: 0,
+              stagger: 0.15,
+              duration: 2.5,
+              ease: "power3.out"
+            }, "heroRightReveal")
 
-            .to({}, {
-              duration: 0.1,
-              onStart: () => {
-                if (!textTriggersRef.current.hero && tl.scrollTrigger && tl.scrollTrigger.direction > 0) {
-                  textTriggersRef.current.hero = true;
-                  useTextReveal(scopeRef, ".hero-secondary-para", {
-                    immediate: true,
-                    duration: 0.5,
-                    stagger: 0.06
-                  });
-                }
-              }
-            }, "heroStart+=3.0");
+            .addLabel("heroRightHide", "heroRightReveal+=2.6")
+            .to(".hero-right-text .custom-line-inner", {
+              opacity: 0,
+              y: -40,
+              duration: 2.0,
+              ease: "power1.in"
+            }, "heroRightHide")
+            .set(".hero-right-text", { visibility: "hidden" }, "heroRightHide+=2.0")
 
-          // ── HERO EXIT INTO SECTION 2 ──
-          tl.addLabel("heroExit")
-            .set(".hero h1, .hero [class*='bottom-8'], .hero-right-text", { visibility: "hidden" }, "heroExit")
-            .set([".s2-title-main", ".s2-title-sub"], { opacity: 0 }, "heroExit")
-            .to([".s2-title-main", ".s2-title-sub"], { opacity: 1, duration: 2.0 }, "heroExit")
-            .to(".hero-bg-wrapper", {
-              clipPath: "inset(0% 8% 100% 50%)",
-              duration: 3.8,
-              ease: "power1.inOut"
+            .set(".hero-secondary-para", { visibility: "visible" }, "heroRightHide+=2.0")
+            .addLabel("heroLeftReveal", "heroRightHide+=2.0")
+            .to(".hero-secondary-para .custom-line-inner", {
+              opacity: 1,
+              yPercent: 0,
+              stagger: 0.15,
+              duration: 2.5,
+              ease: "power3.out"
+            }, "heroLeftReveal")
+
+            // ── NEW HERO EXIT MECHANIC: SECTION 2 SLIDES UP OVER TOP ──
+            .addLabel("heroExit", "heroLeftReveal+=2.6")
+            
+            .to(".hero-secondary-para .custom-line-inner", {
+              opacity: 0,
+              y: -100,
+              duration: 2.5,
+              ease: "power1.in"
             }, "heroExit")
-            .to(".hero-gradient-bg", { 
-              opacity: 0, 
-              duration: 2.0, 
-              ease: "power2.out" 
-            }, "heroExit+=1.2")
-            .to(".hero-secondary-para", {
-              x: () => {
-                const startEl = document.querySelector(".hero-secondary-text-wrap") as HTMLElement;
-                const targetEl = document.querySelector(".s2-body") as HTMLElement;
-                if (!startEl || !targetEl) return 0;
-                const currentTransform = gsap.getProperty(startEl, "x") as number;
-                return targetEl.getBoundingClientRect().left - (startEl.getBoundingClientRect().left - currentTransform);
-              },
-              y: () => {
-                const startEl = document.querySelector(".hero-secondary-text-wrap") as HTMLElement;
-                const targetEl = document.querySelector(".s2-body") as HTMLElement;
-                if (!startEl || !targetEl) return 0;
-                const currentTransform = gsap.getProperty(startEl, "y") as number;
-                return targetEl.getBoundingClientRect().top - (startEl.getBoundingClientRect().top - currentTransform);
-              },
-              duration: 3.8,
-              ease: "power1.inOut"
-            }, "heroExit")
-            .addLabel("textLanding", "heroExit+=3.8");
+            .set(".hero-secondary-para", { visibility: "hidden" }, "heroExit+=2.5")
+
+            .fromTo(".section-2",
+              { yPercent: 100 },
+              { yPercent: 0, duration: 3.5, ease: "power1.inOut" },
+              "heroExit"
+            )
+            .addLabel("textLanding", "heroExit+=3.5");
 
           // ── SECTION 2 INNER ANIMATION ──
           tl.addLabel("s2InnerAnimation", "textLanding")
@@ -290,7 +312,7 @@ export default function HomeDesktop() {
 
           // ── SECTION 2 TO 3 REVEAL WIPE ──
           tl.addLabel("sec3Start")
-            .set(".section-3", { zIndex: 50, display: "block" }, "sec3Start")
+            .set(".section-3", { zIndex: 99, display: "block" }, "sec3Start")
             .fromTo(".section-3",
               { clipPath: "inset(100% 0% 0% 0%)" },
               {
@@ -384,7 +406,7 @@ export default function HomeDesktop() {
             .addLabel("sec10ExitSequence", "sec10ContentReveal+=5.0")
             .to(".s10-img-right-wrap", { 
               clipPath: "inset(0% 0% 100% 0%)", 
-              y: -60,                                   
+              y: -60,                                     
               opacity: 0,
               duration: 5.5,
               ease: "power2.inOut"
@@ -460,10 +482,8 @@ export default function HomeDesktop() {
             .to(".s8-panel-right", { clipPath: "inset(100% 0% 0% 50%)", duration: 3.8 }, "sec9Start")
             .to(".s9-bg-img", { yPercent: 0, scale: 1.0, duration: 3.8 }, "sec9Start")
             
-            // 1. Instantly sets title opacity when background reveal finishes
             .set(".s9-title", { opacity: 1 }, "sec9Start+=3.8")
             
-            // 2. Critical Fix: Empty space tween acts as a timeline buffer so snapping engine doesn't break
             .to({}, { duration: 2.0 }, "sec9Start+=3.8")
             
             .addLabel("sec9MainTrack", "sec9Start+=5.8")
@@ -510,12 +530,15 @@ export default function HomeDesktop() {
 
           const totalDuration = tl.totalDuration();
           const labelNames = [
-            "heroStart", "heroExit", "textLanding", "s2InnerAnimation", "s2InnerMidpoint", "s2InnerSplitReveal", "sec3Start",
+            "heroStart", "heroRightReveal", "heroLeftReveal", "heroExit", "textLanding", 
+            "s2InnerAnimation", "s2InnerMidpoint", "s2InnerSplitReveal", "sec3Start",
             "sec10Start", "sec10TextHide", "sec10ContentReveal", "sec10ExitSequence", 
             "secReviewsStart", "sec7Start", "sec8Start", "sec9Start", 
             "sec9MainTrack", "ctaStart", "footerStart"
           ];
-          cachedProgressLabels = [0, ...labelNames.map(name => tl.labels[name] / totalDuration), 1];
+          
+          // Re-populate layout target markers mapped to timeline fractions
+          snapPointsArray = [0, ...labelNames.map(name => tl.labels[name] / totalDuration), 1];
 
           onScrollReady();
         });
