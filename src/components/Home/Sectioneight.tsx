@@ -7,86 +7,71 @@ export default function SectionEight() {
   const sectionRef   = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const personRef    = useRef<HTMLDivElement>(null);
+  const bgParallaxRef = useRef<HTMLDivElement>(null); // Targets the inner container now
 
-  const [assetsLoaded, setAssetsLoaded] = useState(false);
+  const [assetsLoaded] = useState(true);
 
-  // ── PRELOAD HIGH-PRIORITY WEBGL TEXTURES ──
-  useEffect(() => {
-    const desktopSrc = "/Forest.webp";
-    const mobileSrc = "/ForestMob.webp";
+useEffect(() => {
+  const container = containerRef.current;
+  if (!container) return;
 
-    const preloadImage = (src: string) => {
-      return new Promise<void>((resolve) => {
-        const img = new Image();
-        img.src = src;
-        img.onload = () => resolve();
-        img.onerror = () => resolve(); 
-      });
-    };
+  const handleMouseMove = (e: MouseEvent) => {
+    const { clientX, clientY } = e;
+    const { innerWidth, innerHeight } = window;
 
-    Promise.all([preloadImage(desktopSrc), preloadImage(mobileSrc)]).then(() => {
-      setAssetsLoaded(true);
-    });
-  }, []);
+    // Calculate normalization from center (-0.5 to 0.5)
+    const moveX = (clientX / innerWidth) - 0.5;
+    const moveY = (clientY / innerHeight) - 0.5;
 
-  // ── MOUSE PARALLAX EFFECT ──
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
+    // ── CHANGE THIS VALUE ──
+    const bgIntensity = 6;        // Lowered from 25 to 6 so it barely shifts
+    const personIntensity = -45;  // Keeps the character moving elegantly
 
-    let mx = 0, my = 0;
-    let pX = 0, pY = 0;
-    let rafId: number;
-    let running = false;
+    if (bgParallaxRef.current) {
+      bgParallaxRef.current.style.transform = `translate3d(${moveX * bgIntensity}px, ${moveY * bgIntensity}px, 0)`;
+    }
+    if (personRef.current) {
+      personRef.current.style.transform = `translate3d(${moveX * personIntensity}px, ${moveY * personIntensity}px, 0)`;
+    }
+  };
 
-    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  const handleMouseEnter = () => {
+    if (bgParallaxRef.current) bgParallaxRef.current.style.transition = "none";
+    if (personRef.current) personRef.current.style.transition = "none";
+  };
 
-    const onMouseMove = (e: MouseEvent) => {
-      const r = el.getBoundingClientRect();
-      mx = (e.clientX - r.left)  / r.width  - 0.5;
-      my = (e.clientY - r.top)   / r.height - 0.5;
-      if (!running) { running = true; rafId = requestAnimationFrame(tick); }
-    };
+  const handleMouseLeave = () => {
+    if (bgParallaxRef.current) {
+      bgParallaxRef.current.style.transition = "transform 0.6s ease-out";
+      bgParallaxRef.current.style.transform = "translate3d(0,0,0)";
+    }
+    if (personRef.current) {
+      personRef.current.style.transition = "transform 0.6s ease-out";
+      personRef.current.style.transform = "translate3d(0,0,0)";
+    }
+  };
 
-    const onMouseLeave = () => { mx = 0; my = 0; };
+  container.addEventListener("mousemove", handleMouseMove);
+  container.addEventListener("mouseenter", handleMouseEnter);
+  container.addEventListener("mouseleave", handleMouseLeave);
 
-    const tick = () => {
-      pX = lerp(pX, mx * 28, 0.08);
-      pY = lerp(pY, my * 16, 0.08);
-
-      if (personRef.current) {
-        personRef.current.style.transform = `translate(${pX}px, ${pY}px)`;
-      }
-
-      const settled =
-        Math.abs(pX - mx * 28) < 0.05 &&
-        Math.abs(pY - my * 16) < 0.05;
-
-      if (settled) { running = false; }
-      else { rafId = requestAnimationFrame(tick); }
-    };
-
-    el.addEventListener("mousemove",  onMouseMove);
-    el.addEventListener("mouseleave", onMouseLeave);
-    return () => {
-      el.removeEventListener("mousemove",  onMouseMove);
-      el.removeEventListener("mouseleave", onMouseLeave);
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
+  return () => {
+    container.removeEventListener("mousemove", handleMouseMove);
+    container.removeEventListener("mouseenter", handleMouseEnter);
+    container.removeEventListener("mouseleave", handleMouseLeave);
+  };
+}, []);
 
   return (
     <div
       ref={sectionRef}
       className="relative w-full h-full overflow-hidden"
-      style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
+      style={{ transform: "translate3d(0,0,0)", backfaceVisibility: "hidden" }}
     >
       <link rel="preload" href="/Forest.webp" as="image" type="image/webp" />
       <link rel="preload" href="/ForestMob.webp" as="image" type="image/webp" />
 
-      {/* ══════════════════════════════════════
-          MOBILE + TABLET LAYOUT
-         ══════════════════════════════════════ */}
+      {/* MOBILE + TABLET LAYOUT */}
       <div className="lg:!hidden !absolute !inset-0 !overflow-hidden section-container">
         <div className="s8-mob-bg absolute inset-0 z-[1] w-full h-full overflow-hidden">
           <img 
@@ -114,96 +99,70 @@ export default function SectionEight() {
         </div>
       </div>
 
-      {/* ══════════════════════════════════════
-          DESKTOP LAYOUT
-         ══════════════════════════════════════ */}
+      {/* DESKTOP LAYOUT */}
       <div ref={containerRef} className="hidden lg:block absolute inset-0" style={{ overflow: "hidden" }}>
-
-        {/* ══ LEFT panel ══ */}
+        
+        {/* Outer background layer targeted strictly by GSAP ScrollTrigger timeline */}
         <div
-          className="s8-panel-left absolute inset-0"
-          style={{ clipPath: "inset(0% 50% 0% 0%)" }}
+          className="s8-bg-img absolute inset-0 w-full"
+          style={{
+            top: "-10%", 
+            height: "120%",
+            willChange: "transform",
+            opacity: assetsLoaded ? 1 : 0,
+            transition: "opacity 0.4s ease-out"
+          }}
         >
-          <div
-            className="s8-bg-img absolute left-0 w-full transition-opacity duration-300"
-            style={{
-              top: 0, height: "120%",
-              willChange: "transform",
-              opacity: assetsLoaded ? 1 : 0
-            }}
+          {/* Inner layer targeted strictly by MouseMove Parallax */}
+          <div 
+            ref={bgParallaxRef} 
+            className="absolute inset-0 w-full h-full"
+            style={{ willChange: "transform" }}
           >
             <div className="absolute inset-0 z-[1] pointer-events-none w-full h-full">
-              {assetsLoaded && <WaveCanvas imageSrc="/Forest.webp" />}
+              <WaveCanvas imageSrc="/Forest.webp" />
             </div>
           </div>
+        </div>
+        
+        {/* Dark Overlay */}
+        <div 
+          className="absolute inset-0 z-10 pointer-events-none opacity-20" 
+          style={{ background: "linear-gradient(135deg, #162D24 0%, #094146 100%)" }} 
+        />
+        
+        {/* Foreground Content Stack */}
+        <div className="absolute inset-0 z-20 pointer-events-none">
           
-          <div className="absolute inset-0 z-10 pointer-events-none opacity-70" style={{ background: "#0000007A" }} />
-          
+          {/* Foreground Character Image */}
           <div
             ref={personRef}
-            className="absolute z-20"
-            style={{
-              bottom: -20, left: "-2%", width: "75%", height: "100%",
-              willChange: "transform", pointerEvents: "none",
-            }}
+            className="absolute bottom-[-30px] left-[6vw] h-[105%] w-[75%]"
+            style={{ willChange: "transform" }}
           >
             <img
               src="/person.png"
               alt=""
               style={{
-                width: "100%", height: "100%", objectFit: "contain",
+                width: "100%", height: "100%", objectFit: "contain", 
                 objectPosition: "bottom left", mixBlendMode: "screen",
                 display: "block", transform: "scaleX(-1)", zIndex: 100,
               }}
             />
           </div>
-        </div>
 
-        {/* ══ RIGHT panel ══ */}
-        <div
-          className="s8-panel-right absolute inset-0"
-          style={{ clipPath: "inset(0% 0% 0% 50%)" }}
-        >
-          <div
-            className="s8-bg-img absolute left-0 w-full transition-opacity duration-300"
-            style={{
-              top: 0, height: "120%",
-              willChange: "transform",
-              opacity: assetsLoaded ? 1 : 0
-            }}
-          >
-            <div className="absolute inset-0 z-[1] pointer-events-none w-full h-full">
-              {assetsLoaded && <WaveCanvas imageSrc="/Forest.webp" />}
-            </div>
+          {/* Typography Content Panel */}
+          <div className="absolute left-1/2 top-1/2 -translate-y-1/2 flex flex-col gap-5 text-left ">
+            <h2 className="s8-heading text-[#F4EEDF] font-display lg:opacity-0 whitespace-nowrap">
+              Water as Sanctuary.
+            </h2>
+            <p className="s8-para text-[#F4EEDF] font-body lg:opacity-0 leading-relaxed max-w-[330px]">
+              Designed to disappear into the landscape, not announce itself.
+              The result isn't a pool. It's a quiet room you walk outside to find.
+            </p>
           </div>
-          
-          <div className="absolute inset-0 z-10 pointer-events-none opacity-70" style={{ background: "#0000007A" }} />
-          
-          <div
-            className="absolute z-20 pointer-events-none"
-            style={{
-              left: 0,
-              top: 0,
-              height: "100%",
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-start",
-              paddingLeft: "50%",
-            }}
-          >
-            <div className="flex flex-col gap-5 text-left">
-              <h2 className="s8-heading text-[#F4EEDF] font-display lg:opacity-0" >
-                Water as Sanctuary.
-              </h2>
-              <p className="s8-para text-[#F4EEDF] max-w-[300px] font-body lg:opacity-0" >
-                Designed to disappear into the landscape, not announce itself.
-                The result isn't a pool. It's a quiet room you walk outside to find.
-              </p>
-            </div>
-          </div>
-        </div>
 
+        </div>
       </div>
     </div>
   );

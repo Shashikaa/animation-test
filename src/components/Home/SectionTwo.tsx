@@ -72,7 +72,11 @@ export default function SectionTwo() {
       <div className="absolute inset-0 z-20 grid grid-cols-1 lg:grid-cols-2 w-full h-full pointer-events-none">
         {/* LEFT COLUMN: LANDING REFERENCE */}
         <div className="relative h-full overflow-hidden !pt-58 md:!pt-66 lg:!pt-36">
-          <div className="s2-body w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px] !mb-33 md:!mb-80 lg:!mb-0 h-[100px] !ml-[20px] md:!ml-[30px] lg:!ml-[65px]" />
+          <div className="s2-body w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px] !mb-33 md:!mb-80 lg:!mb-0 h-[100px] !ml-[20px] md:!ml-[30px] lg:!ml-[65px]">
+            <p className="text-[#F4EEDF] font-body text-sm md:text-base leading-relaxed text-left">
+              From renovations to new builds, we design and construct pools that combine style, functionality, and durability.
+            </p>
+          </div>
         </div>
 
         {/* RIGHT COLUMN: DOUBLE LAYER STACK (DESKTOP) */}

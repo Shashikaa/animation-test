@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import WaveCanvas from "../WaveCanvas"; 
 
 export default function SectionTen() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -23,9 +22,13 @@ export default function SectionTen() {
       ref={sectionRef}
       className="relative w-full h-screen overflow-hidden"
     >
-      {/* ── Background WebGL Layer ── */}
-      <div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full">
-        <WaveCanvas imageSrc="/pool-dark-bg.webp" />
+      {/* ── Static Background Image Layer ── */}
+      <div className="s10-static-bg absolute inset-0 z-[1] w-full h-full pointer-events-none">
+        <img 
+          src="/pool-dark-bg.webp" 
+          alt="Pool background" 
+          className="s10-bg-img w-full h-full object-cover"
+        />
       </div>
 
       {/* ── FIRST STAGE ELEMENTS ── */}
@@ -148,7 +151,7 @@ export default function SectionTen() {
         
         @media (max-width: 767px) {
           .s10-title { top: clamp(200px, 15vh, 160px); left: 20px; }
-          .s10-title-sub { top: clamp(236px, 20vh, 200px); left: 20px; }
+          .s10-title-sub { top: clamp(256px, 24vh, 220px); left: 20px; }
           .s10-para-top { bottom: 180px; left: 40px; right: 20px; text-align: right; }
           
           .s10-scrollable-container {

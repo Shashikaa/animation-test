@@ -17,16 +17,15 @@ export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
   const [isReady, setIsReady] = useState(false);
   const appInstanceRef = useRef<any>(null);
 
-  // 🌟 NEW: Prevents any asset fetching or engine creation until the browser is completely quiet
-  const [shouldInitialize, setShouldInitialize] = useState(false);
-
   // ── STEP 1: MOBILE & TABLET DETECTION ──
   useEffect(() => {
     const handleResize = () => {
       const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent
       );
+      // 1024px captures smartphones and standard tablets (portrait/landscape)
       const isSmallScreen = window.innerWidth <= 1024;
+      
       setIsMobileOrTablet(isMobileUA || isSmallScreen);
     };
 
@@ -35,35 +34,9 @@ export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // ── 🌟 NEW STEP: LAZY DEFERRAL WINDOW ──
-  // Keeps the desktop WebGL engine entirely locked until the main preloader animation completes
+  // ── HOOK 1: ENGINE INITIALIZATION ──
   useEffect(() => {
-    if (isMobileOrTablet === null || isMobileOrTablet) return;
-
-    let idleId: any;
-    let timeoutId: any;
-
-    const activateEngine = () => {
-      setShouldInitialize(true);
-    };
-
-    if ("requestIdleCallback" in window) {
-      // Defer asset setup to an idle browser window, max timeout 2 seconds safety buffer
-      idleId = (window as any).requestIdleCallback(activateEngine, { timeout: 2000 });
-    } else {
-      timeoutId = setTimeout(activateEngine, 1500);
-    }
-
-    return () => {
-      if (idleId && "cancelIdleCallback" in window) (window as any).cancelIdleCallback(idleId);
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [isMobileOrTablet]);
-
-  // ── HOOK 1: ENGINE INITIALIZATION (Now gated behind shouldInitialize) ──
-  useEffect(() => {
-    // 🌟 Added shouldInitialize gate guard
-    if (isMobileOrTablet === null || isMobileOrTablet || !shouldInitialize || !canvasRef.current) return;
+    if (isMobileOrTablet === null || isMobileOrTablet || !canvasRef.current) return;
 
     let destroyed = false;
 
@@ -164,12 +137,11 @@ export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
         appInstanceRef.current = null;
       }
     };
-  }, [isMobileOrTablet, shouldInitialize]); // 🌟 Added shouldInitialize dependency
+  }, [isMobileOrTablet]);
 
   // ── HOOK 2: HARDWARE ACCELERATED TEXTURE INSTANCING ──
   useEffect(() => {
-    // 🌟 Added shouldInitialize gate guard
-    if (isMobileOrTablet === null || isMobileOrTablet || !shouldInitialize) return;
+    if (isMobileOrTablet === null || isMobileOrTablet) return;
     
     let active = true;
     let rafId: number;
@@ -212,11 +184,14 @@ export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
       active = false;
       cancelAnimationFrame(rafId);
     };
-  }, [imageSrc, isMobileOrTablet, shouldInitialize]); // 🌟 Added shouldInitialize dependency
+  }, [imageSrc, isMobileOrTablet]);
 
   // ── STEP 3: CLEAN RENDERING STRATEGY ──
+  
+  // Render nothing until screen layout state initializes safely
   if (isMobileOrTablet === null) return null;
 
+  // Render pure, lightweight original background style for handhelds/tabs
   if (isMobileOrTablet) {
     return (
       <div 
@@ -226,13 +201,12 @@ export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
     );
   }
 
+  // Interactive WebGL Canvas for Desktop layouts
   return (
     <canvas 
       ref={canvasRef} 
-      // 🌟 Clean performance upgrade: Keep the static asset behind it visible 
-      // so the UI looks complete while WebGL prepares silently in the idle layout layer
       style={{ backgroundImage: `url(${imageSrc})` }}
-      className={`h-full w-full block bg-cover bg-center bg-no-repeat transition-opacity duration-500 ease-in-out ${
+      className={`h-full w-full block bg-cover bg-center bg-no-repeat transition-opacity duration-300 ease-in-out ${
         isReady ? "opacity-100" : "opacity-0"
       }`}
     />

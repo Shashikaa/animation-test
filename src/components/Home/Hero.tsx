@@ -6,13 +6,13 @@ export default function Hero() {
 
       {/* Gradient layer — sits underneath everything at the absolute bottom */}
       <div
-        className="hero-gradient-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#10221C] to-[#0A4145] will-change-[opacity] z-10"
+        className="hero-gradient-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#10221C] to-[#0A4145] z-10"
         style={{ opacity: 1 }}
       />
 
-      {/* Secondary Text Wrapper */}
-      <div className="hero-secondary-text-wrap w-full max-w-[340px] md:max-w-[340px] lg:max-w-[340px] absolute bottom-[140px] md:bottom-[180px] lg:bottom-40 left-6 sm:left-12 lg:left-24 z-30 overflow-hidden pt-4">
-        <p className="hero-secondary-para font-body text-[#F4EEDF] text-left text-sm sm:text-base leading-relaxed m-0 p-0 will-change-[opacity]">
+      {/* Secondary Text Wrapper (Left Text) */}
+      <div className="hero-secondary-text-wrap w-full max-w-[340px] absolute bottom-[140px] md:bottom-[180px] lg:bottom-40 left-6 sm:left-12 lg:left-24 z-30 overflow-hidden pt-4">
+        <p className="hero-secondary-para font-body text-[#F4EEDF] text-left text-sm sm:text-base leading-relaxed m-0 p-0">
 {`Expert craftsmanship and attention
 to detail bring your vision to life,
 delivering seamless pool solutions
@@ -22,11 +22,11 @@ from concept to completion.`}
 
       {/* Targetable Background wrapper layer — sits at z-20 */}
       <div
-        className="hero-bg-wrapper absolute inset-0 w-full h-full will-change-[clip-path] z-20"
+        className="hero-bg-wrapper absolute inset-0 w-full h-full z-20"
         style={{ clipPath: "inset(0% 0% 0% 0%)" }}
       >
         <div
-          className="hero-bg absolute inset-0 bg-cover bg-center bg-[url('/heroHome.webp')] will-change-transform"
+          className="hero-bg absolute inset-0 bg-cover bg-center bg-[url('/heroHome.webp')]"
           style={{ transform: "scale(1)", transformOrigin: "center center" }}
         />
       </div>
@@ -36,19 +36,18 @@ from concept to completion.`}
 
         {/* Left Side: Initial Title Block */}
         <div className="max-w-xl lg:max-w-4xl flex flex-col justify-end overflow-visible relative">
-          <div className="block h-fit overflow-visible relative z-30 max-w-[260px] md:max-w-[260px] lg:max-w-[260px]">
-            <p className="hero-title text-[#F4EEDF] text-left will-change-[transform,opacity] m-0 p-0 select-none leading-relaxed relative z-30 max-w-2xl font-body">
+          <div className="block h-fit overflow-visible relative z-30 max-w-[260px]">
+            <p className="hero-title text-[#F4EEDF] text-left m-0 p-0 select-none leading-relaxed relative z-30 font-body">
               Premium pools with refined wellness infrastructure, designed for private outdoor living.
             </p>
           </div>
         </div>
 
-        {/* Right Side: Responsive alignment targets left on mobile, right on desktop */}
+        {/* Right Side */}
         <div className="mt-4 lg:mt-0 lg:!pb-6 z-30 relative flex-shrink-0 flex flex-col items-start lg:items-end justify-end gap-4 min-h-[0px] w-full lg:w-auto">
           
-          {/* FIXED: Added 'absolute bottom-12 left-0 lg:relative lg:bottom-0' to remove it from layout flow on mobile */}
           <div className="hero-right-text-wrap absolute bottom-12 left-0 lg:relative lg:bottom-0 w-full max-w-[340px] md:max-w-[390px] lg:max-w-[400px] overflow-hidden text-left lg:text-right">
-            <p className="hero-right-text font-body text-[#F4EEDF] text-left lg:text-right text-sm sm:text-base leading-relaxed m-0 p-0 will-change-[opacity]">
+            <p className="hero-right-text font-body text-[#F4EEDF] text-left lg:text-right text-sm sm:text-base leading-relaxed m-0 p-0">
 {`At Grand Pools, we create custom swimming 
 pools that blend style, function, and quality.
  Every pool is designed to complement your
