@@ -7,17 +7,28 @@ interface HeroProps {
 
 export default function ServicesHero({ hideText = false, isMobile = false }: HeroProps) {
   return (
-    <div className="relative w-full h-full bg-[#F4EEDF]">
+    <div className="relative w-full h-full bg-[#12322D]">
       
-      {/* UNDERNEATH LAYER: Stationary text block card reveal anchor */}
-      <div className="absolute bottom-0 left-0 w-full h-[320px] lg:top-0 lg:right-0 lg:left-auto lg:h-full lg:w-[550px] grid place-items-center !px-12 lg:!px-16 z-0">
-        <div className="w-full max-w-[420px] text-left mx-auto">
-          <p className="text-[#19211C] !text-[14px] md:!text-[16px]">
-            From stunning pool renovations to high-end commercial builds, 
-            we deliver tailored solutions with precision and care. Whether you're 
-            upgrading an existing pool or starting from scratch, our expert team 
-            ensures a seamless process and exceptional results.
-          </p>
+      {/* UNDERNEATH LAYER: Exact Figma Positioning */}
+      <div className="absolute inset-y-0 right-0 w-full lg:w-[47.5%] z-0 text-[#F4EEDF]">
+        <div className="relative w-full h-full p-6 md:p-12 lg:p-16">
+          
+          {/* Paragraph 1: High/Center-Left Position */}
+          <div className="absolute bottom-[260px] md:bottom-[280px] lg:top-[35%] left-6 md:left-12 lg:left-54 max-w-[290px] md:max-w-[310px]">
+            <p className="text-[14px] md:text-[16px] leading-relaxed font-light">
+              From stunning pool renovations to high-end commercial builds, 
+              we deliver tailored solutions with precision and care.
+            </p>
+          </div>
+          
+          {/* Paragraph 2: Bottom-Right Position */}
+          <div className="absolute bottom-18 right-6 lg:bottom-12 md:right-12 lg:bottom-16 lg:right-16 max-w-[280px] md:max-w-[300px] text-left">
+            <p className="text-[14px] md:text-[16px] leading-relaxed font-light">
+              Whether you're upgrading an existing pool or starting from scratch, 
+              our expert team ensures a seamless process and exceptional results.
+            </p>
+          </div>
+
         </div>
       </div>
 
@@ -39,23 +50,59 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 z-[1]" />
           
-          {!hideText && (
-            <div className="hero-text-wrap section-container relative z-10 h-full flex flex-col justify-end !pb-22 will-change-[opacity,transform]">
-              <div className="flex flex-col !gap-2 lg:!gap-6 leading-normal">
-                <h1
-                  className="hero-title text-[#F4EEDF] !font-[100]"
-                  style={{
-                    fontFamily: "var(--font-display)",
-                  }}
-                >
-                  Expert Pool Solutions
-                </h1>
-                <p className="hero-desc text-[#F4EEDF] !mt-1">
-                  Designed to Last
-                </p>
-              </div>
-            </div>
-          )}
+{!hideText && (
+  <div className="section-container relative z-10 h-full flex flex-col justify-end !pb-24 lg:!pb-42">
+    
+    {/* This wrapper now only compresses the title and description */}
+    <div className="hero-text-wrap flex flex-col !gap-4 lg:!gap-8 leading-normal will-change-[opacity,transform]">
+      <h1
+        className="hero-title text-[#F4EEDF] !font-[100]"
+        style={{ fontFamily: "var(--font-display)" }}
+      >
+        Expert Pool Solutions
+      </h1>
+      <p className="hero-desc text-[#F4EEDF] w-[320px]">
+        Tailored pools for relaxing, hosting, and elevated outdoor living.
+      </p>
+    </div>
+
+    {/* --- CONTACT US BUTTON CONTAINER (Moved safely outside hero-text-wrap) --- */}
+    <div className="hero-btn block !mt-4 lg:mt-0 lg:absolute lg:bottom-24 lg:right-20">
+      <a
+        href="/contact"
+        style={{
+          position: "relative",
+          display: "inline-block",
+          width: "fit-content",
+          paddingBottom: 4,
+          fontSize: 14,
+          fontWeight: 500,
+          textTransform: "uppercase",
+          color: "#F4EEDF",
+          textDecoration: "none",
+          flexShrink: 0,
+        }}
+        className="group transition-opacity duration-200 hover:opacity-70 font-body"
+      >
+        CONTACT US
+        <span
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 1,
+            background: "#F4EEDF",
+            transition: "transform 0.2s ease",
+          }}
+          className="group-hover:-translate-y-[2px]"
+        />
+      </a>
+    </div>
+    {/* --- END BUTTON --- */}
+
+  </div>
+)}
         </section>
       </div>
 

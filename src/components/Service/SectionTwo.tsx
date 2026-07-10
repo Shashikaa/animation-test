@@ -1,26 +1,28 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect, useLayoutEffect } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import gsap from "gsap";
 
 const slides = [
   {
     img: "/pool-renovation.webp",
-    label: "Concrete Pool Renovation",
-    desc: "Restore and modernise your pool with high-quality finishes and functional upgrades for a fresh, stylish, and long-lasting look.",
-    tab: "Concrete",
+    label: "Residential Pool Construction",
+    desc: "Whether you're creating a peaceful backyard retreat or an entertainer’s dream, we bring your vision to life with tailored designs, expert craftsmanship, and a seamless building process from start to finish.",
   },
   {
     img: "/hero.webp",
-    label: "Pool Equipment & Installation",
-    desc: "We provide and install premium pool pumps, filters, heating systems, and automation solutions.",
-    tab: "Equipment",
+    label: "Concrete Pool Renovation",
+    desc: "Breathe new life into your existing pool with high-quality renovations. Whether it needs resurfacing, structural repairs, or a modern upgrade, we ensure a seamless transformation with lasting results.",
   },
   {
     img: "/pool-new.webp",
-    label: "New Pool Construction",
-    desc: "From concept to completion, we build bespoke pools tailored to your space, lifestyle, and vision.",
-    tab: "New Pool",
+    label: "Pool Equipment & Installation",
+    desc: "Breathe new life into your existing pool with high-quality renovations. Whether it needs resurfacing, structural repairs, or a modern upgrade, we ensure a seamless transformation with lasting results.",
+  },
+  {
+    img: "/sectionOne.webp",
+    label: "Commercial Pool Construction",
+    desc: "We design and build large-scale pools for hotels, resorts, apartment complexes, and public facilities, delivering premium quality and durability.",
   },
 ];
 
@@ -36,120 +38,66 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
   const currentRef = useRef<number>(0);
   const [current, setCurrent] = useState(0);
   const animating = useRef<boolean>(false);
-  const entranceTimeline = useRef<gsap.core.Timeline | null>(null);
 
   function animateTextIn(selector: string) {
     if (!containerRef.current) return;
-    containerRef.current.querySelectorAll(selector).forEach((el) => {
-      const inners = Array.from(
-        el.querySelectorAll(":scope > .s3-line-wrap > .s3-line-inner")
-      ) as HTMLElement[];
-      inners.forEach((inner, idx) => {
-        gsap.killTweensOf(inner);
-        gsap.fromTo(
-          inner,
-          { y: 30, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: TEXT_DURATION,
-            ease: "power3.out",
-            delay: idx * 0.08,
-          }
-        );
-      });
+    const targets = containerRef.current.querySelectorAll(`${selector} .s3-line-inner`);
+    targets.forEach((inner, idx) => {
+      gsap.killTweensOf(inner);
+      gsap.fromTo(
+        inner,
+        { y: 40, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: TEXT_DURATION,
+          ease: "power3.out",
+          delay: idx * 0.08,
+        }
+      );
     });
   }
 
-  function animateTextOut(selector: string) {
+  function animateTextOut(selector: string, callback?: () => void) {
     if (!containerRef.current) return;
-    containerRef.current.querySelectorAll(selector).forEach((el) => {
-      const inners = Array.from(
-        el.querySelectorAll(":scope > .s3-line-wrap > .s3-line-inner")
-      ) as HTMLElement[];
-      inners.forEach((inner, idx) => {
-        gsap.killTweensOf(inner);
-        gsap.to(inner, {
-          y: -20,
-          opacity: 0,
-          duration: 0.3,
-          ease: "power2.in",
-          delay: idx * 0.03,
-        });
-      });
+    const targets = containerRef.current.querySelectorAll(`${selector} .s3-line-inner`);
+    if (targets.length === 0) {
+      if (callback) callback();
+      return;
+    }
+    gsap.to(Array.from(targets), {
+      y: -30,
+      opacity: 0,
+      duration: 0.35,
+      ease: "power2.in",
+      stagger: 0.03,
+      onComplete: callback,
     });
   }
 
-  // Set initial text states on load safely scoped inside container
   useEffect(() => {
     if (!containerRef.current) return;
     slides.forEach((_, i) => {
-      containerRef.current!
-        .querySelectorAll(`.s3-text-${i + 1} > .s3-line-wrap > .s3-line-inner`)
-        .forEach((el) => {
-          gsap.set(el, { y: 30, opacity: 0 });
+      if (i !== 0) {
+        gsap.set(containerRef.current!.querySelectorAll(`.s3-text-group-${i + 1} .s3-line-inner`), {
+          y: 40,
+          opacity: 0,
         });
+      }
     });
   }, []);
 
-  // Set up baseline hidden layouts and built entrance animation timeline
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.set(".s2-glass-card", { x: 120, opacity: 0 });
-      gsap.set(".s2-card-btn", { y: 20, opacity: 0 });
-
-      entranceTimeline.current = gsap.timeline({ paused: true })
-        .to(".s2-glass-card", {
-          x: 0,
-          opacity: 1,
-          duration: 1.2,
-          ease: "power3.out",
-        })
-        .to(".s2-card-btn", {
-          y: 0,
-          opacity: 1,
-          duration: 0.8,
-          stagger: 0.15,
-          ease: "power2.out",
-        }, "-=0.8")
-        .add(() => {
-          if (window.innerWidth >= 768) {
-            animateTextIn(".s2-desktop-section .s3-text-1");
-          }
-        }, "-=0.5");
-    }, containerRef);
-
-    return () => ctx.revert();
-  }, []);
-
-  // Listen to the parent active status to play/reverse animations gracefully
   useEffect(() => {
     if (!containerRef.current) return;
-    
     if (isActive) {
-      entranceTimeline.current?.play();
-      
-      // Force immediate static visibility on Mobile targets instantly when active
-      if (window.innerWidth < 768) {
-        slides.forEach((_, i) => {
-          containerRef.current!
-            .querySelectorAll(`.s3-mobile-section .s3-text-${i + 1} > .s3-line-wrap > .s3-line-inner`)
-            .forEach((el) => {
-              gsap.killTweensOf(el);
-              gsap.set(el, { y: 0, opacity: 1 });
-            });
-        });
-      }
+      animateTextIn(`.s3-text-group-${currentRef.current + 1}`);
     } else {
-      entranceTimeline.current?.reverse();
-      // Reset text states safely
       slides.forEach((_, i) => {
-        containerRef.current!
-          .querySelectorAll(`.s3-text-${i + 1} > .s3-line-wrap > .s3-line-inner`)
-          .forEach((el) => {
-            gsap.killTweensOf(el);
-            gsap.set(el, { y: 30, opacity: 0 });
-          });
+        gsap.killTweensOf(containerRef.current!.querySelectorAll(`.s3-text-group-${i + 1} .s3-line-inner`));
+        gsap.set(containerRef.current!.querySelectorAll(`.s3-text-group-${i + 1} .s3-line-inner`), {
+          y: 40,
+          opacity: 0,
+        });
       });
     }
   }, [isActive]);
@@ -159,404 +107,179 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
     if (animating.current || next === prev || !containerRef.current) return;
     animating.current = true;
 
-    const isMobile = window.innerWidth < 768;
-
     currentRef.current = next;
     setCurrent(next);
 
-    const incomingClipStart = direction === "next" ? "inset(0 100% 0 0)" : "inset(0 0% 0 100%)";
-    const incomingClipEnd = "inset(0 0% 0 0%)";
+    const targetPanels = [".s2-desktop-section", ".s3-mobile-section"];
+    
+    targetPanels.forEach((panel) => {
+      const currentIncoming = containerRef.current!.querySelector(`${panel} .s3-bg-${next + 1}`);
+      const currentPrev = containerRef.current!.querySelector(`${panel} .s3-bg-${prev + 1}`);
 
-    // Update image viewports cleanly scoping them by device context layout prefix
-    const contextPrefix = isMobile ? ".s3-mobile-section" : ".s2-desktop-section";
+      if (currentIncoming && currentPrev) {
+        if (direction === "next") {
+          gsap.set(currentIncoming, { clipPath: "inset(0 100% 0 0)", zIndex: 2 });
+          gsap.set(currentPrev, { clipPath: "inset(0 0 0 0)", zIndex: 1 });
 
-    gsap.set(`${contextPrefix} .s3-bg-${next + 1}`, {
-      clipPath: incomingClipStart,
-      zIndex: 2,
-    });
-    gsap.set(`${contextPrefix} .s3-bg-${prev + 1}`, {
-      clipPath: "inset(0 0% 0 0)",
-      zIndex: 1,
-    });
-
-    gsap.to(`${contextPrefix} .s3-bg-${next + 1}`, {
-      clipPath: incomingClipEnd,
-      duration: CLIP_DURATION,
-      ease: "power2.inOut",
-      onComplete: () => {
-        gsap.set(`${contextPrefix} .s3-bg-${next + 1}`, { zIndex: 1 });
-        gsap.set(`${contextPrefix} .s3-bg-${prev + 1}`, {
-          zIndex: 1,
-          clipPath: "inset(0 100% 0 0)",
-        });
-      },
-    });
-
-    // 🌟 FIXED: Use context-specific targeting so mobile does not alter Desktop cards
-    if (isMobile) {
-      slides.forEach((_, i) => {
-        const textBlock = containerRef.current!.querySelector(`.s3-mobile-section .s3-text-${i + 1}`) as HTMLElement;
-        if (textBlock) {
-          textBlock.style.opacity = i === next ? "1" : "0";
-          textBlock.style.position = i === next ? "relative" : "absolute";
-        }
-        containerRef.current!
-          .querySelectorAll(`.s3-mobile-section .s3-text-${i + 1} > .s3-line-wrap > .s3-line-inner`)
-          .forEach((el) => {
-            gsap.killTweensOf(el);
-            gsap.set(el, { y: 0, opacity: 1 });
+          gsap.to(currentIncoming, {
+            clipPath: "inset(0 0% 0 0%)",
+            duration: CLIP_DURATION,
+            ease: "power2.inOut",
+            onComplete: () => {
+              gsap.set(currentIncoming, { zIndex: 1 });
+              gsap.set(currentPrev, { zIndex: 0, clipPath: "inset(0 0 0 100%)" });
+            },
           });
-      });
+        } else {
+          gsap.set(currentIncoming, { clipPath: "inset(0 0 0 0)", zIndex: 1 });
+          gsap.set(currentPrev, { clipPath: "inset(0 0 0 0)", zIndex: 2 });
 
+          gsap.to(currentPrev, {
+            clipPath: "inset(0 100% 0 0)",
+            duration: CLIP_DURATION,
+            ease: "power2.inOut",
+            onComplete: () => {
+              gsap.set(currentPrev, { zIndex: 0 });
+            },
+          });
+        }
+      }
+    });
+
+    animateTextOut(`.s3-text-group-${prev + 1}`, () => {
+      gsap.set(containerRef.current!.querySelectorAll(`.s3-text-group-${next + 1} .s3-line-inner`), {
+        y: 40,
+        opacity: 0,
+      });
+      animateTextIn(`.s3-text-group-${next + 1}`);
+    });
+
+    gsap.delayedCall(CLIP_DURATION + 0.15, () => {
       animating.current = false;
-    } else {
-      // Desktop standard animation flow safely limited to desktop container elements
-      containerRef.current
-        .querySelectorAll(`.s2-desktop-section .s3-text-${prev + 1} > .s3-line-wrap > .s3-line-inner`)
-        .forEach((el) => {
-          gsap.killTweensOf(el);
-        });
-      animateTextOut(`.s2-desktop-section .s3-text-${prev + 1}`);
-
-      gsap.set(`.s2-desktop-section .s3-text-${next + 1}`, { opacity: 1 });
-      containerRef.current
-        .querySelectorAll(`.s2-desktop-section .s3-text-${next + 1} > .s3-line-wrap > .s3-line-inner`)
-        .forEach((el) => {
-          gsap.killTweensOf(el);
-          gsap.set(el, { y: 30, opacity: 0 });
-        });
-
-      gsap.delayedCall(0.35, () => animateTextIn(`.s2-desktop-section .s3-text-${next + 1}`));
-
-      gsap.delayedCall(CLIP_DURATION + 0.15, () => {
-        animating.current = false;
-      });
-    }
+    });
   }, []);
 
-  const handleTab = (idx: number) => {
-    if (idx === currentRef.current) return;
-    const direction = idx > currentRef.current ? "next" : "prev";
-    goTo(idx, direction);
-  };
+  useEffect(() => {
+    (window as any)._sec2GoTo = (targetIdx: number) => {
+      if (targetIdx === currentRef.current) return;
+      const dir = targetIdx > currentRef.current ? "next" : "prev";
+      goTo(targetIdx, dir);
+    };
+    return () => {
+      delete (window as any)._sec2GoTo;
+    };
+  }, [goTo]);
 
-  return (
-    <div ref={containerRef}>
-      {/* ── DESKTOP LAYOUT ── */}
-      <section
-        className="s2-desktop-section hidden md:block w-full min-h-screen relative overflow-hidden z-30"
-        style={{ pointerEvents: "auto" }}
-      >
-        {slides.map((slide, i) => (
-          <img
-            key={i}
-            className={`s3-bg s3-bg-${i + 1}`}
-            src={slide.img}
-            alt=""
-            aria-hidden
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              opacity: 1,
-              zIndex: 1,
-              clipPath: i === 0 ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
-            }}
-          />
-        ))}
-
+  const renderTextContent = () => (
+    <div className="absolute bottom-[10%] left-[5%] md:left-[8%] right-[5%] z-10 pointer-events-none max-w-6xl">
+      {slides.map((slide, i) => (
         <div
+          key={i}
+          className={`s3-text-group s3-text-group-${i + 1} flex flex-col items-start gap-6 md:gap-8 lg:gap-12`}
           style={{
-            position: "absolute",
-            inset: 0,
-            background: "linear-gradient(2.13deg, #19211C 3.01%, rgba(21, 40, 31, 0) 59.11%)",
-            zIndex: 2,
-          }}
-        />
-
-        {/* Floating Glass Card */}
-        <div
-          className="s2-glass-card"
-          style={{
-            position: "absolute",
-            right: "10%",
-            top: "50%",
-            transform: "translateY(-50%)",
-            zIndex: 20,
-            background: "rgba(255, 255, 255, 0.06)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            padding: "40px 32px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "24px",
-            minWidth: "280px",
-          }}
-        >
-          {slides.map((slide, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => handleTab(i)}
-              className="s2-card-btn font-display text-left transition-all duration-300"
-              style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                fontSize: "16px",
-                fontWeight: current === i ? "500" : "100",
-                color: current === i ? "#F4EEDF" : "rgba(244,238,223,0.45)",
-                transform: current === i ? "translateX(4px)" : "translateX(0)",
-              }}
-            >
-              {slide.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Bottom Content Area */}
-        <div
-          className="section-container w-full"
-          style={{
-            position: "absolute",
+            position: i === 0 ? "relative" : "absolute",
             bottom: 0,
             left: 0,
-            right: 0,
-            zIndex: 10,
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-            paddingBottom: "60px",
-            paddingLeft: "5%",
-            paddingRight: "5%",
+            width: "100%",
+            opacity: current === i ? 1 : 0,
+            pointerEvents: current === i ? "auto" : "none",
+            transition: "opacity 0.4s ease, visibility 0.4s",
+            visibility: current === i ? "visible" : "hidden",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", flex: 1 }}>
-            <div style={{ position: "relative", flex: 1 }}>
-              {slides.map((slide, i) => (
+          {/* Main Title */}
+          <div className="s3-line-wrap overflow-hidden w-full">
+            <h2 className="s3-line-inner font-display text-[#F4EEDF] text-4xl md:text-5xl lg:text-[70px] tracking-wide leading-[1.1] font-light">
+              {slide.label}
+            </h2>
+          </div>
+
+          {/* Indicator & Description */}
+          <div className="flex flex-row items-stretch gap-4 md:gap-6">
+            
+            {/* 4 Vertical Bars Indicator */}
+            <div className="flex flex-col gap-[4px] py-1 justify-center">
+              {slides.map((_, barIdx) => (
                 <div
-                  key={i}
-                  className={`s3-text s3-text-${i + 1}`}
-                  style={{
-                    position: i === 0 ? "relative" : "absolute",
-                    top: 0,
-                    left: 0,
-                    opacity: i === 0 ? 1 : 0,
-                    display: "flex",
-                    flexDirection: "column",
-                    width: "100%",
-                  }}
-                >
-                  <div className="s3-line-wrap" style={{ overflow: "hidden" }}>
-                    <div className="s3-line-inner">
-                      <span className="font-body text-[14px] text-[#F4EEDF] block !mb-2">
-                        ({i + 1})
-                      </span>
-                    </div>
-                  </div>
-                  <div className="s3-line-wrap" style={{ overflow: "hidden" }}>
-                    <div className="s3-line-inner">
-                      <h2 className="font-display text-[#F4EEDF] text-5xl max-w-[600px] leading-tight">
-                        {slide.label}
-                      </h2>
-                    </div>
-                  </div>
-                  <div className="s3-line-wrap" style={{ overflow: "hidden" }}>
-                    <div className="s3-line-inner">
-                      <p className="!mt-6 max-w-[420px] text-[#F4EEDF] opacity-80 leading-relaxed">
-                        {slide.desc}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                  key={barIdx}
+                  className={`w-[2px] transition-all duration-500 ease-out ${
+                    current === barIdx ? "bg-white h-4 opacity-100" : "bg-white/30 h-4 opacity-40"
+                  }`}
+                />
               ))}
             </div>
+
+            {/* Description Text */}
+            <div className="s3-line-wrap overflow-hidden flex-1">
+              <p className="s3-line-inner font-body text-[#F4EEDF]/80 text-[14px] md:text-[16px] leading-relaxed max-w-[420px]">
+                {slide.desc}
+              </p>
+            </div>
           </div>
-
-          <a
-            href="/contact-us"
-            style={{
-              position: "relative",
-              display: "inline-block",
-              width: "fit-content",
-              paddingBottom: 4,
-              fontSize: 14,
-              fontWeight: 500,
-              textTransform: "uppercase",
-              color: "#F4EEDF",
-              textDecoration: "none",
-              flexShrink: 0,
-              marginLeft: 40,
-            }}
-            className="group transition-opacity duration-200 hover:opacity-70 font-body"
-          >
-            CONTACT US
-            <span
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: 1,
-                background: "#F4EEDF",
-                transition: "transform 0.2s ease",
-              }}
-              className="group-hover:-translate-y-[2px]"
-            />
-          </a>
         </div>
-      </section>
+      ))}
+    </div>
+  );
 
-      {/* ── MOBILE LAYOUT ── */}
-      <section
-        className="s3-mobile-section flex md:hidden flex-col section-container w-full min-h-screen relative overflow-hidden z-30 "
-        style={{
-          pointerEvents: "auto",
-          backgroundImage: "url('/services.webp')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      >
-        <div style={{ position: "relative", width: "100%", height: "50vh", overflow: "hidden", marginTop: 32 }}>
-          {slides.map((slide, i) => (
-            <img
-              key={i}
-              className={`s3-bg s3-bg-${i + 1}`}
-              src={slide.img}
-              alt=""
-              aria-hidden
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                zIndex: 1,
-                clipPath: i === 0 ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
-              }}
-            />
-          ))}
-
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              zIndex: 2,
-              background: "linear-gradient(2.13deg, #19211C 6.01%, rgba(21,40,31,0) 59.11%)",
-              pointerEvents: "none",
-            }}
-          />
-
-          <div
-            style={{
-              position: "absolute",
-              bottom: 20,
-              left: 20,
-              right: 20,
-              zIndex: 3,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-end",
-              gap: 44,
-            }}
-          >
-            {slides.map((slide, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => handleTab(i)}
-                className="font-body text-left"
-                style={{
-                  background: "none",
-                  border: "none",
-                  padding: 0,
-                  paddingBottom: 6,
-                  cursor: "pointer",
-                  fontSize: 14,
-                  flex: 1,
-                  textAlign: "left",
-                  color: current === i ? "#F4EEDF" : "rgba(244,238,223,0.45)",
-                  borderBottom: current === i ? "1.5px solid #F4EEDF" : "1.5px solid rgba(244,238,223,0.45)",
-                  transition: "color 0.25s, border-color 0.25s",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {slide.tab}
-              </button>
-            ))}
+  return (
+    <div ref={containerRef} className="w-full h-full">
+      <section className="s2-desktop-section hidden md:block w-full h-screen relative overflow-hidden bg-transparent">
+        
+        {/* 1. INITIAL REVEAL PANELS */}
+        <div className="absolute inset-0 z-10 flex flex-row w-full h-full pointer-events-none">
+          {/* LEFT PANEL */}
+          <div className="s2-left-panel absolute left-0 top-0 w-1/2 h-full overflow-hidden bg-black" style={{ willChange: "transform" }}>
+            <img src={slides[0].img} alt="" aria-hidden className="absolute inset-0 w-[200%] h-full object-cover max-w-none" style={{ left: "0%" }} />
+            <div className="absolute top-0 h-full z-[2] w-[200%]" style={{ left: "0%", background: "linear-gradient(2.13deg, #19211C 3.01%, rgba(21, 40, 31, 0) 59.11%)" }} />
+          </div>
+          
+          {/* RIGHT PANEL */}
+          <div className="s2-right-panel absolute right-0 top-0 w-1/2 h-full overflow-hidden bg-black" style={{ willChange: "transform" }}>
+            <img src={slides[0].img} alt="" aria-hidden className="absolute inset-0 w-[200%] h-full object-cover max-w-none" style={{ left: "-100%" }} />
+            <div className="absolute top-0 h-full z-[2] w-[200%]" style={{ left: "-100%", background: "linear-gradient(2.13deg, #19211C 3.01%, rgba(21, 40, 31, 0) 59.11%)" }} />
           </div>
         </div>
 
-        <div style={{ position: "relative", flexGrow: 1, padding: "0px" }}>
+        {/* 2. UNIFIED MAIN SLIDER */}
+        <div className="absolute inset-0 z-20 w-full h-full pointer-events-none">
           {slides.map((slide, i) => (
             <div
               key={i}
-              className={`s3-text s3-text-${i + 1}`}
-              style={{
-                position: i === 0 ? "relative" : "absolute",
-                top: "40px",
-                left: "0px",
-                right: "20px",
-                opacity: i === 0 ? 1 : 0,
-                display: "flex",
-                flexDirection: "column",
-              }}
+              className={`s3-bg s3-bg-${i + 1} absolute inset-0 w-full h-full`}
+              style={{ 
+                zIndex: i === 0 ? 1 : 0, 
+                clipPath: i === 0 ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
+                visibility: i === 0 ? "hidden" : "visible"
+              }} 
             >
-              <div className="s3-line-wrap" style={{ overflow: "hidden" }}>
-                <div className="s3-line-inner">
-                  <h2 className="font-display text-[#F4EEDF] text-2xl">
-                    {slide.label}
-                  </h2>
-                </div>
-              </div>
-
-              <div className="s3-line-wrap" style={{ overflow: "hidden", marginTop: 16 }}>
-                <div className="s3-line-inner">
-                  <p
-                    className="font-body text-[#F4EEDF]"
-                    style={{ fontSize: 14, lineHeight: 1.6, margin: 0 }}
-                  >
-                    {slide.desc}
-                  </p>
-                </div>
-              </div>
-
-              <div className="s3-line-wrap" style={{ overflow: "hidden", marginTop: 24 }}>
-                <div className="s3-line-inner">
-                  <a
-                    href="/contact-us"
-                    className="font-body"
-                    style={{
-                      position: "relative",
-                      display: "inline-block",
-                      paddingBottom: 10,
-                      fontSize: 14,
-                      fontWeight: 500,
-                      textTransform: "uppercase",
-                      color: "#F4EEDF",
-                      textDecoration: "none",
-                    }}
-                  >
-                    CONTACT US
-                    <span
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        height: 1,
-                        background: "#F4EEDF",
-                      }}
-                    />
-                  </a>
-                </div>
-              </div>
+              <img src={slide.img} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 z-[2]" style={{ background: "linear-gradient(2.13deg, #19211C 3.01%, rgba(21, 40, 31, 0) 59.11%)" }} />
             </div>
           ))}
+        </div>
+
+        {/* 3. TEXT TARGET */}
+        <div className="s2-inner-fade-target absolute inset-0 z-30 w-full h-full pointer-events-none">
+          {renderTextContent()}
+        </div>
+      </section>
+
+      {/* MOBILE LAYOUT */}
+      <section className="s3-mobile-section flex md:hidden flex-col w-full h-screen relative overflow-hidden bg-black">
+        <div className="absolute inset-0 w-full h-full z-0 s2-left-panel">
+          {slides.map((slide, i) => (
+            <div
+              key={i}
+              className={`s3-bg s3-bg-${i + 1} absolute inset-0 w-full h-full`}
+              style={{ zIndex: i === 0 ? 1 : 0, clipPath: i === 0 ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
+            >
+              <img src={slide.img} alt="" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#19211C]/90 via-[#19211C]/30 to-transparent z-[2]" />
+            </div>
+          ))}
+        </div>
+        <div className="absolute inset-0 z-10 w-full h-full pointer-events-none">
+           {renderTextContent()}
         </div>
       </section>
     </div>

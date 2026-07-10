@@ -2,7 +2,7 @@
 
 export default function Appsection() {
   return (
-    <section className="relative w-full min-h-screen lg:h-screen overflow-hidden flex items-center justify-center py-12 md:py-20 lg:py-0">
+    <section className="relative w-full min-h-screen lg:h-screen overflow-hidden flex items-center justify-center py-18 md:py-20 lg:py-0">
       
       {/* ── Extracted Background Image for isolated GSAP scaling/translation ── */}
       <div 
@@ -43,11 +43,11 @@ export default function Appsection() {
 
         {/* ── Right Column: Device Mockup ── */}
         <div className="appsec-phone-wrapper w-full lg:w-1/2 flex justify-center items-center order-3 lg:order-none">
-          <div className="w-[65%] sm:w-[50%] md:w-[45%] lg:w-[85%] max-w-[380px]">
+          <div className="w-[330px]  md:w-[330px] lg:w-[85%] max-w-[380px]">
             <img 
               src="/phone-mockup.webp" 
               alt="Pool Care Mobile App Mockup" 
-              className="w-full h-auto max-h-[35vh] md:max-h-[55vh] lg:max-h-[70vh] block object-contain drop-shadow-2xl"
+              className="w-full h-auto max-h-[45vh] md:max-h-[55vh] lg:max-h-[70vh] block object-contain"
             />
           </div>
         </div>

@@ -8,6 +8,7 @@ import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal"
 import Hero from "@/src/components/Service/Hero";
 import SectionOne from "@/src/components/Service/SectionOne";
 import SectionTwo from "@/src/components/Service/SectionTwo";
+import Appsection from "@/src/components/Appsection"; 
 import SectionCTA from "@/src/components/SectionCTA";
 import Footer from "@/src/components/Footer";
 
@@ -46,15 +47,28 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
     if (!preloaderDone) return;
     const ctx = gsap.context(() => {
       gsap.set(".service-hero-bg", { scale: 1.3, xPercent: 0, transformOrigin: "center center" });
-      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
+      gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: -60 });
       gsap.set(".services-hero-top-layer", { width: "100%" });
-      gsap.set(".section-one-wrap", { clipPath: "inset(100% 0% 0% 0%)" });
+      
+      // Section One Initial State
+      gsap.set(".section-one-wrap", { clipPath: "inset(100% 0% 0% 0%)", zIndex: 20 });
       gsap.set(".s1-glass-card", { x: 40, opacity: 0 }); 
       gsap.set([".s1-static-title", ".s1-static-desc"], { opacity: 0, y: 30 });
       gsap.set([".s1-reveal-top", ".s1-reveal-bottom"], { opacity: 0, y: 40 });
-      gsap.set(".services-section-two-wrap", { visibility: "hidden", clipPath: "inset(0% 0% 0% 100%)" });
-      gsap.set(".services-section-cta", { visibility: "hidden", y: "100%" });
-      gsap.set(".services-footer-wrap", { visibility: "hidden", y: "100%" });
+      
+      // Section Two Panel Split Initial State
+      gsap.set(".services-section-two-wrap", { visibility: "hidden", zIndex: 30, opacity: 1 });
+      gsap.set(".s2-left-panel", { yPercent: 100 });
+      gsap.set(".s2-right-panel", { yPercent: -100 });
+      gsap.set(".s2-inner-fade-target", { opacity: 0 });
+
+      // App Section Initial State
+      gsap.set(".services-appsec-wrap", { visibility: "hidden", y: "100%", zIndex: 35 });
+
+      // CTA & Footer Initial States mapped explicitly to match About Desktop stacks
+      gsap.set([".services-section-cta", ".services-footer-wrap"], { yPercent: 100, visibility: "hidden" });
+      gsap.set(".services-section-cta", { zIndex: 70 });
+      gsap.set(".services-footer-wrap", { zIndex: 80 });
     }, scopeRef);
     return () => ctx.revert();
   }, [preloaderDone]);
@@ -73,7 +87,7 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
         ease: "power2.out"
       }, 0);
 
-      introTl.to([".hero-title", ".hero-desc"], {
+      introTl.to([".hero-title", ".hero-desc", ".hero-btn"], {
         opacity: 1,
         y: 0,
         duration: 1.4,
@@ -89,21 +103,22 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-      // 1. Array cache matching the deterministic progress snapping approach in About
       let cachedProgressLabels: number[] = [];
+      let sliderThresholds = { p0: 0, p1: 0, p2: 0, p3: 0, t1: 0, t2: 0, t3: 0 };
+      let lastSec2Idx = -1;
 
-      const scrollTl = gsap.timeline({
-        defaults: { ease: "none" }, // Clear out timeline-level default eases
+      const tl = gsap.timeline({
+        defaults: { ease: "none" }, 
         scrollTrigger: {
           trigger: ".services-hero-master",
           start: "top top",
-          end: "+=11000", 
+          end: "+=16500", 
+          scrub: 0.8,
           pin: true,
           pinSpacing: true,
-          scrub: 0.8, 
+          anticipatePin: 1,
           invalidateOnRefresh: true,
           fastScrollEnd: true,
-          preventOverlaps: true,
           snap: {
             snapTo: (progress) => {
               if (cachedProgressLabels.length === 0) return progress;
@@ -116,38 +131,58 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
 
                 if (progress >= start && progress <= end) {
                   const localProgress = (progress - start) / (end - start);
-                  // Strict 30% breakthrough snap margin imported directly from About config
                   return localProgress > 0.3 ? end : start;
                 }
               }
               return progress;
             },
-            duration: { min: 0.7, max: 1.2 },  
-            delay: 0.1,                         
-            ease: "power2.inOut"               
+            duration: { min: 0.8, max: 1.4 },
+            delay: 0.05, 
+            ease: "power2.inOut",
+          },
+          onUpdate: (self) => {
+            const p = self.progress;
+            
+            if (sliderThresholds.p0 > 0 && p >= sliderThresholds.p0 - 0.05 && p <= sliderThresholds.p3 + 0.05) {
+              let nextIdx = 0;
+              if (p >= sliderThresholds.t3) nextIdx = 3;
+              else if (p >= sliderThresholds.t2) nextIdx = 2;
+              else if (p >= sliderThresholds.t1) nextIdx = 1;
+              else nextIdx = 0;
+
+              if (nextIdx !== lastSec2Idx) {
+                lastSec2Idx = nextIdx;
+                if ((window as any)._sec2GoTo) {
+                  (window as any)._sec2GoTo(nextIdx);
+                }
+              }
+            }
           }
-        }
+        },
       });
 
+      tl.addLabel("snap_hero", 0);
+
       // ── PHASE 1: Compress Hero Layout ──
-      scrollTl.addLabel("phase1")
+      tl.addLabel("phase1")
+        .set(".hero-text-wrap", { transformOrigin: "left bottom" }, "phase1")
         .to(".hero-text-wrap", {
-          opacity: 0,
-          y: -40,
-          duration: 0.5,
-          ease: "power1.out"
+          y: 60,
+          scale: 0.75,
+          duration: 1.5,
+          ease: "power1.inOut"
         }, "phase1")
         .to(".services-hero-top-layer", {
-          width: "calc(100% - 600px)",
+          width: "calc(100% - 40%)",
           duration: 1.5,
           ease: "power1.inOut",
         }, "phase1+=0.1");
 
-      // Equalized spacer padding
-      scrollTl.to({}, { duration: 0.2 });
+      tl.addLabel("snap_hero_compressed", "phase1+=1.6");
+      tl.to({}, { duration: 0.8 });
 
       // ── PHASE 2: Reveal Section One Sheet ──
-      scrollTl.addLabel("phase2")
+      tl.addLabel("phase2")
         .to(".section-one-wrap", {
           clipPath: "inset(0% 0% 0% 0%)",
           duration: 1.5,
@@ -186,59 +221,102 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
           ease: "power2.out"
         }, "phase2+=0.8");
 
-      // Equalized spacer padding
-      scrollTl.to({}, { duration: 0.2 });
+      tl.addLabel("snap_s1", "phase2+=2.0");
+      tl.to({}, { duration: 0.3 });
 
       // ── PHASE 3: Transition to Section Two ──
-      scrollTl.addLabel("phase3")
+      tl.addLabel("phase3")
         .set(".services-section-two-wrap", { visibility: "visible" }, "phase3")
-        .to(".services-section-two-wrap", {
-          clipPath: "inset(0% 0% 0% 0%)", 
-          duration: 2.0,
-          ease: "power1.inOut",
-          onStart: () => setIsSectionTwoActive(true),
-          onReverseComplete: () => setIsSectionTwoActive(false)
+        .to([".s1-glass-card", ".s1-static-title", ".s1-static-desc", ".s1-reveal-top", ".s1-reveal-bottom"], {
+          opacity: 0,
+          y: -50,
+          duration: 1.5,
+          ease: "power1.in"
         }, "phase3")
-        .to(".section-one-wrap", {
-          duration: 2.0,
-          ease: "power1.inOut",
-        }, "phase3");
+        .to(".s2-left-panel", {
+          yPercent: 0,
+          duration: 3.0,
+          ease: "power2.inOut",
+          onStart: () => setIsSectionTwoActive(true),
+          onReverseComplete: () => {
+            setIsSectionTwoActive(false);
+            gsap.set(".services-section-two-wrap", { visibility: "hidden" });
+          }
+        }, "phase3")
+        .to(".s2-right-panel", {
+          yPercent: 0,
+          duration: 3.0,
+          ease: "power2.inOut"
+        }, "phase3")
+        .to(".s2-inner-fade-target", {
+          opacity: 1,
+          duration: 1.2,
+          ease: "power1.out"
+        }, "phase3+=2.5");
 
-      useTextReveal(scopeRef, ".s2-reveal-text", {
-        tl: scrollTl,
-        position: "phase3+=0.8",
-        yOffset: 25,
-        stagger: 0.04,
-        duration: 0.5,
-        ease: "power2.out",
-      });
+      tl.addLabel("snap_s2_1", "phase3+=3.0");
+      
+      tl.to({}, { duration: 3.0 });
+      tl.addLabel("snap_s2_2");
 
-      // Equalized spacer padding
-      scrollTl.to({}, { duration: 0.2 });
+      tl.to({}, { duration: 3.0 });
+      tl.addLabel("snap_s2_3");
 
-      // ── PHASE 4: Section CTA Reveal ──
-      scrollTl.addLabel("phase4")
-        .set(".services-section-cta", { visibility: "visible" }, "phase4")
-        .to(".services-section-cta", {
+      tl.to({}, { duration: 3.0 });
+      tl.addLabel("snap_s2_4");
+
+      tl.to({}, { duration: 0.2 });
+
+      // ── PHASE 4: App Section Slide Up over Sec2 ──
+      tl.addLabel("phase_appsec")
+        .set(".services-appsec-wrap", { visibility: "visible" }, "phase_appsec")
+        .to(".services-appsec-wrap", {
           y: "0%",
-          duration: 2.2,
-        }, "phase4");
+          duration: 2.5,
+          ease: "power1.inOut"
+        }, "phase_appsec");
 
-      // Equalized spacer padding
-      scrollTl.to({}, { duration: 0.2 });
+      tl.addLabel("snap_appsec", "phase_appsec+=2.5");
+      tl.to({}, { duration: 1.5 });
 
-      // ── PHASE 5: Footer Reveal ──
-      scrollTl.addLabel("phase5")
-        .set(".services-footer-wrap", { visibility: "visible" }, "phase5")
-        .to(".services-footer-wrap", {
-          y: "0%",
-          duration: 2.2,
-        }, "phase5");
+      // ── PHASE 5: CTA REVEAL TRACK (Identical to About implementation) ──
+      tl.addLabel("ctaStart")
+        .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
+        .to(".services-section-cta", { yPercent: 0, duration: 4.8 }, "ctaStart")
+        .to(".services-appsec-wrap", { scale: 1, duration: 4.8 }, "ctaStart");
 
-      // 🌟 FIXED SNAP TRACKING MATRICES
-      const totalDuration = scrollTl.totalDuration();
-      const labelNames = ["phase1", "phase2", "phase3", "phase4", "phase5"];
-      cachedProgressLabels = [0, ...labelNames.map(name => scrollTl.labels[name] / totalDuration), 1];
+      // ── PHASE 6: FOOTER REVEAL TRACK (Identical to About implementation) ──
+      tl.addLabel("footerStart", "ctaStart+=4.8")
+        .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
+        .to(".services-footer-wrap", { yPercent: 0, duration: 5.5 }, "footerStart")
+        .to(".services-appsec-wrap", { scale: 1, duration: 5.5 }, "footerStart")
+        .to(".services-section-cta .cta-inner-desktop", { opacity: 0, duration: 4.0, ease: "power1.out" }, "footerStart");
+
+      const totalDuration = tl.totalDuration();
+      const snapLabelsList = [
+        "snap_hero", 
+        "snap_hero_compressed",
+        "snap_s1", 
+        "snap_s2_1", 
+        "snap_s2_2", 
+        "snap_s2_3", 
+        "snap_s2_4", 
+        "snap_appsec", 
+        "ctaStart", 
+        "footerStart"
+      ];
+      
+      cachedProgressLabels = [0, ...snapLabelsList.map(name => tl.labels[name] / totalDuration), 1];
+      cachedProgressLabels = Array.from(new Set(cachedProgressLabels)).sort((a, b) => a - b);
+
+      sliderThresholds.p0 = tl.labels["snap_s2_1"] / totalDuration;
+      sliderThresholds.p1 = tl.labels["snap_s2_2"] / totalDuration;
+      sliderThresholds.p2 = tl.labels["snap_s2_3"] / totalDuration;
+      sliderThresholds.p3 = tl.labels["snap_s2_4"] / totalDuration;
+      
+      sliderThresholds.t1 = sliderThresholds.p0 + (sliderThresholds.p1 - sliderThresholds.p0) * 0.3;
+      sliderThresholds.t2 = sliderThresholds.p1 + (sliderThresholds.p2 - sliderThresholds.p1) * 0.3;
+      sliderThresholds.t3 = sliderThresholds.p2 + (sliderThresholds.p3 - sliderThresholds.p2) * 0.3;
 
     }, scopeRef);
 
@@ -252,23 +330,34 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
 
   return (
     <div ref={scopeRef} className="w-full relative">
-      <div className="services-hero-master relative w-full h-screen overflow-hidden z-10">
+      <div className="services-hero-master relative w-full h-screen overflow-hidden z-10 bg-black">
         <Hero />
-        <div className="section-one-wrap absolute inset-0 w-full h-full z-20 overflow-hidden">
+        
+        <div className="section-one-wrap absolute inset-0 w-full h-full overflow-hidden">
           <SectionOne />
         </div>
-        <div className="services-section-two-wrap absolute inset-0 w-full h-full z-30 overflow-hidden bg-[#111]">
+        
+        <div className="services-section-two-wrap absolute inset-0 w-full h-full overflow-hidden">
           <SectionTwo isActive={isSectionTwoActive} />
         </div>
+        
+        <div 
+          className="services-appsec-wrap absolute inset-0 w-full h-full overflow-hidden"
+          style={{ transform: "translateY(100%)" }}
+        >
+          <Appsection />
+        </div>
+        
         <div
-          className="services-section-cta absolute inset-0 w-full h-full bg-white"
-          style={{ zIndex: 40, transform: "translateY(100%)" }}
+          className="services-section-cta absolute bottom-0 left-0 w-full structural-layer"
+          style={{ zIndex: 70 }}
         >
           <SectionCTA />
         </div>
+        
         <div
-          className="services-footer-wrap absolute inset-0 w-full h-full flex flex-col justify-end"
-          style={{ zIndex: 50, transform: "translateY(100%)" }}
+          className="services-footer-wrap absolute left-0 bottom-0 w-full structural-layer"
+          style={{ zIndex: 80 }}
         >
           <Footer />
         </div>

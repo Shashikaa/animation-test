@@ -7,6 +7,7 @@ import { useSite } from "@/src/app/context/SiteContext";
 import Hero from "@/src/components/Service/Hero";
 import SectionOne from "@/src/components/Service/SectionOne";
 import SectionTwo from "@/src/components/Service/SectionTwo";
+import Appsection from "@/src/components/Appsection"; 
 import SectionCTA from "@/src/components/SectionCTA";
 import Footer from "@/src/components/Footer";
 
@@ -45,7 +46,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
     if (!preloaderDone) return;
     const ctx = gsap.context(() => {
       gsap.set(".service-hero-bg", { scale: 1.3 });
-      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 }); 
+      gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: 30 });
       gsap.set(".services-hero-top-layer", { clipPath: "inset(0px 0px 0px 0px)", WebkitClipPath: "inset(0px 0px 0px 0px)" });
 
       // Initialize Section One with bottom-to-top mask hide
@@ -61,9 +62,16 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
         yPercent: 100 
       });
 
-      // Baseline targets for CTA and Footer sheets matching About layout specs
-      gsap.set(".services-section-cta", { visibility: "hidden", y: "100%" });
-      gsap.set(".services-footer-wrap", { visibility: "hidden", y: "100%" });
+      // App Section Initial Baseline
+      gsap.set(".services-appsec-wrap", {
+        visibility: "hidden",
+        yPercent: 100
+      });
+
+      // ── ALIGNED WITH ABOUT SPEC BASICS FOR CTA & FOOTER ──
+      gsap.set(".services-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
+      gsap.set([".services-section-cta .cta-inner-mobile", ".services-section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
+      gsap.set(".services-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden" });
     }, scopeRef);
     return () => ctx.revert();
   }, [preloaderDone]);
@@ -84,7 +92,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
         }
       }, 0);
 
-      masterTl.to([".hero-title", ".hero-desc"], {
+      masterTl.to([".hero-title", ".hero-desc", ".hero-btn"], {
         opacity: 1,
         y: 0,
         duration: 1.4,
@@ -102,53 +110,54 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-const tl = gsap.timeline({
-  scrollTrigger: {
-    trigger: ".services-pin-master",
-    start: "top top",
-    end: "+=6000", // Standardized: 5 milestones * 1200px
-    pin: true,
-    scrub: 0.2,    // Killed scrolling lag to match Home page
-    invalidateOnRefresh: true
-  }
-});
+      const ACTION = 2.0;
+      const DEAD_SCROLL = 0.4;
 
-      // STEP A: Hero top layer image clips UP to reveal underneath card text block
-      tl.to(".hero-text-wrap", {
-        opacity: 0,
-        y: -40,
-        duration: 2.0, // Standardized to match weights
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: ".services-pin-master",
+          start: "top top",
+          end: "+=11000", // Adjusted layout capacity footprint
+          pin: true,
+          scrub: 0.2,    
+          invalidateOnRefresh: true
+        }
+      });
+
+      // ── STEP A: Compress Hero & Move Layout Elements ──
+      tl.to([".hero-text-wrap", ".hero-btn"], {
+        y: "-=380px",    
+        duration: ACTION, 
+        ease: "power2.inOut"
       }, 0)
       .to(".services-hero-top-layer", {
-        clipPath: "inset(0px 0px 320px 0px)",
+        clipPath: "inset(0px 0px 400px 0px)",
         WebkitClipPath: "inset(0px 0px 320px 0px)",
-        duration: 2.0,
+        duration: ACTION,
         ease: "power2.inOut",
       }, 0)
       .to(".service-hero-bg", {
-        yPercent: 5,
-        duration: 2.0,
+        y: "-=80px",     
+        duration: ACTION,
         ease: "power2.inOut"
       }, 0);
 
-      tl.to({}, { duration: 0.4 }); // Separation spacer
-
-      // STEP B: Section One un-clips directly OVER the Hero
+      // ── STEP B: Section One un-clips directly OVER the Hero ──
       tl.set(".services-section-one-wrap", { visibility: "visible" })
         .to(".services-section-one-wrap", {
           clipPath: "inset(0% 0% 0% 0%)",
           WebkitClipPath: "inset(0% 0% 0% 0%)",
-          duration: 2.0,
+          duration: ACTION,
           ease: "power2.inOut"
         });
 
-      tl.to({}, { duration: 0.4 });
+      tl.to({}, { duration: DEAD_SCROLL });
 
-      // STEP C: Section Two slides up over Section One
+      // ── STEP C: Section Two slides up over Section One ──
       tl.set(".services-section-two-wrap", { visibility: "visible" })
         .to(".services-section-two-wrap", { 
           yPercent: 0, 
-          duration: 2.0, 
+          duration: ACTION, 
           ease: "power2.inOut",
           onUpdate: function() {
             const progress = this.progress();
@@ -156,25 +165,45 @@ const tl = gsap.timeline({
           }
         });
 
-      tl.to({}, { duration: 0.4 });
+      // Bi-directional Mobile triggers for Section Two Slider tracks
+      tl.to({}, { duration: 2.0 });
+      tl.call(() => { if ((window as any)._sec2GoTo) (window as any)._sec2GoTo(0); });
+      
+      tl.to({}, { duration: 2.0 });
+      tl.call(() => { if ((window as any)._sec2GoTo) (window as any)._sec2GoTo(1); });
 
-      // STEP D: CTA Panel slides up cleanly over Section Two
-      tl.set(".services-section-cta", { visibility: "visible" })
-        .to(".services-section-cta", {
-          y: "0%",
-          duration: 2.0, // Updated to 2.0 to give uniform precision
+      tl.to({}, { duration: 2.0 });
+      tl.call(() => { if ((window as any)._sec2GoTo) (window as any)._sec2GoTo(2); });
+
+      tl.to({}, { duration: 2.0 });
+      tl.call(() => { if ((window as any)._sec2GoTo) (window as any)._sec2GoTo(3); });
+
+      tl.to({}, { duration: DEAD_SCROLL });
+
+      // ── STEP D: App Section slides up over Section Two ──
+      tl.set(".services-appsec-wrap", { visibility: "visible" })
+        .to(".services-appsec-wrap", {
+          yPercent: 0,
+          duration: ACTION,
           ease: "power2.inOut"
         });
 
-      tl.to({}, { duration: 0.4 }); // Balanced timeline spacer matching upper blocks
+      tl.to({}, { duration: DEAD_SCROLL });
 
-      // STEP E: Footer Panel slides up cleanly over the CTA
-      tl.set(".services-footer-wrap", { visibility: "visible" })
-        .to(".services-footer-wrap", {
-          y: "0%",
-          duration: 2.0, // Updated to 2.0 to give uniform precision
-          ease: "power2.inOut"
-        });
+      // ── STEP E: MATCHING ABOUT DESIGN: APP SECTION -> CTA ──
+      tl.addLabel("ctaStart", ">")
+        .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
+        .to(".services-section-cta", { yPercent: 0, duration: ACTION, ease: "none" }, "ctaStart")
+        .to(".services-appsec-wrap", { yPercent: -10, duration: ACTION, ease: "none" }, "ctaStart");
+
+      tl.to({}, { duration: DEAD_SCROLL }); 
+
+      // ── STEP F: MATCHING ABOUT DESIGN: CTA -> FOOTER ──
+      tl.addLabel("footerStart", ">")
+        .to([".services-section-cta .cta-inner-mobile", ".services-section-cta .cta-inner-desktop"], { opacity: 0, duration: ACTION * 0.3, ease: "none" }, "footerStart")
+        .set(".services-footer-wrap", { visibility: "visible" }, "footerStart+=0.1")
+        .to(".services-footer-wrap", { yPercent: 0, duration: ACTION, ease: "none" }, "footerStart+=0.1") 
+        .to(".services-appsec-wrap", { yPercent: -20, duration: ACTION, ease: "none" }, "footerStart+=0.1");
 
     }, scopeRef);
 
@@ -183,6 +212,12 @@ const tl = gsap.timeline({
 
   return (
     <div ref={scopeRef}>
+      <style jsx global>{`
+        .pin-all {
+          height: 100lvh; 
+        }
+      `}</style>
+
       <div className="services-pin-master pin-all relative w-full overflow-hidden">
         
         {/* Layer 1: Hero Block */}
@@ -190,7 +225,7 @@ const tl = gsap.timeline({
           <Hero isMobile={true} />
         </div>
 
-        {/* Layer 2: Section One with absolute clip masking initialization */}
+        {/* Layer 2: Section One */}
         <div 
           className="services-section-one-wrap absolute inset-0 w-full h-full overflow-y-auto" 
           style={{ 
@@ -210,18 +245,26 @@ const tl = gsap.timeline({
           <SectionTwo isActive={isSectionTwoActive} />
         </div>
 
-        {/* Layer 4: Section CTA Block matching the About structural depths */}
+        {/* Layer 4: App Section Slide Up Wrapper */}
         <div 
-          className="services-section-cta absolute inset-0 w-full h-full bg-white" 
-          style={{ zIndex: 40 }}
+          className="services-appsec-wrap absolute top-0 left-0 w-full h-full overflow-y-auto bg-black" 
+          style={{ zIndex: 35 }}
+        >
+          <Appsection />
+        </div>
+
+        {/* Layer 5: Section CTA Block - Updated zIndex and visibility attributes to align with About */}
+        <div 
+          className="services-section-cta absolute inset-0 w-full h-full bg-white z-[150]" 
+          style={{ pointerEvents: "auto", visibility: "hidden" }}
         >
           <SectionCTA />
         </div>
 
-        {/* Layer 5: Footer Wrapper Frame sitting on top of the layout heap */}
+        {/* Layer 6: Footer Wrapper Frame - Updated zIndex and positioning to match About */}
         <div 
-          className="services-footer-wrap absolute inset-0 w-full h-full flex flex-col justify-end" 
-          style={{ zIndex: 50 }}
+          className="services-footer-wrap absolute left-0 bottom-0 w-full z-[151]" 
+          style={{ pointerEvents: "auto", visibility: "hidden" }}
         >
           <Footer />
         </div>

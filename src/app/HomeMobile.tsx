@@ -15,7 +15,7 @@ const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { 
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
 const SectionNine  = dynamic(() => import("../components/Home/SectionNine"),   { ssr: false });
 const SectionTen   = dynamic(() => import("../components/Home/SectionTen"),    { ssr: false });
-const Appsection   = dynamic(() => import("../components/Home/Appsection"),   { ssr: false });
+const Appsection   = dynamic(() => import("../components/Appsection"),   { ssr: false });
 
 gsap.registerPlugin(ScrollTrigger);
 
