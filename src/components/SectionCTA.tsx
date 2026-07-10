@@ -16,9 +16,10 @@ export default function SectionCTA() {
     >
 <div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full">
         {/* Show WebGL canvas only on desktop */}
-        <div className="hidden lg:block w-full h-full">
-          <WaveCanvas imageSrc="/CTA.webp" />
-        </div>
+
+      <div className="hidden lg:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
+        <WaveCanvas imageSrc="/CTA.webp" />
+      </div>
 
         {/* Show static background image on mobile and tablet */}
         <div className="block lg:hidden w-full h-full">

@@ -466,9 +466,7 @@ export default function HomeDesktop() {
   return (
     <div ref={scopeRef}>
       <div className="pin-all relative h-screen w-screen overflow-hidden bg-black">
-        <div className="section-2 absolute inset-0 h-full w-full structural-layer">
-          <SectionTwo />
-        </div>
+
         <div className="section-10 absolute inset-0 h-full w-full structural-layer">
           <SectionTen />
         </div>
@@ -481,15 +479,11 @@ export default function HomeDesktop() {
         <div className="section-9 absolute inset-0 h-full w-full structural-layer">
           <SectionNine />
         </div>
-        <div className="section-8 absolute inset-0 h-full w-full structural-layer">
-          <SectionEight />
-        </div>
+
         <div className="hero absolute inset-0 h-full w-full structural-layer">
           <Hero />
         </div>
-        <div className="section-cta absolute bottom-0 left-0 w-full structural-layer">
-          <SectionCTA />
-        </div>
+
         <div className="footer absolute left-0 bottom-0 w-full structural-layer">
           <Footer />
         </div>

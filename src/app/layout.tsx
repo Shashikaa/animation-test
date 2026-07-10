@@ -13,7 +13,7 @@ const instrumentSans = Instrument_Sans({
   weight:    ["400", "500", "600", "700"],
   style:     ["normal", "italic"],
   variable:  "--font-body",
-  display:   "swap" // Layout performance optimization
+  display:   "swap" 
 });
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -43,6 +43,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased`}>
+      {/* Note: "preloading" class is safely handled and stripped by your Preloader toggle logic */}
       <body className="flex flex-col min-h-screen preloading" suppressHydrationWarning>
         <SiteProvider>
           <SmoothScroll>
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </main>
           </SmoothScroll>
 
+          {/* This component safely captures performance metrics, lag spikes, and timeouts */}
           <PreloaderToggle />
         </SiteProvider>
       </body>

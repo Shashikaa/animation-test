@@ -7,9 +7,9 @@ type FadePreloaderProps = {
   onComplete?: () => void;
 };
 
-// 1. Reduced this down to 400ms so it cuts out almost instantly
-const HOLD_DURATION_MS = 400; 
-const EXIT_DURATION_MS = 500; // Slightly faster fade transition to match the snappy feel
+// Set both to 0 for an absolute instant appearance and disappearance
+const HOLD_DURATION_MS = 0; 
+const EXIT_DURATION_MS = 0; 
 
 export default function FadePreloader({
   onExitStart,
@@ -40,10 +40,11 @@ export default function FadePreloader({
 
     el.addEventListener("transitionend", handleEnd);
 
+    // Reduced the fallback delay to 0 since there is no transition time to wait for
     const fallback = setTimeout(() => {
       onComplete?.();
       setVisible(false);
-    }, EXIT_DURATION_MS + 200);
+    }, EXIT_DURATION_MS);
 
     return () => {
       el.removeEventListener("transitionend", handleEnd);

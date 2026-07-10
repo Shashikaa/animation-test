@@ -1,214 +1,272 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AmbientLight } from "three";
+import * as THREE from "three";
+import {
+  AmbientLight,
+  TextureLoader,
+  LinearFilter,
+  NoToneMapping,
+  LinearSRGBColorSpace,
+  ShaderMaterial,
+  Vector2,
+} from "three";
+import LiquidBackgroundFn from "../app/utils/liquidBackground";
 
-interface LiquidCanvasProps {
-  imageSrc: string;
-}
+type LiquidCanvasProps = {
+  imageSrc: string; // Made required since there's no video fallback
+  onReady?: () => void;
+};
 
-// Global engine & texture cache to prevent multi-panel lag
-let cachedLiquidBackgroundFn: any = null;
-const globalTextureCache: Record<string, any> = {};
+// --- Shaders ---
+const vertexShader = `
+  varying vec2 vUv;
+  void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
+`;
+const fragmentShader = `
+  uniform sampler2D map;             
+  uniform sampler2D displacementMap; 
+  uniform vec2 uvMapScale;
+  uniform float displacementScale;
+  varying vec2 vUv;
+  
+  void main() {
+    // Read the displacement texture
+    vec4 disp = texture2D(displacementMap, vUv);
+    vec3 normal = vec3(disp.b, disp.a, sqrt(max(0.0, 1.0 - dot(disp.ba, disp.ba))));
+    
+    // Calculate UV distortion based on the normal
+    vec2 dUv = normal.xy * displacementScale * 0.04;
+    vec2 newUv = ((vUv - 0.5) * uvMapScale) + 0.5 + dUv;
+    
+    // Sample the background image with the distorted UVs
+    vec4 baseColor = texture2D(map, newUv);
+    gl_FragColor = baseColor;
+  }
+`;
 
-export default function LiquidCanvas({ imageSrc }: LiquidCanvasProps) {
+// --- Utility: Off-Main-Thread Texture Decoding ---
+const loadTextureOffThread = async (url: string): Promise<THREE.Texture> => {
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    const blob = await res.blob();
+    // Keeps the flipY fix to ensure the image isn't upside down
+    const bitmap = await createImageBitmap(blob, { 
+        premultiplyAlpha: 'none',
+        imageOrientation: 'flipY' 
+    });
+    const texture = new THREE.Texture(bitmap);
+    texture.colorSpace = LinearSRGBColorSpace;
+    texture.minFilter = LinearFilter;
+    texture.magFilter = LinearFilter;
+    texture.generateMipmaps = false;
+    texture.needsUpdate = true;
+    return texture;
+  } catch (e) {
+    const loader = new TextureLoader();
+    loader.setCrossOrigin("anonymous");
+    const tex = await loader.loadAsync(url);
+    tex.colorSpace = LinearSRGBColorSpace;
+    tex.minFilter = LinearFilter;
+    tex.magFilter = LinearFilter;
+    tex.generateMipmaps = false;
+    return tex;
+  }
+};
+
+const yieldToMain = () => new Promise((resolve) => setTimeout(resolve, 30));
+
+export default function LiquidCanvas({ imageSrc, onReady }: LiquidCanvasProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  
   const [isMobileOrTablet, setIsMobileOrTablet] = useState<boolean | null>(null);
-  const [isReady, setIsReady] = useState(false);
+  const [engineReady, setEngineReady] = useState(false);
+  const [isInViewport, setIsInViewport] = useState(false);
+  
   const appInstanceRef = useRef<any>(null);
 
-  // ── STEP 1: MOBILE & TABLET DETECTION ──
+  // 1. Device Detection
   useEffect(() => {
-    const handleResize = () => {
-      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      );
-      // 1024px captures smartphones and standard tablets (portrait/landscape)
-      const isSmallScreen = window.innerWidth <= 1024;
-      
-      setIsMobileOrTablet(isMobileUA || isSmallScreen);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    setIsMobileOrTablet(isMobileUA || window.innerWidth <= 1024);
   }, []);
 
-  // ── HOOK 1: ENGINE INITIALIZATION ──
+  // 2. Interaction-Triggered Setup
   useEffect(() => {
     if (isMobileOrTablet === null || isMobileOrTablet || !canvasRef.current) return;
 
     let destroyed = false;
+    let setupInitiated = false;
+    let fallbackTimeout: NodeJS.Timeout;
+    
+    let bgTexture: THREE.Texture | null = null;
+    let shaderMat: THREE.ShaderMaterial | null = null;
 
-    const initEngine = (LiquidBackgroundFn: any) => {
-      if (destroyed || !canvasRef.current) return;
+    const setupEngine = async () => {
+      try {
+        await yieldToMain();
+        if (destroyed) return;
 
-      const appInstance = LiquidBackgroundFn(canvasRef.current) as any;
-      appInstanceRef.current = appInstance;
-      
-      appInstance.three.resize();
-      
-      const matteLight = new AmbientLight(0xffffff, 1.5);
-      appInstance.three.scene.add(matteLight);
+        if (imageSrc) {
+          bgTexture = await loadTextureOffThread(imageSrc);
+        }
+        await yieldToMain();
+        if (destroyed) return;
 
-      appInstance.liquidPlane.material.envMap = null; 
-      appInstance.liquidPlane.material.metalness = 0.0;
-      appInstance.liquidPlane.material.roughness = 1.0;
-      
-      appInstance.liquidPlane.material.onBeforeCompile = (shader: any) => {
-        Object.assign(shader.uniforms, appInstance.liquidPlane.uniforms);
+        const originalFromScene = THREE.PMREMGenerator.prototype.fromScene;
+        THREE.PMREMGenerator.prototype.fromScene = function () { return { texture: null } as any; };
         
-        shader.fragmentShader = `
-          uniform vec2 uvMapScale;
-          uniform sampler2D displacementMap;
-          uniform float displacementScale;
+        const appInstance = (LiquidBackgroundFn as any)(canvasRef.current);
+        appInstanceRef.current = appInstance;
+        THREE.PMREMGenerator.prototype.fromScene = originalFromScene;
+
+        appInstance.three.maxPixelRatio = Math.min(window.devicePixelRatio, 1.5);
+        appInstance.three.resize();
+        
+        const renderer = appInstance.three.renderer;
+        renderer.toneMapping = NoToneMapping;
+        renderer.outputColorSpace = LinearSRGBColorSpace; 
+        appInstance.three.scene.add(new AmbientLight(0xffffff, 1.0));
+
+        await yieldToMain();
+        if (destroyed) return;
+
+        shaderMat = new ShaderMaterial({
+          uniforms: {
+            map:               { value: bgTexture },
+            displacementMap:   { value: appInstance.liquidPlane.uniforms.displacementMap.value },
+            uvMapScale:        { value: new Vector2(1, 1) },
+            displacementScale: { value: 5.0 },
+          },
+          vertexShader,
+          fragmentShader,
+          depthWrite: false,
+          transparent: false,
+          blending: THREE.NoBlending,
+        });
+
+        appInstance.liquidPlane.material.dispose();
+        appInstance.liquidPlane.material = shaderMat;
+        appInstance.liquidPlane.uniforms = shaderMat.uniforms;
+        
+        if (appInstance.liquidPlane.attenuation !== undefined) {
+          appInstance.liquidPlane.attenuation = 0.95; 
+        }
+
+        // Setup mouse/touch interaction for the liquid drops
+        if (appInstance.interaction) {
+          let lastDropTime = 0;
+          appInstance.interaction.onMove = () => {
+            const now = performance.now();
+            if (now - lastDropTime < 16) return; 
+            lastDropTime = now;
+            
+            appInstance.liquidPlane.addDrop(
+              appInstance.interaction.nPosition.x,
+              appInstance.interaction.nPosition.y,
+              0.04,   
+              0.004   
+            );
+          };
+        }
+
+        appInstance.setRain(false);
+        await yieldToMain();
+        if (destroyed) return;
+
+        renderer.compile(appInstance.three.scene, appInstance.three.camera);
+        
+        const updateAspect = () => {
+          if (!appInstanceRef.current || !canvasRef.current || !bgTexture?.image) return;
+          const cw = canvasRef.current.clientWidth;
+          const ch = canvasRef.current.clientHeight;
+          const uniforms = appInstanceRef.current.liquidPlane.uniforms;
+          const cRatio = cw / ch;
+          const img = bgTexture.image as HTMLImageElement | ImageBitmap;
+          const iRatio = img.width && img.height ? img.width / img.height : 1;
           
-          float redOffset   = 0.0;
-          float greenOffset = 0.0;
-          float blueOffset  = 0.0;
-        ` + shader.fragmentShader;
-
-        shader.fragmentShader = shader.fragmentShader.replace(
-          "#include <map_fragment>",
-          `
-          vec4 disp = texture2D(displacementMap, vUv);
-          vec3 transformedNormal = vec3(disp.b, disp.a, sqrt(1.0 - dot(disp.ba, disp.ba)));
-          #ifdef USE_MAP
-            vec2 dUv = transformedNormal.xy * displacementScale * 0.04;
-            vec2 newUv = ((vUv - 0.5) * uvMapScale + 0.5) + dUv;
-            float st = smoothstep(0.0, 0.1, length(dUv));
-            diffuseColor.r *= texture2D(map, newUv + redOffset * st).r;
-            diffuseColor.g *= texture2D(map, newUv + greenOffset * st).g;
-            diffuseColor.b *= texture2D(map, newUv + blueOffset * st).b;
-          #endif
-          `
-        );
-
-        shader.fragmentShader = shader.fragmentShader.replace(
-          "#include <normal_fragment_maps>",
-          "\n normal = transformedNormal;\n "
-        );
-      };
-
-      appInstance.liquidPlane.material.needsUpdate = true;
-      appInstance.liquidPlane.uniforms.displacementScale.value = 5.0;
-      
-      if (appInstance.liquidPlane.attenuation !== undefined) {
-        appInstance.liquidPlane.attenuation = 0.95;
-      }
-
-      if (appInstance.interaction) {
-        let lastDropTime = 0;
-        appInstance.interaction.onMove = () => {
-          const now = performance.now();
-          if (now - lastDropTime < 16) return;
-          lastDropTime = now;
-
-          appInstance.liquidPlane.addDrop(
-            appInstance.interaction.nPosition.x, 
-            appInstance.interaction.nPosition.y, 
-            0.04, 
-            0.004
-          );
+          // Cover the canvas with the image while maintaining aspect ratio
+          if (cRatio < iRatio) uniforms.uvMapScale.value.set(cRatio / iRatio, 1.0);
+          else uniforms.uvMapScale.value.set(1.0, iRatio / cRatio);
         };
-      }
+        
+        updateAspect();
+        window.addEventListener("resize", updateAspect);
+        setEngineReady(true);
+        onReady?.(); // Fire onReady right away once setup completes
 
-      appInstance.setRain(false);
-      window.dispatchEvent(new Event('resize'));
+      } catch (err) {
+        console.error("WebGL Setup Error:", err);
+      }
     };
 
-    if (cachedLiquidBackgroundFn) {
-      initEngine(cachedLiquidBackgroundFn);
-    } else {
-      import("../app/utils/liquidBackground")
-        .then((module) => {
-          cachedLiquidBackgroundFn = module.default;
-          initEngine(cachedLiquidBackgroundFn);
-        })
-        .catch((err) => {
-          console.error("Failed to load LiquidBackground: ", err);
-        });
-    }
+    const triggerSetup = () => {
+      if (setupInitiated) return;
+      setupInitiated = true;
+      
+      window.removeEventListener("mousemove", triggerSetup);
+      window.removeEventListener("touchstart", triggerSetup);
+      window.removeEventListener("scroll", triggerSetup);
+      clearTimeout(fallbackTimeout);
+
+      if ("requestIdleCallback" in window) {
+        (window as any).requestIdleCallback(() => setupEngine(), { timeout: 1000 });
+      } else {
+        setTimeout(() => setupEngine(), 200);
+      }
+    };
+
+    window.addEventListener("mousemove", triggerSetup, { once: true, passive: true });
+    window.addEventListener("touchstart", triggerSetup, { once: true, passive: true });
+    window.addEventListener("scroll", triggerSetup, { once: true, passive: true });
+    fallbackTimeout = setTimeout(triggerSetup, 3500);
 
     return () => {
       destroyed = true;
-      if (appInstanceRef.current && typeof appInstanceRef.current.dispose === "function") {
-        appInstanceRef.current.dispose();
-        appInstanceRef.current = null;
-      }
-    };
-  }, [isMobileOrTablet]);
-
-  // ── HOOK 2: HARDWARE ACCELERATED TEXTURE INSTANCING ──
-  useEffect(() => {
-    if (isMobileOrTablet === null || isMobileOrTablet) return;
-    
-    let active = true;
-    let rafId: number;
-    setIsReady(false);
-
-    const checkAndLoad = () => {
-      if (!active) return;
+      clearTimeout(fallbackTimeout);
+      window.removeEventListener("mousemove", triggerSetup);
+      window.removeEventListener("touchstart", triggerSetup);
+      window.removeEventListener("scroll", triggerSetup);
       
-      const appInstance = appInstanceRef.current;
-      if (!appInstance) {
-        rafId = requestAnimationFrame(checkAndLoad);
-        return;
-      }
-
-      if (globalTextureCache[imageSrc]) {
-        if (appInstance.liquidPlane?.material) {
-          appInstance.liquidPlane.material.map = globalTextureCache[imageSrc];
-          appInstance.liquidPlane.material.needsUpdate = true;
-        }
-        appInstance.three.resize();
-        setIsReady(true);
-        return;
-      }
-
-      appInstance.loadImage(imageSrc).then(() => {
-        if (!active) return;
-        
-        if (appInstance.liquidPlane?.material?.map) {
-          globalTextureCache[imageSrc] = appInstance.liquidPlane.material.map;
-        }
-
-        appInstance.three.resize();
-        setIsReady(true);
-      });
+      if (bgTexture) bgTexture.dispose();
+      if (shaderMat) shaderMat.dispose();
+      if (appInstanceRef.current?.dispose) appInstanceRef.current.dispose();
     };
+  }, [isMobileOrTablet, imageSrc, onReady]);
 
-    checkAndLoad();
-
-    return () => {
-      active = false;
-      cancelAnimationFrame(rafId);
-    };
-  }, [imageSrc, isMobileOrTablet]);
-
-  // ── STEP 3: CLEAN RENDERING STRATEGY ──
-  
-  // Render nothing until screen layout state initializes safely
-  if (isMobileOrTablet === null) return null;
-
-  // Render pure, lightweight original background style for handhelds/tabs
-  if (isMobileOrTablet) {
-    return (
-      <div 
-        style={{ backgroundImage: `url(${imageSrc})` }}
-        className="h-full w-full bg-cover bg-center bg-no-repeat select-none pointer-events-none"
-      />
+  // 3. Viewport Observer
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInViewport(entry.isIntersecting),
+      { rootMargin: "100px" }
     );
-  }
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
-  // Interactive WebGL Canvas for Desktop layouts
   return (
-    <canvas 
-      ref={canvasRef} 
-      style={{ backgroundImage: `url(${imageSrc})` }}
-      className={`h-full w-full block bg-cover bg-center bg-no-repeat transition-opacity duration-300 ease-in-out ${
-        isReady ? "opacity-100" : "opacity-0"
-      }`}
-    />
+    <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-black">
+      {/* Background Image - Acts as a placeholder/fallback */}
+      {imageSrc && (
+        <img
+          src={imageSrc}
+          alt="Background"
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        />
+      )}
+      
+      {/* WebGL Canvas */}
+      {!isMobileOrTablet && (
+        <canvas
+          ref={canvasRef}
+          className={`absolute inset-0 w-full h-full block transition-opacity duration-1000 ease-out ${
+            engineReady && isInViewport ? "opacity-100" : "opacity-0"
+          }`}
+          style={{ zIndex: 1 }}
+        />
+      )}
+    </div>
   );
 }
