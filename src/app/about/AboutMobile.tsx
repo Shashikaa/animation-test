@@ -6,7 +6,6 @@ import SectionTwo from "@/src/components/About/SectionTwo";
 import SectionThree from "@/src/components/About/SectionThree";
 import SectionFour from "@/src/components/About/SectionFour";
 import SectionFive from "@/src/components/About/SectionFive";
-import SectionReviews from "../../components/SectionReviews"; 
 import SectionCTA from "@/src/components/SectionCTA";
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
@@ -23,13 +22,11 @@ type AboutMobileProps = {
 export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
   const { setPreloaderDone } = useSite(); 
   const [introDone, setIntroDone] = useState(false);
-  const [isReady, setIsReady] = useState(true);
   const scopeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.scrollTo(0, 0);
-
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
@@ -41,7 +38,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // Initial structural configurations (Runs instantly before paint)
+  // Initial structural configurations
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     
@@ -60,23 +57,18 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
 
       gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0 });
 
+      // Clean setup for Section 5 container placement
       gsap.set(".about-section-five", { 
-        visibility: "hidden", 
-        clipPath: "inset(100% 0% 0% 0%)",
-        WebkitClipPath: "inset(100% 0% 0% 0%)"
+        yPercent: 100
       });
 
-      gsap.set(".about-section-reviews", { 
-        visibility: "hidden", 
-        clipPath: "inset(100% 0% 0% 0%)",
-        WebkitClipPath: "inset(100% 0% 0% 0%)"
-      });
+      // UPGRADED: Increased base background scale slightly to prevent any blank edge leaks during heavy translations
+      gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0 });
+      gsap.set([".about-section-five .s5-static-title", ".about-section-five .s5-static-desc"], { y: 0, opacity: 1 });
+      
+      gsap.set(".about-section-five .s5-slide-card", { opacity: 0, pointerEvents: "none" });
+      gsap.set(".about-section-five .s5-slide-card-0", { opacity: 1, pointerEvents: "auto" });
 
-      gsap.set(".about-section-five .s5-bg", { scale: 1.25 });
-      gsap.set([".about-section-five .s5-static-title", ".about-section-five .s5-static-desc"], { y: 30, opacity: 0 });
-      gsap.set(".about-section-five .s5-main-glass-card", { x: 40, opacity: 0 });
-
-      // ── MATCHING HOME INITIAL STATES FOR CTA & FOOTER ──
       gsap.set(".about-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
       gsap.set([".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
       gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden" });
@@ -85,9 +77,9 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // Hero Intro Scale & Fade Sequence
+  // Hero Intro Scale & Fade Sequence (Page Load Animations)
   useEffect(() => {
-    if (!preloaderDone || !isReady) return;
+    if (!preloaderDone) return;
 
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
@@ -107,10 +99,13 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
         stagger: 0.2,
         ease: "power3.out",
       }, 0.4);
+
+      introTl.to(".about-section-five", { opacity: 1, duration: 1.2, ease: "linear" }, 0.2);
+
     }, scopeRef);
 
     return () => ctx.revert();
-  }, [preloaderDone, isReady]);
+  }, [preloaderDone]);
 
   // Pure Section Transition Scroll Timeline
   useEffect(() => {
@@ -124,7 +119,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
         scrollTrigger: {
           trigger: ".about-pin",
           start: "top top",
-          end: "+=14500", // Expanded timeline to mirror fluid scroll footprints on Home
+          end: "+=12500", 
           scrub: 0.2,    
           pin: true,
           anticipatePin: 1,
@@ -183,72 +178,50 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
       
       tl.to({}, { duration: DEAD_SCROLL }); 
 
-      // Section 5
+      // ── SECTION 5 PANEL SLIDE UP REVEAL ──
       tl.addLabel("sec5Start")
         .set(".about-section-five", { visibility: "visible" }, "sec5Start")
         .to(".about-section-five", { 
-          clipPath: "inset(0% 0% 0% 0%)", 
-          WebkitClipPath: "inset(0% 0% 0% 0%)", 
+          yPercent: 0, 
           duration: 2.2, 
           ease: "power2.inOut" 
-        }, "sec5Start")
-        .to(".about-section-five .s5-static-title, .about-section-five .s5-static-desc", { 
-          y: 0, 
-          opacity: 1, 
-          duration: 1.2, 
-          ease: "power2.out" 
-        }, "sec5Start+=1.0")
-        .to(".about-section-five .s5-main-glass-card", { 
-          x: 0, 
-          opacity: 1, 
-          duration: 1.2, 
-          ease: "power2.out" 
-        }, "sec5Start+=1.0");
+        }, "sec5Start");
 
-      tl.to(".about-section-five .s5-bg", {
-        scale: 1.0,
-        ease: "none",
-        duration: 6.5
-      }, "sec5Start");
+      // UPGRADED: Amplified `yPercent` to -35 and extended duration to 9.0. 
+      // This forces the image to physically travel further and move noticeably faster with every scroll increment.
+      tl.fromTo(".about-section-five .s5-bg", 
+        { yPercent: 5, scale: 1.25 }, 
+        { yPercent: -25, scale: 1.25, ease: "none", duration: 9.0 }, 
+        "sec5Start"
+      );
 
-      // Card Transitions inside Section 5
-      tl.addLabel("sec5_card2", "sec5Start+=2.0")
-        .to(".about-section-five .s5-slide-card-0", { opacity: 0, y: -25, pointerEvents: "none", duration: 1.2, ease: "power2.inOut" }, "sec5_card2")
-        .fromTo(".about-section-five .s5-slide-card-1", { opacity: 0, y: 25 }, { opacity: 1, y: 0, pointerEvents: "auto", duration: 1.2, ease: "power2.inOut" }, "sec5_card2");
+      tl.addLabel("sec5FullyRevealed", "sec5Start+=2.2");
 
-      tl.addLabel("sec5_card3", "sec5Start+=4.0")
-        .to(".about-section-five .s5-slide-card-1", { opacity: 0, y: -25, pointerEvents: "none", duration: 1.2, ease: "power2.inOut" }, "sec5_card3")
-        .fromTo(".about-section-five .s5-slide-card-2", { opacity: 0, y: 25 }, { opacity: 1, y: 0, pointerEvents: "auto", duration: 1.2, ease: "power2.inOut" }, "sec5_card3");
+      // ── SECTION 5 CARDS CROSSFADE ──
+      tl.addLabel("sec5_card2", "sec5FullyRevealed+=1.5")
+        .to(".about-section-five .s5-slide-card-0", { opacity: 0, duration: 1.0, ease: "power2.out" }, "sec5_card2")
+        .to(".about-section-five .s5-slide-card-1", { opacity: 1, pointerEvents: "auto", duration: 1.0, ease: "power2.out" }, "sec5_card2");
+
+      tl.addLabel("sec5_card3", "sec5_card2+=2.0")
+        .to(".about-section-five .s5-slide-card-1", { opacity: 0, duration: 1.0, ease: "power2.out" }, "sec5_card3")
+        .to(".about-section-five .s5-slide-card-2", { opacity: 1, pointerEvents: "auto", duration: 1.0, ease: "power2.out" }, "sec5_card3");
 
       tl.to({}, { duration: 1.5 }); 
 
-      // ── REVIEWS SECTION REVEAL ──
-      tl.addLabel("reviewsStart", ">")
-        .set(".about-section-reviews", { visibility: "visible" }, "reviewsStart")
-        .to(".about-section-reviews", {
-          clipPath: "inset(0% 0% 0% 0%)",
-          WebkitClipPath: "inset(0% 0% 0% 0%)",
-          duration: ACTION,
-          ease: "power2.inOut"
-        }, "reviewsStart")
-        .to(".about-section-five", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "reviewsStart");
-
-      tl.to({}, { duration: DEAD_SCROLL });
-
-      // ── UNIFIED HOMEPAGE TRANSITION: REVIEWS -> CTA ──
+      // ── CTA REVEAL TRACK ──
       tl.addLabel("ctaStart", ">")
         .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
-        .to(".about-section-cta", { yPercent: 0, duration: ACTION, ease: "none" }, "ctaStart") 
-        .to(".about-section-reviews", { yPercent: -10, duration: ACTION, ease: "none" }, "ctaStart");
+        .to(".about-section-cta", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart") 
+        .to(".about-section-five", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "ctaStart");
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // ── UNIFIED HOMEPAGE TRANSITION: CTA -> FOOTER ──
+      // ── FOOTER REVEAL TRACK ──
       tl.addLabel("footerStart", ">")
         .to([".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"], { opacity: 0, duration: ACTION * 0.3, ease: "none" }, "footerStart")
         .set(".about-footer-wrap", { visibility: "visible" }, "footerStart+=0.1")
         .to(".about-footer-wrap", { yPercent: 0, duration: ACTION, ease: "none" }, "footerStart+=0.1") 
-        .to(".about-section-reviews", { yPercent: -20, duration: ACTION, ease: "none" }, "footerStart+=0.1");
+        .to(".about-section-five", { yPercent: -20, duration: ACTION, ease: "none" }, "footerStart+=0.1");
 
     }, scopeRef);
 
@@ -298,25 +271,13 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
           className="about-section-five absolute inset-0 w-full h-full" 
           style={{ 
             zIndex: 45,
-            clipPath: "inset(100% 0% 0% 0%)",
-            WebkitClipPath: "inset(100% 0% 0% 0%)"
+            opacity: 0,
+            visibility: "hidden"
           }}
         >
           <SectionFive />
         </div>
 
-        <div 
-          className="about-section-reviews absolute inset-0 w-full h-full" 
-          style={{ 
-            zIndex: 55,
-            clipPath: "inset(100% 0% 0% 0%)",
-            WebkitClipPath: "inset(100% 0% 0% 0%)"
-          }}
-        >
-          <SectionReviews />
-        </div>
-
-        {/* Updated structure classes and z-indexes to map precisely to Home layout */}
         <div className="about-section-cta absolute inset-0 w-full h-full z-[150]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionCTA />
         </div>

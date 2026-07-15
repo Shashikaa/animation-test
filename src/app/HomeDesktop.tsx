@@ -145,8 +145,6 @@ export default function HomeDesktop() {
         });
       });
 
-      // 1. INCREASE SCRUB DAMPING FOR WEIGHTED 'BUTTERY' INTERACTION
-      // Changing from 0.5 to 1.2 adds a subtle inertia trailing effect when scrolling
       const scrubValue = 1.2;
 
       gsap.set(".s10-bg-img", { yPercent: 100, scale: 1.25, transformOrigin: "center center" });
@@ -194,7 +192,6 @@ export default function HomeDesktop() {
           textTriggersRef.current = { hero: false, sec10: false, sec7: false, sec8: false, sec9: false };
 
           // ── PHASE 1: INITIAL STATE -> SMOOTH ZOOM TO 1.18 ──
-          // Switched to 'sine.inOut' for a seamless organic ramp up and ramp down
           tl.addLabel("heroPhase1")
             .set([".hero-right-text .custom-line-inner", ".hero-secondary-para .custom-line-inner"], { opacity: 0, yPercent: 100 }, "heroPhase1")
             .to(".hero-bg", { scale: 1.18, duration: 4.0, ease: "sine.inOut" }, "heroPhase1")
@@ -219,7 +216,6 @@ export default function HomeDesktop() {
             .set(".hero", { display: "block", zIndex: 90, opacity: 1 }, "heroPhase3")
             .set(".hero-bg-wrapper", { visibility: "visible", opacity: 1 }, "heroPhase3")
             
-            // Subtle transition into the final landing scale with a soft 'sine.out' exit curve
             .to(".hero-bg", { 
               scale: 1.45, 
               duration: 4.0, 
@@ -466,18 +462,35 @@ export default function HomeDesktop() {
   return (
     <div ref={scopeRef}>
       <div className="pin-all relative h-screen w-screen overflow-hidden bg-black">
+        {/* Added missing Section 2 layout wrapper */}
+        <div className="section-2 absolute inset-0 h-full w-full structural-layer">
+          <SectionTwo />
+        </div>
+
+        {/* Added missing Section 8 layout wrapper */}
+        <div className="section-8 absolute inset-0 h-full w-full structural-layer">
+          <SectionEight />
+        </div>
 
         <div className="section-10 absolute inset-0 h-full w-full structural-layer">
           <SectionTen />
         </div>
+        
         <div className="section-7 absolute inset-0 h-full w-full structural-layer">
           <SectionSeven />
         </div>
+        
         <div className="section-appsec absolute inset-0 h-full w-full structural-layer">
           <Appsection />
         </div>
+        
         <div className="section-9 absolute inset-0 h-full w-full structural-layer">
           <SectionNine />
+        </div>
+
+        {/* Added missing CTA Layout wrapper */}
+        <div className="section-cta absolute inset-0 h-full w-full structural-layer">
+          <SectionCTA />
         </div>
 
         <div className="hero absolute inset-0 h-full w-full structural-layer">

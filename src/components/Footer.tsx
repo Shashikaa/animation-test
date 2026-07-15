@@ -209,12 +209,13 @@ className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[30px] "
               </a>
             </div>
 
-            {/* Social icons row */}
+            {/* Social icons row 
             <div style={{ display: "flex", alignItems: "center", gap: 52, marginTop: 12 }}>
               {SOCIAL_LINKS.map(({ label, href, src }) => (
                 <SocialLink key={label} href={href} label={label} src={src} size={24} />
               ))}
             </div>
+            */}
           </div>
         </div>
 

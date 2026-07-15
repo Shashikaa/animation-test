@@ -23,58 +23,62 @@ const slides = [
 
 export default function SectionFive() {
   useEffect(() => {
-    // Base structural positions before master scroll triggers them
+    // Keep left-hand typography fully hidden prior to target label arrival
     gsap.set([".s5-static-title", ".s5-static-desc"], { y: 30, opacity: 0 });
-    gsap.set(".s5-main-glass-card", { x: 40, opacity: 0 });
     
-    // Setup clean initial states for content crossfades
-    gsap.set(".s5-slide-card", { opacity: 0, y: 15, pointerEvents: "none" });
-    gsap.set(".s5-slide-card-0", { opacity: 1, y: 0, pointerEvents: "auto" });
+    // Smooth opacity system base layers setup
+    gsap.set(".s5-slide-card", { opacity: 0, pointerEvents: "none" });
+    gsap.set(".s5-slide-card-0", { opacity: 1, pointerEvents: "auto" });
   }, []);
 
   return (
-    <section className="!relative !w-full !h-[100lvh] !overflow-hidden">
-      {/* Background Media - Handled responsively via Tailwind arbitrary classes */}
-      <div className="s5-bg absolute top-0 left-0 w-full h-[100lvh] lg:h-[125lvh] bg-cover bg-center will-change-transform bg-[url('/parallax-image-about-mobile.webp')] md:bg-[url('/parallax-image-about.webp')]" />
+    <section className="relative w-full h-full min-h-screen overflow-hidden flex flex-col lg:grid lg:grid-cols-2 bg-[#F4EEDF]">
       
-      {/* Main Container Titles */}
-      {/* Added lg:!top-auto so bottom-[60px] functions properly on desktop viewports */}
-<div className="!absolute !z-10 !top-[150px] lg:!top-auto lg:!bottom-[60px] !left-[30px] md:!left-[65px] !flex !flex-col !gap-3 !overflow-hidden">
-  <h2
-    className="s5-static-title s5-reveal-text !whitespace-nowrap !font-[100] !text-[#F4EEDF] !will-change-transform"
-    style={{ fontFamily: "var(--font-display)" }}
-  >
-    Decades of Expertise
-  </h2>
-  <p 
-    className="s5-static-desc s5-reveal-text !text-[#F4EEDF] !will-change-transform" 
-    style={{ fontFamily: "var(--font-body)" }}
-  >
-    Unmatched Craftsmanship
-  </p>
-</div>
+      {/* TOP / LEFT SIDE: Image + Title Overlay */}
+      <div className="relative w-full h-[65svh] lg:h-full lg:min-h-screen overflow-hidden bg-[#19211C]">
+        {/* Main image container - Adjusted height and negative top to anchor safely behind boundaries */}
+        <div className="s5-bg absolute -top-[20%] left-0 w-full h-[140%] bg-cover bg-center will-change-transform bg-[url('/projects.webp')]" />
+        
+        <div className="absolute z-10 bottom-[30px] md:bottom-[60px] left-[24px] md:left-[65px] flex flex-col !gap-2 md:!gap-4 overflow-hidden">
+          <h2
+            className="s5-static-title text-3xl sm:text-4xl md:text-5xl lg:text-6xl  !font-[100] text-[#F4EEDF] will-change-transform opacity-0"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Decades of Expertise
+          </h2>
+          <p 
+            className="s5-static-desc text-sm sm:text-base md:text-lg text-[#F4EEDF] will-change-transform opacity-0" 
+            style={{ fontFamily: "var(--font-body)" }}
+          >
+            Unmatched Craftsmanship
+          </p>
+        </div>
+      </div>
 
-      {/* Dynamic Slide Deck Panel Card */}
-      <div 
-/* Update your className string to include lg:left-auto */
-className="s5-main-glass-card s5-dynamic-bg absolute z-10 left-[65px] md:left-1/3 lg:left-auto lg:!right-[65px] top-3/5 lg:top-1/2 -translate-y-1/2 w-full max-w-[200px] flex flex-col gap-6 px-5 py-8 overflow-hidden will-change-transform transition-colors duration-700"      >
-        {/* Content Stack */}
-        <div className="relative z-10 min-h-[150px]">
+      {/* BOTTOM / RIGHT SIDE: Smooth Fixed Card Container Area */}
+      <div className="s5-right-panel relative w-full flex-1 lg:h-full lg:min-h-screen bg-[#F4EEDF] flex items-center justify-center px-6 py-8 md:px-12">
+        <div className="relative w-full max-w-[320px] h-[180px] sm:h-[220px] lg:h-[250px] bg-[#F4EEDF]">
           {slides.map((slide, i) => (
             <div
               key={i}
-              className={`s5-slide-card s5-slide-card-${i} flex flex-col gap-2 w-full absolute top-0 left-0`}
+              className={`s5-slide-card s5-slide-card-${i} absolute inset-0 flex flex-col justify-center gap-2 md:gap-4 w-full h-full`}
             >
-              <h3 className="s5-reveal-text font-normal text-white text-3xl md:text-[40px]">
+              <h3 className="font-normal text-[#19211C] font-body text-4xl sm:text-5xl lg:text-3xl">
                 {slide.stat}
               </h3>
-              <p className="s5-reveal-text text-white text-sm !mt-4" style={{ fontFamily: "var(--font-body)" }}>
-                <span>{slide.desc}</span>
-              </p>
+              <div className="flex flex-col gap-1">
+                <p className="font-medium text-sm sm:text-base text-[#19211C]">
+                  {slide.label}
+                </p>
+                <p className="text-xs sm:text-sm md:text-base text-[#19211C]/80" style={{ fontFamily: "var(--font-body)" }}>
+                  {slide.desc}
+                </p>
+              </div>
             </div>
           ))}
         </div>
       </div>
+
     </section>
   );
 }

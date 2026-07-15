@@ -5,12 +5,12 @@ import Image from "next/image";
 export default function SectionOne() {
   return (
     <section className="w-full min-h-screen h-[100dvh] md:h-auto bg-[#F4EEDF] py-12 md:py-32 lg:py-48 px-6 md:px-12 lg:px-20 text-[#111] flex items-center">
-      <div className="max-w-7xl mx-auto w-full h-full md:h-auto flex flex-col justify-start items-stretch section-container">
+      <div className=" w-full h-full md:h-auto flex flex-col justify-start items-stretch section-container">
         
         {/* Row 1: Right-Aligned Title */}
         <div className="w-full flex justify-end !mb-12 lg:!mb-8">
           <h2 
-            className="!font-[100] text-right max-w-2xl text-4xl md:text-5xl"
+            className="!font-[100] text-left lg:text-right"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Explore Our Projects
@@ -26,12 +26,12 @@ export default function SectionOne() {
 
         {/* Row 3: Centered Image Container */}
         <div className="w-full flex justify-center items-center">
-          <div className="relative w-full h-[450px] md:h-auto md:aspect-[4/3] max-h-[650px] overflow-hidden rounded-sm">
+          <div className="relative w-full h-[450px] md:h-auto md:aspect-[4/3] max-h-[650px] overflow-hidden ">
             
             {/* Inner absolute frame layout locks out Next.js fill engine constraints */}
             <div className="absolute inset-0 w-full h-full overflow-hidden">
               <Image
-                src="/project-aerial1.webp" 
+                src="/projects.webp" 
                 alt="Aerial view of custom pool"
                 width={2000}
                 height={1500}

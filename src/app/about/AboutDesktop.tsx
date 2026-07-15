@@ -6,7 +6,6 @@ import SectionTwo from "@/src/components/About/SectionTwo";
 import SectionThree from "@/src/components/About/SectionThree";
 import SectionFour from "@/src/components/About/SectionFour";
 import SectionFive from "@/src/components/About/SectionFive";
-import SectionReviews from "../../components/SectionReviews"; 
 import SectionCTA from "@/src/components/SectionCTA";
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
@@ -66,15 +65,23 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
       gsap.set([".s3-reveal-bottom", ".s3-reveal-top"], { opacity: 0 });
       gsap.set(".s4-reveal-text", { opacity: 0 });
 
-      gsap.set(".about-section-two", { visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)" });
+      gsap.set(".about-section-two", { 
+        visibility: "hidden", 
+        top: "100%", 
+        bottom: "-100%",
+        clipPath: "inset(0% 0% 0% 0%)"
+      });
+      
       gsap.set(".about-section-three", { visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)" });
       gsap.set(".about-section-four", { visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)" });
       gsap.set(".s4-glass-card", { y: 80, opacity: 0 });
       
-      // Changed initial clipPath from right-to-left (0% 0% 0% 100%) to bottom slide-up (100% 0% 0% 0%)
-      gsap.set(".about-section-five", { visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)" });
+      gsap.set(".about-section-five", { 
+        visibility: "hidden", 
+        top: "100%", 
+        bottom: "-100%" 
+      });
       
-      gsap.set(".about-section-reviews", { visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)" });
       gsap.set([".about-section-cta", ".about-footer-wrap"], { yPercent: 100, visibility: "hidden" });
       gsap.set(".about-section-cta", { zIndex: 95 });
       gsap.set(".about-footer-wrap", { zIndex: 96 });
@@ -119,7 +126,7 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         scrollTrigger: {
           trigger: ".about-pin",
           start: "top top",
-          end: "+=13500", 
+          end: "+=11500", 
           scrub: 0.8, 
           pin: true,
           pinSpacing: true,
@@ -160,7 +167,6 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
 
       tl.set(".about-hero-panel-left", { clipPath: "inset(0% 50% 0% 0%)" });
       tl.set(".about-hero-panel-right", { clipPath: "inset(0% 0% 0% 50%)" });
-      tl.set([".s3-reveal-bottom", ".s3-reveal-top"], { visibility: "hidden" });
 
       // ── SECTION 1 REVEAL ──
       tl.addLabel("sec1Start")
@@ -200,16 +206,17 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
       // ── SECTION 2 REVEAL ──
       tl.addLabel("sec2Start")
         .set(".about-section-two", { visibility: "visible" })
-        .to(".about-section-two", {
-          clipPath: "inset(0% 0% 0% 0%)",
-          duration: 2.0,
-        })
+        .fromTo(".about-section-two",
+          { top: "100%", bottom: "-100%" },
+          { top: "0%", bottom: "0%", duration: 2.0 },
+          "sec2Start"
+        )
         .fromTo(".s2-bg",
-          { scale: 1.2 },
-          { scale: 1.0, duration: 2.0 },
+          { yPercent: 15, scale: 1.1 },
+          { yPercent: 0, scale: 1.0, duration: 2.0 },
           "<"
         )
-        .to(".about-section-one", { scale: 1.05, duration: 2.0 }, "<");
+        .to(".about-section-one", { yPercent: -10, duration: 2.0 }, "<");
 
       tl.to({}, {
         duration: 0.1,
@@ -235,16 +242,10 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         .addLabel("sec3Start")
         .fromTo(".about-section-three",
           { clipPath: "inset(100% 0% 0% 0%)" },
-          {
-            clipPath: "inset(0% 0% 0% 0%)",
-            duration: 2.0,
-          },
+          { clipPath: "inset(0% 0% 0% 0%)", duration: 2.0 },
           "sec3Start"
-         )
-        .to(".s2-bg", {
-          yPercent: -15,
-          duration: 2.0,
-        }, "sec3Start")
+        )
+        .to(".s2-bg", { yPercent: -15, duration: 2.0 }, "sec3Start")
         .fromTo(".s3-bg",
           { scale: 1.15 },
           { scale: 1.0, duration: 2.0 },
@@ -312,25 +313,19 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
 
       tl.to({}, { duration: 0.2 });
 
-      // ── SECTION 4 TO 5 REVEAL (SLIDE UP OVER SECTION 4) ──
+      // ── SECTION 4 TO 5 REVEAL ──
       tl.addLabel("sec5Start")
         .to(".about-section-four .s4-img-bg", {
-          scale: 1.03, // Slight zoom-out feel as section 5 slides up
+          scale: 1.03, 
           yPercent: -10,
           duration: 2.2,
         }, "sec5Start")
         .set(".about-section-five", { visibility: "visible" }, "sec5Start")
-        // Slid upward perfectly from bottom (0% top edge reveals cleanly)
-        .to(".about-section-five", {
-          clipPath: "inset(0% 0% 0% 0%)",
-          duration: 2.2,
-        }, "sec5Start")
-        .to(".s5-main-glass-card", {
-          opacity: 1,
-          x: 0,
-          duration: 1.5,
-          ease: "power2.out"
-        }, "sec5Start+=0.6");
+        .fromTo(".about-section-five",
+          { top: "100%", bottom: "-100%" },
+          { top: "0%", bottom: "0%", duration: 2.2 },
+          "sec5Start"
+        );
 
       useTextReveal(scopeRef, ".about-section-five .s5-reveal-text", {
         tl,
@@ -340,74 +335,41 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         duration: 0.01,
       });
 
-      tl.to(".about-section-five .s5-static-title", { opacity: 1, y: 0, duration: 1.0, ease: "power2.out" }, "sec5Start+=1.0")
-        .to(".about-section-five .s5-static-desc", { opacity: 1, y: 0, duration: 1.0, ease: "power2.out" }, "sec5Start+=1.2");
+      tl.addLabel("sec5FullyRevealed", "sec5Start+=2.2");
 
-      // Smooth downward background parallax interaction during rollout track execution
+      tl.to(".about-section-five .s5-static-title", { opacity: 1, y: 0, duration: 1.0, ease: "power2.out" }, "sec5FullyRevealed")
+        .to(".about-section-five .s5-static-desc", { opacity: 1, y: 0, duration: 1.0, ease: "power2.out" }, "sec5FullyRevealed+=0.2");
+
       tl.fromTo(".s5-bg", 
-        { yPercent: 15 }, 
-        { yPercent: -15, ease: "none", duration: 6.5 }, 
+        { yPercent: 0, scale: 1.15 }, 
+        { yPercent: -20, scale: 1.15, ease: "none", duration: 6.5 }, 
         "sec5Start"
       );
 
-      // ── DYNAMIC CARDS ──
-      tl.addLabel("sec5_card2", "sec5Start+=2.0")
-        .to(".s5-slide-card-0", { 
-          opacity: 0, 
-          y: -25, 
-          pointerEvents: "none", 
-          duration: 1.2, 
-          ease: "power2.inOut" 
-        }, "sec5_card2")
-        .fromTo(".s5-slide-card-1", 
-          { opacity: 0, y: 25 }, 
-          { opacity: 1, y: 0, pointerEvents: "auto", duration: 1.2, ease: "power2.inOut" }, 
-          "sec5_card2"
-        )
-        .to(".s5-dynamic-bg", { duration: 1.2 }, "sec5_card2");
+      // ── SECTION 5 CARDS CROSSFADE ──
+      tl.addLabel("sec5_card2", "sec5FullyRevealed+=1.5")
+        .to(".s5-slide-card-0", { opacity: 0, duration: 1.0, ease: "power2.out" }, "sec5_card2")
+        .to(".s5-slide-card-1", { opacity: 1, pointerEvents: "auto", duration: 1.0, ease: "power2.out" }, "sec5_card2");
 
-      tl.addLabel("sec5_card3", "sec5Start+=4.0")
-        .to(".s5-slide-card-1", { 
-          opacity: 0, 
-          y: -25, 
-          pointerEvents: "none", 
-          duration: 1.2, 
-          ease: "power2.inOut" 
-        }, "sec5_card3")
-        .fromTo(".s5-slide-card-2", 
-          { opacity: 0, y: 25 }, 
-          { opacity: 1, y: 0, pointerEvents: "auto", duration: 1.2, ease: "power2.inOut" }, 
-          "sec5_card3"
-        )
-        .to(".s5-dynamic-bg", { duration: 1.2 }, "sec5_card3");
+      tl.addLabel("sec5_card3", "sec5_card2+=2.0")
+        .to(".s5-slide-card-1", { opacity: 0, duration: 1.0, ease: "power2.out" }, "sec5_card3")
+        .to(".s5-slide-card-2", { opacity: 1, pointerEvents: "auto", duration: 1.0, ease: "power2.out" }, "sec5_card3");
 
-      tl.to({}, { duration: 1.5 });
-
-      // ── REVIEWS SECTION REVEAL ──
-      tl.addLabel("secReviewsStart")
-        .set(".about-section-reviews", { visibility: "visible" })
-        .to(".about-section-reviews", {
-          clipPath: "inset(0% 0% 0% 0%)",
-          duration: 2.2,
-        });
-
-      tl.to({}, { duration: 1.5 });
-
-      // ── CTA REVEAL TRACK ──
-      tl.addLabel("ctaStart")
+      // ── CTA REVEAL TRACK (Triggered after final card finishes staging) ──
+      tl.addLabel("ctaStart", "sec5_card3+=2.0")
         .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
         .to(".about-section-cta", { yPercent: 0, duration: 4.8 }, "ctaStart")
-        .to(".about-section-reviews", { scale: 1.05, duration: 4.8 }, "ctaStart");
+        .to(".about-section-five", { scale: 1.0, duration: 4.8 }, "ctaStart");
 
       // ── FOOTER REVEAL TRACK ──
       tl.addLabel("footerStart", "ctaStart+=4.8")
         .set(".about-footer-wrap", { visibility: "visible" }, "footerStart")
         .to(".about-footer-wrap", { yPercent: 0, duration: 5.5 }, "footerStart")
-        .to(".about-section-reviews", { scale: 1.05, duration: 5.5 }, "footerStart")
+        .to(".about-section-five", { scale: 1.05, duration: 5.5 }, "footerStart")
         .to(".about-section-cta .cta-inner-desktop", { opacity: 0, duration: 4.0, ease: "power1.out" }, "footerStart");
 
       const totalDuration = tl.totalDuration();
-      const labelNames = ["sec1Start", "sec2Start", "sec3Start", "sec4Start", "sec5Start", "sec5_card2", "sec5_card3", "secReviewsStart", "ctaStart", "footerStart"];
+      const labelNames = ["sec1Start", "sec2Start", "sec3Start", "sec4Start", "sec5Start", "sec5FullyRevealed", "sec5_card2", "sec5_card3", "ctaStart", "footerStart"];
       cachedProgressLabels = [0, ...labelNames.map(name => tl.labels[name] / totalDuration), 1];
 
     }, scopeRef);
@@ -436,22 +398,22 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         <div className="about-hero-panel-right absolute inset-0" style={{ zIndex: 20, overflow: "hidden" }}>
           <Hero />
         </div>
-        <div className="about-section-two absolute inset-0" style={{ zIndex: 30, clipPath: "inset(100% 0% 0% 0%)" }}>
+        
+        <div className="about-section-two absolute left-0 right-0" style={{ zIndex: 30, top: "100%", bottom: "-100%" }}>
           <SectionTwo />
         </div>
+        
         <div className="about-section-three absolute inset-0 w-full h-full" style={{ zIndex: 40, clipPath: "inset(100% 0% 0% 0%)" }}>
           <SectionThree />
         </div>
         <div className="about-section-four absolute inset-0" style={{ zIndex: 50, clipPath: "inset(100% 0% 0% 0%)" }}>
           <SectionFour />
         </div>
-        {/* Changed default stack clipPath here from 0% 0% 0% 100% to 100% 0% 0% 0% */}
-        <div className="about-section-five absolute inset-0" style={{ zIndex: 60, clipPath: "inset(100% 0% 0% 0%)" }}>
+        
+        <div className="about-section-five absolute left-0 right-0" style={{ zIndex: 60, top: "100%", bottom: "-100%" }}>
           <SectionFive />
         </div>
-        <div className="about-section-reviews absolute inset-0" style={{ zIndex: 65, clipPath: "inset(100% 0% 0% 0%)" }}>
-          <SectionReviews />
-        </div>
+        
         <div className="about-section-cta absolute bottom-0 left-0 w-full structural-layer" style={{ zIndex: 70 }}>
           <SectionCTA />
         </div>

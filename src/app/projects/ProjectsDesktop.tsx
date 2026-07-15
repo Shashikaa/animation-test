@@ -5,15 +5,47 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSite } from "@/src/app/context/SiteContext";
 import ProjectsHero from "../../components/Projects/ProjectsHero";
-import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal";
+import { restoreTextReveal } from "@/src/app/utils/useTextReveal";
 import SectionOne from "@/src/components/Projects/SectionOne";
 import SectionTwo from "@/src/components/Projects/SectionTwo";
+import SectionCTA from "@/src/components/SectionCTA";
+import Footer from "@/src/components/Footer";
 
 gsap.registerPlugin(ScrollTrigger);
 
 type ContactProps = {
   preloaderDone: boolean;
 };
+
+function executeDesktopSplitting(selector: string) {
+  const elements = document.querySelectorAll(selector);
+  elements.forEach((element) => {
+    const htmlElement = element as HTMLElement;
+    if (!htmlElement || htmlElement.dataset.splitComplete === "true") return;
+
+    const rawText = htmlElement.textContent || "";
+    const linesArray = rawText.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+    
+    htmlElement.innerHTML = "";
+    linesArray.forEach(lineText => {
+      const wrapper = document.createElement("span");
+      wrapper.className = "custom-line-wrap";
+      wrapper.style.display = "block";
+      wrapper.style.overflow = "hidden";
+      wrapper.style.position = "relative";
+
+      const inner = document.createElement("span");
+      inner.className = "custom-line-inner";
+      inner.style.display = "block";
+      inner.textContent = lineText;
+
+      wrapper.appendChild(inner);
+      htmlElement.appendChild(wrapper);
+    });
+
+    htmlElement.dataset.splitComplete = "true";
+  });
+}
 
 export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
   const { setPreloaderDone } = useSite();
@@ -27,27 +59,46 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
     if (typeof window === "undefined") return;
     window.history.scrollRestoration = "manual";
     window.scrollTo(0, 0);
+    document.body.classList.remove("preloading");
     setPreloaderDone(true);
   }, [setPreloaderDone]);
+
+  // Handle body scrolling lock while preloading or intro running
+  useEffect(() => {
+    const locked = !preloaderDone || !introDone;
+    document.body.style.overflow = locked ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [preloaderDone, introDone]);
 
   // 1. Establish precise starting positions cleanly
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     
     const ctx = gsap.context(() => {
-      gsap.set(".projects-hero-bg", { scale: 1.4, transformOrigin: "center center" });
+      // Starts highly zoomed in (1.6) for the initial cinematic entry
+      gsap.set(".projects-hero-bg", { scale: 1.6, yPercent: 0, transformOrigin: "center center" });
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
       
-      // Section One uses top placement and standard natural heights
+      // Ensure scroll paragraphs are completely invisible and hidden at launch
+      gsap.set([".scroll-para-1", ".scroll-para-2"], { opacity: 1, visibility: "hidden" });
+      
+      // Setup structural layering
       gsap.set(".section-one-wrapper", { top: "100vh", height: "auto", zIndex: 20 });
       gsap.set(".section-two-wrapper", { y: "100vh", zIndex: 30 });
       gsap.set(".parallax-img-asset", { yPercent: -20 });
+
+      // CTA & Footer Initial States matching services/about desktop configurations
+      gsap.set([".projects-section-cta", ".projects-footer-wrap"], { yPercent: 100, visibility: "hidden" });
+      gsap.set(".projects-section-cta", { zIndex: 70 });
+      gsap.set(".projects-footer-wrap", { zIndex: 80 });
     }, scopeRef);
     
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // 2. Play Intro Cinematic
+  // 2. Play Intro Cinematic (Zoom out to 1.3 on load)
   useEffect(() => {
     if (!preloaderDone) return;
     
@@ -57,7 +108,7 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
       });
       
       introTl
-        .to(".projects-hero-bg", { scale: 1, duration: 2.2, ease: "power2.out" }, 0)
+        .to(".projects-hero-bg", { scale: 1.3, duration: 2.2, ease: "power2.out" }, 0)
         .to([".hero-title", ".hero-desc"], { opacity: 1, y: 0, duration: 1.4, stagger: 0.15, ease: "power3.out" }, 0.4);
     }, scopeRef);
     
@@ -68,48 +119,64 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
   useEffect(() => {
     if (!introDone) return;
 
+    // Split text into line elements prior to building the scroll timeline
+    executeDesktopSplitting(".scroll-para-1");
+    executeDesktopSplitting(".scroll-para-2");
+
     const ctx = gsap.context(() => {
       const scrollTl = gsap.timeline({
+        defaults: { ease: "none" },
         scrollTrigger: {
           trigger: ".master-viewport",
           start: "top top",
-          end: "+=5500", 
+          end: "+=10000", 
           pin: true,
           pinSpacing: true,
-          scrub: 1, 
+          scrub: 1.2, 
           invalidateOnRefresh: true,
         }
       });
 
       // ── STEP A: TEXT SWAPPING SEQUENCE ──
-      // Title fades out
-      scrollTl.to(".hero-text-wrap", { opacity: 0, ease: "power1.inOut", duration: 1.2 }, 0);
-      
-      // Paragraph 1 Text Reveal
-      useTextReveal(scopeRef, ".scroll-para-1", {
-        tl: scrollTl, position: 0.5, yOffset: 30, duration: 0.7, ease: "power2.out", stagger: 0.04
-      });
+      scrollTl.set([".scroll-para-1 .custom-line-inner", ".scroll-para-2 .custom-line-inner"], { opacity: 0, yPercent: 100 }, 0);
 
-      // Paragraph 1 Exit: Fast clean fade out
-      scrollTl.to(".scroll-para-1", { opacity: 0, ease: "power2.in", duration: 0.4 }, "+=0.6");
-      // Explicitly turn it hidden right here so it cannot overlap paragraph 2
+      // 1. Initial Hero Title / Desc Fades & Shifts Out
+      scrollTl.to(".hero-text-wrap", { opacity: 0, y: -30, ease: "power1.inOut", duration: 1.5 }, 0);
+      scrollTl.set(".hero-text-wrap", { visibility: "hidden" }, 1.5);
+      
+      // 2. Paragraph 1 Entrance
+      scrollTl.set(".scroll-para-1", { visibility: "visible" }, 1.5);
+      scrollTl.to(".scroll-para-1 .custom-line-inner", { 
+        opacity: 1, 
+        yPercent: 0, 
+        stagger: 0.1, 
+        duration: 2.0, 
+        ease: "power2.out" 
+      }, 1.5);
+
+      // Paragraph 1 Exit
+      scrollTl.to(".scroll-para-1 .custom-line-inner", { opacity: 0, y: -30, ease: "power1.in", duration: 1.5 }, "+=1.5");
       scrollTl.set(".scroll-para-1", { visibility: "hidden" });
       
-      // Paragraph 2 Entrance: Starts immediately after paragraph 1 is hidden ("Pristine canvas")
-      useTextReveal(scopeRef, ".scroll-para-2", {
-        tl: scrollTl, position: ">", yOffset: 30, duration: 0.7, ease: "power2.out", stagger: 0.04
-      });
+      // 3. Paragraph 2 Entrance
+      scrollTl.set(".scroll-para-2", { visibility: "visible" }, ">");
+      scrollTl.to(".scroll-para-2 .custom-line-inner", { 
+        opacity: 1, 
+        yPercent: 0, 
+        stagger: 0.1, 
+        duration: 2.0, 
+        ease: "power2.out" 
+      }, ">");
       
       // Paragraph 2 Exit
-      scrollTl.to(".scroll-para-2", { opacity: 0, ease: "power1.in", duration: 0.8 }, "+=0.6");
+      scrollTl.to(".scroll-para-2 .custom-line-inner", { opacity: 0, y: -60, ease: "power1.in", duration: 2.0 }, "+=1.5");
       scrollTl.set(".scroll-para-2", { visibility: "hidden" });
 
-      // ── HOOK UP THE ZOOM TO MATCH ENTIRE TEXT SEQUENCE OVERALL DURATION ──
-      // This forces the zoom to start at 0 and run up to the exact ending frame of Paragraph 2's exit.
+      // Upward Translation Over Text Phase
       scrollTl.fromTo(
         ".projects-hero-bg", 
-        { scale: 1 }, 
-        { scale: 1.32, ease: "none", duration: scrollTl.duration() }, 
+        { yPercent: 0 }, 
+        { yPercent: -18, ease: "none", duration: scrollTl.duration() }, 
         0
       );
 
@@ -120,7 +187,6 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
         return `${elementHeight}px`;
       };
 
-      // Starts precisely when Paragraph 2 finishes hiding completely
       scrollTl.to(".section-one-wrapper", {
         y: () => `-${getSectionOneScrollDistance()}`,
         duration: 4.0, 
@@ -141,6 +207,17 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
         onStart: () => setIsSectionTwoActive(true),
         onReverseComplete: () => setIsSectionTwoActive(false)
       }, "+=0.5");
+
+      // ── STEP D: CTA REVEAL TRACK (Snaps upward over Section Two) ──
+      scrollTl.addLabel("ctaStart", "+=0.5")
+        .set(".projects-section-cta", { visibility: "visible" }, "ctaStart")
+        .to(".projects-section-cta", { yPercent: 0, duration: 4.8 }, "ctaStart");
+
+      // ── STEP E: FOOTER REVEAL TRACK ──
+      scrollTl.addLabel("footerStart", "ctaStart+=4.8")
+        .set(".projects-footer-wrap", { visibility: "visible" }, "footerStart")
+        .to(".projects-footer-wrap", { yPercent: 0, duration: 5.5 }, "footerStart")
+        .to(".projects-section-cta .cta-inner-desktop", { opacity: 0, duration: 4.0, ease: "power1.out" }, "footerStart");
 
     }, scopeRef);
 
@@ -163,7 +240,7 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
       ref={scopeRef} 
       className={`w-full relative ${!introDone ? "h-screen overflow-hidden" : "overflow-x-hidden"}`}
     >
-      <div className="master-viewport relative w-full h-screen overflow-hidden">
+      <div className="master-viewport relative w-full h-screen overflow-hidden bg-black">
         
         {/* Layer 1: Hero Section */}
         <div className="projects-hero-master absolute inset-0 w-full h-full z-10">
@@ -181,6 +258,22 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
         {/* Layer 3: Section Two Container */}
         <div className="section-two-wrapper absolute inset-0 w-full h-full">
           <SectionTwo isActive={isSectionTwoActive}/>
+        </div>
+        
+        {/* Layer 4: CTA Section Container */}
+        <div
+          className="projects-section-cta absolute bottom-0 left-0 w-full structural-layer"
+          style={{ zIndex: 70 }}
+        >
+          <SectionCTA />
+        </div>
+        
+        {/* Layer 5: Footer Container */}
+        <div
+          className="projects-footer-wrap absolute left-0 bottom-0 w-full structural-layer"
+          style={{ zIndex: 80 }}
+        >
+          <Footer />
         </div>
 
       </div>

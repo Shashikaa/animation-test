@@ -23,6 +23,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
   const scopeRef = useRef<HTMLDivElement>(null);
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
 
+  // Reset scroll mechanics on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.history.scrollRestoration) {
@@ -33,6 +34,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
+  // Handle body overflow logic during initial page loading
   useEffect(() => {
     const locked = !preloaderDone || !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
@@ -68,7 +70,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
         yPercent: 100
       });
 
-      // ── ALIGNED WITH ABOUT SPEC BASICS FOR CTA & FOOTER ──
+      // Initial States for CTA & Footer
       gsap.set(".services-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
       gsap.set([".services-section-cta .cta-inner-mobile", ".services-section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
       gsap.set(".services-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden" });
@@ -117,7 +119,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
         scrollTrigger: {
           trigger: ".services-pin-master",
           start: "top top",
-          end: "+=11000", // Adjusted layout capacity footprint
+          end: "+=11000", 
           pin: true,
           scrub: 0.2,    
           invalidateOnRefresh: true
@@ -151,8 +153,6 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
           ease: "power2.inOut"
         });
 
-      tl.to({}, { duration: DEAD_SCROLL });
-
       // ── STEP C: Section Two slides up over Section One ──
       tl.set(".services-section-two-wrap", { visibility: "visible" })
         .to(".services-section-two-wrap", { 
@@ -165,19 +165,21 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
           }
         });
 
-      // Bi-directional Mobile triggers for Section Two Slider tracks
-      tl.to({}, { duration: 2.0 });
-      tl.call(() => { if ((window as any)._sec2GoTo) (window as any)._sec2GoTo(0); });
+      // ── ROBUST TRACK RUNS FOR BIDIRECTIONAL SCROLLING SLIDES ──
+      // Slide 0 Anchor
+      tl.call(() => { if ((window as any)._sec2GoTo) (window as any)._sec2GoTo(0); }, undefined, ">");
+      tl.to({}, { duration: 1.5 });
       
-      tl.to({}, { duration: 2.0 });
-      tl.call(() => { if ((window as any)._sec2GoTo) (window as any)._sec2GoTo(1); });
+      // Slide 1 Anchor
+      tl.call(() => { if ((window as any)._sec2GoTo) (window as any)._sec2GoTo(1); }, undefined, ">");
+      tl.to({}, { duration: 1.5 });
 
-      tl.to({}, { duration: 2.0 });
-      tl.call(() => { if ((window as any)._sec2GoTo) (window as any)._sec2GoTo(2); });
+      // Slide 2 Anchor
+      tl.call(() => { if ((window as any)._sec2GoTo) (window as any)._sec2GoTo(2); }, undefined, ">");
+      tl.to({}, { duration: 1.5 });
 
-      tl.to({}, { duration: 2.0 });
-      tl.call(() => { if ((window as any)._sec2GoTo) (window as any)._sec2GoTo(3); });
-
+      // Slide 3 Anchor
+      tl.call(() => { if ((window as any)._sec2GoTo) (window as any)._sec2GoTo(3); }, undefined, ">");
       tl.to({}, { duration: DEAD_SCROLL });
 
       // ── STEP D: App Section slides up over Section Two ──
@@ -190,7 +192,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP E: MATCHING ABOUT DESIGN: APP SECTION -> CTA ──
+      // ── STEP E: UNIFIED TRANSITION: APP SECTION -> CTA ──
       tl.addLabel("ctaStart", ">")
         .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
         .to(".services-section-cta", { yPercent: 0, duration: ACTION, ease: "none" }, "ctaStart")
@@ -198,7 +200,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
 
       tl.to({}, { duration: DEAD_SCROLL }); 
 
-      // ── STEP F: MATCHING ABOUT DESIGN: CTA -> FOOTER ──
+      // ── STEP F: UNIFIED TRANSITION: CTA -> FOOTER ──
       tl.addLabel("footerStart", ">")
         .to([".services-section-cta .cta-inner-mobile", ".services-section-cta .cta-inner-desktop"], { opacity: 0, duration: ACTION * 0.3, ease: "none" }, "footerStart")
         .set(".services-footer-wrap", { visibility: "visible" }, "footerStart+=0.1")
@@ -231,7 +233,8 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
           style={{ 
             zIndex: 20,
             clipPath: "inset(100% 0% 0% 0%)",
-            WebkitClipPath: "inset(100% 0% 0% 0%)"
+            WebkitClipPath: "inset(100% 0% 0% 0%)",
+            visibility: "hidden"
           }}
         >
           <SectionOne />
@@ -240,7 +243,10 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
         {/* Layer 3: Section Two Context */}
         <div 
           className="services-section-two-wrap absolute inset-0 w-full h-full overflow-y-auto" 
-          style={{ zIndex: 30 }}
+          style={{ 
+            zIndex: 30,
+            visibility: "hidden"
+          }}
         >
           <SectionTwo isActive={isSectionTwoActive} />
         </div>
@@ -248,23 +254,32 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
         {/* Layer 4: App Section Slide Up Wrapper */}
         <div 
           className="services-appsec-wrap absolute top-0 left-0 w-full h-full overflow-y-auto bg-black" 
-          style={{ zIndex: 35 }}
+          style={{ 
+            zIndex: 35,
+            visibility: "hidden"
+          }}
         >
           <Appsection />
         </div>
 
-        {/* Layer 5: Section CTA Block - Updated zIndex and visibility attributes to align with About */}
+        {/* Layer 5: Section CTA Block */}
         <div 
           className="services-section-cta absolute inset-0 w-full h-full bg-white z-[150]" 
-          style={{ pointerEvents: "auto", visibility: "hidden" }}
+          style={{ 
+            pointerEvents: "auto", 
+            visibility: "hidden"
+          }}
         >
           <SectionCTA />
         </div>
 
-        {/* Layer 6: Footer Wrapper Frame - Updated zIndex and positioning to match About */}
+        {/* Layer 6: Footer Wrapper Frame */}
         <div 
           className="services-footer-wrap absolute left-0 bottom-0 w-full z-[151]" 
-          style={{ pointerEvents: "auto", visibility: "hidden" }}
+          style={{ 
+            pointerEvents: "auto", 
+            visibility: "hidden" 
+          }}
         >
           <Footer />
         </div>

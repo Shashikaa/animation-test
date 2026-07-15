@@ -45,7 +45,7 @@ export default function SectionCTA() {
           gap: 44,
           height: "100%",
           maxWidth: 1440,
-          margin: "0 auto",
+   
           padding: "0 48px",
         }}
       >
