@@ -175,6 +175,7 @@ export default function Header({
   const [hovered,   setHovered]   = useState(false);
   const [isMobile,  setIsMobile]  = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -183,15 +184,16 @@ export default function Header({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Performance Fix: Mobile scroll state tracking moved entirely to CSS via the layout engine
   useEffect(() => {
     if (typeof window === "undefined") return;
     
     const handleScrollClass = () => {
       if (window.scrollY > 0) {
         document.documentElement.classList.add("header-scrolled");
+        setIsScrolled(true);
       } else {
         document.documentElement.classList.remove("header-scrolled");
+        setIsScrolled(false);
       }
     };
 
@@ -201,7 +203,8 @@ export default function Header({
     return () => window.removeEventListener("scroll", handleScrollClass);
   }, []);
 
-  const showGlass = hovered || menuOpen;
+  // Show the background if it's hovered, if the menu is open, OR if the page has scrolled past 0
+  const showGlass = hovered || menuOpen || isScrolled;
 
   function handleContactClick() {
     setModalOpen(true);
@@ -210,7 +213,7 @@ export default function Header({
 
   return (
     <>
-<style>{`
+      <style>{`
         #site-header {
           height: 56px !important;
           padding: 0 20px !important;
@@ -222,7 +225,7 @@ export default function Header({
           #site-header { height: 72px !important; padding: 0 55px !important; }
         }
         @media (max-width: 767px) {
-          #header-logo-inner { width: 135px !important; gap: 4px !important; }
+          #header-logo-inner { width: 135px !important; gap: 8px !important; }
           #header-logo-inner #h-grand,
           #header-logo-inner #h-pools { flex: 1 1 0; min-width: 0; overflow: visible !important; }
           #header-logo-inner #h-grand svg,
@@ -263,7 +266,6 @@ export default function Header({
           logoVisible={logoVisible}
         />
         <div className="relative z-[2] flex items-center gap-0 md:gap-6">
-          <ContactButton onClick={handleContactClick} />
           <MenuIcon onClick={onMenuClick} />
         </div>
       </motion.header>

@@ -1,12 +1,10 @@
 "use client";
 
+import Link from "next/link"; // Imported Next.js Link component
 import { useSite } from "../app/context/SiteContext"; // adjust path if needed
 
 const SOCIAL_LINKS = [
-  { label: "YouTube",   href: "https://youtube.com",   src: "/yt.svg" },
-  { label: "LinkedIn",  href: "https://linkedin.com",  src: "/linkedin.svg" },
   { label: "Instagram", href: "https://www.instagram.com/grandpools_aus/", src: "/ig.svg" },
-  { label: "Facebook",  href: "https://facebook.com",  src: "/Facebook.svg" },
 ];
 
 export default function Footer() {
@@ -27,7 +25,8 @@ export default function Footer() {
           .responsive-row-2 {
             flex-direction: column !important;
             align-items: center !important;
-            gap: 48px !important;
+            gap: 24px !important; /* Reduced from 48px to pull the social icon closer to the links */
+            margin-bottom: 24px !important; /* Reduced from 48px to pull the divider line closer to the social icon */
           }
           .responsive-links-container {
             width: 100% !important;
@@ -38,6 +37,7 @@ export default function Footer() {
             width: 100% !important;
             align-items: center !important;
             margin-left: 0 !important;
+            gap: 0px !important; /* Clears excess inner layout gap on mobile */
           }
           .desktop-only-contacts {
             display: none !important;
@@ -65,43 +65,43 @@ export default function Footer() {
         }
       `}</style>
 
-{/* Background / Container */}
-<div 
-className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[30px] "
-  style={{
-    width: "100%",
-    overflow: "hidden",
-  }}
->
+      {/* Background / Container */}
+      <div 
+        className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[20px]"
+        style={{
+          width: "100%",
+          overflow: "hidden",
+        }}
+      >
         {/* ══════════════════════════════════════
-            ROW 1: Big Logo Wordmark Centered
+            ROW 1: Logo Left-Aligned & Resized (Linked to Home)
         ══════════════════════════════════════ */}
         <div
           style={{
             width: "100%",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
+            justifyContent: "flex-start",
             overflow: "hidden",
-            marginBottom: 0,
+            marginBottom: 30,
           }}
         >
-          <img
-            src="/Footer.svg"
-            alt="Grand Pools"
-            style={{
-              width: "100%",
-              maxWidth: "1140px",
-              height: "auto",
-              display: "block",
-              pointerEvents: "none",
-              userSelect: "none",
-            }}
-          />
+          <Link href="/" style={{ display: "block", width: "100%", maxWidth: "380px" }}>
+            <img
+              src="/Footer.svg"
+              alt="Grand Pools"
+              style={{
+                width: "100%",
+                height: "auto",
+                display: "block",
+                cursor: "pointer",
+              }}
+            />
+          </Link>
         </div>
 
         {/* ══════════════════════════════════════
-            ROW 2: Link Column Grid 
+            ROW 2: Link Column Grid (Space-Between Layout)
         ══════════════════════════════════════ */}
         <div
           className="responsive-row-2"
@@ -109,15 +109,15 @@ className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[30px] "
             display: "flex",
             flexDirection: "row",
             alignItems: "start",
-            gap: "20%",
+            justifyContent: "space-between",
             marginBottom: 48,
           }}
         >
-          {/* Wrapper around Col 1 & Col 2 to manage mobile/tablet space-between stretching cleanly */}
-    <div 
-  className="responsive-links-container flex flex-row justify-between lg:justify-start lg:gap-44  !text-[14px] md:!text-[16px]" 
-  style={{ display: "flex", flexDirection: "row" }} // If you can, remove inline styles and use Tailwind's 'flex flex-row'
->
+          {/* Wrapper around Col 1 & Col 2 to manage desktop layout cleanly */}
+          <div 
+            className="responsive-links-container flex flex-row justify-between lg:w-[60%] !text-[14px] md:!text-[16px]" 
+            style={{ display: "flex", flexDirection: "row" }}
+          >
             {/* Col 1 — Main Nav links */}
             <nav style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
               {[
@@ -132,7 +132,6 @@ className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[30px] "
                   href={href}
                   style={{
                     color: "#F4EBE4",
-       
                     textDecoration: "none",
                     fontFamily: "var(--font-body)",
                     transition: "opacity 0.2s ease",
@@ -147,7 +146,7 @@ className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[30px] "
             </nav>
 
             {/* Col 2 — Service Capabilities list */}
-  <nav className="flex flex-col !items-end lg:!items-start gap-3">
+            <nav className="flex flex-col !items-end lg:!items-start gap-3">
               {[
                 { item: "New Pool Construction", href: "/services/new-pool-construction" },
                 { item: "Concrete Pool Renovations", href: "/services/concrete-pool-renovations" },
@@ -159,7 +158,6 @@ className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[30px] "
                   href={href}
                   style={{
                     color: "#F4EBE4",
-
                     textDecoration: "none",
                     fontFamily: "var(--font-body)",
                     transition: "opacity 0.2s ease",
@@ -174,14 +172,13 @@ className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[30px] "
             </nav>
           </div>
 
-          {/* Col 3 — Contact Info & Social Icons */}
-          <div className="responsive-socials-container" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", marginLeft: "auto", gap: 8 }}>
-            <div className="desktop-only-contacts  !text-[14px] md:!text-[16px]" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+          {/* Col 3 — Contact Info & Restored Social Icons */}
+          <div className="responsive-socials-container" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+            <div className="desktop-only-contacts !text-[14px] md:!text-[16px]" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
               <a
                 href="tel:0422630394"
                 style={{
                   color: "#F4EBE4",
-     
                   textDecoration: "none",
                   fontFamily: "var(--font-body)",
                   textAlign: "right",
@@ -196,7 +193,6 @@ className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[30px] "
                 href="mailto:admin@grandpools.com.au"
                 style={{
                   color: "#F4EBE4",
-       
                   textDecoration: "none",
                   fontFamily: "var(--font-body)",
                   textAlign: "right",
@@ -209,19 +205,18 @@ className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[30px] "
               </a>
             </div>
 
-            {/* Social icons row 
+            {/* Restored Social Icons row */}
             <div style={{ display: "flex", alignItems: "center", gap: 52, marginTop: 12 }}>
               {SOCIAL_LINKS.map(({ label, href, src }) => (
                 <SocialLink key={label} href={href} label={label} src={src} size={24} />
               ))}
             </div>
-            */}
           </div>
         </div>
 
         {/* Divider Line */}
         <div
-          style={{ height: "1px", background: "#F4EBE4", marginBottom: 30 }}
+          style={{ height: "1px", background: "#F4EBE4", marginBottom: 20 }}
           className="w-full"
         />
 
@@ -229,24 +224,23 @@ className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[30px] "
             ROW 3: Legal Terms & Author Attribution
         ══════════════════════════════════════ */}
         <div
-          className="responsive-bottom-row  !text-[14px] md:!text-[16px]"
+          className="responsive-bottom-row !text-[14px] md:!text-[16px]"
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             flexWrap: "wrap",
             gap: 16,
-
           }}
         >
           {/* Mobile Split Layout */}
-          <div className="mobile-only-row-4 " style={{ display: "none", justifyContent: "space-between", alignItems: "flex-start", width: "100%" }}>
-            <div className=" !text-[14px] md:!text-[16px]" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="mobile-only-row-4" style={{ display: "none", justifyContent: "space-between", alignItems: "flex-start", width: "100%" }}>
+            <div className="!text-[14px] md:!text-[16px]" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <BottomLink href="/terms-of-use">Terms of Use</BottomLink>
               <BottomLink href="/privacy-policy">Privacy Policy</BottomLink>
             </div>
-            <div  style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12, textAlign: "right"}}>
-              <a href="tel:0422630394" style={{ color: "#F4EBE4",  textDecoration: "none", fontFamily: "var(--font-body)" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12, textAlign: "right"}}>
+              <a href="tel:0422630394" style={{ color: "#F4EBE4", textDecoration: "none", fontFamily: "var(--font-body)" }}>
                 0422 630 394
               </a>
               <a href="mailto:admin@grandpools.com.au" style={{ color: "#F4EBE4" , textDecoration: "none", fontFamily: "var(--font-body)" }}>
@@ -260,17 +254,16 @@ className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[30px] "
             © 2026 Grand Pools. All rights reserved.
           </span>
 
-          <div className="desktop-only-row-4  !text-[14px] md:!text-[16px]" style={{ display: "flex", gap: 24, alignItems: "center" }}>
+          <div className="desktop-only-row-4 !text-[14px] md:!text-[16px]" style={{ display: "flex", gap: 24, alignItems: "center" }}>
             <BottomLink href="/terms-of-use">Terms of Use</BottomLink>
             <BottomLink href="/privacy-policy">Privacy Policy</BottomLink>
           </div>
 
-          {/* Handled dynamic bottom attribution block for mobile screen switching layout */}
+          {/* Dynamic bottom attribution block for mobile screen layout */}
           <div className="responsive-attribution !text-[14px] md:!text-[16px] !pt-4" style={{ display: "contents" }}>
             <span
               style={{
                 color: "#F4EBE4",
-            
                 fontFamily: "var(--font-body)",
               }}
             >
@@ -285,8 +278,8 @@ className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[30px] "
               </a>
             </span>
 
-            {/* Mobile layout placement adjustment container for copy block */}
-            <span className="mobile-only-row-4 !text-[14px] md:!text-[16px] !text-right" style={{ display: "none", color: "#F4EBE4",  fontFamily: "var(--font-body)" }}>
+            {/* Mobile copy block placement container */}
+            <span className="mobile-only-row-4 !text-[14px] md:!text-[16px] !text-right" style={{ display: "none", color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
               © 2026 Grand Pools.<br />All rights reserved.
             </span>
           </div>
@@ -338,7 +331,6 @@ function BottomLink({ href, children }: { href: string; children: React.ReactNod
       href={href}
       style={{
         color: "#F4EBE4",
-
         fontFamily: "var(--font-body)",
         textDecoration: "none",
         transition: "opacity 0.2s ease",

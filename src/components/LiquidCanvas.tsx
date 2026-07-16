@@ -36,7 +36,7 @@ const fragmentShader = `
     vec3 normal = vec3(disp.b, disp.a, sqrt(max(0.0, 1.0 - dot(disp.ba, disp.ba))));
     
     // Calculate UV distortion based on the normal
-    vec2 dUv = normal.xy * displacementScale * 0.04;
+    vec2 dUv = normal.xy * displacementScale * 0.02;
     vec2 newUv = ((vUv - 0.5) * uvMapScale) + 0.5 + dUv;
     
     // Sample the background image with the distorted UVs

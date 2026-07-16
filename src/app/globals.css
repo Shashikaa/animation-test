@@ -271,3 +271,9 @@ p {
   }
 }
 
+/* src/app/globals.css */
+.reveal-text {
+  opacity: 0;
+  transform: translateY(30px);
+  will-change: transform, opacity;
+}

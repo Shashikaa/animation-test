@@ -10,7 +10,7 @@ export default function SectionOne() {
         {/* Row 1: Right-Aligned Title */}
         <div className="w-full flex justify-end !mb-12 lg:!mb-8">
           <h2 
-            className="!font-[100] text-left lg:text-right"
+            className="reveal-text !font-[100] text-left lg:text-right" 
             style={{ fontFamily: "var(--font-display)" }}
           >
             Explore Our Projects
@@ -19,7 +19,7 @@ export default function SectionOne() {
 
         {/* Row 2: Paragraph Aligned Under the Title Block */}
         <div className="w-full flex justify-start !mb-15 lg:!mb-24">
-          <p className="max-w-[340px] text-left text-sm md:text-base">
+          <p className="reveal-text max-w-[340px] text-left text-sm md:text-base">
             Browse through our collection of custom-built pools, each crafted to suit the unique needs and style of our clients.
           </p>
         </div>
@@ -28,7 +28,6 @@ export default function SectionOne() {
         <div className="w-full flex justify-center items-center">
           <div className="relative w-full h-[450px] md:h-auto md:aspect-[4/3] max-h-[650px] overflow-hidden ">
             
-            {/* Inner absolute frame layout locks out Next.js fill engine constraints */}
             <div className="absolute inset-0 w-full h-full overflow-hidden">
               <Image
                 src="/projects.webp" 

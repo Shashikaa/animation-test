@@ -165,8 +165,9 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
         appInstance.liquidPlane.material = shaderMat;
         appInstance.liquidPlane.uniforms = shaderMat.uniforms;
         
+        // Slightly faster decay keeps the bump from propagating out into wide waves
         if (appInstance.liquidPlane.attenuation !== undefined) {
-          appInstance.liquidPlane.attenuation = 0.95; 
+          appInstance.liquidPlane.attenuation = 0.9; // was 0.95
         }
 
         if (appInstance.interaction) {
@@ -179,8 +180,8 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
             appInstance.liquidPlane.addDrop(
               appInstance.interaction.nPosition.x,
               appInstance.interaction.nPosition.y,
-              0.04,   
-              0.004   
+              0.015,   // was 0.04 — small, tight bump instead of a wide expanding ripple
+              0.0015   // was 0.004 — gentler push so it doesn't build into a visible wave
             );
           };
         }

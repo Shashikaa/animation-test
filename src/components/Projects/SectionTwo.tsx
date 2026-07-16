@@ -231,7 +231,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               key={project.id}
               type="button"
               onClick={() => handleTab(i)}
-              className="s2-card-btn font-display text-left transition-all duration-300 hover:!opacity-100"
+              className="s2-card-btn font-display text-left transition-all duration-300 hover:!opacity-100 "
               style={{
                 background: "none",
                 border: "none",
