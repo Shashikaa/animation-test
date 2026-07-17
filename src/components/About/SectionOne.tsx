@@ -21,8 +21,11 @@ export default function SectionOne() {
         <div
           className="w-full max-w-[280px] md:max-w-[330px] lg:max-w-[370px] flex flex-col justify-center gap-4 will-change-transform !py-8 !p-6 md:!p-8 lg:!p-10"
         >
-          {/* Added lg:invisible here to hide text instantly on mount for large displays */}
-          <p className="text-[#F4EEDF] s1-reveal-text lg:invisible">
+          {/* Mapped clean to your new single ScrollTrigger.onUpdate engine */}
+          <p 
+            className="text-[#F4EEDF] reveal-text"
+   
+          >
             At Grand Pools, we design and build pools that bring families together,
             blending craftsmanship, innovation, and lasting quality.
           </p>

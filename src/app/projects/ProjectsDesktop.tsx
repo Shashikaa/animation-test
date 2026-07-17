@@ -5,7 +5,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSite } from "@/src/app/context/SiteContext";
 import ProjectsHero from "../../components/Projects/ProjectsHero";
-import { restoreTextReveal } from "@/src/app/utils/useTextReveal";
+import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal"; 
 import SectionOne from "@/src/components/Projects/SectionOne";
 import SectionTwo from "@/src/components/Projects/SectionTwo";
 import SectionCTA from "@/src/components/SectionCTA";
@@ -77,21 +77,15 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
     if (!preloaderDone) return;
     
     const ctx = gsap.context(() => {
-      // Hero setup triggers instantly to prevent lagging
       gsap.set(".projects-hero-bg", { scale: 1.6, yPercent: 0, transformOrigin: "center center" });
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
       
       gsap.set([".scroll-para-1", ".scroll-para-2"], { opacity: 1, visibility: "hidden" });
       
-      // Structural layering initial setups
       gsap.set(".section-one-wrapper", { top: "100vh", y: 0, height: "auto", zIndex: 20 });
       gsap.set(".section-two-wrapper", { y: "100vh", zIndex: 30 });
       gsap.set(".parallax-img-asset", { yPercent: -20 });
 
-      // Ensure hidden text blocks are clean before layout animation passes mount
-      gsap.set(".master-viewport .reveal-text", { opacity: 0, y: 40 });
-
-      // Clean positioning hooks for lower layers
       gsap.set([".projects-section-cta", ".projects-footer-wrap"], { yPercent: 100, visibility: "hidden" });
       gsap.set(".projects-section-cta", { zIndex: 70 });
       gsap.set(".projects-footer-wrap", { zIndex: 80 });
@@ -125,49 +119,68 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
     executeDesktopSplitting(".scroll-para-2");
 
     const ctx = gsap.context(() => {
+      gsap.ticker.lagSmoothing(0);
+
+      ScrollTrigger.config({
+        ignoreMobileResize: true,
+        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize",
+      });
+
+      // Initialize the DOM text splitting structures for Section One
+      useTextReveal(scopeRef, ".section-one-wrapper .reveal-text");
+
+      // Setup clean starting visibility constraints for the lines
+      gsap.set(".section-one-wrapper .reveal-text", { visibility: "visible", opacity: 1 });
+      gsap.set([
+        ".section-one-wrapper .reveal-text .gs-line-inner",
+        ".section-one-wrapper .reveal-text > *"
+      ], { y: 45, opacity: 0 });
+
       const scrollTl = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
           trigger: ".master-viewport",
           start: "top top",
-          end: "+=10000", 
+          end: "+=11000", 
           pin: true,
           pinSpacing: true,
           scrub: 1.2, 
           invalidateOnRefresh: true,
-          // Live scroll engine callback track handles geometry monitoring across views
-          onUpdate: () => {
-            const revealElements = document.querySelectorAll(".master-viewport .reveal-text");
-            
-            revealElements.forEach((el) => {
-              const htmlEl = el as HTMLElement;
-              if (htmlEl.dataset.revealed === "true") return;
+          snap: {
+            snapTo: (progress) => {
+              const labels = Object.keys(scrollTl.labels).map(name => scrollTl.labels[name] / scrollTl.totalDuration());
+              labels.sort((a, b) => a - b);
+              
+              const currentProg = scrollTl.progress();
+              const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
 
-              const rect = htmlEl.getBoundingClientRect();
-              const windowHeight = window.innerHeight;
+              for (let i = 0; i < labels.length - 1; i++) {
+                const start = labels[i];
+                const end = labels[i + 1];
 
-              // Animate elements forward exactly once when crossing standard window horizons
-              if (rect.top > 0 && rect.top < windowHeight * 0.85) {
-                htmlEl.dataset.revealed = "true";
-                
-                const delay = parseFloat(htmlEl.getAttribute("data-reveal-delay") || "0");
-                const duration = parseFloat(htmlEl.getAttribute("data-reveal-duration") || "1.4");
+                if (currentProg >= start && currentProg <= end) {
+                  const localProgress = (currentProg - start) / (end - start);
 
-                gsap.to(htmlEl, {
-                  opacity: 1,
-                  y: 0,
-                  duration: duration,
-                  delay: delay,
-                  ease: "power3.out",
-                  overwrite: "auto"
-                });
+                  if (isForward) {
+                    return localProgress >= 0.42 ? end : start;
+                  } else {
+                    return localProgress <= 0.58 ? start : end;
+                  }
+                }
               }
-            });
+              return progress;
+            },
+            duration: { min: 0.25, max: 0.55 },
+            delay: 0.12, 
+            ease: "power2.out"
           }
         }
       });
 
-      // ── STEP A: TEXT SWAPPING SEQUENCE ──
+      const revealedElements = new Set<string>();
+
+      // ── STEP A: HERO INNER TEXT SWAPPING ANIMATION ──
+      scrollTl.addLabel("phaseHeroMain", 0); 
       scrollTl.set([".scroll-para-1 .custom-line-inner", ".scroll-para-2 .custom-line-inner"], { opacity: 0, yPercent: 100 }, 0);
 
       scrollTl.to(".hero-text-wrap", { opacity: 0, y: -30, ease: "power1.inOut", duration: 1.5 }, 0);
@@ -182,51 +195,88 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
         ease: "power2.out" 
       }, 1.5);
 
-      scrollTl.to(".scroll-para-1 .custom-line-inner", { opacity: 0, y: -30, ease: "power1.in", duration: 1.5 }, "+=1.5");
-      scrollTl.set(".scroll-para-1", { visibility: "hidden" });
+      scrollTl.addLabel("phaseHeroParaOne", 3.5); 
+
+      scrollTl.to(".scroll-para-1 .custom-line-inner", { opacity: 0, y: -30, ease: "power1.in", duration: 1.5 }, 3.5);
+      scrollTl.set(".scroll-para-1", { visibility: "hidden" }, 5.0);
       
-      scrollTl.set(".scroll-para-2", { visibility: "visible" }, ">");
+      scrollTl.set(".scroll-para-2", { visibility: "visible" }, 5.0);
       scrollTl.to(".scroll-para-2 .custom-line-inner", { 
         opacity: 1, 
         yPercent: 0, 
         stagger: 0.1, 
         duration: 2.0, 
         ease: "power2.out" 
-      }, ">");
-      
-      scrollTl.to(".scroll-para-2 .custom-line-inner", { opacity: 0, y: -60, ease: "power1.in", duration: 2.0 }, "+=1.5");
-      scrollTl.set(".scroll-para-2", { visibility: "hidden" });
+      }, 5.0);
 
-      scrollTl.fromTo(
-        ".projects-hero-bg", 
-        { yPercent: 0 }, 
-        { yPercent: -18, ease: "none", duration: scrollTl.duration() }, 
-        0
-      );
+      scrollTl.addLabel("phaseHeroParaTwo", 7.0); 
 
-      // ── STEP B: SECTION ONE TALL SCROLL OVER HERO ──
+      // ── STEP B: SECTION ONE SCROLL UP + HERO PARAGRAPH TWO EXIT ──
       const getSectionOneScrollDistance = () => {
         if (!sectionOneRef.current) return "100vh";
         const elementHeight = sectionOneRef.current.offsetHeight;
         return `${elementHeight}px`;
       };
 
-      scrollTl.addLabel("sectionOneStart", "+=0.1");
+      // Anchor Point 1: Locks exactly when Section One top hits Viewport top (starts scrolling up)
+      scrollTl.addLabel("sectionOneStart", 7.0);
 
+      scrollTl.to(".scroll-para-2 .custom-line-inner", { 
+        opacity: 0, 
+        y: -60, 
+        ease: "power1.in", 
+        duration: 1.5 
+      }, "sectionOneStart");
+      
+      scrollTl.set(".scroll-para-2", { visibility: "hidden" }, "sectionOneStart+=1.5");
+
+      // Continuous un-interrupted scroll move up through the full layout height of Section One
       scrollTl.to(".section-one-wrapper", {
         y: () => `-${getSectionOneScrollDistance()}`,
-        duration: 4.0, 
+        duration: 4.5, 
         ease: "none"
       }, "sectionOneStart");
 
       scrollTl.to(".parallax-img-asset", {
         yPercent: 20,
         ease: "none",
-        duration: 4.0
+        duration: 4.5
       }, "sectionOneStart");
 
+      // Fires early reveal text animations as the section surfaces into view
+      scrollTl.call(() => {
+        const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
+        const selectorKey = ".section-one-wrapper .reveal-text";
+        
+        if (isForward && !revealedElements.has(selectorKey)) {
+          revealedElements.add(selectorKey);
+
+          gsap.to([
+            ".section-one-wrapper .reveal-text .gs-line-inner",
+            ".section-one-wrapper .reveal-text > *"
+          ], {
+            y: 0,
+            opacity: 1,
+            stagger: 0.05,
+            duration: 0.8,
+            ease: "power2.out",
+            overwrite: "auto"
+          });
+        }
+      }, [], "sectionOneStart+=0.4");
+
+      // Anchor Point 2: Snap triggers exactly when Section One finish sliding up completely
+      scrollTl.addLabel("sectionOneEnd", "sectionOneStart+=4.5");
+
+      scrollTl.fromTo(
+        ".projects-hero-bg", 
+        { yPercent: 0 }, 
+        { yPercent: -18, ease: "none", duration: 11.5 }, 
+        0
+      );
+
       // ── STEP C: SECTION TWO SLIDES UP OVER SECTION ONE ──
-      scrollTl.addLabel("sectionTwoStart", "+=0.5");
+      scrollTl.addLabel("sectionTwoStart", "sectionOneEnd+=0.2");
       scrollTl.to(".section-two-wrapper", {
         y: "0vh",
         duration: 2.5,
@@ -236,8 +286,8 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
       }, "sectionTwoStart");
 
       // ── STEP D: CTA REVEAL TRACK ──
-      scrollTl.addLabel("ctaStart", "+=0.5")
-        .set(".projects-section-cta", { visibility: "visible" }, "ctaStart")
+      scrollTl.addLabel("ctaStart", "sectionTwoStart+=2.5");
+      scrollTl.set(".projects-section-cta", { visibility: "visible" }, "ctaStart")
         .to(".projects-section-cta", { yPercent: 0, duration: 4.8 }, "ctaStart");
 
       // ── STEP E: FOOTER REVEAL TRACK ──
@@ -246,6 +296,7 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
         .to(".projects-footer-wrap", { yPercent: 0, duration: 5.5 }, "footerStart")
         .to(".projects-section-cta .cta-inner-desktop", { opacity: 0, duration: 4.0, ease: "power1.out" }, "footerStart");
 
+      scrollTl.addLabel("end");
     }, scopeRef);
 
     const refreshTimeout = setTimeout(() => {
@@ -258,6 +309,7 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
       if (scopeRef.current) {
         restoreTextReveal(scopeRef.current, ".scroll-para-1");
         restoreTextReveal(scopeRef.current, ".scroll-para-2");
+        restoreTextReveal(scopeRef.current, ".section-one-wrapper .reveal-text");
       }
     };
   }, [introDone]);

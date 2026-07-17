@@ -44,17 +44,17 @@ export default function SectionThree() {
       <div className="section-container relative z-[2] h-full flex flex-col justify-between pb-10 md:pb-14 lg:pb-16">
         {/* TOP CONTENT */}
         <div className="flex flex-col !mt-44">
-          <h2 className="s3-reveal-top font-display text-[#F4EEDF] leading-[1.2] !font-[100]">
+          <h2 className="s3-reveal-top reveal-text font-display text-[#F4EEDF] leading-[1.2] !font-[100]">
             Built on Trust <br />
           </h2>
-          <p className="s3-reveal-top font-body text-[#F4EEDF] text-sm md:text-base !mt-3">
+          <p className="s3-reveal-top reveal-text font-body text-[#F4EEDF] text-sm md:text-base !mt-3">
             Driven by Excellence
           </p>
         </div>
 
         {/* BOTTOM RIGHT CONTENT */}
         <div className="flex justify-end">
-          <p className="s3-reveal-bottom font-body text-[#F4EEDF] text-right lg:text-left max-w-[250px] md:max-w-[280px] lg:max-w-[280px] !mb-33 md:!mb-80 lg:!mb-0">
+          <p className="s3-reveal-bottom reveal-text font-body text-[#F4EEDF] text-right lg:text-left max-w-[250px] md:max-w-[280px] lg:max-w-[280px] !mb-33 md:!mb-80 lg:!mb-0">
             At Grand Pools, we create premium pools with expert craftsmanship, innovative design, and personalised service, delivering seamless experiences and exceptional results.
           </p>
         </div>

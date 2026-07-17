@@ -15,13 +15,13 @@ export default function SectionTwo() {
       >
         <div className="flex flex-col gap-3">
           <h2
-            className="s2-reveal-text !font-[100] text-[#FFFFFF] !leading-[0.9] lg:invisible"
+            className=" !font-[100] text-[#FFFFFF] !leading-[0.9] reveal-text"
             style={{ fontFamily: "var(--font-display)" }}
           >
             A Passion for Pools
           </h2>
           <p
-            className="s2-reveal-text text-[#FFFFFF] lg:invisible"
+            className=" text-[#FFFFFF] reveal-text"
             style={{ fontFamily: "var(--font-body)" }}
           >
             A Commitment to Quality
@@ -29,7 +29,7 @@ export default function SectionTwo() {
         </div>
 
         <p
-          className="s2-reveal-text text-[#FFFFFF] !mt-2 !mb-6 lg:!mt-8 lg:invisible"
+          className=" text-[#FFFFFF] !mt-2 !mb-6 lg:!mt-8 reveal-text"
           style={{ fontFamily: "var(--font-body)" }}
         >
           Founded in 2021, Grand Pools combines 25+ years of experience to

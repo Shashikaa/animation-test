@@ -23,9 +23,6 @@ const slides = [
 
 export default function SectionFive() {
   useEffect(() => {
-    // Keep left-hand typography fully hidden prior to target label arrival
-    gsap.set([".s5-static-title", ".s5-static-desc"], { y: 30, opacity: 0 });
-    
     // Smooth opacity system base layers setup
     gsap.set(".s5-slide-card", { opacity: 0, pointerEvents: "none" });
     gsap.set(".s5-slide-card-0", { opacity: 1, pointerEvents: "auto" });
@@ -36,18 +33,20 @@ export default function SectionFive() {
       
       {/* TOP / LEFT SIDE: Image + Title Overlay */}
       <div className="relative w-full h-[65svh] lg:h-full lg:min-h-screen overflow-hidden bg-[#19211C]">
-        {/* Main image container - Adjusted height and negative top to anchor safely behind boundaries */}
+        {/* Main image container */}
         <div className="s5-bg absolute -top-[20%] left-0 w-full h-[140%] bg-cover bg-center will-change-transform bg-[url('/projects.webp')]" />
         
         <div className="absolute z-10 bottom-[30px] md:bottom-[60px] left-[24px] md:left-[65px] flex flex-col !gap-2 md:!gap-4 overflow-hidden">
+          {/* Added .s5-title class anchor here */}
           <h2
-            className="s5-static-title text-3xl sm:text-4xl md:text-5xl lg:text-6xl  !font-[100] text-[#F4EEDF] will-change-transform opacity-0"
+            className=" text-3xl sm:text-4xl md:text-5xl lg:text-6xl !font-[100] text-[#F4EEDF]"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Decades of Expertise
           </h2>
+          {/* Added .s5-desc class anchor here */}
           <p 
-            className="s5-static-desc text-sm sm:text-base md:text-lg text-[#F4EEDF] will-change-transform opacity-0" 
+            className=" text-sm sm:text-base md:text-lg text-[#F4EEDF]" 
             style={{ fontFamily: "var(--font-body)" }}
           >
             Unmatched Craftsmanship

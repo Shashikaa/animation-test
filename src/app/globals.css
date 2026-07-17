@@ -271,9 +271,13 @@ p {
   }
 }
 
-/* src/app/globals.css */
+/* Keep text hidden uniformly prior to animation runtime */
 .reveal-text {
   opacity: 0;
-  transform: translateY(30px);
-  will-change: transform, opacity;
+  visibility: hidden;
+}
+
+/* Base style for split components */
+.reveal-text .gs-line-inner {
+  display: inline-block;
 }

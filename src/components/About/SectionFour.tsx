@@ -30,9 +30,9 @@ export default function SectionFour() {
 
       <div className="section-container relative z-[1] h-full flex items-start md:items-end !pb-26 md:!pb-32 lg:!pb-50 !pt-42 md:!pt-32 lg:!pt-32">
         <div
-          className="s4-glass-card w-full max-w-[250px] md:max-w-[340px] lg:max-w-[360px] h-auto md:h-[148px] lg:h-[164px] flex flex-col justify-center gap-4 will-change-transform"
+          className=" w-full max-w-[250px] md:max-w-[340px] lg:max-w-[360px] h-auto md:h-[148px] lg:h-[164px] flex flex-col justify-center gap-4 will-change-transform"
         >
-          <p className="s4-reveal-text text-[#F4EEDF] font-body font-normal ">
+          <p className=" reveal-text text-[#F4EEDF] font-body font-normal ">
             Built using premium materials and proven techniques, tailored to your vision and space, with clear communication ensuring a smooth, stress-free experience.
           </p>
         </div>
