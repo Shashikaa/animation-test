@@ -16,6 +16,8 @@ import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal"
 
 gsap.registerPlugin(ScrollTrigger);
 
+const isTouchOnly = () => ScrollTrigger.isTouch === 1;
+
 type AboutDesktopProps = {
   preloaderDone: boolean;
 };
@@ -95,7 +97,7 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         opacity: 1,
         y: 0,
         duration: 1.4,
-        stagger: 0.2,
+         stagger: 0.2,
         ease: "power3.out",
       }, 0.4);
     }, scopeRef);
@@ -105,6 +107,10 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
 
   useEffect(() => {
     if (!introDone) return;
+
+    if (isTouchOnly()) {
+      ScrollTrigger.normalizeScroll(true);
+    }
 
     let vvCleanup: (() => void) | null = null;
 
@@ -129,7 +135,8 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         });
       });
 
-      const scrubValue = 1.3; 
+      // Standardized to match the Home page's close scrub speed tracking
+      const scrubValue = 1.2; 
 
       useTextReveal(scopeRef, ".about-section-one .reveal-text");
       useTextReveal(scopeRef, ".about-section-two .reveal-text");
@@ -172,7 +179,8 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
             scrollTrigger: {
               trigger: ".about-pin",
               start: "top top",
-              end: "+=16000", 
+              // 8 sections (Hero/S1, S2, S3, S4, S5 Card 1, S5 Card 2, S5 Card 3, CTA/Footer) x 1200px = 9600px
+              end: "+=9600", 
               scrub: scrubValue, 
               pin: true,
               pinSpacing: true,
@@ -203,9 +211,9 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
                   }
                   return progress;
                 },
-                duration: { min: 0.3, max: 0.7 },
+                duration: { min: 0.3, max: 0.6 },
                 delay: 0.01,
-                ease: "power2.out"
+                ease: "power1.inOut" // Softened snapping curve for continuous scroll parity
               }
             },
           });
@@ -254,75 +262,74 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
             });
           };
 
+          // Standardized Timeline Structure: Each block takes exactly 1.0 unit weight relative duration
           tl.set(".about-hero-panel-left", { clipPath: "inset(0% 50% 0% 0%)" }, 0);
           tl.set(".about-hero-panel-right", { clipPath: "inset(0% 0% 0% 50%)" }, 0);
 
           // ── SECTION 1 REVEAL ──
           tl.addLabel("sec1Start")
-            .to(".about-hero-panel-left", { clipPath: "inset(0% 50% 100% 0%)", duration: 2.0 })
-            .to(".about-hero-panel-right", { clipPath: "inset(100% 0% 0% 50%)", duration: 2.0 }, "<")
-            .fromTo(".about-hero-bg", { scale: 1.15 }, { scale: 1.0, duration: 2.0 }, "<");
+            .to(".about-hero-panel-left", { clipPath: "inset(0% 50% 100% 0%)", duration: 1.0 })
+            .to(".about-hero-panel-right", { clipPath: "inset(100% 0% 0% 50%)", duration: 1.0 }, "<")
+            .fromTo(".about-hero-bg", { scale: 1.15 }, { scale: 1.0, duration: 1.0 }, "<");
 
-          addPlayOnceTextReveal("sec1Start", 0.7, ".about-section-one .reveal-text .gs-line-inner, .about-section-one .reveal-text > *");
+          addPlayOnceTextReveal("sec1Start", 0.35, ".about-section-one .reveal-text .gs-line-inner, .about-section-one .reveal-text > *");
 
           // ── SECTION 2 REVEAL ──
           tl.addLabel("sec2Start")
             .set(".about-section-two", { visibility: "visible", yPercent: 100 })
-            .to(".about-section-two", { yPercent: 0, duration: 4.8 })
-            .fromTo(".s2-bg", { scale: 1.1 }, { scale: 1.0, duration: 4.8 }, "<");
+            .to(".about-section-two", { yPercent: 0, duration: 1.0 })
+            .fromTo(".s2-bg", { scale: 1.1 }, { scale: 1.0, duration: 1.0 }, "<");
 
-          addPlayOnceTextReveal("sec2Start", 1.68, ".about-section-two .reveal-text .gs-line-inner, .about-section-two .reveal-text > *");
+          addPlayOnceTextReveal("sec2Start", 0.35, ".about-section-two .reveal-text .gs-line-inner, .about-section-two .reveal-text > *");
 
           // ── SECTION 3 REVEAL ──
           tl.addLabel("sec3Start")
             .set(".about-section-three", { visibility: "visible" })
-            .fromTo(".about-section-three", { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 3.0 })
-            .to(".s2-bg", { yPercent: -15, duration: 3.0 }, "<")
-            .fromTo(".s3-bg", { scale: 1.15 }, { scale: 1.0, duration: 3.0 }, "<");
+            .fromTo(".about-section-three", { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.0 })
+            .to(".s2-bg", { yPercent: -15, duration: 1.0 }, "<")
+            .fromTo(".s3-bg", { scale: 1.15 }, { scale: 1.0, duration: 1.0 }, "<");
 
-          addPlayOnceTextReveal("sec3Start", 1.05, ".about-section-three .s3-reveal-bottom .gs-line-inner, .about-section-three .s3-reveal-bottom > *");
-          addPlayOnceTextReveal("sec3Start", 1.8, ".about-section-three .s3-reveal-top .gs-line-inner, .about-section-three .s3-reveal-top > *");
+          addPlayOnceTextReveal("sec3Start", 0.35, ".about-section-three .s3-reveal-bottom .gs-line-inner, .about-section-three .s3-reveal-bottom > *");
+          addPlayOnceTextReveal("sec3Start", 0.6, ".about-section-three .s3-reveal-top .gs-line-inner, .about-section-three .s3-reveal-top > *");
 
           // ── SECTION 4 REVEAL ──
           tl.addLabel("sec4Start")
             .set(".about-section-four", { visibility: "visible" })
-            .to(".about-section-four", { clipPath: "inset(0% 0% 0% 0%)", duration: 3.0 })
-            .to(".s4-glass-card", { opacity: 1, y: 0, duration: 1.4, ease: "power2.out" }, "sec4Start+=0.8");
+            .to(".about-section-four", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.0 })
+            .to(".s4-glass-card", { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "sec4Start+=0.2");
 
-          addPlayOnceTextReveal("sec4Start", 1.05, ".about-section-four .reveal-text .gs-line-inner, .about-section-four .reveal-text > *");
+          addPlayOnceTextReveal("sec4Start", 0.35, ".about-section-four .reveal-text .gs-line-inner, .about-section-four .reveal-text > *");
 
           // ── SECTION 4 TO 5 TRANSITION ──
           tl.addLabel("sec5Start")
             .set(".about-section-five", { visibility: "visible" })
-            .to(".about-section-four .s4-img-bg", { scale: 1.03, yPercent: -10, duration: 3.0 })
-            .fromTo(".about-section-five", { yPercent: 100 }, { yPercent: 0, duration: 3.0 }, "<")
-            .fromTo(".s5-bg", { yPercent: 0, scale: 1.2 }, { yPercent: 0, scale: 1.15, duration: 3.0 }, "<");
+            .to(".about-section-four .s4-img-bg", { scale: 1.03, yPercent: -10, duration: 1.0 })
+            .fromTo(".about-section-five", { yPercent: 100 }, { yPercent: 0, duration: 1.0 }, "<")
+            .fromTo(".s5-bg", { yPercent: 0, scale: 1.2 }, { yPercent: 0, scale: 1.15, duration: 1.0 }, "<");
           
-          tl.call(() => triggerCardFade(0), [], "sec5Start+=3.0");
+          tl.call(() => triggerCardFade(0), [], "sec5Start+=1.0");
 
           // ── SECTION 5 INTERNAL SLIDE CARDS ──
-          tl.addLabel("sec5_card2", "sec5Start+=3.0")
-            .to(".s5-bg", { yPercent: -10, duration: 2.0 })
-            .call(() => triggerCardFade(1), [], "sec5_card2+=2.0");
+          tl.addLabel("sec5_card2", "sec5Start+=1.0")
+            .to(".s5-bg", { yPercent: -10, duration: 1.0 })
+            .call(() => triggerCardFade(1), [], "sec5_card2+=1.0");
 
-          tl.addLabel("sec5_card3", "sec5_card2+=2.0")
-            .to(".s5-bg", { yPercent: -20, duration: 2.0 })
-            .call(() => triggerCardFade(2), [], "sec5_card3+=2.0");
+          tl.addLabel("sec5_card3", "sec5_card2+=1.0")
+            .to(".s5-bg", { yPercent: -20, duration: 1.0 })
+            .call(() => triggerCardFade(2), [], "sec5_card3+=1.0");
 
           // ── CTA REVEAL TRACK ──
-          // Added an explicit timeline step to smoothly shift Section 5 out and Section CTA in
-          // This eliminates floating dynamic gaps so snap point calculations lock instantly
-          tl.addLabel("ctaStart", "sec5_card3+=2.0")
+          tl.addLabel("ctaStart", "sec5_card3+=1.0")
             .set(".about-section-cta", { visibility: "visible" })
-            .to(".about-section-cta", { yPercent: 0, duration: 4.8 })
-            .to(".about-section-five", { scale: 1.0, duration: 4.8 }, "<");
+            .to(".about-section-cta", { yPercent: 0, duration: 1.0 })
+            .to(".about-section-five", { scale: 1.0, duration: 1.0 }, "<");
 
           // ── FOOTER REVEAL TRACK ──
           tl.addLabel("footerStart")
             .set(".about-footer-wrap", { visibility: "visible" })
-            .to(".about-footer-wrap", { yPercent: 0, duration: 5.5 })
-            .to(".about-section-five", { scale: 1.05, duration: 5.5 }, "<")
-            .to(".about-section-cta .cta-inner-desktop", { opacity: 0, duration: 4.0, ease: "power1.out" }, "<");
+            .to(".about-footer-wrap", { yPercent: 0, duration: 1.0 })
+            .to(".about-section-five", { scale: 1.05, duration: 1.0 }, "<")
+            .to(".about-section-cta .cta-inner-desktop", { opacity: 0, duration: 0.7, ease: "power1.out" }, "<");
           
           tl.addLabel("end");
         });
@@ -341,6 +348,9 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
 
     return () => {
       vvCleanup?.();
+      if (isTouchOnly()) {
+        ScrollTrigger.normalizeScroll(false);
+      }
       if (scopeRef.current) {
         restoreTextReveal(
           scopeRef.current,

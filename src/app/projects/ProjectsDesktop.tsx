@@ -54,6 +54,8 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
   const [introDone, setIntroDone] = useState(false);
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
 
+  const isTouchOnly = () => ScrollTrigger.isTouch === 1;
+
   // Reset scroll position on refresh
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -115,6 +117,12 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
   useEffect(() => {
     if (!introDone) return;
 
+    if (isTouchOnly()) {
+      ScrollTrigger.normalizeScroll(true);
+    }
+
+    let vvCleanup: (() => void) | null = null;
+
     executeDesktopSplitting(".scroll-para-1");
     executeDesktopSplitting(".scroll-para-2");
 
@@ -124,6 +132,19 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
       ScrollTrigger.config({
         ignoreMobileResize: true,
         autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize",
+      });
+
+      // Unified hardware layer optimization targets mapping layout
+      const performanceTargets = [
+        ".projects-hero-bg", ".section-one-wrapper", ".section-two-wrapper",
+        ".parallax-img-asset", ".projects-section-cta", ".projects-footer-wrap"
+      ];
+
+      performanceTargets.forEach(selector => {
+        gsap.set(selector, {
+          force3D: true,
+          willChange: "transform, opacity"
+        });
       });
 
       // Initialize the DOM text splitting structures for Section One
@@ -136,176 +157,196 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
         ".section-one-wrapper .reveal-text > *"
       ], { y: 45, opacity: 0 });
 
-      const scrollTl = gsap.timeline({
-        defaults: { ease: "none" },
-        scrollTrigger: {
-          trigger: ".master-viewport",
-          start: "top top",
-          end: "+=11000", 
-          pin: true,
-          pinSpacing: true,
-          scrub: 1.2, 
-          invalidateOnRefresh: true,
-          snap: {
-            snapTo: (progress) => {
-              const labels = Object.keys(scrollTl.labels).map(name => scrollTl.labels[name] / scrollTl.totalDuration());
-              labels.sort((a, b) => a - b);
-              
-              const currentProg = scrollTl.progress();
-              const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
+      const buildTimeline = () => {
+        requestAnimationFrame(() => {
+          ScrollTrigger.refresh();
 
-              for (let i = 0; i < labels.length - 1; i++) {
-                const start = labels[i];
-                const end = labels[i + 1];
-
-                if (currentProg >= start && currentProg <= end) {
-                  const localProgress = (currentProg - start) / (end - start);
-
-                  if (isForward) {
-                    return localProgress >= 0.42 ? end : start;
-                  } else {
-                    return localProgress <= 0.58 ? start : end;
-                  }
-                }
-              }
-              return progress;
-            },
-            duration: { min: 0.25, max: 0.55 },
-            delay: 0.12, 
-            ease: "power2.out"
+          const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
+          if (vv) {
+            const onVVResize = () => ScrollTrigger.refresh(true);
+            vv.addEventListener("resize", onVVResize);
+            vvCleanup = () => vv.removeEventListener("resize", onVVResize);
           }
-        }
-      });
 
-      const revealedElements = new Set<string>();
+          const scrollTl = gsap.timeline({
+            defaults: { ease: "none" },
+            scrollTrigger: {
+              trigger: ".master-viewport",
+              start: "top top",
+              end: "+=11000", // Preserved exact custom scroll weight length
+              pin: true,
+              pinSpacing: true,
+              scrub: 1.2, // Unified core tracking scrub speed
+              invalidateOnRefresh: true,
+              snap: {
+                snapTo: (progress) => {
+                  // Standardized dynamic label collection calculation loop
+                  const labels = Object.keys(scrollTl.labels).map(name => scrollTl.labels[name] / scrollTl.totalDuration());
+                  labels.sort((a, b) => a - b);
+                  
+                  const currentProg = scrollTl.progress();
+                  const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
 
-      // ── STEP A: HERO INNER TEXT SWAPPING ANIMATION ──
-      scrollTl.addLabel("phaseHeroMain", 0); 
-      scrollTl.set([".scroll-para-1 .custom-line-inner", ".scroll-para-2 .custom-line-inner"], { opacity: 0, yPercent: 100 }, 0);
+                  for (let i = 0; i < labels.length - 1; i++) {
+                    const start = labels[i];
+                    const end = labels[i + 1];
 
-      scrollTl.to(".hero-text-wrap", { opacity: 0, y: -30, ease: "power1.inOut", duration: 1.5 }, 0);
-      scrollTl.set(".hero-text-wrap", { visibility: "hidden" }, 1.5);
-      
-      scrollTl.set(".scroll-para-1", { visibility: "visible" }, 1.5);
-      scrollTl.to(".scroll-para-1 .custom-line-inner", { 
-        opacity: 1, 
-        yPercent: 0, 
-        stagger: 0.1, 
-        duration: 2.0, 
-        ease: "power2.out" 
-      }, 1.5);
+                    if (currentProg >= start && currentProg <= end) {
+                      const localProgress = (currentProg - start) / (end - start);
 
-      scrollTl.addLabel("phaseHeroParaOne", 3.5); 
+                      if (isForward) {
+                        return localProgress >= 0.35 ? end : start;
+                      } else {
+                        return localProgress <= 0.40 ? start : end;
+                      }
+                    }
+                  }
+                  return progress;
+                },
+                duration: { min: 0.3, max: 0.6 },
+                delay: 0.01, 
+                ease: "power1.inOut"
+              }
+            }
+          });
 
-      scrollTl.to(".scroll-para-1 .custom-line-inner", { opacity: 0, y: -30, ease: "power1.in", duration: 1.5 }, 3.5);
-      scrollTl.set(".scroll-para-1", { visibility: "hidden" }, 5.0);
-      
-      scrollTl.set(".scroll-para-2", { visibility: "visible" }, 5.0);
-      scrollTl.to(".scroll-para-2 .custom-line-inner", { 
-        opacity: 1, 
-        yPercent: 0, 
-        stagger: 0.1, 
-        duration: 2.0, 
-        ease: "power2.out" 
-      }, 5.0);
+          const revealedElements = new Set<string>();
 
-      scrollTl.addLabel("phaseHeroParaTwo", 7.0); 
+          // ── STEP A: HERO INNER TEXT SWAPPING ANIMATION ──
+          scrollTl.addLabel("phaseHeroMain", 0); 
+          scrollTl.set([".scroll-para-1 .custom-line-inner", ".scroll-para-2 .custom-line-inner"], { opacity: 0, yPercent: 100 }, 0);
 
-      // ── STEP B: SECTION ONE SCROLL UP + HERO PARAGRAPH TWO EXIT ──
-      const getSectionOneScrollDistance = () => {
-        if (!sectionOneRef.current) return "100vh";
-        const elementHeight = sectionOneRef.current.offsetHeight;
-        return `${elementHeight}px`;
+          scrollTl.to(".hero-text-wrap", { opacity: 0, y: -30, ease: "power1.inOut", duration: 1.5 }, 0);
+          scrollTl.set(".hero-text-wrap", { visibility: "hidden" }, 1.5);
+          
+          scrollTl.set(".scroll-para-1", { visibility: "visible" }, 1.5);
+          scrollTl.to(".scroll-para-1 .custom-line-inner", { 
+            opacity: 1, 
+            yPercent: 0, 
+            stagger: 0.1, 
+            duration: 2.0, 
+            ease: "power2.out" 
+          }, 1.5);
+
+          scrollTl.addLabel("phaseHeroParaOne", 3.5); 
+
+          scrollTl.to(".scroll-para-1 .custom-line-inner", { opacity: 0, y: -30, ease: "power1.in", duration: 1.5 }, 3.5);
+          scrollTl.set(".scroll-para-1", { visibility: "hidden" }, 5.0);
+          
+          scrollTl.set(".scroll-para-2", { visibility: "visible" }, 5.0);
+          scrollTl.to(".scroll-para-2 .custom-line-inner", { 
+            opacity: 1, 
+            yPercent: 0, 
+            stagger: 0.1, 
+            duration: 2.0, 
+            ease: "power2.out" 
+          }, 5.0);
+
+          scrollTl.addLabel("phaseHeroParaTwo", 7.0); 
+
+          // ── STEP B: SECTION ONE SCROLL UP + HERO PARAGRAPH TWO EXIT ──
+          const getSectionOneScrollDistance = () => {
+            if (!sectionOneRef.current) return "100vh";
+            const elementHeight = sectionOneRef.current.offsetHeight;
+            return `${elementHeight}px`;
+          };
+
+          scrollTl.addLabel("sectionOneStart", 7.0);
+
+          scrollTl.to(".scroll-para-2 .custom-line-inner", { 
+            opacity: 0, 
+            y: -60, 
+            ease: "power1.in", 
+            duration: 1.5 
+          }, "sectionOneStart");
+          
+          scrollTl.set(".scroll-para-2", { visibility: "hidden" }, "sectionOneStart+=1.5");
+
+          scrollTl.to(".section-one-wrapper", {
+            y: () => `-${getSectionOneScrollDistance()}`,
+            duration: 4.5, 
+            ease: "none"
+          }, "sectionOneStart");
+
+          scrollTl.to(".parallax-img-asset", {
+            yPercent: 20,
+            ease: "none",
+            duration: 4.5
+          }, "sectionOneStart");
+
+          // Standardized timeline callback side-effect injector matching the About / Home structure
+          scrollTl.call(() => {
+            const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
+            const selectorKey = ".section-one-wrapper .reveal-text";
+            
+            if (isForward && !revealedElements.has(selectorKey)) {
+              revealedElements.add(selectorKey);
+
+              gsap.to([
+                ".section-one-wrapper .reveal-text .gs-line-inner",
+                ".section-one-wrapper .reveal-text > *"
+              ], {
+                y: 0,
+                opacity: 1,
+                stagger: 0.05,
+                duration: 0.8,
+                ease: "power2.out",
+                overwrite: "auto"
+              });
+            }
+          }, [], "sectionOneStart+=0.4");
+
+          scrollTl.addLabel("sectionOneEnd", "sectionOneStart+=4.5");
+
+          scrollTl.fromTo(
+            ".projects-hero-bg", 
+            { yPercent: 0 }, 
+            { yPercent: -18, ease: "none", duration: 11.5 }, 
+            0
+          );
+
+          // ── STEP C: SECTION TWO SLIDES UP OVER SECTION ONE ──
+          scrollTl.addLabel("sectionTwoStart", "sectionOneEnd+=0.2");
+          scrollTl.to(".section-two-wrapper", {
+            y: "0vh",
+            duration: 2.5,
+            ease: "power2.inOut",
+            onStart: () => setIsSectionTwoActive(true),
+            onReverseComplete: () => setIsSectionTwoActive(false)
+          }, "sectionTwoStart");
+
+          // ── STEP D: CTA REVEAL TRACK ──
+          scrollTl.addLabel("ctaStart", "sectionTwoStart+=2.5");
+          scrollTl.set(".projects-section-cta", { visibility: "visible" }, "ctaStart")
+            .to(".projects-section-cta", { yPercent: 0, duration: 4.8 }, "ctaStart");
+
+          // ── STEP E: FOOTER REVEAL TRACK ──
+          scrollTl.addLabel("footerStart", "ctaStart+=4.8")
+            .set(".projects-footer-wrap", { visibility: "visible" }, "footerStart")
+            .to(".projects-footer-wrap", { yPercent: 0, duration: 5.5 }, "footerStart")
+            .to(".projects-section-cta .cta-inner-desktop", { opacity: 0, duration: 4.0, ease: "power1.out" }, "footerStart");
+
+          scrollTl.addLabel("end");
+        });
       };
 
-      // Anchor Point 1: Locks exactly when Section One top hits Viewport top (starts scrolling up)
-      scrollTl.addLabel("sectionOneStart", 7.0);
-
-      scrollTl.to(".scroll-para-2 .custom-line-inner", { 
-        opacity: 0, 
-        y: -60, 
-        ease: "power1.in", 
-        duration: 1.5 
-      }, "sectionOneStart");
-      
-      scrollTl.set(".scroll-para-2", { visibility: "hidden" }, "sectionOneStart+=1.5");
-
-      // Continuous un-interrupted scroll move up through the full layout height of Section One
-      scrollTl.to(".section-one-wrapper", {
-        y: () => `-${getSectionOneScrollDistance()}`,
-        duration: 4.5, 
-        ease: "none"
-      }, "sectionOneStart");
-
-      scrollTl.to(".parallax-img-asset", {
-        yPercent: 20,
-        ease: "none",
-        duration: 4.5
-      }, "sectionOneStart");
-
-      // Fires early reveal text animations as the section surfaces into view
-      scrollTl.call(() => {
-        const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
-        const selectorKey = ".section-one-wrapper .reveal-text";
-        
-        if (isForward && !revealedElements.has(selectorKey)) {
-          revealedElements.add(selectorKey);
-
-          gsap.to([
-            ".section-one-wrapper .reveal-text .gs-line-inner",
-            ".section-one-wrapper .reveal-text > *"
-          ], {
-            y: 0,
-            opacity: 1,
-            stagger: 0.05,
-            duration: 0.8,
-            ease: "power2.out",
-            overwrite: "auto"
-          });
-        }
-      }, [], "sectionOneStart+=0.4");
-
-      // Anchor Point 2: Snap triggers exactly when Section One finish sliding up completely
-      scrollTl.addLabel("sectionOneEnd", "sectionOneStart+=4.5");
-
-      scrollTl.fromTo(
-        ".projects-hero-bg", 
-        { yPercent: 0 }, 
-        { yPercent: -18, ease: "none", duration: 11.5 }, 
-        0
-      );
-
-      // ── STEP C: SECTION TWO SLIDES UP OVER SECTION ONE ──
-      scrollTl.addLabel("sectionTwoStart", "sectionOneEnd+=0.2");
-      scrollTl.to(".section-two-wrapper", {
-        y: "0vh",
-        duration: 2.5,
-        ease: "power2.inOut",
-        onStart: () => setIsSectionTwoActive(true),
-        onReverseComplete: () => setIsSectionTwoActive(false)
-      }, "sectionTwoStart");
-
-      // ── STEP D: CTA REVEAL TRACK ──
-      scrollTl.addLabel("ctaStart", "sectionTwoStart+=2.5");
-      scrollTl.set(".projects-section-cta", { visibility: "visible" }, "ctaStart")
-        .to(".projects-section-cta", { yPercent: 0, duration: 4.8 }, "ctaStart");
-
-      // ── STEP E: FOOTER REVEAL TRACK ──
-      scrollTl.addLabel("footerStart", "ctaStart+=4.8")
-        .set(".projects-footer-wrap", { visibility: "visible" }, "footerStart")
-        .to(".projects-footer-wrap", { yPercent: 0, duration: 5.5 }, "footerStart")
-        .to(".projects-section-cta .cta-inner-desktop", { opacity: 0, duration: 4.0, ease: "power1.out" }, "footerStart");
-
-      scrollTl.addLabel("end");
+      // Typography structure protection setup loop
+      if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+        (window as any).requestIdleCallback(
+          () => document.fonts.ready.then(buildTimeline),
+          { timeout: 300 }
+        );
+      } else {
+        setTimeout(() => document.fonts.ready.then(buildTimeline), 0);
+      }
     }, scopeRef);
 
-    const refreshTimeout = setTimeout(() => {
-      ScrollTrigger.refresh();
-    }, 150);
-
     return () => {
+      vvCleanup?.();
+      if (isTouchOnly()) {
+        ScrollTrigger.normalizeScroll(false);
+      }
       ctx.revert();
-      clearTimeout(refreshTimeout);
       if (scopeRef.current) {
         restoreTextReveal(scopeRef.current, ".scroll-para-1");
         restoreTextReveal(scopeRef.current, ".scroll-para-2");

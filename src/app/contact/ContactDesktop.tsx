@@ -8,9 +8,12 @@ import ContactHero from "../../components/contact/Hero";
 import SectionCTA from "@/src/components/contact/SectionCTA";
 import SectionOne from "@/src/components/contact/SectionOne";
 import FAQSection from "@/src/components/contact/FAQSection";
-import Footer from "@/src/components/Footer"; // Ensure your correct Footer path
+import Footer from "@/src/components/Footer";
+import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal";
 
 gsap.registerPlugin(ScrollTrigger);
+
+const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
 type ContactProps = {
   preloaderDone: boolean;
@@ -23,10 +26,21 @@ export default function ContactDesktop({ preloaderDone }: ContactProps) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.history.scrollRestoration = "manual";
+    if (window.history.scrollRestoration) {
+      window.history.scrollRestoration = "manual";
+    }
     window.scrollTo(0, 0);
+    document.body.classList.remove("preloading");
     setPreloaderDone(true);
   }, [setPreloaderDone]);
+
+  useEffect(() => {
+    const locked = !preloaderDone || !introDone;
+    document.body.style.overflow = locked ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [preloaderDone, introDone]);
 
   useLayoutEffect(() => {
     if (!preloaderDone) return;
@@ -34,10 +48,11 @@ export default function ContactDesktop({ preloaderDone }: ContactProps) {
       gsap.set(".contact-hero-bg", { scale: 1.3, y: 0, transformOrigin: "center center" });
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
       
-      gsap.set(".section-one-scroll-wrapper", { y: "100vh" });
-      gsap.set(".faq-scroll-wrapper", { y: "100vh" }); 
-      gsap.set(".footer-scroll-wrapper", { y: "100vh" }); // Set footer off-screen safely
-      gsap.set(".faq-content", { opacity: 1 }); // Clear layout state
+      gsap.set(".cta-scroll-wrapper", { yPercent: 0, visibility: "visible" });
+      gsap.set(".section-one-scroll-wrapper", { visibility: "hidden", y: "100vh" });
+      gsap.set(".faq-scroll-wrapper", { visibility: "hidden", y: "100vh" }); 
+      gsap.set(".footer-scroll-wrapper", { visibility: "hidden", y: "100vh" });
+      gsap.set(".faq-content", { opacity: 1 });
       
       gsap.set(".contact-one-bg", { scale: 1, yPercent: 0 });
       gsap.set(".contact-right-scroll-track", { y: 0 });
@@ -57,75 +72,173 @@ export default function ContactDesktop({ preloaderDone }: ContactProps) {
 
   useEffect(() => {
     if (!introDone) return;
+
+    if (isTouchOnly()) {
+      ScrollTrigger.normalizeScroll(true);
+    }
+
+    let vvCleanup: (() => void) | null = null;
     
-    const timer = setTimeout(() => {
-      const ctx = gsap.context(() => {
-        const cardContainer = document.querySelector(".contact-cards-container");
-        const scrollDistance = cardContainer ? cardContainer.getBoundingClientRect().height + 96 : window.innerHeight;
+    const ctx = gsap.context(() => {
+      gsap.ticker.lagSmoothing(0);
 
-        const scrollTl = gsap.timeline({
-          scrollTrigger: {
-            trigger: ".contact-hero-master",
-            start: "top top",
-            end: "+=14000", // Expanded timeline to handle footer entry smoothly
-            pin: true,
-            scrub: 1.2, 
-            invalidateOnRefresh: true,
-          }
+      ScrollTrigger.config({
+        ignoreMobileResize: true,
+        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize",
+      });
+
+      const performanceTargets = [
+        ".contact-hero-master", ".contact-hero-bg", ".cta-scroll-wrapper",
+        ".section-one-scroll-wrapper", ".contact-one-bg", ".contact-right-scroll-track",
+        ".faq-scroll-wrapper", ".faq-content", ".footer-scroll-wrapper"
+      ];
+
+      performanceTargets.forEach(selector => {
+        gsap.set(selector, {
+          force3D: true,
+          willChange: "transform, opacity"
         });
+      });
 
-        scrollTl
+      const scrubValue = 1.2;
+      const revealedElements = new Set<string>();
+
+      // Optional text reveals hook targets can be registered here if needed
+      // useTextReveal(scopeRef, ".faq-scroll-wrapper .reveal-text");
+
+      const buildTimeline = () => {
+        requestAnimationFrame(() => {
+          ScrollTrigger.refresh();
+
+          const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
+          if (vv) {
+            const onVVResize = () => ScrollTrigger.refresh(true);
+            vv.addEventListener("resize", onVVResize);
+            vvCleanup = () => vv.removeEventListener("resize", onVVResize);
+          }
+
+          const cardContainer = document.querySelector(".contact-cards-container");
+          const scrollDistance = cardContainer ? cardContainer.getBoundingClientRect().height + 96 : window.innerHeight;
+
+          const tl = gsap.timeline({
+            defaults: { ease: "none" },
+            scrollTrigger: {
+              trigger: ".contact-hero-master",
+              start: "top top",
+              end: "+=12000",
+              scrub: scrubValue,
+              pin: true,
+              pinSpacing: true,
+              anticipatePin: 1,
+              preventOverlaps: true,
+              invalidateOnRefresh: true,
+              snap: {
+                snapTo: (progress) => {
+                  const labels = Object.keys(tl.labels).map(name => tl.labels[name] / tl.totalDuration());
+                  labels.sort((a, b) => a - b);
+                  
+                  const currentProg = tl.progress();
+                  const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+
+                  for (let i = 0; i < labels.length - 1; i++) {
+                    const start = labels[i];
+                    const end = labels[i + 1];
+
+                    if (currentProg >= start && currentProg <= end) {
+                      const localProgress = (currentProg - start) / (end - start);
+                      if (isForward) {
+                        return localProgress >= 0.35 ? end : start;
+                      } else {
+                        return localProgress <= 0.40 ? start : end;
+                      }
+                    }
+                  }
+                  return progress;
+                },
+                duration: { min: 0.3, max: 0.6 },
+                delay: 0.01,
+                ease: "power1.inOut",
+              }
+            }
+          });
+
           // ─── PHASE 1: Previous components shift out ───
-          .to(".contact-hero-bg", { y: -100, ease: "none", duration: 2 }, 0)
-          .to(".cta-scroll-wrapper", { yPercent: -100, ease: "power2.inOut", duration: 2 }, 0)
+          tl.addLabel("heroOut")
+            .to(".contact-hero-bg", { y: -100, duration: 1.0 }, "heroOut")
+            .to(".cta-scroll-wrapper", { yPercent: -100, ease: "power2.inOut", duration: 1.0 }, "heroOut");
           
           // ─── PHASE 2: Section One glides up safely ───
-          .to(".section-one-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: 2 }, 2)
+          tl.addLabel("sec1Start")
+            .set(".section-one-scroll-wrapper", { visibility: "visible" }, "sec1Start")
+            .to(".section-one-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: 1.0 }, "sec1Start");
           
           // ─── PHASE 3: Section One Cards Track Scrolls up ───
-          .to(".contact-one-bg", { yPercent: -35, ease: "none", duration: 5 }, 4)
-          .to(".contact-right-scroll-track", { y: -scrollDistance, ease: "power1.inOut", duration: 5 }, 4)
+          tl.addLabel("sec1Scroll")
+            .to(".contact-one-bg", { yPercent: -35, duration: 2.0 }, "sec1Scroll")
+            .to(".contact-right-scroll-track", { y: -scrollDistance, ease: "power1.inOut", duration: 2.0 }, "sec1Scroll");
 
           // ─── PHASE 4: FAQ Section glides up seamlessly ───
-          .to(".faq-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: 3.5 }, 9)
+          tl.addLabel("faqStart")
+            .set(".faq-scroll-wrapper", { visibility: "visible" }, "faqStart")
+            .to(".faq-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: 1.5 }, "faqStart");
           
-          // ─── PHASE 5: FAQ Text Content Fades out (Leaving background intact) ───
-          .to(".faq-content", { opacity: 0, y: -30, ease: "power2.in", duration: 2 }, 13)
+          // ─── PHASE 5: FAQ Text Content Fades out ───
+          tl.addLabel("faqFade")
+            .to(".faq-content", { opacity: 0, y: -30, ease: "power2.in", duration: 1.0 }, "faqFade");
 
           // ─── PHASE 6: Footer Slides Up over the FAQ background ───
-          .to(".footer-scroll-wrapper", { y: "0vh", ease: "power2.out", duration: 2.5 }, 14);
+          tl.addLabel("footerStart")
+            .set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
+            .to(".footer-scroll-wrapper", { y: "0vh", ease: "power2.out", duration: 1.0 }, "footerStart");
 
-      }, scopeRef);
+          tl.addLabel("end");
+        });
+      };
 
-      ScrollTrigger.refresh();
-    }, 100);
+      if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+        (window as any).requestIdleCallback(
+          () => document.fonts.ready.then(buildTimeline),
+          { timeout: 300 }
+        );
+      } else {
+        setTimeout(() => document.fonts.ready.then(buildTimeline), 0);
+      }
 
-    return () => clearTimeout(timer);
+    }, scopeRef);
+
+    return () => {
+      vvCleanup?.();
+      if (isTouchOnly()) {
+        ScrollTrigger.normalizeScroll(false);
+      }
+      if (scopeRef.current) {
+        restoreTextReveal(scopeRef.current, ".faq-scroll-wrapper .reveal-text");
+      }
+      ctx.revert();
+    };
   }, [introDone]);
 
   return (
     <div ref={scopeRef} className="w-full relative">
-      <div className="contact-hero-master relative w-full h-screen overflow-hidden">
+      <div className="contact-hero-master relative w-full h-screen overflow-hidden bg-black" style={{ visibility: "visible" }}>
         
         <div className="w-full h-full relative z-10">
           <ContactHero />
         </div>
 
-        <div className="cta-scroll-wrapper absolute top-full left-0 w-full h-screen z-20 will-change-transform">
+        <div className="cta-scroll-wrapper absolute top-full left-0 w-full h-screen z-20">
           <SectionCTA />
         </div>
 
-        <div className="section-one-scroll-wrapper absolute top-0 left-0 w-full h-screen z-30 will-change-transform">
+        <div className="section-one-scroll-wrapper absolute top-0 left-0 w-full h-screen z-30">
           <SectionOne />
         </div>
 
-        {/* FAQ Section Layer */}
-        <div className="faq-scroll-wrapper absolute top-0 left-0 w-full h-screen z-40 will-change-transform">
+        <div className="faq-scroll-wrapper absolute top-0 left-0 w-full h-screen z-40">
           <FAQSection />
         </div>
 
-        {/* Footer Container Layer - Absolute layout aligns to the same pin frame */}
-        <div className="footer-scroll-wrapper absolute top-0 left-0 w-full h-screen z-50 flex flex-col justify-end pointer-events-none will-change-transform">
+        <div className="footer-scroll-wrapper absolute top-0 left-0 w-full h-screen z-50 flex flex-col justify-end pointer-events-none">
           <div className="w-full pointer-events-auto">
             <Footer />
           </div>

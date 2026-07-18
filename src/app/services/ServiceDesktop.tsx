@@ -14,6 +14,8 @@ import Footer from "@/src/components/Footer";
 
 gsap.registerPlugin(ScrollTrigger);
 
+const isTouchOnly = () => ScrollTrigger.isTouch === 1;
+
 type ServicesDesktopProps = {
   preloaderDone: boolean;
 };
@@ -24,6 +26,9 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
   
   const [introDone, setIntroDone] = useState(false);
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
+  
+  // Track current inner index for Section Two panels safely across refreshes
+  const lastSec2Idx = useRef<number>(-1);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -46,26 +51,27 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     const ctx = gsap.context(() => {
+      // Hero Initial Layout Restores
       gsap.set(".service-hero-bg", { scale: 1.3, xPercent: 0, transformOrigin: "center center" });
       gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: -60 });
       gsap.set(".services-hero-top-layer", { width: "100%" });
       
-      // Section One Initial State
-      gsap.set(".section-one-wrap", { clipPath: "inset(100% 0% 0% 0%)", zIndex: 20 });
+      // Section One Sheet Setups
+      gsap.set(".section-one-wrap", { clipPath: "inset(100% 0% 0% 0%)" });
       gsap.set(".s1-glass-card", { x: 40, opacity: 0 }); 
       gsap.set([".s1-static-title", ".s1-static-desc"], { opacity: 0, y: 30 });
       gsap.set([".s1-reveal-top", ".s1-reveal-bottom"], { opacity: 0, y: 40 });
       
-      // Section Two Panel Split Initial State
-      gsap.set(".services-section-two-wrap", { visibility: "hidden", zIndex: 30, opacity: 1 });
+      // Section Two Panel Split Configurations
+      gsap.set(".services-section-two-wrap", { visibility: "hidden", opacity: 1 });
       gsap.set(".s2-left-panel", { yPercent: 100 });
       gsap.set(".s2-right-panel", { yPercent: -100 });
       gsap.set(".s2-inner-fade-target", { opacity: 0 });
 
-      // App Section Initial State
-      gsap.set(".services-appsec-wrap", { visibility: "hidden", y: "100%", zIndex: 35 });
+      // App Section Initialization
+      gsap.set(".services-appsec-wrap", { visibility: "hidden", yPercent: 100 });
 
-      // CTA & Footer Initial States mapped explicitly to match About Desktop stacks
+      // CTA & Footer Backdrops Fixed
       gsap.set([".services-section-cta", ".services-footer-wrap"], { yPercent: 100, visibility: "hidden" });
       gsap.set(".services-section-cta", { zIndex: 70 });
       gsap.set(".services-footer-wrap", { zIndex: 80 });
@@ -102,263 +108,267 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
   useEffect(() => {
     if (!introDone) return;
 
+    if (isTouchOnly()) {
+      ScrollTrigger.normalizeScroll(true);
+    }
+
+    let vvCleanup: (() => void) | null = null;
+
     const ctx = gsap.context(() => {
-      let cachedProgressLabels: number[] = [];
-      let sliderThresholds = { p0: 0, p1: 0, p2: 0, p3: 0, t1: 0, t2: 0, t3: 0 };
-      let lastSec2Idx = -1;
+      gsap.ticker.lagSmoothing(0);
 
-      const tl = gsap.timeline({
-        defaults: { ease: "none" }, 
-        scrollTrigger: {
-          trigger: ".services-hero-master",
-          start: "top top",
-          end: "+=16500", 
-          scrub: 0.8,
-          pin: true,
-          pinSpacing: true,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          fastScrollEnd: true,
-          snap: {
-            snapTo: (progress) => {
-              if (cachedProgressLabels.length === 0) return progress;
-              if (progress <= 0) return 0;
-              if (progress >= 1) return 1;
-
-              for (let i = 0; i < cachedProgressLabels.length - 1; i++) {
-                const start = cachedProgressLabels[i];
-                const end = cachedProgressLabels[i + 1];
-
-                if (progress >= start && progress <= end) {
-                  const localProgress = (progress - start) / (end - start);
-                  return localProgress > 0.3 ? end : start;
-                }
-              }
-              return progress;
-            },
-            duration: { min: 0.8, max: 1.4 },
-            delay: 0.05, 
-            ease: "power2.inOut",
-          },
-          onUpdate: (self) => {
-            const p = self.progress;
-            
-            if (sliderThresholds.p0 > 0 && p >= sliderThresholds.p0 - 0.05 && p <= sliderThresholds.p3 + 0.05) {
-              let nextIdx = 0;
-              if (p >= sliderThresholds.t3) nextIdx = 3;
-              else if (p >= sliderThresholds.t2) nextIdx = 2;
-              else if (p >= sliderThresholds.t1) nextIdx = 1;
-              else nextIdx = 0;
-
-              if (nextIdx !== lastSec2Idx) {
-                lastSec2Idx = nextIdx;
-                if ((window as any)._sec2GoTo) {
-                  (window as any)._sec2GoTo(nextIdx);
-                }
-              }
-            }
-          }
-        },
+      ScrollTrigger.config({
+        ignoreMobileResize: true,
+        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize",
       });
 
-      tl.addLabel("snap_hero", 0);
-
-      // ── PHASE 1: Compress Hero Layout ──
-      tl.addLabel("phase1")
-        .set(".hero-text-wrap", { transformOrigin: "left bottom" }, "phase1")
-        .to(".hero-text-wrap", {
-          y: 60,
-          scale: 0.75,
-          duration: 1.5,
-          ease: "power1.inOut"
-        }, "phase1")
-        .to(".services-hero-top-layer", {
-          width: "calc(100% - 40%)",
-          duration: 1.5,
-          ease: "power1.inOut",
-        }, "phase1+=0.1");
-
-      tl.addLabel("snap_hero_compressed", "phase1+=1.6");
-      tl.to({}, { duration: 0.8 });
-
-      // ── PHASE 2: Reveal Section One Sheet ──
-      tl.addLabel("phase2")
-        .to(".section-one-wrap", {
-          clipPath: "inset(0% 0% 0% 0%)",
-          duration: 1.5,
-          ease: "power1.inOut"
-        }, "phase2")
-        .to(".service-hero-bg", {
-          xPercent: -8,   
-          scale: 1.6,     
-          duration: 1.5,
-          ease: "power1.inOut",
-        }, "phase2")
-        .to(".s1-glass-card", {
-          opacity: 1,
-          x: 0,
-          duration: 1.5,
-          ease: "power2.out"
-        }, "phase2+=0.4")
-        .to(".s1-reveal-bottom", {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out"
-        }, "phase2+=0.5")
-        .to(".s1-reveal-top", {
-          opacity: 1,
-          y: 0,
-          stagger: 0.15,
-          duration: 0.8,
-          ease: "power2.out"
-        }, "phase2+=0.6")
-        .to([".s1-static-title", ".s1-static-desc"], {
-          opacity: 1,
-          y: 0,
-          duration: 1.2,
-          stagger: 0.15,
-          ease: "power2.out"
-        }, "phase2+=0.8");
-
-      tl.addLabel("snap_s1", "phase2+=2.0");
-      tl.to({}, { duration: 0.3 });
-
-      // ── PHASE 3: Transition to Section Two ──
-      tl.addLabel("phase3")
-        .set(".services-section-two-wrap", { visibility: "visible" }, "phase3")
-        .to([".s1-glass-card", ".s1-static-title", ".s1-static-desc", ".s1-reveal-top", ".s1-reveal-bottom"], {
-          opacity: 0,
-          y: -50,
-          duration: 1.5,
-          ease: "power1.in"
-        }, "phase3")
-        .to(".s2-left-panel", {
-          yPercent: 0,
-          duration: 3.0,
-          ease: "power2.inOut",
-          onStart: () => setIsSectionTwoActive(true),
-          onReverseComplete: () => {
-            setIsSectionTwoActive(false);
-            gsap.set(".services-section-two-wrap", { visibility: "hidden" });
-          }
-        }, "phase3")
-        .to(".s2-right-panel", {
-          yPercent: 0,
-          duration: 3.0,
-          ease: "power2.inOut"
-        }, "phase3")
-        .to(".s2-inner-fade-target", {
-          opacity: 1,
-          duration: 1.2,
-          ease: "power1.out"
-        }, "phase3+=2.5");
-
-      tl.addLabel("snap_s2_1", "phase3+=3.0");
-      
-      tl.to({}, { duration: 3.0 });
-      tl.addLabel("snap_s2_2");
-
-      tl.to({}, { duration: 3.0 });
-      tl.addLabel("snap_s2_3");
-
-      tl.to({}, { duration: 3.0 });
-      tl.addLabel("snap_s2_4");
-
-      tl.to({}, { duration: 0.2 });
-
-      // ── PHASE 4: App Section Slide Up over Sec2 ──
-      tl.addLabel("phase_appsec")
-        .set(".services-appsec-wrap", { visibility: "visible" }, "phase_appsec")
-        .to(".services-appsec-wrap", {
-          y: "0%",
-          duration: 2.5,
-          ease: "power1.inOut"
-        }, "phase_appsec");
-
-      tl.addLabel("snap_appsec", "phase_appsec+=2.5");
-      tl.to({}, { duration: 1.5 });
-
-      // ── PHASE 5: CTA REVEAL TRACK (Identical to About implementation) ──
-      tl.addLabel("ctaStart")
-        .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
-        .to(".services-section-cta", { yPercent: 0, duration: 4.8 }, "ctaStart")
-        .to(".services-appsec-wrap", { scale: 1, duration: 4.8 }, "ctaStart");
-
-      // ── PHASE 6: FOOTER REVEAL TRACK (Identical to About implementation) ──
-      tl.addLabel("footerStart", "ctaStart+=4.8")
-        .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
-        .to(".services-footer-wrap", { yPercent: 0, duration: 5.5 }, "footerStart")
-        .to(".services-appsec-wrap", { scale: 1, duration: 5.5 }, "footerStart")
-        .to(".services-section-cta .cta-inner-desktop", { opacity: 0, duration: 4.0, ease: "power1.out" }, "footerStart");
-
-      const totalDuration = tl.totalDuration();
-      const snapLabelsList = [
-        "snap_hero", 
-        "snap_hero_compressed",
-        "snap_s1", 
-        "snap_s2_1", 
-        "snap_s2_2", 
-        "snap_s2_3", 
-        "snap_s2_4", 
-        "snap_appsec", 
-        "ctaStart", 
-        "footerStart"
+      const performanceTargets = [
+        ".services-hero-master", ".service-hero-bg", ".services-hero-top-layer",
+        ".section-one-wrap", ".s1-glass-card", ".services-section-two-wrap",
+        ".s2-left-panel", ".s2-right-panel", ".services-appsec-wrap",
+        ".services-section-cta", ".services-footer-wrap"
       ];
-      
-      cachedProgressLabels = [0, ...snapLabelsList.map(name => tl.labels[name] / totalDuration), 1];
-      cachedProgressLabels = Array.from(new Set(cachedProgressLabels)).sort((a, b) => a - b);
 
-      sliderThresholds.p0 = tl.labels["snap_s2_1"] / totalDuration;
-      sliderThresholds.p1 = tl.labels["snap_s2_2"] / totalDuration;
-      sliderThresholds.p2 = tl.labels["snap_s2_3"] / totalDuration;
-      sliderThresholds.p3 = tl.labels["snap_s2_4"] / totalDuration;
-      
-      sliderThresholds.t1 = sliderThresholds.p0 + (sliderThresholds.p1 - sliderThresholds.p0) * 0.3;
-      sliderThresholds.t2 = sliderThresholds.p1 + (sliderThresholds.p2 - sliderThresholds.p1) * 0.3;
-      sliderThresholds.t3 = sliderThresholds.p2 + (sliderThresholds.p3 - sliderThresholds.p2) * 0.3;
+      performanceTargets.forEach(selector => {
+        gsap.set(selector, {
+          force3D: true,
+          willChange: "transform, opacity, clip-path"
+        });
+      });
+
+      // Matches the exact uniform tracking configuration of the About page
+      const scrubValue = 1.2;
+      const revealedElements = new Set<string>();
+
+      // Text Reveal Prep
+      useTextReveal(scopeRef, ".services-section-two-wrap .s2-reveal-text");
+      gsap.set(".services-section-two-wrap .s2-reveal-text", { visibility: "visible", opacity: 1 });
+
+      const buildTimeline = () => {
+        requestAnimationFrame(() => {
+          ScrollTrigger.refresh();
+
+          const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
+          if (vv) {
+            const onVVResize = () => ScrollTrigger.refresh(true);
+            vv.addEventListener("resize", onVVResize);
+            vvCleanup = () => vv.removeEventListener("resize", onVVResize);
+          }
+
+          const tl = gsap.timeline({
+            defaults: { ease: "none" }, 
+            scrollTrigger: {
+              trigger: ".services-hero-master",
+              start: "top top",
+              end: "+=10800", // Expanded layout timeline space to safely handle the Card 4 structural hold
+              scrub: scrubValue,
+              pin: true,
+              pinSpacing: true,
+              anticipatePin: 1,
+              preventOverlaps: true,
+              invalidateOnRefresh: true,
+              snap: {
+                snapTo: (progress) => {
+                  const labels = Object.keys(tl.labels).map(name => tl.labels[name] / tl.totalDuration());
+                  labels.sort((a, b) => a - b);
+                  
+                  const currentProg = tl.progress();
+                  const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+
+                  for (let i = 0; i < labels.length - 1; i++) {
+                    const start = labels[i];
+                    const end = labels[i + 1];
+
+                    if (currentProg >= start && currentProg <= end) {
+                      const localProgress = (currentProg - start) / (end - start);
+                      if (isForward) {
+                        return localProgress >= 0.35 ? end : start;
+                      } else {
+                        return localProgress <= 0.40 ? start : end;
+                      }
+                    }
+                  }
+                  return progress;
+                },
+                duration: { min: 0.3, max: 0.6 },
+                delay: 0.01,
+                ease: "power1.inOut",
+              }
+            },
+          });
+
+          // Text animations
+          const addPlayOnceTextReveal = (labelName: string, timeOffset: number, selector: string) => {
+            const absoluteTime = tl.labels[labelName] + timeOffset;
+            tl.call(() => {
+              const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+              if (isForward && !revealedElements.has(selector)) {
+                revealedElements.add(selector);
+                gsap.to(selector, {
+                  y: 0,
+                  opacity: 1,
+                  stagger: 0.05,
+                  duration: 0.8,
+                  ease: "power2.out",
+                  overwrite: "auto"
+                });
+              }
+            }, [], absoluteTime);
+          };
+
+          // Direction aware slide index controller
+          const triggerSec2Hook = (nextIdx: number) => {
+            if (nextIdx !== lastSec2Idx.current) {
+              lastSec2Idx.current = nextIdx;
+              if ((window as any)._sec2GoTo) {
+                (window as any)._sec2GoTo(nextIdx);
+              }
+            }
+          };
+
+          // ── HERO HOLD BUFFER & COMPRESSION ──
+          tl.addLabel("heroStart")
+            .set(".hero-text-wrap", { transformOrigin: "left bottom" }, 0)
+            .to(".hero-text-wrap", { y: 60, scale: 0.75, duration: 1.0 }, 0)
+            .to(".services-hero-top-layer", { width: "60%", duration: 1.0 }, 0);
+
+          // ── SECTION 1 SHEET REVEAL ──
+          tl.addLabel("sec1Start")
+            .to(".section-one-wrap", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.0 })
+            .to(".service-hero-bg", { xPercent: -8, scale: 1.6, duration: 1.0 }, "<")
+            .to(".s1-glass-card", { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, "sec1Start+=0.2")
+            .to(".s1-reveal-bottom", { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, "sec1Start+=0.3")
+            .to(".s1-reveal-top", { opacity: 1, y: 0, stagger: 0.1, duration: 0.4, ease: "power2.out" }, "sec1Start+=0.4")
+            .to([".s1-static-title", ".s1-static-desc"], { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out" }, "sec1Start+=0.5");
+
+          // ── SECTION TWO TRANSITION ──
+          tl.addLabel("sec2Start")
+            .set(".services-section-two-wrap", { visibility: "visible" })
+            .to([".s1-glass-card", ".s1-static-title", ".s1-static-desc", ".s1-reveal-top", ".s1-reveal-bottom"], { opacity: 0, y: -50, duration: 0.5 }, "sec2Start")
+            .to(".s2-left-panel", { 
+                yPercent: 0, 
+                duration: 1.0,
+                onStart: () => setIsSectionTwoActive(true),
+                onReverseComplete: () => {
+                  setIsSectionTwoActive(false);
+                  gsap.set(".services-section-two-wrap", { visibility: "hidden" });
+                  triggerSec2Hook(0);
+                }
+            }, "sec2Start")
+            .to(".s2-right-panel", { yPercent: 0, duration: 1.0 }, "sec2Start")
+            .to(".s2-inner-fade-target", { opacity: 1, duration: 0.4, ease: "power1.out" }, "sec2Start+=0.6");
+
+          addPlayOnceTextReveal("sec2Start", 0.35, ".services-section-two-wrap .s2-reveal-text");
+          
+          tl.call(() => {
+            const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+            triggerSec2Hook(isForward ? 0 : 0);
+          }, [], "sec2Start+=1.0");
+
+          // ── SECTION 2 PANEL INTERNAL STEP SLIDES (Direction-aware) ──
+          tl.addLabel("sec2_card2", "sec2Start+=1.0")
+            .to({}, { duration: 1.0 })
+            .call(() => {
+              const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+              triggerSec2Hook(isForward ? 1 : 0);
+            }, [], "sec2_card2+=1.0");
+
+          tl.addLabel("sec2_card3", "sec2_card2+=1.0")
+            .to({}, { duration: 1.0 })
+            .call(() => {
+              const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+              triggerSec2Hook(isForward ? 2 : 1);
+            }, [], "sec2_card3+=1.0");
+
+          tl.addLabel("sec2_card4", "sec2_card3+=1.0")
+            .to({}, { duration: 1.0 })
+            .call(() => {
+              const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+              triggerSec2Hook(isForward ? 3 : 2);
+            }, [], "sec2_card4+=1.0");
+
+          // ── CARD 4 HOLD TRACK ──
+          tl.addLabel("sec2_card4_hold", "sec2_card4+=1.0")
+            .to({}, { duration: 1.0 });
+
+          // ── APP SECTION SLIDE OVER ──
+          tl.addLabel("appsecStart", "sec2_card4_hold+=1.0")
+            .set(".services-appsec-wrap", { visibility: "visible" })
+            .to(".services-appsec-wrap", { 
+              yPercent: 0, 
+              duration: 1.0,
+              onStart: () => {
+                const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+                if (isForward) triggerSec2Hook(3);
+              },
+              onReverseComplete: () => {
+                const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+                if (!isForward) triggerSec2Hook(3);
+              }
+            });
+
+          // ── CTA REVEAL TRACK ──
+          tl.addLabel("ctaStart")
+            .set(".services-section-cta", { visibility: "visible" })
+            .to(".services-section-cta", { yPercent: 0, duration: 1.0 })
+            .to(".services-appsec-wrap", { scale: 1.0, duration: 1.0 }, "<");
+
+          // ── FOOTER REVEAL TRACK ──
+          tl.addLabel("footerStart")
+            .set(".services-footer-wrap", { visibility: "visible" })
+            .to(".services-footer-wrap", { yPercent: 0, duration: 1.0 })
+            .to(".services-appsec-wrap", { scale: 1.05, duration: 1.0 }, "<")
+            .to(".services-section-cta .cta-inner-desktop", { opacity: 0, duration: 0.7, ease: "power1.out" }, "<");
+          
+          tl.addLabel("end");
+        });
+      };
+
+      if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+        (window as any).requestIdleCallback(
+          () => document.fonts.ready.then(buildTimeline),
+          { timeout: 300 }
+        );
+      } else {
+        setTimeout(() => document.fonts.ready.then(buildTimeline), 0);
+      }
 
     }, scopeRef);
 
     return () => {
-      ctx.revert();
-      if (scopeRef.current) {
-        restoreTextReveal(scopeRef.current, ".s2-reveal-text");
+      vvCleanup?.();
+      if (isTouchOnly()) {
+        ScrollTrigger.normalizeScroll(false);
       }
+      if (scopeRef.current) {
+        restoreTextReveal(scopeRef.current, ".services-section-two-wrap .s2-reveal-text");
+      }
+      ctx.revert();
     };
   }, [introDone]);
 
   return (
     <div ref={scopeRef} className="w-full relative">
-      <div className="services-hero-master relative w-full h-screen overflow-hidden z-10 bg-black">
+      <div className="services-hero-master relative w-full h-screen overflow-hidden bg-black" style={{ visibility: "visible" }}>
         <Hero />
         
-        <div className="section-one-wrap absolute inset-0 w-full h-full overflow-hidden">
+        <div className="section-one-wrap absolute inset-0 w-full h-full overflow-hidden" style={{ zIndex: 20 }}>
           <SectionOne />
         </div>
         
-        <div className="services-section-two-wrap absolute inset-0 w-full h-full overflow-hidden">
+        <div className="services-section-two-wrap absolute inset-0 w-full h-full overflow-hidden" style={{ zIndex: 30 }}>
           <SectionTwo isActive={isSectionTwoActive} />
         </div>
         
-        <div 
-          className="services-appsec-wrap absolute inset-0 w-full h-full overflow-hidden"
-          style={{ transform: "translateY(100%)" }}
-        >
+        <div className="services-appsec-wrap absolute inset-0 w-full h-full overflow-hidden" style={{ zIndex: 35 }}>
           <Appsection />
         </div>
         
-        <div
-          className="services-section-cta absolute bottom-0 left-0 w-full structural-layer"
-          style={{ zIndex: 70 }}
-        >
+        <div className="services-section-cta absolute bottom-0 left-0 w-full structural-layer" style={{ zIndex: 70 }}>
           <SectionCTA />
         </div>
         
-        <div
-          className="services-footer-wrap absolute left-0 bottom-0 w-full structural-layer"
-          style={{ zIndex: 80 }}
-        >
+        <div className="services-footer-wrap absolute left-0 bottom-0 w-full structural-layer" style={{ zIndex: 80 }}>
           <Footer />
         </div>
       </div>
