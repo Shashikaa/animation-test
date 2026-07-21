@@ -4,7 +4,9 @@ import { useRef, useEffect, useState, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import ProjectScrollHero from "@/src/components/Projects/ProjectScrollHero";
-import SectionCTA from "@/src/components/SectionCTA";
+import ProjectInfoSlide from "@/src/components/Projects/ProjectInfoSlide";
+import Appsection from "@/src/components/Projects/Appsection";
+import FAQSection from "@/src/components/contact/FAQSection";
 import Footer from "@/src/components/Footer";
 import { FullServiceData } from "./data";
 
@@ -18,8 +20,9 @@ type SubServicesMobileProps = {
 export default function SingleProjectPageMobile({ preloaderDone, pageData }: SubServicesMobileProps) {
   const scopeRef = useRef<HTMLDivElement>(null);
   const [introDone, setIntroDone] = useState(false);
+  const [isProjectInfoActive, setIsProjectInfoActive] = useState(false);
+  const lastInfoIdx = useRef<number>(-1);
 
-  // Reset scroll position on refresh
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.history.scrollRestoration) {
@@ -29,7 +32,6 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
     document.body.classList.remove("preloading");
   }, []);
 
-  // Handle body overflow locking logic during initial rendering
   useEffect(() => {
     const locked = !preloaderDone || !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
@@ -38,34 +40,44 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
     };
   }, [preloaderDone, introDone]);
 
-  // 1. Establish precise starting layouts cleanly before paint
   useLayoutEffect(() => {
     if (!preloaderDone) return;
-    
-    const ctx = gsap.context(() => {
-      // Clear inline placement values to avoid rendering flashes
-      gsap.set([".project-hero-layer", ".project-section-cta", ".project-footer-wrap"], { clearProps: "transform" });
 
-      gsap.set(".project-hero-layer", { zIndex: 10, yPercent: 0 });
-      gsap.set(".project-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
-      gsap.set([".project-section-cta .cta-inner-mobile", ".project-section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
-      gsap.set(".project-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden" });
-      
-      gsap.set(".hero-title", { opacity: 0, y: 20 });
-      
+    const ctx = gsap.context(() => {
+      gsap.set(".project-hero-master", { zIndex: 10 });
+
+      gsap.set(
+        [
+          ".project-info-wrap",
+          ".project-app-wrap",
+          ".faq-scroll-wrapper",
+          ".footer-scroll-wrapper"
+        ],
+        { clearProps: "transform" }
+      );
+
+      gsap.set(".project-info-wrap", { yPercent: 100, visibility: "hidden", zIndex: 50 });
+      gsap.set(".project-app-wrap", { yPercent: 100, visibility: "hidden", zIndex: 60 });
+      gsap.set(".faq-scroll-wrapper", { yPercent: 100, visibility: "hidden", zIndex: 70 });
+      gsap.set(".footer-scroll-wrapper", { yPercent: 100, visibility: "hidden", zIndex: 80 });
+      gsap.set(".faq-content", { opacity: 1, y: 0 });
+
+      // Keep wrapper visible to allow child animations, but prepare text for intro stagger
+      gsap.set(".hero-text-wrap", { autoAlpha: 1 });
+      gsap.set([".hero-title", ".hero-description"], { autoAlpha: 0, y: 20 });
+
       const layers = gsap.utils.toArray<HTMLElement>(".hero-image-layer");
       if (layers.length > 0) {
         const firstInnerImg = layers[0].querySelector(".hero-image-inner");
         if (firstInnerImg) {
-          gsap.set(firstInnerImg, { scale: 1.6, transformOrigin: "center center" });
+          gsap.set(firstInnerImg, { scale: 1.5, transformOrigin: "center center" });
         }
       }
     }, scopeRef);
-    
+
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // 2. Play Intro Cinematic (Smooth zoom out from 1.6 down to 1.3)
   useEffect(() => {
     if (!preloaderDone) return;
 
@@ -78,177 +90,257 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
       const firstInnerImg = layers[0]?.querySelector(".hero-image-inner");
 
       introTl
-        .to(firstInnerImg, { scale: 1.3, duration: 2.2, ease: "power2.out" }, 0)
-        .to(".hero-title", { opacity: 1, y: 0, duration: 1.2, ease: "power3.out" }, 0.3);
+        .to(firstInnerImg, { scale: 1.25, duration: 1.8, ease: "power2.out" }, 0)
+        .to(".hero-title", { autoAlpha: 1, y: 0, duration: 1.0, ease: "power3.out" }, 0.2)
+        .to(".hero-description", { autoAlpha: 1, y: 0, duration: 1.0, ease: "power3.out" }, 0.4);
     }, scopeRef);
 
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // 3. Integrated Master Single Scroll Timeline Controller
   useEffect(() => {
     if (!introDone || !preloaderDone) return;
 
+    let vvCleanup: (() => void) | null = null;
+
     const ctx = gsap.context(() => {
-      const imagesElements = gsap.utils.toArray<HTMLElement>(".hero-image-layer");
-      let cachedProgressLabels: number[] = [];
-      const labelNames: string[] = [];
+      gsap.ticker.lagSmoothing(0);
 
-      const ACTION = 2.0;
-      const DEAD_SCROLL = 0.4;
+      ScrollTrigger.normalizeScroll(true);
 
-      const scrollTl = gsap.timeline({
-        defaults: { ease: "none" }
+      ScrollTrigger.config({
+        ignoreMobileResize: true,
+        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize",
       });
 
-      // ── STEP A: HERO TEXT FADEOUT ──
-      scrollTl.addLabel("slide-0", 0);
-      scrollTl.to(".hero-text-wrap", { opacity: 0, y: -40, duration: 2.0 }, 0)
-              .set(".hero-text-wrap", { visibility: "hidden" });
-      
-      // ── STEP B: MODERN DIRECTIONAL CLIP-PATH REVEALS ──
-      if (imagesElements.length > 0) {
-        imagesElements.forEach((layer, index) => {
-          const imgInner = layer.querySelector(".hero-image-inner");
+      const performanceTargets = [
+        ".project-hero-master", ".hero-image-layer", ".hero-image-inner",
+        ".project-info-wrap", ".info-text-block", ".info-img-layer",
+        ".project-app-wrap", ".appsec-bg", ".appsec-phone-wrapper",
+        ".faq-scroll-wrapper", ".faq-content", ".footer-scroll-wrapper"
+      ];
 
-          if (index === 0) {
-            if (imgInner) {
-              scrollTl.to(imgInner, { scale: 1.02, duration: 2.0 }, 0);
-            }
-            return;
+      performanceTargets.forEach(selector => {
+        gsap.set(selector, {
+          force3D: true,
+          willChange: "transform, opacity, clip-path"
+        });
+      });
+
+      const infoSlides = pageData.slides || [];
+      const scrubValue = 0.8;
+
+      const triggerInfoHook = (nextIdx: number) => {
+        if (nextIdx !== lastInfoIdx.current) {
+          lastInfoIdx.current = nextIdx;
+          if ((window as any)._projectInfoGoTo) {
+            (window as any)._projectInfoGoTo(nextIdx);
+          }
+        }
+      };
+
+      const buildTimeline = () => {
+        requestAnimationFrame(() => {
+          ScrollTrigger.refresh();
+
+          const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
+          if (vv) {
+            const onVVResize = () => ScrollTrigger.refresh(true);
+            vv.addEventListener("resize", onVVResize);
+            vvCleanup = () => vv.removeEventListener("resize", onVVResize);
           }
 
-          const labelName = `slide-${index}`;
-          labelNames.push(labelName);
-          scrollTl.addLabel(labelName); 
+          gsap.set(".appsec-phone-wrapper", { y: 30, opacity: 0 });
 
-          scrollTl.fromTo(
-            layer,
-            { clipPath: "polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)" },
-            { clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)", duration: 3.0 },
-            labelName
+          const scrollTl = gsap.timeline({
+            defaults: { ease: "none" },
+            scrollTrigger: {
+              trigger: ".master-viewport",
+              start: "top top",
+              end: `+=12000`,
+              pin: true,
+              pinSpacing: true,
+              scrub: scrubValue,
+              anticipatePin: 1,
+              preventOverlaps: true,
+              invalidateOnRefresh: true,
+            }
+          });
+
+          // ── STEP A: HERO TRANSITION & INFO SECTION SLIDE UP ──
+          scrollTl.addLabel("start", 0);
+
+          scrollTl.set(".project-info-wrap", { visibility: "visible" }, 0)
+                  .to(".project-info-wrap", { 
+                    yPercent: 0, 
+                    duration: 3.0, 
+                    ease: "power2.out",
+                    onStart: () => setIsProjectInfoActive(true),
+                    onReverseComplete: () => {
+                      setIsProjectInfoActive(false);
+                      triggerInfoHook(0);
+                    }
+                  }, 0);
+
+          scrollTl.to(".hero-text-wrap", { autoAlpha: 0, y: -40, duration: 2.0 }, 0);
+
+          scrollTl.call(() => {
+            triggerInfoHook(0);
+          }, [], 1.5);
+
+          // ── STEP B: SEQUENTIAL INNER INFO SLIDES ──
+          if (infoSlides.length > 0) {
+            infoSlides.forEach((_, index) => {
+              if (index === 0) return;
+
+              const slideLabel = `info_slide_${index}`;
+              scrollTl.addLabel(slideLabel);
+
+              const currentImgLayer = `.info-img-layer-${index}`;
+              const innerImage = `${currentImgLayer} .info-image-inner`;
+
+              scrollTl.to(currentImgLayer, {
+                clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+                duration: 3.5,
+                ease: "power2.inOut"
+              }, slideLabel);
+
+              scrollTl.fromTo(innerImage, 
+                { scale: 1.25 },
+                { scale: 1.0, duration: 3.5, ease: "power2.out" },
+                slideLabel
+              );
+
+              scrollTl.call(() => {
+                const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
+                triggerInfoHook(isForward ? index : index - 1);
+              }, [], `${slideLabel}+=1.5`);
+            });
+          }
+
+          scrollTl.to({}, { duration: 1.5 });
+
+          // ── STEP C: APP SECTION SLIDES UP OVER INFO WRAP ──
+          scrollTl.addLabel("appSectionStart");
+
+          scrollTl.set(".project-app-wrap", { visibility: "visible" }, "appSectionStart")
+                  .to(".project-app-wrap", { yPercent: 0, duration: 3.5, ease: "power2.inOut" }, "appSectionStart");
+
+          scrollTl.to(
+            ".appsec-phone-wrapper",
+            { y: 0, opacity: 1, duration: 1.5, ease: "power2.out" },
+            "appSectionStart+=1.0"
           );
 
-          if (imgInner) {
-            scrollTl.fromTo(
-              imgInner,
-              { scale: 1.22, xPercent: 6 },
-              { scale: 1.05, xPercent: 0, duration: 3.0 },
-              labelName
-            );
-          }
+          // ── STEP D: FAQ SECTION SLIDES UP OVER APP WRAP ──
+          scrollTl.addLabel("faqStart", "appSectionStart+=3.5");
+
+          scrollTl.set(".faq-scroll-wrapper", { visibility: "visible" }, "faqStart")
+                  .to(".faq-scroll-wrapper", { yPercent: 0, ease: "power2.inOut", duration: 3.5 }, "faqStart");
+
+          // ── STEP E: FAQ CONTENT FADES OUT & FOOTER REVEALS ──
+          const footerDuration = 2.5;
+          scrollTl.addLabel("footerStart", "faqStart+=3.5");
+
+          scrollTl.to(
+            ".faq-content", 
+            { 
+              opacity: 0, 
+              y: -30, 
+              duration: 1.2, 
+              ease: "power2.in",
+              pointerEvents: "none" 
+            }, 
+            "footerStart"
+          );
+
+          scrollTl.set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
+                  .to(".footer-scroll-wrapper", { yPercent: 0, ease: "power2.out", duration: footerDuration }, "footerStart");
+
+          scrollTl.addLabel("end");
         });
+      };
+
+      if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+        (window as any).requestIdleCallback(
+          () => document.fonts.ready.then(buildTimeline),
+          { timeout: 300 }
+        );
+      } else {
+        setTimeout(() => document.fonts.ready.then(buildTimeline), 0);
       }
-
-      // ── STEP C: UNIFIED TRANSITION TO CTA SECTION ──
-      labelNames.push("ctaStart");
-      scrollTl.addLabel("ctaStart", ">");
-      
-      scrollTl.set(".project-section-cta", { visibility: "visible" }, "ctaStart")
-              .to(".project-section-cta", { yPercent: 0, duration: ACTION, ease: "none" }, "ctaStart")
-              .to(".project-hero-layer", { yPercent: -10, duration: ACTION, ease: "none" }, "ctaStart");
-
-      scrollTl.to({}, { duration: DEAD_SCROLL });
-
-      // ── STEP D: UNIFIED TRANSITION: CTA -> FOOTER ──
-      labelNames.push("footerStart");
-      scrollTl.addLabel("footerStart", ">");
-      
-      scrollTl.to([".project-section-cta .cta-inner-mobile", ".project-section-cta .cta-inner-desktop"], { 
-        opacity: 0, 
-        duration: ACTION * 0.3, 
-        ease: "none" 
-      }, "footerStart")
-        .set(".project-footer-wrap", { visibility: "visible" }, "footerStart+=0.1")
-        .to(".project-footer-wrap", { yPercent: 0, duration: ACTION, ease: "none" }, "footerStart+=0.1")
-        .to(".project-hero-layer", { yPercent: -20, duration: ACTION, ease: "none" }, "footerStart+=0.1");
-
-      // ── STEP SNAPPING CONTROLLER CALCULATOR ──
-      const totalDuration = scrollTl.totalDuration();
-      cachedProgressLabels = [0, ...labelNames.map(name => scrollTl.labels[name] / totalDuration), 1];
-
-      ScrollTrigger.create({
-        animation: scrollTl,
-        trigger: ".master-viewport",
-        start: "top top",
-        end: `+=${imagesElements.length * 1200 + 4500}`, 
-        pin: true,
-        pinSpacing: true,
-        scrub: 1.2, 
-        anticipatePin: 1, 
-        invalidateOnRefresh: true,
-        snap: {
-          snapTo: (progress) => {
-            if (cachedProgressLabels.length === 0) return progress;
-            if (progress <= 0) return 0;
-            if (progress >= 1) return 1;
-
-            for (let i = 0; i < cachedProgressLabels.length - 1; i++) {
-              const start = cachedProgressLabels[i];
-              const end = cachedProgressLabels[i + 1];
-
-              if (progress >= start && progress <= end) {
-                const localProgress = (progress - start) / (end - start);
-                return localProgress > 0.3 ? end : start;
-              }
-            }
-            return progress;
-          },
-          duration: { min: 0.6, max: 1.1 }, 
-          delay: 0.03, 
-          ease: "power2.inOut"
-        }
-      });
 
     }, scopeRef);
 
-    const refreshTimeout = setTimeout(() => {
-      ScrollTrigger.refresh();
-    }, 150);
-
     return () => {
+      vvCleanup?.();
+      ScrollTrigger.normalizeScroll(false);
       ctx.revert();
-      clearTimeout(refreshTimeout);
     };
-  }, [introDone, preloaderDone, pageData.images, pageData.title]);
+  }, [introDone, preloaderDone, pageData.images, pageData.slides, pageData.title]);
 
   return (
     <div 
       ref={scopeRef} 
-      className={`w-full relative bg-[#131313] ${!introDone ? "h-screen overflow-hidden" : "overflow-x-hidden"}`}
+      className={`w-full relative ${!introDone ? "h-screen overflow-hidden" : "overflow-x-hidden"}`}
     >
-      <div className="master-viewport relative w-full h-screen overflow-hidden">
+      <div className="master-viewport relative w-full h-screen overflow-hidden bg-black" style={{ visibility: "visible" }}>
         
-        {/* Layer 1: Presentational Project Hero Stack */}
-        <div className="project-hero-layer absolute inset-0 w-full h-full z-10">
+        <div className="project-hero-master absolute inset-0 w-full h-full">
           <ProjectScrollHero 
             title={pageData.title}
+            description={pageData.description}
             images={pageData.images || []}
           />
         </div>
 
-        {/* Layer 2: Mobile/Desktop Responsive CTA Layer Container */}
         <div 
-          className="project-section-cta absolute inset-0 w-full h-full bg-white z-[150]" 
+          className="project-info-wrap absolute inset-0 w-full h-full structural-layer"
           style={{ 
-            pointerEvents: "auto", 
-            visibility: "hidden",
-            transform: "translateY(100%)"
+            zIndex: 50, 
+            visibility: "hidden", 
+            transform: "translateY(100%)" 
           }}
         >
-          <SectionCTA />
+          <ProjectInfoSlide 
+            slides={pageData.slides || []} 
+            isActive={isProjectInfoActive}
+          />
         </div>
 
-        {/* Layer 3: Pinned Full Footer Assembly Wrapper Frame */}
         <div 
-          className="project-footer-wrap absolute left-0 bottom-0 w-full z-[151]" 
+          className="project-app-wrap absolute inset-x-0 bottom-0 w-full h-[120vh] min-h-[120vh] structural-layer overflow-y-auto overflow-x-hidden"
           style={{ 
-            pointerEvents: "auto", 
-            visibility: "hidden",
-            transform: "translateY(100%)"
+            zIndex: 60, 
+            visibility: "hidden", 
+            transform: "translateY(100%)" 
           }}
         >
-          <Footer />
+          <Appsection />
+        </div>
+
+        <div 
+          className="faq-scroll-wrapper absolute inset-0 w-full h-full structural-layer overflow-hidden"
+          style={{ 
+            zIndex: 70, 
+            visibility: "hidden", 
+            transform: "translateY(100%)" 
+          }}
+        >
+          <FAQSection />
+        </div>
+
+        <div 
+          className="footer-scroll-wrapper absolute inset-0 w-full h-full flex flex-col justify-end pointer-events-none"
+          style={{ 
+            zIndex: 80, 
+            visibility: "hidden", 
+            transform: "translateY(100%)" 
+          }}
+        >
+          <div className="w-full pointer-events-auto">
+            <Footer />
+          </div>
         </div>
 
       </div>

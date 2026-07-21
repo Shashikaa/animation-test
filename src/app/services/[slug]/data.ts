@@ -197,7 +197,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
 
   },
   'equipment-maintenance': {
-    slug: 'equipment-maintenance',
+    slug: 'concrete-pool-renovations',
     hero: {
       title: 'Advanced Mechanics',
       subtitle: 'Pristine Water Quality',

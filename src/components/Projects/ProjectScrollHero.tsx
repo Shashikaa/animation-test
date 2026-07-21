@@ -2,10 +2,11 @@
 
 interface ProjectScrollHeroProps {
   title: string;
+  description?: string;
   images: string[];
 }
 
-export default function ProjectScrollHero({ title, images }: ProjectScrollHeroProps) {
+export default function ProjectScrollHero({ title, description, images }: ProjectScrollHeroProps) {
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden bg-[#131313] p-8 md:p-16 flex items-end project-hero-master section-container">
       {/* Dynamic Stacking of Passed Images */}
@@ -18,7 +19,6 @@ export default function ProjectScrollHero({ title, images }: ProjectScrollHeroPr
             clipPath: index === 0 ? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)" : "polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)",
           }}
         >
-          {/* FIXED: Standardized transform: "scale(1.6)" inline to match your main Projects page layout perfectly */}
           <div 
             className="hero-image-inner w-full h-full bg-cover bg-center will-change-transform"
             style={{
@@ -30,17 +30,34 @@ export default function ProjectScrollHero({ title, images }: ProjectScrollHeroPr
         </div>
       ))}
 
-      {/* Typography & Gradient Overlay */}
+      {/* Gradient Overlay for Readable Text */}
       <div 
-        className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none hero-gradient-overlay"
+        className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none hero-gradient-overlay"
         style={{ zIndex: 100 }}
       />
 
-      <div className="relative max-w-4xl w-full z-[101] pointer-events-none hero-text-wrap">
-        {/* FIXED: Pre-hiding the element from frame zero with opacity-0 and translate-y-[30px] to prevent FOUC */}
-        <h1 className="text-white font-display hero-title opacity-0 translate-y-[30px]">
-          {title}
+      {/* Typography Container - Hidden on DOM render to prevent initial flash */}
+      <div 
+        className="relative max-w-3xl w-full z-[101] pointer-events-none hero-text-wrap flex flex-col gap-4 lg:gap-8 pb-4 opacity-0 invisible"
+        style={{ visibility: "hidden", opacity: 0 }}
+      >
+        {/* Title */}
+        <h1 
+          className="text-white font-display hero-title text-4xl md:text-6xl font-bold tracking-tight opacity-0 invisible"
+          style={{ visibility: "hidden", opacity: 0 }}
+        >
+          {title} 
         </h1>
+
+        {/* Description right under title */}
+        {description && (
+          <p 
+            className="text-white/85 text-base md:text-xl font-normal leading-relaxed hero-description max-w-sm opacity-0 invisible"
+            style={{ visibility: "hidden", opacity: 0 }}
+          >
+            {description}
+          </p>
+        )}
       </div>
     </div>
   );

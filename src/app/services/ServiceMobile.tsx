@@ -113,13 +113,13 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
 
     const ctx = gsap.context(() => {
       const ACTION = 2.0;
-      const DEAD_SCROLL = 0.4;
+      const DEAD_SCROLL = 0.2;
 
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: ".services-pin-master",
           start: "top top",
-          end: "+=11000", 
+          end: "+=11500", // Perfectly balanced overall track distance
           pin: true,
           scrub: 0.2,    
           invalidateOnRefresh: true
@@ -183,6 +183,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
       tl.to({}, { duration: DEAD_SCROLL });
 
       // ── STEP D: App Section slides up over Section Two ──
+      // Because bottom-0 + h-[120vh], yPercent: 0 naturally aligns the bottom flush with the viewport bottom.
       tl.set(".services-appsec-wrap", { visibility: "visible" })
         .to(".services-appsec-wrap", {
           yPercent: 0,
@@ -190,9 +191,8 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
           ease: "power2.inOut"
         });
 
-      tl.to({}, { duration: DEAD_SCROLL });
-
       // ── STEP E: UNIFIED TRANSITION: APP SECTION -> CTA ──
+      // CTA immediately slides in over top as soon as the App Section bottom lands flush
       tl.addLabel("ctaStart", ">")
         .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
         .to(".services-section-cta", { yPercent: 0, duration: ACTION, ease: "none" }, "ctaStart")
@@ -253,9 +253,10 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
 
         {/* Layer 4: App Section Slide Up Wrapper */}
         <div 
-          className="services-appsec-wrap absolute top-0 left-0 w-full h-full overflow-y-auto bg-black" 
+          className="services-appsec-wrap absolute inset-x-0 bottom-0 w-full h-[120vh] min-h-[120vh] overflow-y-auto overflow-x-hidden bg-black" 
           style={{ 
             zIndex: 35,
+            pointerEvents: "auto",
             visibility: "hidden"
           }}
         >

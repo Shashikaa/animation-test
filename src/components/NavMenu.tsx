@@ -11,11 +11,11 @@ interface NavMenuProps {
 }
 
 const NAV_LINKS = [
-  { label: "Home",     href: "/",        image: "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=1400&q=80" },
-  { label: "About Us",  href: "/about",    image: "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1400&q=80" },
+  { label: "Home", href: "/", image: "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=1400&q=80" },
+  { label: "About Us", href: "/about", image: "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1400&q=80" },
   { label: "Services", href: "/services", image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=80" },
   { label: "Projects", href: "/projects", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&q=80" },
-  { label: "Contact Us",href: "/contact",  image: "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=1400&q=80" },
+  { label: "Contact Us", href: "/contact", image: "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=1400&q=80" },
 ];
 
 const SOCIAL_LINKS = [
@@ -48,10 +48,12 @@ function PoolsSVG({ width, height }: { width: number; height: number }) {
   );
 }
 
-// Global shared logo element template perfectly identical to the Header responsive layout sizes
-function SharedLogoMarkup() {
+// Global logo link element template wrapped with <a> tag
+function SharedLogoMarkup({ onClose }: { onClose?: () => void }) {
   return (
-    <div
+    <a
+      href="/"
+      onClick={onClose}
       id="header-logo-inner"
       style={{
         display: "flex",
@@ -79,21 +81,19 @@ function SharedLogoMarkup() {
           <PoolsSVG width={202 * HEADER_LOGO_SCALE} height={30 * HEADER_LOGO_SCALE} />
         </span>
       </span>
-    </div>
+    </a>
   );
 }
 
+// Close button updated to use /closebtn.svg from the public folder
 function CloseButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
       aria-label="Close menu"
       className="!flex !items-center !justify-center !p-1.5 !bg-transparent !border-none !cursor-pointer !opacity-85 hover:!opacity-100 hover:!rotate-90 !transition-[opacity,transform] !duration-200 !ease-in-out"
-      style={{ color: LOGO_COLOR }}
     >
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M16 1.61716L14.3828 0L7.99997 6.38287L1.61716 0L0 1.61716L6.38287 7.99997L0 14.3828L1.61716 16L7.99997 9.61713L14.3828 16L16 14.3828L9.61713 7.99997L16 1.61716Z" fill="#F4EEDF"/>
-      </svg>
+      <img src="/closebtn.svg" alt="Close" className="!w-8 !h-8 !block !object-contain" />
     </button>
   );
 }
@@ -164,16 +164,13 @@ const EASE_OUT = [0.76, 0, 0.24, 1] as const;
 
 const desktopContainerVariants = {
   hidden: { 
-    y: "-105%", 
-    opacity: 0, 
+    opacity: 0,
     transition: { duration: 0.45, ease: EASE_OUT } 
   },
   visible: { 
-    y: 0, 
     opacity: 1, 
     transition: { 
-      opacity: { duration: 0.35, ease: EASE_IN },
-      y: { duration: 0.55, ease: EASE_IN } 
+      duration: 0.45, ease: EASE_IN
     } 
   },
 };
@@ -186,7 +183,7 @@ const mobileContainerVariants = {
 const linkContainerVariants = {
   hidden: {},
   visible: {
-    transition: { staggerChildren: 0.04, delayChildren: 0.2 },
+    transition: { staggerChildren: 0.04, delayChildren: 0.15 },
   },
 };
 
@@ -195,14 +192,9 @@ const linkVariants = {
   visible: { y: 0,  opacity: 1, transition: { duration: 0.4, ease: EASE_IN } },
 };
 
-const ctaVariants = {
-  hidden:  { opacity: 0, y: 8 },
-  visible: { opacity: 1, y: 0, transition: { delay: 0.42, duration: 0.35, ease: EASE_OUT } },
-};
-
 const bottomVariants = {
   hidden:  { opacity: 0, y: 6 },
-  visible: { opacity: 1, y: 0, transition: { delay: 0.46, duration: 0.35, ease: EASE_OUT } },
+  visible: { opacity: 1, y: 0, transition: { delay: 0.35, duration: 0.35, ease: EASE_OUT } },
 };
 
 // ── MOBILE MENU ──────────────────────────────────────────
@@ -232,10 +224,9 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
           exit="hidden"
           className="!fixed !z-[2000] !flex !flex-col !w-[100dvw] !h-full !top-0 !left-0"
           style={{
-            background: "linear-gradient(155deg, #152e26 0%, #094045 100%)",
+            background: "linear-gradient(155deg, #0e2724 0%, #08373b 100%)",
           }}
         >
-          {/* Custom Media Queries for Logo Responsiveness Inside Menu Overlay */}
           <style>{`
             @media (max-width: 767px) {
               #header-logo-inner { width: 135px !important; gap: 8px !important; }
@@ -247,23 +238,18 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
             }
           `}</style>
 
-          {/* Top Header Row Panel */}
           <div 
             className="!flex !items-center !justify-between !w-full"
             style={{
-              height: "56px",
-              padding: "0 20px",
+              height: "64px",
+              padding: "0 24px",
             }}
           >
-            {/* Matches the layout structure and sizing parameters from Header */}
-            <SharedLogoMarkup />
-
-            {/* Close element on exact right position alignment */}
+            <SharedLogoMarkup onClose={onClose} />
             <CloseButton onClick={onClose} />
           </div>
 
-          {/* Nav links navigation row overlay section */}
-          <div className="!flex-1 !flex !flex-col !px-12 !pt-[70px]">
+          <div className="!flex-1 !flex !flex-col !px-12 !pt-[60px]">
             <motion.nav
               variants={linkContainerVariants}
               initial="hidden"
@@ -288,7 +274,6 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
             </motion.nav>
           </div>
 
-          {/* Bottom layout elements section view panel */}
           <motion.div
             key="mobile-bottom"
             variants={bottomVariants}
@@ -379,133 +364,89 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
           animate="visible"
           exit="hidden"
           className={[
-            "!fixed !z-[2000] !origin-top",
-            "!top-0 lg:!top-8",
-            "!bottom-0 lg:!bottom-8",
-            "!left-0 lg:!left-16",
-            "!right-0 lg:!right-16",
-            "!grid",
-            "!grid-cols-1 lg:!grid-cols-[50%_1fr]",
-            "!p-5",
+            "!fixed !inset-0 !z-[2000] !w-screen !h-screen",
+            "!grid !grid-cols-1 lg:!grid-cols-[38%_1fr]",
           ].join(" ")}
           style={{
-            backdropFilter:       "blur(24px) brightness(0.8) saturate(1.3)",
-            WebkitBackdropFilter: "blur(24px) brightness(0.8) saturate(1.3)",
-            background: "rgba(255, 255, 255, 0.03)",
+            background: "#0c2b27",
             willChange: "transform, opacity",
-            transform: "translateZ(0)",
           }}
         >
-          {/* ── LEFT PANEL ── */}
-          <div className="!relative !flex !flex-col !py-12 !px-0 !w-full !h-full" style={{ willChange: "transform" }}>
-            <div className="!absolute !top-7 !left-10 !z-10">
-              <CloseButton onClick={onClose} />
+          {/* ── LEFT PANEL (Smaller panel: 38% width) ── */}
+          <div className="!relative !flex !flex-col !justify-between !pt-8 !pb-12 !px-12 lg:!px-16 !w-full !h-full !z-10">
+            {/* Top Left Linked Logo Area */}
+            <div className="!flex !items-center !h-12">
+              <SharedLogoMarkup onClose={onClose} />
             </div>
-            <div className="!flex !flex-col !h-full !px-12 lg:!px-0 lg:!mx-auto lg:!w-fit">
-              <div className="!flex-1 !flex !flex-col !justify-start !pt-[126px] lg:!pt-24">
-                <motion.nav
-                  variants={linkContainerVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="hidden"
-                >
-                  {NAV_LINKS.map(({ label, href }, i) => (
-                    <motion.div key={label} variants={linkVariants} className="!overflow-hidden">
-                      <NavLink
-                        label={label}
-                        href={href}
-                        isActive={hoveredIndex === i}
-                        onClose={onClose}
-                        onMouseEnter={() => handleMouseEnter(i)}
-                        onMouseLeave={handleMouseLeave}
-                      />
-                    </motion.div>
-                  ))}
-                </motion.nav>
 
-                <motion.div variants={ctaVariants} initial="hidden" animate="visible" exit="hidden">
-<a
-  href="/contact"
-  style={{
-    position: "relative",
-    display: "inline-block",
-    width: "fit-content",
-    paddingBottom: 4,
-    fontSize: 14,
-    fontWeight: 500,
-    textTransform: "uppercase",
-    color: "#F4EEDF",
-    textDecoration: "none",
-    flexShrink: 0,
-  }}
-  className="hero-contact-btn group transition-opacity duration-200 hover:opacity-70 font-body !mt-11"
->
-  Get a free consultation
-  <span
-    style={{
-      position: "absolute",
-      left: 0,
-      right: 0,
-      bottom: 0,
-      height: 1,
-      background: "#F4EEDF",
-      transition: "transform 0.2s ease",
-    }}
-    className="group-hover:-translate-y-[2px]"
-  />
-</a>
-                </motion.div>
-              </div>
-
-              <motion.div
-                key="desktop-bottom"
-                variants={bottomVariants}
+            {/* Nav Menu Links Center Section */}
+            <div className="!my-auto !py-8">
+              <motion.nav
+                variants={linkContainerVariants}
                 initial="hidden"
                 animate="visible"
                 exit="hidden"
+                className="!flex !flex-col !gap-5"
               >
-                <div className="font-body !mb-6" style={{ color: LOGO_COLOR }}>
-                  <p className="!m-0 !mb-1.5 !text-base">
-                    <a
-                      href="tel:0422630394"
-                      className="!no-underline hover:!opacity-70 !transition-opacity !duration-200"
-                      style={{ color: LOGO_COLOR }}
-                    >
-                      0422 630 394
-                    </a>
-                  </p>
-                  <p className="!m-0 !text-base">
-                    <a
-                      href="mailto:admin@grandpools.com.au"
-                      className="!no-underline hover:!opacity-70 !transition-opacity !duration-200"
-                      style={{ color: LOGO_COLOR }}
-                    >
-                      admin@grandpools.com.au
-                    </a>
-                  </p>
-                </div>
-                <div className="!flex !items-center !gap-4">
-                  {SOCIAL_LINKS.map(({ label, href, src }) => (
-                    <a
-                      key={label}
+                {NAV_LINKS.map(({ label, href }, i) => (
+                  <motion.div key={label} variants={linkVariants} className="!overflow-hidden">
+                    <NavLink
+                      label={label}
                       href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={label}
-                      className="!flex !opacity-100 hover:!opacity-70 !transition-opacity !duration-200"
-                    >
-                      <img src={src} alt={label} className="!block !w-5 !h-5 !object-contain" />
-                    </a>
-                  ))}
-                </div>
-              </motion.div>
+                      isActive={hoveredIndex === i}
+                      onClose={onClose}
+                      onMouseEnter={() => handleMouseEnter(i)}
+                      onMouseLeave={handleMouseLeave}
+                    />
+                  </motion.div>
+                ))}
+              </motion.nav>
             </div>
+
+            {/* Bottom Contact & Social Links Section */}
+            <motion.div
+              key="desktop-bottom"
+              variants={bottomVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+            >
+              <div className="font-body !mb-6" style={{ color: LOGO_COLOR }}>
+                <p className="!m-0 !text-base !font-medium">
+                  <a
+                    href="tel:0422630394"
+                    className="!no-underline hover:!opacity-70 !transition-opacity !duration-200"
+                    style={{ color: LOGO_COLOR }}
+                  >
+                    0422 630 394
+                  </a>
+                </p>
+              </div>
+              <div className="!flex !items-center !gap-4">
+                {SOCIAL_LINKS.map(({ label, href, src }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="!flex !opacity-100 hover:!opacity-70 !transition-opacity !duration-200"
+                  >
+                    <img src={src} alt={label} className="!block !w-5 !h-5 !object-contain" />
+                  </a>
+                ))}
+              </div>
+            </motion.div>
           </div>
 
-          {/* ── RIGHT PANEL ── */}
-          <div className="!hidden lg:!block !relative !overflow-hidden !p-5">
+          {/* ── RIGHT PANEL (Larger panel covering full right screen) ── */}
+          <div className="!hidden lg:!block !relative !w-full !h-full !overflow-hidden">
             <ImagePanel activeIndex={activeIndex} isReverse={isReverse} />
-            <div className="!absolute !inset-0 !z-[1] !pointer-events-none" />
+            
+            {/* Close Button using /closebtn.svg floating on Top Right */}
+            <div className="!absolute !top-8 !right-12 !z-20">
+              <CloseButton onClick={onClose} />
+            </div>
           </div>
         </motion.div>
       )}
@@ -548,14 +489,14 @@ function NavLink({
       onMouseLeave={onMouseLeave}
       onFocus={onMouseEnter}
       onBlur={onMouseLeave}
-      className="!block !no-underline !leading-[2.0] !cursor-pointer"
+      className="!block !no-underline !leading-none !cursor-pointer"
     >
       <span
-        className="font-display !inline-block !select-none !pb-[0.18em] !font-normal !not-italic !leading-none !transition-[color,letter-spacing] !duration-[250ms,350ms] !ease-in-out"
+        className="font-display !inline-block !select-none !font-normal !uppercase !not-italic !leading-none !transition-[color,letter-spacing] !duration-[250ms,350ms] !ease-in-out"
         style={{
-          fontSize: "clamp(26px, 2.5vw, 32px)",
-          color: highlighted ? "#F4EEDF" : "#c4c4c4",
-          letterSpacing: highlighted ? "0.01em" : "0",
+          fontSize: "clamp(22px, 2vw, 28px)",
+          color: highlighted ? "#F4EEDF" : "rgba(244, 238, 223, 0.6)",
+          letterSpacing: "0.08em",
         }}
       >
         {label}

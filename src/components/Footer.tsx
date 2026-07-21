@@ -148,7 +148,7 @@ export default function Footer() {
             {/* Col 2 — Service Capabilities list */}
             <nav className="flex flex-col !items-end lg:!items-start gap-3">
               {[
-                { item: "New Pool Construction", href: "/services/new-pool-construction" },
+                { item: "Residential pools Construction", href: "/services/Residential-pools-Construction" },
                 { item: "Concrete Pool Renovations", href: "/services/concrete-pool-renovations" },
                 { item: "Pool Equipment & Installation", href: "/services/pool-equipment-and-installation" },
                 { item: "Commercial Pool Construction", href: "/services/commercial-pool-construction" },
@@ -268,14 +268,16 @@ export default function Footer() {
               }}
             >
               Design &amp; Development by{" "}
-              <a
-                href="#"
-                style={{ color: "#F4EBE4", textDecoration: "none", fontWeight: 500, opacity: 1, transition: "opacity 0.2s ease" }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
-              >
-                Tactik
-              </a>
+<a
+  href="https://tactik.com.au/"
+  target="_blank"
+  rel="noopener noreferrer"
+  style={{ color: "#F4EBE4", textDecoration: "none", fontWeight: 500, opacity: 1, transition: "opacity 0.2s ease" }}
+  onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
+  onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+>
+  Tactik
+</a>
             </span>
 
             {/* Mobile copy block placement container */}

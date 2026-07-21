@@ -12,17 +12,8 @@ export default function Appsection() {
       {/* ── Main Content Container ── */}
       <div className="appsec-content section-container relative z-10 w-full flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 lg:gap-20">
         
-        {/* Left Column (Desktop Layout Swapped) */}
+        {/* Title */}
         <div className="w-full lg:w-1/2 flex flex-col justify-between items-start text-left lg:h-[450px]">
-          
-          {/* Paragraph Moved to Top for Desktop */}
-          <div className="hidden lg:flex flex-col items-center w-full gap-6">
-            <p className="font-body text-[#F4EEDF] text-sm md:text-base max-w-[360px] self-start">
-              Pool Care+ keeps you informed and involved from start to finish. Track progress, receive live updates, and follow each stage of your pool project — all in one place.
-            </p>
-          </div>
-
-          {/* Subtitle & Title Moved to Bottom for Desktop */}
           <div className="flex flex-col gap-2 w-full">
             <span className="hidden lg:inline-block text-[#F4EEDF] text-xs md:text-[14px] font-normal">
               Pool Care +
@@ -31,10 +22,15 @@ export default function Appsection() {
               className="text-[#F4EEDF] !font-[100] text-3xl md:text-5xl lg:text-6xl max-w-[320px] sm:max-w-none !mb-4"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              Your pool journey clearly tracked
+              Stay Updated at Every Stage
             </h2>
           </div>
 
+          <div className="hidden lg:flex flex-col items-center w-full gap-6">
+            <p className="font-body text-[#F4EEDF] text-sm md:text-base max-w-[360px] self-start">
+              Pool Care+ keeps you informed and involved from start to finish. Track progress, receive live updates, and follow each stage of your pool project — all in one place.
+            </p>
+          </div>
         </div>
 
         {/* Device Mockup */}

@@ -271,13 +271,16 @@ p {
   }
 }
 
-/* Keep text hidden uniformly prior to animation runtime */
-.reveal-text {
-  opacity: 0;
-  visibility: hidden;
-}
+/* Apply styles only on desktop screens (1024px and wider) */
+@media screen and (min-width: 1024px) {
+  /* Keep text hidden uniformly prior to animation runtime */
+  .reveal-text {
+    opacity: 0;
+    visibility: hidden;
+  }
 
-/* Base style for split components */
-.reveal-text .gs-line-inner {
-  display: inline-block;
+  /* Base style for split components */
+  .reveal-text .gs-line-inner {
+    display: inline-block;
+  }
 }

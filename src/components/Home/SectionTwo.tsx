@@ -37,32 +37,24 @@ export default function SectionTwo() {
 
       {/* BACKGROUND LAYER RULE */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        {mounted && !isMobile ? (
-          // DESKTOP: Interactive Liquid WebGL Canvas
-          <div className="absolute inset-0 w-full h-full" style={{ willChange: "transform" }}>
-            <LiquidCanvas imageSrc="/sectiontwo.webp" />
-          </div>
-        ) : (
-          // MOBILE / SSR FALLBACK: Flat High-Performance Static Image Layer
-          <img
-            src="/marvin-van-mobile.webp"
-            alt="Background track mobile"
-            className="w-full h-full object-cover"
-            style={{ 
-              willChange: "transform",
-              transform: "translate3d(0,0,0)" 
-            }}
-          />
-        )}
+        <img
+          src="/sectiontwo.webp"
+          alt="Background layer"
+          className="w-full h-full object-cover"
+          style={{ 
+            willChange: "transform",
+            transform: "translate3d(0,0,0)" 
+          }}
+        />
       </div>
 
-      {/* CONTENT BLOCK OVERLAY */}
+      {/* CONTENT BLOCK OVERLAY (FIRST FRAME TEXT) */}
       <div className="section-container absolute inset-0 z-10 h-full flex flex-col justify-end pointer-events-none">
         <div className="flex flex-col items-end text-right gap-2 lg:gap-3 p-4 md:p-8">
-          <h2 className="s2-title-main font-display text-[#F4EEDF] !font-[100] text-3xl md:text-5xl">
+          <h2 className="s2-title-main font-display text-[#F4EEDF] !font-[100] text-3xl md:text-5xl reveal-text">
             Premium Pool <br />
           </h2>
-          <p className="s2-title-sub font-body text-[#F4EEDF] text-sm md:text-base">
+          <p className="s2-title-sub font-body text-[#F4EEDF] text-sm md:text-base reveal-text">
             Solution for Every Need
           </p>
         </div>
@@ -72,11 +64,11 @@ export default function SectionTwo() {
       <div className="absolute inset-0 z-20 grid grid-cols-1 lg:grid-cols-2 w-full h-full pointer-events-none">
         {/* LEFT COLUMN: LANDING REFERENCE */}
         <div className="relative h-full overflow-hidden !pt-58 md:!pt-66 lg:!pt-36">
-          <div className="s2-body w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px] !mb-33 md:!mb-80 lg:!mb-0 h-[100px] !ml-[20px] md:!ml-[30px] lg:!ml-[65px]">
-            <p className="text-[#F4EEDF] font-body text-sm md:text-base leading-relaxed text-left">
-              From renovations to new builds, we design and construct pools that combine style, functionality, and durability.
-            </p>
-          </div>
+<div className="s2-body w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px] !mb-33 md:!mb-80 lg:!mb-0 h-[100px] !ml-[20px] md:!ml-[30px] lg:!ml-[65px]">
+  <p className="reveal-text text-[#F4EEDF] font-body text-sm md:text-base leading-relaxed text-left">
+    From renovations to new builds, we design and construct pools that combine style, functionality, and durability.
+  </p>
+</div>
         </div>
 
         {/* RIGHT COLUMN: DOUBLE LAYER STACK (DESKTOP) */}
@@ -128,7 +120,7 @@ export default function SectionTwo() {
         </p>
       </div>
 
-      {/* ── MOBILE & TABLET SCROLL CONTAINER ── */}
+      {/* MOBILE & TABLET SCROLL CONTAINER */}
       <div 
         className="s2-mob-scroll-wrapper section-container lg:hidden relative w-full h-auto z-40 pointer-events-auto"
         style={{ 

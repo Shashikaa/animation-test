@@ -44,7 +44,7 @@ export default function SectionSeven() {
         style={{ top: "16%", left: "50%", width: 620 }}
       >
         <h2
-          className="text-[#F4EEDF] font-[100] s7-title opacity-0"
+          className="text-[#F4EEDF] font-[100] s7-title reveal-text"
           style={{ fontFamily: "var(--font-display)" }}
         >
           Meet The Experts
@@ -53,13 +53,13 @@ export default function SectionSeven() {
         <div
           className="flex flex-col gap-0.5 !px-[32px] !py-[30px] max-w-[340px] !mt-2 "
         >
-          <p className="s7-para font-body text-[#F4EEDF] text-[14px] font-normal opacity-0">
+          <p className="s7-para font-body text-[#F4EEDF] text-[14px] font-normal reveal-text">
             Lachlan Deleeuw
           </p>
-          <p className="s7-para text-[#F4EEDF] text-[14px] mt-2 opacity-0">
+          <p className="s7-para text-[#F4EEDF] text-[14px] mt-2 reveal-text">
             Founder – Grand Pools
           </p>
-          <p className="s7-para font-body text-[#F4EBE4] text-[14px] font-normal leading-snug !mt-6 w-full opacity-0">
+          <p className="s7-para font-body text-[#F4EBE4] text-[14px] font-normal leading-snug !mt-6 w-full reveal-text">
             Grand Pools founder Lachlan Deleeuw brings expert craftsmanship and tailored creativity to luxury pool builds, transforming backyards across Melbourne and the Bayside Region.
           </p>
         </div>

@@ -33,7 +33,7 @@ export default function SectionTen() {
 
       {/* ── FIRST STAGE ELEMENTS ── */}
       <h2
-        className="s10-title absolute !font-[100] text-[#FFFFFF] pointer-events-none lg:opacity-0"
+        className="s10-title absolute !font-[100] text-[#FFFFFF] pointer-events-none reveal-text"
         style={{
           fontFamily: "var(--font-display)",
           zIndex: 10,
@@ -43,14 +43,14 @@ export default function SectionTen() {
       </h2> 
 
       <p
-        className="s10-title-sub absolute font-body text-[#FFFFFF] pointer-events-none !mt-3 lg:opacity-0"
+        className="s10-title-sub absolute font-body text-[#FFFFFF] pointer-events-none !mt-3 reveal-text"
         style={{ zIndex: 10 }} 
       >
         Designed For You
       </p>
 
       <p
-        className="s10-para-top absolute font-body text-[#FFFFFF] pointer-events-none lg:opacity-0"
+        className="s10-para-top absolute font-body text-[#FFFFFF] pointer-events-none reveal-text"
         style={{
           zIndex: 10,
         }}

@@ -59,8 +59,6 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
       // Section One Sheet Setups
       gsap.set(".section-one-wrap", { clipPath: "inset(100% 0% 0% 0%)" });
       gsap.set(".s1-glass-card", { x: 40, opacity: 0 }); 
-      gsap.set([".s1-static-title", ".s1-static-desc"], { opacity: 0, y: 30 });
-      gsap.set([".s1-reveal-top", ".s1-reveal-bottom"], { opacity: 0, y: 40 });
       
       // Section Two Panel Split Configurations
       gsap.set(".services-section-two-wrap", { visibility: "hidden", opacity: 1 });
@@ -83,6 +81,7 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
     if (!preloaderDone) return;
 
     const ctx = gsap.context(() => {
+      // Standard Hero Intro Animation (Unchanged)
       const introTl = gsap.timeline({
         onComplete: () => setIntroDone(true)
       });
@@ -136,13 +135,27 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
         });
       });
 
-      // Matches the exact uniform tracking configuration of the About page
       const scrubValue = 1.2;
-      const revealedElements = new Set<string>();
 
-      // Text Reveal Prep
-      useTextReveal(scopeRef, ".services-section-two-wrap .s2-reveal-text");
-      gsap.set(".services-section-two-wrap .s2-reveal-text", { visibility: "visible", opacity: 1 });
+      // ── TEXT REVEAL INITIALIZATION FOR ALL NON-HERO SECTIONS ──
+      useTextReveal(scopeRef, ".section-one-wrap .reveal-text");
+      useTextReveal(scopeRef, ".services-section-two-wrap .reveal-text");
+      useTextReveal(scopeRef, ".services-appsec-wrap .reveal-text");
+
+      gsap.set([
+        ".section-one-wrap .reveal-text",
+        ".services-section-two-wrap .reveal-text",
+        ".services-appsec-wrap .reveal-text"
+      ], { visibility: "visible", opacity: 1 });
+
+      gsap.set([
+        ".section-one-wrap .reveal-text .gs-line-inner",
+        ".services-section-two-wrap .reveal-text .gs-line-inner",
+        ".services-appsec-wrap .reveal-text .gs-line-inner",
+        ".section-one-wrap .reveal-text > *",
+        ".services-section-two-wrap .reveal-text > *",
+        ".services-appsec-wrap .reveal-text > *"
+      ], { y: 45, opacity: 0 });
 
       const buildTimeline = () => {
         requestAnimationFrame(() => {
@@ -155,12 +168,14 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
             vvCleanup = () => vv.removeEventListener("resize", onVVResize);
           }
 
+          const revealedElements = new Set<string>();
+
           const tl = gsap.timeline({
             defaults: { ease: "none" }, 
             scrollTrigger: {
               trigger: ".services-hero-master",
               start: "top top",
-              end: "+=10800", // Expanded layout timeline space to safely handle the Card 4 structural hold
+              end: "+=10800",
               scrub: scrubValue,
               pin: true,
               pinSpacing: true,
@@ -197,13 +212,15 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
             },
           });
 
-          // Text animations
+          // Play-once text reveal trigger function (Identical to About Page)
           const addPlayOnceTextReveal = (labelName: string, timeOffset: number, selector: string) => {
             const absoluteTime = tl.labels[labelName] + timeOffset;
+            
             tl.call(() => {
               const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
               if (isForward && !revealedElements.has(selector)) {
                 revealedElements.add(selector);
+                
                 gsap.to(selector, {
                   y: 0,
                   opacity: 1,
@@ -216,7 +233,6 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
             }, [], absoluteTime);
           };
 
-          // Direction aware slide index controller
           const triggerSec2Hook = (nextIdx: number) => {
             if (nextIdx !== lastSec2Idx.current) {
               lastSec2Idx.current = nextIdx;
@@ -236,15 +252,14 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
           tl.addLabel("sec1Start")
             .to(".section-one-wrap", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.0 })
             .to(".service-hero-bg", { xPercent: -8, scale: 1.6, duration: 1.0 }, "<")
-            .to(".s1-glass-card", { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, "sec1Start+=0.2")
-            .to(".s1-reveal-bottom", { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, "sec1Start+=0.3")
-            .to(".s1-reveal-top", { opacity: 1, y: 0, stagger: 0.1, duration: 0.4, ease: "power2.out" }, "sec1Start+=0.4")
-            .to([".s1-static-title", ".s1-static-desc"], { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out" }, "sec1Start+=0.5");
+            .to(".s1-glass-card", { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, "sec1Start+=0.2");
+
+          addPlayOnceTextReveal("sec1Start", 0.35, ".section-one-wrap .reveal-text .gs-line-inner, .section-one-wrap .reveal-text > *");
 
           // ── SECTION TWO TRANSITION ──
           tl.addLabel("sec2Start")
             .set(".services-section-two-wrap", { visibility: "visible" })
-            .to([".s1-glass-card", ".s1-static-title", ".s1-static-desc", ".s1-reveal-top", ".s1-reveal-bottom"], { opacity: 0, y: -50, duration: 0.5 }, "sec2Start")
+            .to(".s1-glass-card", { opacity: 0, y: -50, duration: 0.5 }, "sec2Start")
             .to(".s2-left-panel", { 
                 yPercent: 0, 
                 duration: 1.0,
@@ -258,14 +273,14 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
             .to(".s2-right-panel", { yPercent: 0, duration: 1.0 }, "sec2Start")
             .to(".s2-inner-fade-target", { opacity: 1, duration: 0.4, ease: "power1.out" }, "sec2Start+=0.6");
 
-          addPlayOnceTextReveal("sec2Start", 0.35, ".services-section-two-wrap .s2-reveal-text");
-          
+          addPlayOnceTextReveal("sec2Start", 0.35, ".services-section-two-wrap .reveal-text .gs-line-inner, .services-section-two-wrap .reveal-text > *");
+
           tl.call(() => {
             const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
             triggerSec2Hook(isForward ? 0 : 0);
           }, [], "sec2Start+=1.0");
 
-          // ── SECTION 2 PANEL INTERNAL STEP SLIDES (Direction-aware) ──
+          // ── SECTION 2 PANEL INTERNAL STEP SLIDES ──
           tl.addLabel("sec2_card2", "sec2Start+=1.0")
             .to({}, { duration: 1.0 })
             .call(() => {
@@ -307,6 +322,8 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
               }
             });
 
+          addPlayOnceTextReveal("appsecStart", 0.35, ".services-appsec-wrap .reveal-text .gs-line-inner, .services-appsec-wrap .reveal-text > *");
+
           // ── CTA REVEAL TRACK ──
           tl.addLabel("ctaStart")
             .set(".services-section-cta", { visibility: "visible" })
@@ -341,7 +358,14 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
         ScrollTrigger.normalizeScroll(false);
       }
       if (scopeRef.current) {
-        restoreTextReveal(scopeRef.current, ".services-section-two-wrap .s2-reveal-text");
+        restoreTextReveal(
+          scopeRef.current,
+          [
+            ".section-one-wrap .reveal-text",
+            ".services-section-two-wrap .reveal-text",
+            ".services-appsec-wrap .reveal-text"
+          ].join(",")
+        );
       }
       ctx.revert();
     };

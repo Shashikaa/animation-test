@@ -176,7 +176,7 @@ export default function HomeMobile() {
               scrollTrigger: {
                 trigger:               ".pin-all",
                 start:                 "top top",
-                end:                   "+=13000", 
+                end:                   "+=16000", // Extended scroll distance to comfortably accommodate tall App section
                 scrub:                 true, 
                 pin:                   true,
                 anticipatePin:         1,
@@ -334,7 +334,8 @@ export default function HomeMobile() {
               .fromTo(".section-appsec", { yPercent: 100 }, { yPercent: 0, duration: ACTION }, "appSecStart")
               .to(".section-7", { yPercent: -10, duration: ACTION }, "appSecStart") // Clean parallax exit
 
-              .to({}, { duration: DEAD_SCROLL })
+              // Buffer duration allowing full internal scroll of the tall App section
+              .to({}, { duration: 3.0 })
 
             // ── SECTION 9 SLIDE UP ──
             tl.addLabel("sec9Start", ">")
@@ -422,7 +423,11 @@ export default function HomeMobile() {
           <SectionSeven />
         </div>
 
-        <div className="section-appsec absolute inset-0 h-full w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        {/* App Section Wrapper with explicit scroll height matching project section */}
+        <div 
+          className="section-appsec absolute inset-x-0 bottom-0 w-full h-[120vh] min-h-[120vh] structural-layer overflow-y-auto overflow-x-hidden bg-black" 
+          style={{ pointerEvents: "auto", visibility: "hidden" }}
+        >
           <Appsection />
         </div>
 

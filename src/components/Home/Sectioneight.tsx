@@ -153,10 +153,10 @@ useEffect(() => {
 
           {/* Typography Content Panel */}
           <div className="absolute left-1/2 top-1/2 -translate-y-1/2 flex flex-col gap-5 text-left ">
-            <h2 className="s8-heading text-[#F4EEDF] font-display lg:opacity-0 whitespace-nowrap">
+            <h2 className="s8-heading text-[#F4EEDF] font-display  whitespace-nowrap reveal-text">
               Water as Sanctuary.
             </h2>
-            <p className="s8-para text-[#F4EEDF] font-body lg:opacity-0 leading-relaxed max-w-[330px]">
+            <p className="s8-para text-[#F4EEDF] font-body  leading-relaxed max-w-[330px] reveal-text">
               Designed to disappear into the landscape, not announce itself.
               The result isn't a pool. It's a quiet room you walk outside to find.
             </p>
