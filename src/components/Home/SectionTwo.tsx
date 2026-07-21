@@ -52,10 +52,10 @@ export default function SectionTwo() {
 
       {/* MOBILE BACKGROUND LAYER 2 (Desktop Left Sub Image) */}
       <div
-        className="s2-mob-clip-bg-1 lg:hidden absolute inset-0 z-[1] overflow-hidden pointer-events-none"
+        className="s2-mob-clip-bg-1 lg:hidden absolute inset-0 z-[1] overflow-hidden pointer-events-none origin-left"
         style={{
-          clipPath: "polygon(0 0, 0% 0, 0% 100%, 0 100%)",
-          willChange: "clip-path",
+          transform: "scaleX(0) translate3d(0,0,0)",
+          willChange: "transform",
         }}
       >
         <img
@@ -63,14 +63,16 @@ export default function SectionTwo() {
           alt="Background layer 2"
           className="w-full h-full object-cover"
         />
+        {/* Dark overlay for mobile */}
+        <div className="absolute inset-0 bg-black opacity-50"></div>
       </div>
 
       {/* MOBILE BACKGROUND LAYER 3 (Desktop Right Image) */}
       <div
-        className="s2-mob-clip-bg-2 lg:hidden absolute inset-0 z-[2] overflow-hidden pointer-events-none"
+        className="s2-mob-clip-bg-2 lg:hidden absolute inset-0 z-[2] overflow-hidden pointer-events-none origin-left"
         style={{
-          clipPath: "polygon(0 0, 0% 0, 0% 100%, 0 100%)",
-          willChange: "clip-path",
+          transform: "scaleX(0) translate3d(0,0,0)",
+          willChange: "transform",
         }}
       >
         <img
@@ -78,14 +80,16 @@ export default function SectionTwo() {
           alt="Background layer 3"
           className="w-full h-full object-cover"
         />
+        {/* Dark overlay for mobile */}
+        <div className="absolute inset-0 bg-black opacity-50"></div>
       </div>
 
       {/* MOBILE BACKGROUND LAYER 4 (Desktop Right Under Image) */}
       <div
-        className="s2-mob-clip-bg-3 lg:hidden absolute inset-0 z-[3] overflow-hidden pointer-events-none"
+        className="s2-mob-clip-bg-3 lg:hidden absolute inset-0 z-[3] overflow-hidden pointer-events-none origin-left"
         style={{
-          clipPath: "polygon(0 0, 0% 0, 0% 100%, 0 100%)",
-          willChange: "clip-path",
+          transform: "scaleX(0) translate3d(0,0,0)",
+          willChange: "transform",
         }}
       >
         <img
@@ -93,6 +97,8 @@ export default function SectionTwo() {
           alt="Background layer 4"
           className="w-full h-full object-cover"
         />
+        {/* Dark overlay for mobile */}
+        <div className="absolute inset-0 bg-black opacity-50"></div>
       </div>
 
       {/* CONTENT BLOCK OVERLAY (FIRST FRAME TEXT) */}
@@ -187,7 +193,7 @@ export default function SectionTwo() {
 
           {/* Row 2: Tailor-Made Designs (+500px gap) */}
           <div className="s2-mob-row2 flex flex-col gap-1 text-left max-w-[300px] self-start !mt-[500px]">
-            <p className="text-[#F4EEDF]  text-xl md:text-2xl font-light">
+            <p className="text-[#F4EEDF] text-xl md:text-2xl font-light">
               Tailor-Made Designs
             </p>
             <p className="text-[#F4EEDF] font-body text-xs md:text-sm leading-relaxed">
@@ -197,7 +203,7 @@ export default function SectionTwo() {
 
           {/* Row 3: Expert Craftsmanship (+500px gap) */}
           <div className="s2-mob-row3 flex flex-col gap-1 text-left max-w-[300px] self-start !mt-[500px]">
-            <p className="text-[#F4EEDF]  text-xl md:text-2xl font-light">
+            <p className="text-[#F4EEDF] text-xl md:text-2xl font-light">
               Expert Craftsmanship
             </p>
             <p className="text-[#F4EEDF] font-body text-xs md:text-sm leading-relaxed">
@@ -207,7 +213,7 @@ export default function SectionTwo() {
 
           {/* Row 4: Seamless Process (+500px gap) */}
           <div className="s2-mob-row4 flex flex-col gap-1 max-w-[300px] text-left self-start !mt-[500px]">
-            <p className="text-[#F4EEDF]  text-xl md:text-2xl font-light">
+            <p className="text-[#F4EEDF] text-xl md:text-2xl font-light">
               Seamless Process
             </p>
             <p className="text-[#F4EEDF] font-body text-xs md:text-sm leading-relaxed">

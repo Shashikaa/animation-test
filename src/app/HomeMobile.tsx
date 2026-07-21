@@ -74,9 +74,10 @@ export default function HomeMobile() {
       gsap.set(".s2-mob-scroll-wrapper", { opacity: 0, yPercent: 100, y: 0 }); 
       gsap.set([".s2-title-main", ".s2-title-sub", ".s2-body"], { opacity: 1, y: 0, visibility: "visible" });
       
-      // RESET ALL THREE MULTI-BG REVEAL LAYERS
+      // RESET ALL THREE MULTI-BG REVEAL LAYERS USING scaleX FOR HARDWARE ACCELERATION
       gsap.set([".s2-mob-clip-bg-1", ".s2-mob-clip-bg-2", ".s2-mob-clip-bg-3"], { 
-        clipPath: "polygon(0 0, 0% 0, 0% 100%, 0 100%)" 
+        scaleX: 0,
+        transformOrigin: "left center"
       });
 
       gsap.set(".section-8", { visibility: "hidden", yPercent: 100, zIndex: 100 });
@@ -270,7 +271,7 @@ export default function HomeMobile() {
               )
               .addLabel("textLanding", `heroExit+=${ACTION * 0.8}`);
 
-            // ── SECTION 2 INNER MOBILE ANIMATIONS WITH BACKGROUND IMAGE TRANSITIONS ──
+            // ── SECTION 2 INNER MOBILE ANIMATIONS WITH SMOOTH scaleX TRANSITIONS ──
             tl.addLabel("s2TextDismissal", "textLanding")
               // 1. Fade out initial Frame 1 text
               .to([".s2-title-main", ".s2-title-sub", ".s2-body"], { 
@@ -293,25 +294,25 @@ export default function HomeMobile() {
                 "s2MobileScrollStart"
               )
 
-              // 3. Background Image Transition 1 (to sectiontwo-left-sub.webp)
+              // 3. Background Image Transition 1
               .to(".s2-mob-clip-bg-1", {
-                clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+                scaleX: 1,
                 duration: ACTION * 0.6,
-                ease: "none"
+                ease: "power2.inOut"
               }, "s2MobileScrollStart+=" + (ACTION * 0.3))
 
-              // 4. Background Image Transition 2 (to sectiontwo-right.webp)
+              // 4. Background Image Transition 2
               .to(".s2-mob-clip-bg-2", {
-                clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+                scaleX: 1,
                 duration: ACTION * 0.6,
-                ease: "none"
+                ease: "power2.inOut"
               }, "s2MobileScrollStart+=" + (ACTION * 1.1))
 
-              // 5. Background Image Transition 3 (to sectiontwo-right-under.webp)
+              // 5. Background Image Transition 3
               .to(".s2-mob-clip-bg-3", {
-                clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+                scaleX: 1,
                 duration: ACTION * 0.6,
-                ease: "none"
+                ease: "power2.inOut"
               }, "s2MobileScrollStart+=" + (ACTION * 1.8));
 
             // ── SECTION 8 SLIDE UP ──
@@ -347,13 +348,13 @@ export default function HomeMobile() {
 
               .to({}, { duration: DEAD_SCROLL })
 
-            // ── APPSECTION SLIDE UP (Directly Over Section 7) ──
+            // ── APPSECTION SLIDE UP ──
             tl.addLabel("appSecStart", ">")
               .set(".section-appsec", { visibility: "visible" }, "appSecStart")
               .fromTo(".section-appsec", { yPercent: 100 }, { yPercent: 0, duration: ACTION }, "appSecStart")
               .to(".section-7", { yPercent: -10, duration: ACTION }, "appSecStart") 
 
-              .to({}, { duration: 3.0 })
+              .to({}, { duration: DEAD_SCROLL }) 
 
             // ── SECTION 9 SLIDE UP ──
             tl.addLabel("sec9Start", ">")
