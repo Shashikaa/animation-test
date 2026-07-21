@@ -20,14 +20,13 @@ const slides = [
     desc: "Breathe new life into your existing pool with high-quality renovations. Whether it needs resurfacing, structural repairs, or a modern upgrade, we ensure a seamless transformation with lasting results.",
   },
   {
-    img: "/sectionOne.webp",
+    img: "/pool.webp",
     label: "Commercial Pool Construction",
     desc: "We design and build large-scale pools for hotels, resorts, apartment complexes, and public facilities, delivering premium quality and durability.",
   },
 ];
 
-const CLIP_DURATION = 1.0;
-const TEXT_DURATION = 0.7;
+const CLIP_DURATION = 0.6;
 
 type SectionTwoProps = {
   isActive: boolean;
@@ -37,25 +36,22 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const currentRef = useRef<number>(0);
   const [current, setCurrent] = useState(0);
-  const animating = useRef<boolean>(false);
 
   function animateTextIn(selector: string) {
     if (!containerRef.current) return;
     const targets = containerRef.current.querySelectorAll(`${selector} .s3-line-inner`);
-    targets.forEach((inner, idx) => {
-      gsap.killTweensOf(inner);
-      gsap.fromTo(
-        inner,
-        { y: 40, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: TEXT_DURATION,
-          ease: "power3.out",
-          delay: idx * 0.08,
-        }
-      );
-    });
+    gsap.killTweensOf(targets);
+    gsap.fromTo(
+      Array.from(targets),
+      { y: 25, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        duration: 0.4,
+        ease: "power2.out",
+        stagger: 0.04,
+      }
+    );
   }
 
   function animateTextOut(selector: string, callback?: () => void) {
@@ -65,47 +61,19 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
       if (callback) callback();
       return;
     }
+    gsap.killTweensOf(targets);
     gsap.to(Array.from(targets), {
-      y: -30,
+      y: -20,
       opacity: 0,
-      duration: 0.35,
-      ease: "power2.in",
-      stagger: 0.03,
+      duration: 0.2,
+      ease: "power1.in",
       onComplete: callback,
     });
   }
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-    slides.forEach((_, i) => {
-      if (i !== 0) {
-        gsap.set(containerRef.current!.querySelectorAll(`.s3-text-group-${i + 1} .s3-line-inner`), {
-          y: 40,
-          opacity: 0,
-        });
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    if (isActive) {
-      animateTextIn(`.s3-text-group-${currentRef.current + 1}`);
-    } else {
-      slides.forEach((_, i) => {
-        gsap.killTweensOf(containerRef.current!.querySelectorAll(`.s3-text-group-${i + 1} .s3-line-inner`));
-        gsap.set(containerRef.current!.querySelectorAll(`.s3-text-group-${i + 1} .s3-line-inner`), {
-          y: 40,
-          opacity: 0,
-        });
-      });
-    }
-  }, [isActive]);
-
   const goTo = useCallback((next: number, direction: "next" | "prev") => {
     const prev = currentRef.current;
-    if (animating.current || next === prev || !containerRef.current) return;
-    animating.current = true;
+    if (next === prev || !containerRef.current) return;
 
     currentRef.current = next;
     setCurrent(next);
@@ -113,6 +81,9 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
     const targetPanels = [".s2-desktop-section", ".s3-mobile-section"];
     
     targetPanels.forEach((panel) => {
+      const allBgs = containerRef.current!.querySelectorAll(`${panel} .s3-bg`);
+      gsap.killTweensOf(allBgs);
+
       const currentIncoming = containerRef.current!.querySelector(`${panel} .s3-bg-${next + 1}`);
       const currentPrev = containerRef.current!.querySelector(`${panel} .s3-bg-${prev + 1}`);
 
@@ -147,15 +118,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
     });
 
     animateTextOut(`.s3-text-group-${prev + 1}`, () => {
-      gsap.set(containerRef.current!.querySelectorAll(`.s3-text-group-${next + 1} .s3-line-inner`), {
-        y: 40,
-        opacity: 0,
-      });
       animateTextIn(`.s3-text-group-${next + 1}`);
-    });
-
-    gsap.delayedCall(CLIP_DURATION + 0.15, () => {
-      animating.current = false;
     });
   }, []);
 
@@ -170,12 +133,19 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
     };
   }, [goTo]);
 
+  // Ensure active text is displayed when Section Two turns active
+  useEffect(() => {
+    if (isActive && containerRef.current) {
+      animateTextIn(`.s3-text-group-${currentRef.current + 1}`);
+    }
+  }, [isActive]);
+
   const renderTextContent = () => (
     <div className="absolute bottom-[10%] left-[5%] md:left-[8%] right-[5%] z-10 pointer-events-none max-w-6xl">
       {slides.map((slide, i) => (
         <div
           key={i}
-          className={`s3-text-group s3-text-group-${i + 1} flex flex-col items-start gap-6 md:gap-8 lg:gap-12`}
+          className={`s3-text-group s3-text-group-${i + 1} flex flex-col items-start gap-4 md:gap-8 lg:gap-12`}
           style={{
             position: i === 0 ? "relative" : "absolute",
             bottom: 0,
@@ -183,13 +153,13 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
             width: "100%",
             opacity: current === i ? 1 : 0,
             pointerEvents: current === i ? "auto" : "none",
-            transition: "opacity 0.4s ease, visibility 0.4s",
             visibility: current === i ? "visible" : "hidden",
+            transition: "opacity 0.25s ease, visibility 0.25s",
           }}
         >
           {/* Main Title */}
           <div className="s3-line-wrap overflow-hidden w-full">
-            <h2 className="s3-line-inner font-display text-[#F4EEDF] text-4xl md:text-5xl lg:text-[70px] tracking-wide leading-[1.1] font-light">
+            <h2 className="s3-line-inner font-display text-[#F4EEDF] text-3xl md:text-5xl lg:text-[70px] tracking-wide leading-[1.1] font-light">
               {slide.label}
             </h2>
           </div>
@@ -202,7 +172,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               {slides.map((_, barIdx) => (
                 <div
                   key={barIdx}
-                  className={`w-[2px] transition-all duration-500 ease-out ${
+                  className={`w-[2px] transition-all duration-300 ease-out ${
                     current === barIdx ? "bg-white h-4 opacity-100" : "bg-white/30 h-4 opacity-40"
                   }`}
                 />
@@ -211,7 +181,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
 
             {/* Description Text */}
             <div className="s3-line-wrap overflow-hidden flex-1">
-              <p className="s3-line-inner font-body text-[#F4EEDF]/80 text-[14px] md:text-[16px] leading-relaxed max-w-[420px]">
+              <p className="s3-line-inner font-body text-[#F4EEDF]/80 text-[13px] md:text-[16px] leading-relaxed max-w-[420px]">
                 {slide.desc}
               </p>
             </div>
@@ -224,23 +194,18 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
   return (
     <div ref={containerRef} className="w-full h-full">
       <section className="s2-desktop-section hidden md:block w-full h-screen relative overflow-hidden bg-transparent">
-        
-        {/* 1. INITIAL REVEAL PANELS */}
         <div className="absolute inset-0 z-10 flex flex-row w-full h-full pointer-events-none">
-          {/* LEFT PANEL */}
           <div className="s2-left-panel absolute left-0 top-0 w-1/2 h-full overflow-hidden bg-black" style={{ willChange: "transform" }}>
             <img src={slides[0].img} alt="" aria-hidden className="absolute inset-0 w-[200%] h-full object-cover max-w-none" style={{ left: "0%" }} />
             <div className="absolute top-0 h-full z-[2] w-[200%]" style={{ left: "0%", background: "linear-gradient(2.13deg, #19211C 3.01%, rgba(21, 40, 31, 0) 59.11%)" }} />
           </div>
           
-          {/* RIGHT PANEL */}
           <div className="s2-right-panel absolute right-0 top-0 w-1/2 h-full overflow-hidden bg-black" style={{ willChange: "transform" }}>
             <img src={slides[0].img} alt="" aria-hidden className="absolute inset-0 w-[200%] h-full object-cover max-w-none" style={{ left: "-100%" }} />
             <div className="absolute top-0 h-full z-[2] w-[200%]" style={{ left: "-100%", background: "linear-gradient(2.13deg, #19211C 3.01%, rgba(21, 40, 31, 0) 59.11%)" }} />
           </div>
         </div>
 
-        {/* 2. UNIFIED MAIN SLIDER */}
         <div className="absolute inset-0 z-20 w-full h-full pointer-events-none">
           {slides.map((slide, i) => (
             <div
@@ -258,7 +223,6 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
           ))}
         </div>
 
-        {/* 3. TEXT TARGET */}
         <div className="s2-inner-fade-target absolute inset-0 z-30 w-full h-full pointer-events-none">
           {renderTextContent()}
         </div>
@@ -266,7 +230,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
 
       {/* MOBILE LAYOUT */}
       <section className="s3-mobile-section flex md:hidden flex-col w-full h-screen relative overflow-hidden bg-black">
-        <div className="absolute inset-0 w-full h-full z-0 s2-left-panel">
+        <div className="absolute inset-0 w-full h-full z-0">
           {slides.map((slide, i) => (
             <div
               key={i}
@@ -274,11 +238,11 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               style={{ zIndex: i === 0 ? 1 : 0, clipPath: i === 0 ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
             >
               <img src={slide.img} alt="" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#19211C]/90 via-[#19211C]/30 to-transparent z-[2]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#19211C]/95 via-[#19211C]/40 to-transparent z-[2]" />
             </div>
           ))}
         </div>
-        <div className="absolute inset-0 z-10 w-full h-full pointer-events-none">
+        <div className="s2-inner-fade-target absolute inset-0 z-10 w-full h-full pointer-events-none">
            {renderTextContent()}
         </div>
       </section>

@@ -56,7 +56,7 @@ export default function HomeMobile() {
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       gsap.set([
-        ".hero-bg-wrapper", ".hero-bg", ".s2-mob-row5", ".section-10", 
+        ".hero-bg-wrapper", ".hero-bg", ".section-10", 
         ".s10-img-right-wrap", ".s10-scrollable-container", 
         ".section-7", ".s7-bg-img", ".s7-mob-bg", ".section-8", ".s8-bg-img", 
         ".s8-mob-bg", ".section-9", ".s9-bg-img", ".section-cta", ".footer", ".section-appsec"
@@ -74,8 +74,10 @@ export default function HomeMobile() {
       gsap.set(".s2-mob-scroll-wrapper", { opacity: 0, yPercent: 100, y: 0 }); 
       gsap.set([".s2-title-main", ".s2-title-sub", ".s2-body"], { opacity: 1, y: 0, visibility: "visible" });
       
-      gsap.set(".s2-mob-row5", { opacity: 0, clipPath: "none" });
-      gsap.set(".s2-mob-row5-under", { opacity: 1 });
+      // RESET ALL THREE MULTI-BG REVEAL LAYERS
+      gsap.set([".s2-mob-clip-bg-1", ".s2-mob-clip-bg-2", ".s2-mob-clip-bg-3"], { 
+        clipPath: "polygon(0 0, 0% 0, 0% 100%, 0 100%)" 
+      });
 
       gsap.set(".section-8", { visibility: "hidden", yPercent: 100, zIndex: 100 });
       gsap.set(".s8-bg-img", { yPercent: 20 });
@@ -174,15 +176,15 @@ export default function HomeMobile() {
                 lazy: true 
               },
               scrollTrigger: {
-                trigger:               ".pin-all",
-                start:                 "top top",
-                end:                   "+=16000", // Extended scroll distance to comfortably accommodate tall App section
-                scrub:                 true, 
-                pin:                   true,
-                anticipatePin:         1,
-                preventOverlaps:       true, 
-                fastScrollEnd:         true, 
-                invalidateOnRefresh:   true,
+                trigger:              ".pin-all",
+                start:                "top top",
+                end:                  "+=18000",
+                scrub:                true, 
+                pin:                  true,
+                anticipatePin:        1,
+                preventOverlaps:      true, 
+                fastScrollEnd:        true, 
+                invalidateOnRefresh:  true,
                 onRefresh: (self) => {
                   if (pinEl) pinEl.style.removeProperty("max-height");
                   
@@ -195,9 +197,9 @@ export default function HomeMobile() {
 
                   const scrollWrapper = document.querySelector(".s2-mob-scroll-wrapper") as HTMLElement;
                   if (scrollWrapper) {
-                    cachedScrollWrapperY = -(scrollWrapper.getBoundingClientRect().height - window.innerHeight * 0.85);
+                    cachedScrollWrapperY = -(scrollWrapper.getBoundingClientRect().height - window.innerHeight * 0.80);
                   } else {
-                    cachedScrollWrapperY = window.innerWidth >= 768 ? -window.innerHeight * 0.55 : -window.innerHeight * 0.65;
+                    cachedScrollWrapperY = -window.innerHeight * 1.8;
                   }
                 }
               },
@@ -268,8 +270,9 @@ export default function HomeMobile() {
               )
               .addLabel("textLanding", `heroExit+=${ACTION * 0.8}`);
 
-            // ── SECTION 2 INNER ANIMATIONS ──
+            // ── SECTION 2 INNER MOBILE ANIMATIONS WITH BACKGROUND IMAGE TRANSITIONS ──
             tl.addLabel("s2TextDismissal", "textLanding")
+              // 1. Fade out initial Frame 1 text
               .to([".s2-title-main", ".s2-title-sub", ".s2-body"], { 
                 opacity: 0, 
                 y: -60, 
@@ -277,26 +280,42 @@ export default function HomeMobile() {
                 ease: "power2.in"
               }, "s2TextDismissal")
               
-              .addLabel("s2MobileScrollStart", "s2TextDismissal+=" + (ACTION * 0.8))
-              .to(".s2-mob-scroll-wrapper", { opacity: 1, duration: ACTION * 0.1 }, "s2MobileScrollStart")
+              // 2. Start scrolling text-only wrapper up
+              .addLabel("s2MobileScrollStart", "s2TextDismissal+=" + (ACTION * 0.4))
+              .to(".s2-mob-scroll-wrapper", { opacity: 1, duration: ACTION * 0.2 }, "s2MobileScrollStart")
               .fromTo(".s2-mob-scroll-wrapper", 
                 { yPercent: 100, y: 0 }, 
                 { 
                   yPercent: 0,
                   y: () => cachedScrollWrapperY, 
-                  duration: ACTION 
+                  duration: ACTION * 2.5
                 }, 
                 "s2MobileScrollStart"
               )
-              
-              .to(".s2-mob-row5", { 
-                opacity: 1, 
-                duration: ACTION * 0.4, 
-                ease: "power1.out" 
-              }, "s2MobileScrollStart+=" + (ACTION * 0.5));
+
+              // 3. Background Image Transition 1 (to sectiontwo-left-sub.webp)
+              .to(".s2-mob-clip-bg-1", {
+                clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+                duration: ACTION * 0.6,
+                ease: "none"
+              }, "s2MobileScrollStart+=" + (ACTION * 0.3))
+
+              // 4. Background Image Transition 2 (to sectiontwo-right.webp)
+              .to(".s2-mob-clip-bg-2", {
+                clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+                duration: ACTION * 0.6,
+                ease: "none"
+              }, "s2MobileScrollStart+=" + (ACTION * 1.1))
+
+              // 5. Background Image Transition 3 (to sectiontwo-right-under.webp)
+              .to(".s2-mob-clip-bg-3", {
+                clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+                duration: ACTION * 0.6,
+                ease: "none"
+              }, "s2MobileScrollStart+=" + (ACTION * 1.8));
 
             // ── SECTION 8 SLIDE UP ──
-            tl.addLabel("sec8Start", "s2MobileScrollStart+=" + ACTION)
+            tl.addLabel("sec8Start", "s2MobileScrollStart+=" + (ACTION * 2.5))
               .set(".section-8", { visibility: "visible" }, "sec8Start")
               .to(".section-8", { yPercent: 0, duration: ACTION }, "sec8Start")
               .to(".s8-bg-img", { yPercent: 0, duration: ACTION }, "sec8Start")
@@ -310,8 +329,8 @@ export default function HomeMobile() {
               .fromTo(".section-10", { yPercent: 100 }, { yPercent: 0, duration: ACTION }, "sec10Start")
               .to(".section-8", { yPercent: -10, duration: ACTION }, "sec10Start")
               
-              .to(".s10-title, .s10-title-sub, .s10-para-top", { y: "-100vh", duration: ACTION }, ">")
-              .fromTo(".s10-scrollable-container", { y: "0vh" }, { y: "-84vh", duration: ACTION }, "<")
+              .to(".s10-title, .s10-title-sub, .s10-para-top", { y: "-50vh", duration: ACTION }, ">")
+              .fromTo(".s10-scrollable-container", { y: "0vh" }, { y: "-36vh", duration: ACTION }, "<")
 
               .to({}, { duration: DEAD_SCROLL })
 
@@ -332,9 +351,8 @@ export default function HomeMobile() {
             tl.addLabel("appSecStart", ">")
               .set(".section-appsec", { visibility: "visible" }, "appSecStart")
               .fromTo(".section-appsec", { yPercent: 100 }, { yPercent: 0, duration: ACTION }, "appSecStart")
-              .to(".section-7", { yPercent: -10, duration: ACTION }, "appSecStart") // Clean parallax exit
+              .to(".section-7", { yPercent: -10, duration: ACTION }, "appSecStart") 
 
-              // Buffer duration allowing full internal scroll of the tall App section
               .to({}, { duration: 3.0 })
 
             // ── SECTION 9 SLIDE UP ──
@@ -423,7 +441,6 @@ export default function HomeMobile() {
           <SectionSeven />
         </div>
 
-        {/* App Section Wrapper with explicit scroll height matching project section */}
         <div 
           className="section-appsec absolute inset-x-0 bottom-0 w-full h-[120vh] min-h-[120vh] structural-layer overflow-y-auto overflow-x-hidden bg-black" 
           style={{ pointerEvents: "auto", visibility: "hidden" }}

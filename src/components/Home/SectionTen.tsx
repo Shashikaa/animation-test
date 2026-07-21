@@ -63,15 +63,6 @@ export default function SectionTen() {
 
       {/* ── MOBILE & TABLET SCROLLABLE STRUCTURAL CONTAINER ── */}
       <div className="s10-scrollable-container">
-        {/* Image Wrapper Container */}
-        <div className="s10-img-right-wrap">
-          <img
-            src="/Craftsmanship.webp" 
-            alt="Grand Pools Craftsmanship"
-            className="w-full h-full object-cover"
-          />
-        </div>
-
         {/* SECOND STAGE ELEMENTS */}
         <div className="s10-content-wrap">
           <p className="s10-card-para text-[#FFFFFF] text-sm md:text-base leading-relaxed">
@@ -100,15 +91,6 @@ export default function SectionTen() {
             max-width: 380px;
             text-align: left;
           }
-          .s10-img-right-wrap {
-            position: absolute;
-            bottom: clamp(180px, 25vh, 240px);
-            right: clamp(40px, 6vw, 80px);
-            width: 540px;
-            height: 360px;
-            z-index: 50;
-            clip-path: inset(0% 0% 0% 0%);
-          }
           .s10-content-wrap {
             position: absolute;
             bottom: clamp(300px, 30vh, 300px); 
@@ -136,13 +118,6 @@ export default function SectionTen() {
             z-index: 60;
           }
 
-          .s10-img-right-wrap {
-            width: 100%;
-            height: clamp(420px, 40vh, 420px);
-            overflow: hidden;
-            clip-path: inset(0% 0% 0% 0%);
-          }
-
           .s10-content-wrap {
             width: 60%;
             height: auto;
@@ -163,13 +138,6 @@ export default function SectionTen() {
             flex-direction: column;
             gap: 190px; 
             z-index: 60;
-          }
-
-          .s10-img-right-wrap {
-            width: 100%;
-            height: clamp(220px, 30vh, 320px);
-            overflow: hidden;
-            clip-path: inset(0% 0% 0% 0%);
           }
 
           .s10-content-wrap {

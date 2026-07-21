@@ -22,6 +22,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
   const [introDone, setIntroDone] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
+  const lastSec2Idx = useRef<number>(-1);
 
   // Reset scroll mechanics on mount
   useEffect(() => {
@@ -58,11 +59,12 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
         WebkitClipPath: "inset(100% 0% 0% 0%)"
       });
 
-      // Section Two comes in via standard slide over Section One
+      // Section Two initial state
       gsap.set(".services-section-two-wrap", { 
         visibility: "hidden", 
         yPercent: 100 
       });
+      gsap.set(".s2-inner-fade-target", { opacity: 0 });
 
       // App Section Initial Baseline
       gsap.set(".services-appsec-wrap", {
@@ -113,20 +115,28 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
 
     const ctx = gsap.context(() => {
       const ACTION = 2.0;
-      const DEAD_SCROLL = 0.2;
+
+      const triggerSec2Hook = (nextIdx: number) => {
+        if (nextIdx !== lastSec2Idx.current) {
+          lastSec2Idx.current = nextIdx;
+          if ((window as any)._sec2GoTo) {
+            (window as any)._sec2GoTo(nextIdx);
+          }
+        }
+      };
 
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: ".services-pin-master",
           start: "top top",
-          end: "+=11500", // Perfectly balanced overall track distance
+          end: "+=10000",
           pin: true,
-          scrub: 0.2,    
+          scrub: 0.5,
           invalidateOnRefresh: true
         }
       });
 
-      // ── STEP A: Compress Hero & Move Layout Elements ──
+      // ── STEP A: Compress Hero ──
       tl.to([".hero-text-wrap", ".hero-btn"], {
         y: "-=380px",    
         duration: ACTION, 
@@ -144,7 +154,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
         ease: "power2.inOut"
       }, 0);
 
-      // ── STEP B: Section One un-clips directly OVER the Hero ──
+      // ── STEP B: Section One un-clips OVER Hero ──
       tl.set(".services-section-one-wrap", { visibility: "visible" })
         .to(".services-section-one-wrap", {
           clipPath: "inset(0% 0% 0% 0%)",
@@ -153,55 +163,55 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
           ease: "power2.inOut"
         });
 
-      // ── STEP C: Section Two slides up over Section One ──
+      // ── STEP C: Section Two & Text Slide Up Together ──
       tl.set(".services-section-two-wrap", { visibility: "visible" })
         .to(".services-section-two-wrap", { 
           yPercent: 0, 
           duration: ACTION, 
           ease: "power2.inOut",
-          onUpdate: function() {
-            const progress = this.progress();
-            setIsSectionTwoActive(progress > 0.2);
+          onStart: () => setIsSectionTwoActive(true),
+          onReverseComplete: () => {
+            setIsSectionTwoActive(false);
+            gsap.set(".services-section-two-wrap", { visibility: "hidden" });
+            triggerSec2Hook(0);
           }
-        });
+        })
+        .to(".s2-inner-fade-target", { 
+          opacity: 1, 
+          duration: ACTION, 
+          ease: "power2.inOut"
+        }, "<");
 
-      // ── ROBUST TRACK RUNS FOR BIDIRECTIONAL SCROLLING SLIDES ──
-      // Slide 0 Anchor
-      tl.call(() => { if ((window as any)._sec2GoTo) (window as any)._sec2GoTo(0); }, undefined, ">");
-      tl.to({}, { duration: 1.5 });
-      
-      // Slide 1 Anchor
-      tl.call(() => { if ((window as any)._sec2GoTo) (window as any)._sec2GoTo(1); }, undefined, ">");
-      tl.to({}, { duration: 1.5 });
+      // ── STEP D: SLIDE TRACK STEPPER ──
+      tl.to({}, { 
+        duration: 4.0,
+        onUpdate: function() {
+          const p = this.progress();
+          if (p < 0.25) triggerSec2Hook(0);
+          else if (p < 0.50) triggerSec2Hook(1);
+          else if (p < 0.75) triggerSec2Hook(2);
+          else triggerSec2Hook(3);
+        }
+      });
 
-      // Slide 2 Anchor
-      tl.call(() => { if ((window as any)._sec2GoTo) (window as any)._sec2GoTo(2); }, undefined, ">");
-      tl.to({}, { duration: 1.5 });
-
-      // Slide 3 Anchor
-      tl.call(() => { if ((window as any)._sec2GoTo) (window as any)._sec2GoTo(3); }, undefined, ">");
-      tl.to({}, { duration: DEAD_SCROLL });
-
-      // ── STEP D: App Section slides up over Section Two ──
-      // Because bottom-0 + h-[120vh], yPercent: 0 naturally aligns the bottom flush with the viewport bottom.
+      // ── STEP E: App Section slides up over Section Two ──
       tl.set(".services-appsec-wrap", { visibility: "visible" })
         .to(".services-appsec-wrap", {
           yPercent: 0,
           duration: ACTION,
-          ease: "power2.inOut"
+          ease: "power2.inOut",
+          onStart: () => triggerSec2Hook(3),
+          onReverseComplete: () => triggerSec2Hook(3)
         });
 
-      // ── STEP E: UNIFIED TRANSITION: APP SECTION -> CTA ──
-      // CTA immediately slides in over top as soon as the App Section bottom lands flush
-      tl.addLabel("ctaStart", ">")
+      // ── STEP F: APP SECTION -> CTA ──
+      tl.addLabel("ctaStart")
         .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
         .to(".services-section-cta", { yPercent: 0, duration: ACTION, ease: "none" }, "ctaStart")
         .to(".services-appsec-wrap", { yPercent: -10, duration: ACTION, ease: "none" }, "ctaStart");
 
-      tl.to({}, { duration: DEAD_SCROLL }); 
-
-      // ── STEP F: UNIFIED TRANSITION: CTA -> FOOTER ──
-      tl.addLabel("footerStart", ">")
+      // ── STEP G: CTA -> FOOTER ──
+      tl.addLabel("footerStart")
         .to([".services-section-cta .cta-inner-mobile", ".services-section-cta .cta-inner-desktop"], { opacity: 0, duration: ACTION * 0.3, ease: "none" }, "footerStart")
         .set(".services-footer-wrap", { visibility: "visible" }, "footerStart+=0.1")
         .to(".services-footer-wrap", { yPercent: 0, duration: ACTION, ease: "none" }, "footerStart+=0.1") 

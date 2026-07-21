@@ -152,153 +152,145 @@ export default function SingleProjectPageDesktop({ preloaderDone, pageData }: Su
       };
 
       const buildTimeline = () => {
-        requestAnimationFrame(() => {
-          ScrollTrigger.refresh();
+        ScrollTrigger.refresh();
 
-          const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
-          if (vv) {
-            const onVVResize = () => ScrollTrigger.refresh(true);
-            vv.addEventListener("resize", onVVResize);
-            vvCleanup = () => vv.removeEventListener("resize", onVVResize);
-          }
+        const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
+        if (vv) {
+          const onVVResize = () => ScrollTrigger.refresh(true);
+          vv.addEventListener("resize", onVVResize);
+          vvCleanup = () => vv.removeEventListener("resize", onVVResize);
+        }
 
-          gsap.set(".appsec-phone-wrapper", { y: 40, opacity: 0 });
+        gsap.set(".appsec-phone-wrapper", { y: 40, opacity: 0 });
 
-          const scrollTl = gsap.timeline({
-            defaults: { ease: "none" },
-            scrollTrigger: {
-              trigger: ".master-viewport",
-              start: "top top",
-              end: `+=18000`,
-              pin: true,
-              pinSpacing: true,
-              scrub: scrubValue,
-              anticipatePin: 1,
-              preventOverlaps: true,
-              fastScrollEnd: true,
-              invalidateOnRefresh: true,
-              snap: {
-                snapTo: (progress) => {
-                  const labels = Object.keys(scrollTl.labels).map(
-                    name => scrollTl.labels[name] / scrollTl.totalDuration()
-                  );
-                  labels.sort((a, b) => a - b);
+        const scrollTl = gsap.timeline({
+          defaults: { ease: "none" },
+          scrollTrigger: {
+            trigger: ".master-viewport",
+            start: "top top",
+            end: `+=18000`,
+            pin: true,
+            pinSpacing: true,
+            scrub: scrubValue,
+            anticipatePin: 1,
+            preventOverlaps: true,
+            fastScrollEnd: true,
+            invalidateOnRefresh: true,
+            snap: {
+              snapTo: (progress) => {
+                const labels = Object.keys(scrollTl.labels).map(
+                  name => scrollTl.labels[name] / scrollTl.totalDuration()
+                );
+                labels.sort((a, b) => a - b);
 
-                  const currentProg = scrollTl.progress();
-                  const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
+                const currentProg = scrollTl.progress();
+                const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
 
-                  for (let i = 0; i < labels.length - 1; i++) {
-                    const start = labels[i];
-                    const end = labels[i + 1];
+                for (let i = 0; i < labels.length - 1; i++) {
+                  const start = labels[i];
+                  const end = labels[i + 1];
 
-                    if (currentProg >= start && currentProg <= end) {
-                      const localProgress = (currentProg - start) / (end - start);
+                  if (currentProg >= start && currentProg <= end) {
+                    const localProgress = (currentProg - start) / (end - start);
 
-                      if (isForward) {
-                        return localProgress >= 0.35 ? end : start;
-                      } else {
-                        return localProgress <= 0.40 ? start : end;
-                      }
+                    if (isForward) {
+                      return localProgress >= 0.35 ? end : start;
+                    } else {
+                      return localProgress <= 0.40 ? start : end;
                     }
                   }
-                  return progress;
-                },
-                duration: { min: 0.3, max: 0.6 },
-                delay: 0.01,
-                ease: "power1.inOut"
-              }
+                }
+                return progress;
+              },
+              duration: { min: 0.3, max: 0.6 },
+              delay: 0.01,
+              ease: "power1.inOut"
             }
-          });
-
-          // ── HERO TRANSITION & INFO PANEL SLIDE UP ──
-          scrollTl.addLabel("start", 0);
-
-          scrollTl.set(".project-info-wrap", { visibility: "visible" }, 0)
-                  .to(".project-info-wrap", { 
-                    yPercent: 0, 
-                    duration: 2.0,
-                    ease: "power2.out",
-                    onStart: () => setIsProjectInfoActive(true),
-                    onReverseComplete: () => {
-                      setIsProjectInfoActive(false);
-                      triggerInfoHook(0);
-                    }
-                  }, 0);
-
-          scrollTl.to(".hero-text-wrap", { autoAlpha: 0, y: -60, duration: 1.5 }, 0);
-
-          scrollTl.call(() => triggerInfoHook(0), [], 1.0);
-
-          // ── INNER INFO SLIDES SWITCHING ──
-          if (infoSlides.length > 0) {
-            infoSlides.forEach((_, index) => {
-              if (index === 0) return;
-
-              const slideLabel = `info_slide_${index}`;
-              scrollTl.addLabel(slideLabel);
-
-              const currentImgLayer = `.info-img-layer-${index}`;
-              const innerImage = `${currentImgLayer} .info-image-inner`;
-
-              scrollTl.to(currentImgLayer, {
-                clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-                duration: 2.5,
-                ease: "power2.inOut"
-              }, slideLabel);
-
-              scrollTl.fromTo(innerImage, 
-                { scale: 1.25 },
-                { scale: 1.0, duration: 2.5, ease: "power2.out" },
-                slideLabel
-              );
-
-              scrollTl.call(() => {
-                const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
-                triggerInfoHook(isForward ? index : index - 1);
-              }, [], `${slideLabel}+=1.0`);
-            });
           }
-
-          scrollTl.addLabel("infoSlidesEnd");
-          scrollTl.to({}, { duration: 1.5 }, "infoSlidesEnd");
-
-          // ── APP SECTION SLIDE UP OVER INFO WRAP ──
-          scrollTl.addLabel("appSectionStart");
-
-          scrollTl.set(".project-app-wrap", { visibility: "visible" }, "appSectionStart")
-                  .to(".project-app-wrap", { yPercent: 0, duration: 2.0, ease: "power2.inOut" }, "appSectionStart");
-
-          scrollTl.to(
-            ".appsec-phone-wrapper",
-            { y: 0, opacity: 1, duration: 1.5, ease: "power2.out" },
-            "appSectionStart+=0.5"
-          );
-
-          // ── FAQ SECTION SLIDES UP ──
-          scrollTl.addLabel("faqStart", "appSectionStart+=2.0");
-          scrollTl.set(".faq-scroll-wrapper", { visibility: "visible" }, "faqStart")
-                  .to(".faq-scroll-wrapper", { yPercent: 0, ease: "power2.inOut", duration: 2.0 }, "faqStart");
-
-          // ── COMBINED FAQ FADE & FOOTER SLIDE ──
-          scrollTl.addLabel("footerStart", "faqStart+=2.0");
-          
-          scrollTl.to(".faq-content", { opacity: 0, y: -30, ease: "power2.in", duration: 1.0 }, "footerStart");
-          
-          scrollTl.set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
-                  .to(".footer-scroll-wrapper", { yPercent: 0, ease: "power2.out", duration: 2.0 }, "footerStart");
-
-          scrollTl.addLabel("end");
         });
+
+        // ── HERO TRANSITION & INFO PANEL SLIDE UP ──
+        scrollTl.addLabel("start", 0);
+
+        scrollTl.set(".project-info-wrap", { visibility: "visible" }, 0)
+                .to(".project-info-wrap", { 
+                  yPercent: 0, 
+                  duration: 2.0,
+                  ease: "power2.out",
+                  onStart: () => setIsProjectInfoActive(true),
+                  onReverseComplete: () => {
+                    setIsProjectInfoActive(false);
+                    triggerInfoHook(0);
+                  }
+                }, 0);
+
+        scrollTl.to(".hero-text-wrap", { autoAlpha: 0, y: -60, duration: 1.5 }, 0);
+
+        scrollTl.call(() => triggerInfoHook(0), [], 1.0);
+
+        // ── INNER INFO SLIDES SWITCHING ──
+        if (infoSlides.length > 0) {
+          infoSlides.forEach((_, index) => {
+            if (index === 0) return;
+
+            const slideLabel = `info_slide_${index}`;
+            scrollTl.addLabel(slideLabel);
+
+            const currentImgLayer = `.info-img-layer-${index}`;
+            const innerImage = `${currentImgLayer} .info-image-inner`;
+
+            scrollTl.to(currentImgLayer, {
+              clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+              duration: 2.5,
+              ease: "power2.inOut"
+            }, slideLabel);
+
+            scrollTl.fromTo(innerImage, 
+              { scale: 1.25 },
+              { scale: 1.0, duration: 2.5, ease: "power2.out" },
+              slideLabel
+            );
+
+            scrollTl.call(() => {
+              const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
+              triggerInfoHook(isForward ? index : index - 1);
+            }, [], `${slideLabel}+=1.0`);
+          });
+        }
+
+        scrollTl.addLabel("infoSlidesEnd");
+        scrollTl.to({}, { duration: 1.5 }, "infoSlidesEnd");
+
+        // ── APP SECTION SLIDE UP OVER INFO WRAP ──
+        scrollTl.addLabel("appSectionStart");
+
+        scrollTl.set(".project-app-wrap", { visibility: "visible" }, "appSectionStart")
+                .to(".project-app-wrap", { yPercent: 0, duration: 2.0, ease: "power2.inOut" }, "appSectionStart");
+
+        scrollTl.to(
+          ".appsec-phone-wrapper",
+          { y: 0, opacity: 1, duration: 1.5, ease: "power2.out" },
+          "appSectionStart+=0.5"
+        );
+
+        // ── FAQ SECTION SLIDES UP ──
+        scrollTl.addLabel("faqStart", "appSectionStart+=2.0");
+        scrollTl.set(".faq-scroll-wrapper", { visibility: "visible" }, "faqStart")
+                .to(".faq-scroll-wrapper", { yPercent: 0, ease: "power2.inOut", duration: 2.0 }, "faqStart");
+
+        // ── COMBINED FAQ FADE & FOOTER SLIDE ──
+        scrollTl.addLabel("footerStart", "faqStart+=2.0");
+        
+        scrollTl.to(".faq-content", { opacity: 0, y: -30, ease: "power2.in", duration: 1.0 }, "footerStart");
+        
+        scrollTl.set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
+                .to(".footer-scroll-wrapper", { yPercent: 0, ease: "power2.out", duration: 2.0 }, "footerStart");
+
+        scrollTl.addLabel("end");
       };
 
-      if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-        (window as any).requestIdleCallback(
-          () => document.fonts.ready.then(buildTimeline),
-          { timeout: 300 }
-        );
-      } else {
-        setTimeout(() => document.fonts.ready.then(buildTimeline), 0);
-      }
+      // 🌟 FIXED: Instantly builds the timeline on the next animation frame
+      requestAnimationFrame(buildTimeline);
 
     }, scopeRef);
 

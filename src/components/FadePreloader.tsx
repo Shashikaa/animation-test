@@ -7,9 +7,9 @@ type FadePreloaderProps = {
   onComplete?: () => void;
 };
 
-// Set both to 0 for an absolute instant appearance and disappearance
-const HOLD_DURATION_MS = 0; 
-const EXIT_DURATION_MS = 0; 
+// Set short durations so the SVG flashes/fades visually without hanging
+const HOLD_DURATION_MS = 100; // Hold briefly so the SVG/gradient actually renders
+const EXIT_DURATION_MS = 400; // Smooth 400ms fade-out transition
 
 export default function FadePreloader({
   onExitStart,
@@ -20,6 +20,7 @@ export default function FadePreloader({
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // 1. Hold briefly to let the SVG render, then trigger exit
     const fadeTimer = setTimeout(() => {
       setFading(true);
       onExitStart?.();
@@ -29,27 +30,15 @@ export default function FadePreloader({
   }, [onExitStart]);
 
   useEffect(() => {
-    const el = rootRef.current;
-    if (!el || !fading) return;
+    if (!fading) return;
 
-    const handleEnd = (e: TransitionEvent) => {
-      if (e.propertyName !== "opacity") return;
-      onComplete?.();
-      setVisible(false);
-    };
-
-    el.addEventListener("transitionend", handleEnd);
-
-    // Reduced the fallback delay to 0 since there is no transition time to wait for
-    const fallback = setTimeout(() => {
+    // 2. Complete transition cleanly after the exit duration
+    const completeTimer = setTimeout(() => {
       onComplete?.();
       setVisible(false);
     }, EXIT_DURATION_MS);
 
-    return () => {
-      el.removeEventListener("transitionend", handleEnd);
-      clearTimeout(fallback);
-    };
+    return () => clearTimeout(completeTimer);
   }, [fading, onComplete]);
 
   if (!visible) return null;
@@ -57,11 +46,10 @@ export default function FadePreloader({
   return (
     <div
       ref={rootRef}
-      className="fixed inset-0 z-[9999] overflow-hidden"
+      className="fixed inset-0 z-[9999] overflow-hidden pointer-events-none"
       style={{
         opacity: fading ? 0 : 1,
-        transition: `opacity ${EXIT_DURATION_MS}ms ease-out`,
-        pointerEvents: "none",
+        transition: `opacity ${EXIT_DURATION_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`,
       }}
     >
       {/* Background Gradient */}

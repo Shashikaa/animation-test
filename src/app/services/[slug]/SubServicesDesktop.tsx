@@ -132,162 +132,151 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
       const scrubValue = 1.2;
       const revealedElements = new Set<string>();
 
-      // Optional text reveals target declarations can match the layout loop here
-      // useTextReveal(scopeRef, ".services-faq-wrap .reveal-text");
-
       const buildTimeline = () => {
-        requestAnimationFrame(() => {
-          ScrollTrigger.refresh();
+        ScrollTrigger.refresh();
 
-          const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
-          if (vv) {
-            const onVVResize = () => ScrollTrigger.refresh(true);
-            vv.addEventListener("resize", onVVResize);
-            vvCleanup = () => vv.removeEventListener("resize", onVVResize);
-          }
+        const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
+        if (vv) {
+          const onVVResize = () => ScrollTrigger.refresh(true);
+          vv.addEventListener("resize", onVVResize);
+          vvCleanup = () => vv.removeEventListener("resize", onVVResize);
+        }
 
-          const tl = gsap.timeline({
-            defaults: { ease: "none" }, 
-            scrollTrigger: {
-              trigger: ".services-hero-master",
-              start: "top top",
-              end: "+=10500", 
-              scrub: scrubValue,
-              pin: true,
-              pinSpacing: true,
-              anticipatePin: 1,
-              preventOverlaps: true,
-              invalidateOnRefresh: true,
-              fastScrollEnd: true,
-              snap: {
-                snapTo: (progress) => {
-                  const labels = Object.keys(tl.labels).map(name => tl.labels[name] / tl.totalDuration());
-                  labels.sort((a, b) => a - b);
-                  
-                  const currentProg = tl.progress();
-                  const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+        const tl = gsap.timeline({
+          defaults: { ease: "none" }, 
+          scrollTrigger: {
+            trigger: ".services-hero-master",
+            start: "top top",
+            end: "+=10500", 
+            scrub: scrubValue,
+            pin: true,
+            pinSpacing: true,
+            anticipatePin: 1,
+            preventOverlaps: true,
+            invalidateOnRefresh: true,
+            fastScrollEnd: true,
+            snap: {
+              snapTo: (progress) => {
+                const labels = Object.keys(tl.labels).map(name => tl.labels[name] / tl.totalDuration());
+                labels.sort((a, b) => a - b);
+                
+                const currentProg = tl.progress();
+                const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
 
-                  for (let i = 0; i < labels.length - 1; i++) {
-                    const start = labels[i];
-                    const end = labels[i + 1];
+                for (let i = 0; i < labels.length - 1; i++) {
+                  const start = labels[i];
+                  const end = labels[i + 1];
 
-                    if (currentProg >= start && currentProg <= end) {
-                      const localProgress = (currentProg - start) / (end - start);
-                      if (isForward) {
-                        return localProgress >= 0.35 ? end : start;
-                      } else {
-                        return localProgress <= 0.40 ? start : end;
-                      }
+                  if (currentProg >= start && currentProg <= end) {
+                    const localProgress = (currentProg - start) / (end - start);
+                    if (isForward) {
+                      return localProgress >= 0.35 ? end : start;
+                    } else {
+                      return localProgress <= 0.40 ? start : end;
                     }
                   }
-                  return progress;
-                },
-                duration: { min: 0.3, max: 0.6 },
-                delay: 0.01,
-                ease: "power1.inOut"
-              }
+                }
+                return progress;
+              },
+              duration: { min: 0.3, max: 0.6 },
+              delay: 0.01,
+              ease: "power1.inOut"
             }
-          });
-
-          // ── PHASE 1: Compress Hero Layout ──
-          tl.addLabel("phase1")
-            .to(".hero-text-wrap", {
-              opacity: 0,
-              y: -40,
-              duration: 1.0,
-              ease: "power1.out"
-            }, "phase1")
-            .to(".services-hero-top-layer", {
-              width: "calc(100% - 600px)", 
-              xPercent: -10,                      
-              duration: 1.0, 
-              ease: "power1.inOut",
-             }, "phase1+=0.1");
-
-          // ── PHASE 2: Reveal Section One Sheet ──
-          tl.addLabel("sec1Start")
-            .to(".section-one-wrap", {
-              clipPath: "inset(0% 0% 0% 0%)",
-              duration: 1.0, 
-              ease: "power1.inOut"
-            }, "sec1Start")
-            .to(".service-hero-bg", {
-              scale: 1.1,     
-              duration: 1.0, 
-              ease: "power1.inOut",
-            }, "sec1Start");
-
-          // ── PHASE 2.5: Scale Up Cleanly ──
-          tl.addLabel("sec1Expanded")
-            .to([".s10-para-top", ".s10-title"], {
-              opacity: 0,
-              y: -45,
-              duration: 0.8,
-              ease: "power2.in"
-            }, "sec1Expanded")
-            
-            .to(".s10-img-absolute-container", {
-              width: "100vw",
-              height: "100vh",
-              right: "0px",
-              bottom: "0px",
-              borderRadius: "0px",
-              duration: 1.0, 
-              ease: "power2.inOut"
-            }, "sec1Expanded")
-            
-            .to(".s10-img-element", {
-              scale: 1.06,
-              duration: 1.0, 
-              ease: "power2.inOut"
-            }, "sec1Expanded");
-
-          // ── SEQUENTIAL PARAGRAPHS ROLL UP ──
-          tl.addLabel("text1")
-            .to(".s10-seq-container", { y: -380, duration: 1.0 }, "text1");
-            
-          tl.addLabel("text2")
-            .to(".s10-seq-container", { y: -760, duration: 1.0 }, "text2");
-            
-          tl.addLabel("text3")
-            .to(".s10-seq-container", { y: -1100, duration: 1.0 }, "text3");
-            
-          tl.addLabel("text4");
-
-          // ── PHASE 2.6: FAQ Section Slide Up ──
-          tl.addLabel("faqStart", "text4")
-            .set(".services-faq-wrap", { visibility: "visible" }, "faqStart")
-            .to(".services-faq-wrap", {
-              y: "0%",
-              duration: 1.0, 
-              ease: "power1.inOut"
-            }, "faqStart");
-
-          // ── CTA REVEAL TRACK ──
-          tl.addLabel("ctaStart")
-            .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
-            .to(".services-section-cta", { yPercent: 0, duration: 1.0 }, "ctaStart")
-            .to(".services-faq-wrap", { scale: 1, duration: 1.0 }, "ctaStart");
-
-          // ── FOOTER REVEAL TRACK ──
-          tl.addLabel("footerStart")
-            .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
-            .to(".services-footer-wrap", { yPercent: 0, duration: 1.0 }, "footerStart")
-            .to(".services-faq-wrap", { scale: 0.92, duration: 1.0 }, "footerStart")
-            .to(".services-section-cta .cta-inner-desktop", { opacity: 0, duration: 0.7, ease: "power1.out" }, "footerStart");
-            
-          tl.addLabel("end");
+          }
         });
+
+        // ── PHASE 1: Compress Hero Layout ──
+        tl.addLabel("phase1")
+          .to(".hero-text-wrap", {
+            opacity: 0,
+            y: -40,
+            duration: 1.0,
+            ease: "power1.out"
+          }, "phase1")
+          .to(".services-hero-top-layer", {
+            width: "calc(100% - 600px)", 
+            xPercent: -10,                     
+            duration: 1.0, 
+            ease: "power1.inOut",
+           }, "phase1+=0.1");
+
+        // ── PHASE 2: Reveal Section One Sheet ──
+        tl.addLabel("sec1Start")
+          .to(".section-one-wrap", {
+            clipPath: "inset(0% 0% 0% 0%)",
+            duration: 1.0, 
+            ease: "power1.inOut"
+          }, "sec1Start")
+          .to(".service-hero-bg", {
+            scale: 1.1,    
+            duration: 1.0, 
+            ease: "power1.inOut",
+          }, "sec1Start");
+
+        // ── PHASE 2.5: Scale Up Cleanly ──
+        tl.addLabel("sec1Expanded")
+          .to([".s10-para-top", ".s10-title"], {
+            opacity: 0,
+            y: -45,
+            duration: 0.8,
+            ease: "power2.in"
+          }, "sec1Expanded")
+          
+          .to(".s10-img-absolute-container", {
+            width: "100vw",
+            height: "100vh",
+            right: "0px",
+            bottom: "0px",
+            borderRadius: "0px",
+            duration: 1.0, 
+            ease: "power2.inOut"
+          }, "sec1Expanded")
+          
+          .to(".s10-img-element", {
+            scale: 1.06,
+            duration: 1.0, 
+            ease: "power2.inOut"
+          }, "sec1Expanded");
+
+        // ── SEQUENTIAL PARAGRAPHS ROLL UP ──
+        tl.addLabel("text1")
+          .to(".s10-seq-container", { y: -380, duration: 1.0 }, "text1");
+          
+        tl.addLabel("text2")
+          .to(".s10-seq-container", { y: -760, duration: 1.0 }, "text2");
+          
+        tl.addLabel("text3")
+          .to(".s10-seq-container", { y: -1100, duration: 1.0 }, "text3");
+          
+        tl.addLabel("text4");
+
+        // ── PHASE 2.6: FAQ Section Slide Up ──
+        tl.addLabel("faqStart", "text4")
+          .set(".services-faq-wrap", { visibility: "visible" }, "faqStart")
+          .to(".services-faq-wrap", {
+            y: "0%",
+            duration: 1.0, 
+            ease: "power1.inOut"
+          }, "faqStart");
+
+        // ── CTA REVEAL TRACK ──
+        tl.addLabel("ctaStart")
+          .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
+          .to(".services-section-cta", { yPercent: 0, duration: 1.0 }, "ctaStart")
+          .to(".services-faq-wrap", { scale: 1, duration: 1.0 }, "ctaStart");
+
+        // ── FOOTER REVEAL TRACK ──
+        tl.addLabel("footerStart")
+          .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
+          .to(".services-footer-wrap", { yPercent: 0, duration: 1.0 }, "footerStart")
+          .to(".services-faq-wrap", { scale: 0.92, duration: 1.0 }, "footerStart")
+          .to(".services-section-cta .cta-inner-desktop", { opacity: 0, duration: 0.7, ease: "power1.out" }, "footerStart");
+          
+        tl.addLabel("end");
       };
 
-      if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-        (window as any).requestIdleCallback(
-          () => document.fonts.ready.then(buildTimeline),
-          { timeout: 300 }
-        );
-      } else {
-        setTimeout(() => document.fonts.ready.then(buildTimeline), 0);
-      }
+      // 🌟 FIXED: Instantly builds the timeline on the next animation frame without font-loading stalls
+      requestAnimationFrame(buildTimeline);
 
     }, scopeRef);
 

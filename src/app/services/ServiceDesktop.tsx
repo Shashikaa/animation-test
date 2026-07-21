@@ -27,7 +27,6 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
   const [introDone, setIntroDone] = useState(false);
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
   
-  // Track current inner index for Section Two panels safely across refreshes
   const lastSec2Idx = useRef<number>(-1);
 
   useEffect(() => {
@@ -51,25 +50,21 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     const ctx = gsap.context(() => {
-      // Hero Initial Layout Restores
+      // 🌟 Restored your original scale (1.3) and y-offset (-60)
       gsap.set(".service-hero-bg", { scale: 1.3, xPercent: 0, transformOrigin: "center center" });
       gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: -60 });
       gsap.set(".services-hero-top-layer", { width: "100%" });
       
-      // Section One Sheet Setups
       gsap.set(".section-one-wrap", { clipPath: "inset(100% 0% 0% 0%)" });
       gsap.set(".s1-glass-card", { x: 40, opacity: 0 }); 
       
-      // Section Two Panel Split Configurations
       gsap.set(".services-section-two-wrap", { visibility: "hidden", opacity: 1 });
       gsap.set(".s2-left-panel", { yPercent: 100 });
       gsap.set(".s2-right-panel", { yPercent: -100 });
       gsap.set(".s2-inner-fade-target", { opacity: 0 });
 
-      // App Section Initialization
       gsap.set(".services-appsec-wrap", { visibility: "hidden", yPercent: 100 });
 
-      // CTA & Footer Backdrops Fixed
       gsap.set([".services-section-cta", ".services-footer-wrap"], { yPercent: 100, visibility: "hidden" });
       gsap.set(".services-section-cta", { zIndex: 70 });
       gsap.set(".services-footer-wrap", { zIndex: 80 });
@@ -81,11 +76,11 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
     if (!preloaderDone) return;
 
     const ctx = gsap.context(() => {
-      // Standard Hero Intro Animation (Unchanged)
       const introTl = gsap.timeline({
         onComplete: () => setIntroDone(true)
       });
 
+      // 🌟 Restored your original animation values (scale 1.1, duration 2.2s, stagger 0.2s)
       introTl.to(".service-hero-bg", {
         scale: 1.1, 
         duration: 2.2,
@@ -137,7 +132,6 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
 
       const scrubValue = 1.2;
 
-      // ── TEXT REVEAL INITIALIZATION FOR ALL NON-HERO SECTIONS ──
       useTextReveal(scopeRef, ".section-one-wrap .reveal-text");
       useTextReveal(scopeRef, ".services-section-two-wrap .reveal-text");
       useTextReveal(scopeRef, ".services-appsec-wrap .reveal-text");
@@ -158,197 +152,197 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
       ], { y: 45, opacity: 0 });
 
       const buildTimeline = () => {
-        requestAnimationFrame(() => {
-          ScrollTrigger.refresh();
+        ScrollTrigger.refresh();
 
-          const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
-          if (vv) {
-            const onVVResize = () => ScrollTrigger.refresh(true);
-            vv.addEventListener("resize", onVVResize);
-            vvCleanup = () => vv.removeEventListener("resize", onVVResize);
-          }
+        const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
+        if (vv) {
+          const onVVResize = () => ScrollTrigger.refresh(true);
+          vv.addEventListener("resize", onVVResize);
+          vvCleanup = () => vv.removeEventListener("resize", onVVResize);
+        }
 
-          const revealedElements = new Set<string>();
+        const revealedElements = new Set<string>();
 
-          const tl = gsap.timeline({
-            defaults: { ease: "none" }, 
-            scrollTrigger: {
-              trigger: ".services-hero-master",
-              start: "top top",
-              end: "+=10800",
-              scrub: scrubValue,
-              pin: true,
-              pinSpacing: true,
-              anticipatePin: 1,
-              preventOverlaps: true,
-              invalidateOnRefresh: true,
-              snap: {
-                snapTo: (progress) => {
-                  const labels = Object.keys(tl.labels).map(name => tl.labels[name] / tl.totalDuration());
-                  labels.sort((a, b) => a - b);
-                  
-                  const currentProg = tl.progress();
-                  const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+        const tl = gsap.timeline({
+          defaults: { ease: "none" }, 
+          scrollTrigger: {
+            trigger: ".services-hero-master",
+            start: "top top",
+            end: "+=10800",
+            scrub: scrubValue,
+            pin: true,
+            pinSpacing: true,
+            anticipatePin: 1,
+            preventOverlaps: true,
+            invalidateOnRefresh: true,
+            snap: {
+              snapTo: (progress) => {
+                const labels = Object.keys(tl.labels).map(name => tl.labels[name] / tl.totalDuration());
+                labels.sort((a, b) => a - b);
+                
+                const currentProg = tl.progress();
+                const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
 
-                  for (let i = 0; i < labels.length - 1; i++) {
-                    const start = labels[i];
-                    const end = labels[i + 1];
+                for (let i = 0; i < labels.length - 1; i++) {
+                  const start = labels[i];
+                  const end = labels[i + 1];
 
-                    if (currentProg >= start && currentProg <= end) {
-                      const localProgress = (currentProg - start) / (end - start);
-                      if (isForward) {
-                        return localProgress >= 0.35 ? end : start;
-                      } else {
-                        return localProgress <= 0.40 ? start : end;
-                      }
+                  if (currentProg >= start && currentProg <= end) {
+                    const localProgress = (currentProg - start) / (end - start);
+                    if (isForward) {
+                      return localProgress >= 0.35 ? end : start;
+                    } else {
+                      return localProgress <= 0.40 ? start : end;
                     }
                   }
-                  return progress;
-                },
-                duration: { min: 0.3, max: 0.6 },
-                delay: 0.01,
-                ease: "power1.inOut",
-              }
-            },
-          });
-
-          // Play-once text reveal trigger function (Identical to About Page)
-          const addPlayOnceTextReveal = (labelName: string, timeOffset: number, selector: string) => {
-            const absoluteTime = tl.labels[labelName] + timeOffset;
-            
-            tl.call(() => {
-              const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
-              if (isForward && !revealedElements.has(selector)) {
-                revealedElements.add(selector);
-                
-                gsap.to(selector, {
-                  y: 0,
-                  opacity: 1,
-                  stagger: 0.05,
-                  duration: 0.8,
-                  ease: "power2.out",
-                  overwrite: "auto"
-                });
-              }
-            }, [], absoluteTime);
-          };
-
-          const triggerSec2Hook = (nextIdx: number) => {
-            if (nextIdx !== lastSec2Idx.current) {
-              lastSec2Idx.current = nextIdx;
-              if ((window as any)._sec2GoTo) {
-                (window as any)._sec2GoTo(nextIdx);
-              }
-            }
-          };
-
-          // ── HERO HOLD BUFFER & COMPRESSION ──
-          tl.addLabel("heroStart")
-            .set(".hero-text-wrap", { transformOrigin: "left bottom" }, 0)
-            .to(".hero-text-wrap", { y: 60, scale: 0.75, duration: 1.0 }, 0)
-            .to(".services-hero-top-layer", { width: "60%", duration: 1.0 }, 0);
-
-          // ── SECTION 1 SHEET REVEAL ──
-          tl.addLabel("sec1Start")
-            .to(".section-one-wrap", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.0 })
-            .to(".service-hero-bg", { xPercent: -8, scale: 1.6, duration: 1.0 }, "<")
-            .to(".s1-glass-card", { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, "sec1Start+=0.2");
-
-          addPlayOnceTextReveal("sec1Start", 0.35, ".section-one-wrap .reveal-text .gs-line-inner, .section-one-wrap .reveal-text > *");
-
-          // ── SECTION TWO TRANSITION ──
-          tl.addLabel("sec2Start")
-            .set(".services-section-two-wrap", { visibility: "visible" })
-            .to(".s1-glass-card", { opacity: 0, y: -50, duration: 0.5 }, "sec2Start")
-            .to(".s2-left-panel", { 
-                yPercent: 0, 
-                duration: 1.0,
-                onStart: () => setIsSectionTwoActive(true),
-                onReverseComplete: () => {
-                  setIsSectionTwoActive(false);
-                  gsap.set(".services-section-two-wrap", { visibility: "hidden" });
-                  triggerSec2Hook(0);
                 }
-            }, "sec2Start")
-            .to(".s2-right-panel", { yPercent: 0, duration: 1.0 }, "sec2Start")
-            .to(".s2-inner-fade-target", { opacity: 1, duration: 0.4, ease: "power1.out" }, "sec2Start+=0.6");
+                return progress;
+              },
+              duration: { min: 0.3, max: 0.6 },
+              delay: 0.01,
+              ease: "power1.inOut",
+            }
+          },
+        });
 
-          addPlayOnceTextReveal("sec2Start", 0.35, ".services-section-two-wrap .reveal-text .gs-line-inner, .services-section-two-wrap .reveal-text > *");
-
+        const addPlayOnceTextReveal = (labelName: string, timeOffset: number, selector: string) => {
+          const absoluteTime = tl.labels[labelName] + timeOffset;
+          
           tl.call(() => {
             const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
-            triggerSec2Hook(isForward ? 0 : 0);
-          }, [], "sec2Start+=1.0");
+            if (isForward && !revealedElements.has(selector)) {
+              revealedElements.add(selector);
+              
+              gsap.to(selector, {
+                y: 0,
+                opacity: 1,
+                stagger: 0.05,
+                duration: 0.8,
+                ease: "power2.out",
+                overwrite: "auto"
+              });
+            }
+          }, [], absoluteTime);
+        };
 
-          // ── SECTION 2 PANEL INTERNAL STEP SLIDES ──
-          tl.addLabel("sec2_card2", "sec2Start+=1.0")
-            .to({}, { duration: 1.0 })
-            .call(() => {
-              const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
-              triggerSec2Hook(isForward ? 1 : 0);
-            }, [], "sec2_card2+=1.0");
+        const triggerSec2Hook = (nextIdx: number) => {
+          if (nextIdx !== lastSec2Idx.current) {
+            lastSec2Idx.current = nextIdx;
+            if ((window as any)._sec2GoTo) {
+              (window as any)._sec2GoTo(nextIdx);
+            }
+          }
+        };
 
-          tl.addLabel("sec2_card3", "sec2_card2+=1.0")
-            .to({}, { duration: 1.0 })
-            .call(() => {
-              const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
-              triggerSec2Hook(isForward ? 2 : 1);
-            }, [], "sec2_card3+=1.0");
+        // ── HERO HOLD BUFFER ──
+        tl.addLabel("heroStart")
+          .set(".hero-text-wrap", { transformOrigin: "left bottom" }, 0)
+          .to(".hero-text-wrap", { y: 60, scale: 0.75, duration: 1.0 }, 0)
+          .to(".services-hero-top-layer", { width: "60%", duration: 1.0 }, 0);
 
-          tl.addLabel("sec2_card4", "sec2_card3+=1.0")
-            .to({}, { duration: 1.0 })
-            .call(() => {
-              const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
-              triggerSec2Hook(isForward ? 3 : 2);
-            }, [], "sec2_card4+=1.0");
+        // ── SECTION 1 SHEET REVEAL ──
+        tl.addLabel("sec1Start")
+          .to(".section-one-wrap", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.0 })
+          .to(".service-hero-bg", { xPercent: -8, scale: 1.6, duration: 1.0 }, "<")
+          .to(".s1-glass-card", { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, "sec1Start+=0.2");
 
-          // ── CARD 4 HOLD TRACK ──
-          tl.addLabel("sec2_card4_hold", "sec2_card4+=1.0")
-            .to({}, { duration: 1.0 });
+        addPlayOnceTextReveal("sec1Start", 0.35, ".section-one-wrap .reveal-text .gs-line-inner, .section-one-wrap .reveal-text > *");
 
-          // ── APP SECTION SLIDE OVER ──
-          tl.addLabel("appsecStart", "sec2_card4_hold+=1.0")
-            .set(".services-appsec-wrap", { visibility: "visible" })
-            .to(".services-appsec-wrap", { 
+        // ── SECTION TWO TRANSITION ──
+        tl.addLabel("sec2Start")
+          .set(".services-section-two-wrap", { visibility: "visible" })
+          .to(".s1-glass-card", { opacity: 0, y: -50, duration: 0.5 }, "sec2Start")
+          .to(".s2-left-panel", { 
               yPercent: 0, 
               duration: 1.0,
-              onStart: () => {
-                const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
-                if (isForward) triggerSec2Hook(3);
-              },
               onReverseComplete: () => {
-                const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
-                if (!isForward) triggerSec2Hook(3);
+                setIsSectionTwoActive(false);
+                gsap.set(".services-section-two-wrap", { visibility: "hidden" });
+                triggerSec2Hook(0);
               }
-            });
-
-          addPlayOnceTextReveal("appsecStart", 0.35, ".services-appsec-wrap .reveal-text .gs-line-inner, .services-appsec-wrap .reveal-text > *");
-
-          // ── CTA REVEAL TRACK ──
-          tl.addLabel("ctaStart")
-            .set(".services-section-cta", { visibility: "visible" })
-            .to(".services-section-cta", { yPercent: 0, duration: 1.0 })
-            .to(".services-appsec-wrap", { scale: 1.0, duration: 1.0 }, "<");
-
-          // ── FOOTER REVEAL TRACK ──
-          tl.addLabel("footerStart")
-            .set(".services-footer-wrap", { visibility: "visible" })
-            .to(".services-footer-wrap", { yPercent: 0, duration: 1.0 })
-            .to(".services-appsec-wrap", { scale: 1.05, duration: 1.0 }, "<")
-            .to(".services-section-cta .cta-inner-desktop", { opacity: 0, duration: 0.7, ease: "power1.out" }, "<");
+          }, "sec2Start")
+          .to(".s2-right-panel", { yPercent: 0, duration: 1.0 }, "sec2Start")
           
-          tl.addLabel("end");
-        });
+          .to(".s2-inner-fade-target", { 
+            opacity: 1, 
+            duration: 0.5, 
+            ease: "power2.out",
+            onStart: () => setIsSectionTwoActive(true),
+            onReverseComplete: () => setIsSectionTwoActive(false)
+          }, "sec2Start+=1.0");
+
+        addPlayOnceTextReveal("sec2Start", 1.0, ".services-section-two-wrap .reveal-text .gs-line-inner, .services-section-two-wrap .reveal-text > *");
+
+        // ── SECTION 2 PANEL INTERNAL SLIDES ──
+        tl.addLabel("sec2_card1", "sec2Start+=1.5")
+          .to({}, { duration: 1.0 })
+          .call(() => {
+            const dir = tl.scrollTrigger ? tl.scrollTrigger.direction : 1;
+            triggerSec2Hook(dir < 0 ? 0 : 0);
+          }, [], "sec2_card1");
+
+        tl.addLabel("sec2_card2", "sec2_card1+=1.0")
+          .to({}, { duration: 1.0 })
+          .call(() => {
+            const dir = tl.scrollTrigger ? tl.scrollTrigger.direction : 1;
+            triggerSec2Hook(dir < 0 ? 0 : 1);
+          }, [], "sec2_card2");
+
+        tl.addLabel("sec2_card3", "sec2_card2+=1.0")
+          .to({}, { duration: 1.0 })
+          .call(() => {
+            const dir = tl.scrollTrigger ? tl.scrollTrigger.direction : 1;
+            triggerSec2Hook(dir < 0 ? 1 : 2);
+          }, [], "sec2_card3");
+
+        tl.addLabel("sec2_card4", "sec2_card3+=1.0")
+          .to({}, { duration: 1.0 })
+          .call(() => {
+            const dir = tl.scrollTrigger ? tl.scrollTrigger.direction : 1;
+            triggerSec2Hook(dir < 0 ? 2 : 3);
+          }, [], "sec2_card4");
+
+        // ── CARD 4 HOLD TRACK ──
+        tl.addLabel("sec2_card4_hold", "sec2_card4+=1.0")
+          .to({}, { duration: 1.0 })
+          .call(() => {
+            const dir = tl.scrollTrigger ? tl.scrollTrigger.direction : 1;
+            triggerSec2Hook(dir < 0 ? 3 : 3);
+          }, [], "sec2_card4_hold");
+
+        // ── APP SECTION SLIDE OVER ──
+        tl.addLabel("appsecStart", "sec2_card4_hold+=1.0")
+          .set(".services-appsec-wrap", { visibility: "visible" })
+          .to(".services-appsec-wrap", { 
+            yPercent: 0, 
+            duration: 1.0,
+            onStart: () => {
+              triggerSec2Hook(3);
+            },
+            onReverseComplete: () => {
+              triggerSec2Hook(3);
+            }
+          });
+
+        addPlayOnceTextReveal("appsecStart", 0.35, ".services-appsec-wrap .reveal-text .gs-line-inner, .services-appsec-wrap .reveal-text > *");
+
+        // ── CTA REVEAL TRACK ──
+        tl.addLabel("ctaStart")
+          .set(".services-section-cta", { visibility: "visible" })
+          .to(".services-section-cta", { yPercent: 0, duration: 1.0 })
+          .to(".services-appsec-wrap", { scale: 1.0, duration: 1.0 }, "<");
+
+        // ── FOOTER REVEAL TRACK ──
+        tl.addLabel("footerStart")
+          .set(".services-footer-wrap", { visibility: "visible" })
+          .to(".services-footer-wrap", { yPercent: 0, duration: 1.0 })
+          .to(".services-appsec-wrap", { scale: 1.05, duration: 1.0 }, "<")
+          .to(".services-section-cta .cta-inner-desktop", { opacity: 0, duration: 0.7, ease: "power1.out" }, "<");
+        
+        tl.addLabel("end");
       };
 
-      if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-        (window as any).requestIdleCallback(
-          () => document.fonts.ready.then(buildTimeline),
-          { timeout: 300 }
-        );
-      } else {
-        setTimeout(() => document.fonts.ready.then(buildTimeline), 0);
-      }
+      requestAnimationFrame(buildTimeline);
 
     }, scopeRef);
 

@@ -103,106 +103,95 @@ export default function ContactDesktop({ preloaderDone }: ContactProps) {
       const scrubValue = 1.2;
       const revealedElements = new Set<string>();
 
-      // Optional text reveals hook targets can be registered here if needed
-      // useTextReveal(scopeRef, ".faq-scroll-wrapper .reveal-text");
-
       const buildTimeline = () => {
-        requestAnimationFrame(() => {
-          ScrollTrigger.refresh();
+        ScrollTrigger.refresh();
 
-          const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
-          if (vv) {
-            const onVVResize = () => ScrollTrigger.refresh(true);
-            vv.addEventListener("resize", onVVResize);
-            vvCleanup = () => vv.removeEventListener("resize", onVVResize);
-          }
+        const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
+        if (vv) {
+          const onVVResize = () => ScrollTrigger.refresh(true);
+          vv.addEventListener("resize", onVVResize);
+          vvCleanup = () => vv.removeEventListener("resize", onVVResize);
+        }
 
-          const cardContainer = document.querySelector(".contact-cards-container");
-          const scrollDistance = cardContainer ? cardContainer.getBoundingClientRect().height + 96 : window.innerHeight;
+        const cardContainer = document.querySelector(".contact-cards-container");
+        const scrollDistance = cardContainer ? cardContainer.getBoundingClientRect().height + 96 : window.innerHeight;
 
-          const tl = gsap.timeline({
-            defaults: { ease: "none" },
-            scrollTrigger: {
-              trigger: ".contact-hero-master",
-              start: "top top",
-              end: "+=12000",
-              scrub: scrubValue,
-              pin: true,
-              pinSpacing: true,
-              anticipatePin: 1,
-              preventOverlaps: true,
-              invalidateOnRefresh: true,
-              snap: {
-                snapTo: (progress) => {
-                  const labels = Object.keys(tl.labels).map(name => tl.labels[name] / tl.totalDuration());
-                  labels.sort((a, b) => a - b);
-                  
-                  const currentProg = tl.progress();
-                  const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+        const tl = gsap.timeline({
+          defaults: { ease: "none" },
+          scrollTrigger: {
+            trigger: ".contact-hero-master",
+            start: "top top",
+            end: "+=12000",
+            scrub: scrubValue,
+            pin: true,
+            pinSpacing: true,
+            anticipatePin: 1,
+            preventOverlaps: true,
+            invalidateOnRefresh: true,
+            snap: {
+              snapTo: (progress) => {
+                const labels = Object.keys(tl.labels).map(name => tl.labels[name] / tl.totalDuration());
+                labels.sort((a, b) => a - b);
+                
+                const currentProg = tl.progress();
+                const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
 
-                  for (let i = 0; i < labels.length - 1; i++) {
-                    const start = labels[i];
-                    const end = labels[i + 1];
+                for (let i = 0; i < labels.length - 1; i++) {
+                  const start = labels[i];
+                  const end = labels[i + 1];
 
-                    if (currentProg >= start && currentProg <= end) {
-                      const localProgress = (currentProg - start) / (end - start);
-                      if (isForward) {
-                        return localProgress >= 0.35 ? end : start;
-                      } else {
-                        return localProgress <= 0.40 ? start : end;
-                      }
+                  if (currentProg >= start && currentProg <= end) {
+                    const localProgress = (currentProg - start) / (end - start);
+                    if (isForward) {
+                      return localProgress >= 0.35 ? end : start;
+                    } else {
+                      return localProgress <= 0.40 ? start : end;
                     }
                   }
-                  return progress;
-                },
-                duration: { min: 0.3, max: 0.6 },
-                delay: 0.01,
-                ease: "power1.inOut",
-              }
+                }
+                return progress;
+              },
+              duration: { min: 0.3, max: 0.6 },
+              delay: 0.01,
+              ease: "power1.inOut",
             }
-          });
-
-          // ─── PHASE 1: Previous components shift out ───
-          tl.addLabel("heroOut")
-            .to(".contact-hero-bg", { y: -100, duration: 1.0 }, "heroOut")
-            .to(".cta-scroll-wrapper", { yPercent: -100, ease: "power2.inOut", duration: 1.0 }, "heroOut");
-          
-          // ─── PHASE 2: Section One glides up safely ───
-          tl.addLabel("sec1Start")
-            .set(".section-one-scroll-wrapper", { visibility: "visible" }, "sec1Start")
-            .to(".section-one-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: 1.0 }, "sec1Start");
-          
-          // ─── PHASE 3: Section One Cards Track Scrolls up ───
-          tl.addLabel("sec1Scroll")
-            .to(".contact-one-bg", { yPercent: -35, duration: 2.0 }, "sec1Scroll")
-            .to(".contact-right-scroll-track", { y: -scrollDistance, ease: "power1.inOut", duration: 2.0 }, "sec1Scroll");
-
-          // ─── PHASE 4: FAQ Section glides up seamlessly ───
-          tl.addLabel("faqStart")
-            .set(".faq-scroll-wrapper", { visibility: "visible" }, "faqStart")
-            .to(".faq-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: 1.5 }, "faqStart");
-          
-          // ─── PHASE 5: FAQ Text Content Fades out ───
-          tl.addLabel("faqFade")
-            .to(".faq-content", { opacity: 0, y: -30, ease: "power2.in", duration: 1.0 }, "faqFade");
-
-          // ─── PHASE 6: Footer Slides Up over the FAQ background ───
-          tl.addLabel("footerStart")
-            .set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
-            .to(".footer-scroll-wrapper", { y: "0vh", ease: "power2.out", duration: 1.0 }, "footerStart");
-
-          tl.addLabel("end");
+          }
         });
+
+        // ─── PHASE 1: Previous components shift out ───
+        tl.addLabel("heroOut")
+          .to(".contact-hero-bg", { y: -100, duration: 1.0 }, "heroOut")
+          .to(".cta-scroll-wrapper", { yPercent: -100, ease: "power2.inOut", duration: 1.0 }, "heroOut");
+        
+        // ─── PHASE 2: Section One glides up safely ───
+        tl.addLabel("sec1Start")
+          .set(".section-one-scroll-wrapper", { visibility: "visible" }, "sec1Start")
+          .to(".section-one-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: 1.0 }, "sec1Start");
+        
+        // ─── PHASE 3: Section One Cards Track Scrolls up ───
+        tl.addLabel("sec1Scroll")
+          .to(".contact-one-bg", { yPercent: -35, duration: 2.0 }, "sec1Scroll")
+          .to(".contact-right-scroll-track", { y: -scrollDistance, ease: "power1.inOut", duration: 2.0 }, "sec1Scroll");
+
+        // ─── PHASE 4: FAQ Section glides up seamlessly ───
+        tl.addLabel("faqStart")
+          .set(".faq-scroll-wrapper", { visibility: "visible" }, "faqStart")
+          .to(".faq-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: 1.5 }, "faqStart");
+        
+        // ─── PHASE 5: FAQ Text Content Fades out ───
+        tl.addLabel("faqFade")
+          .to(".faq-content", { opacity: 0, y: -30, ease: "power2.in", duration: 1.0 }, "faqFade");
+
+        // ─── PHASE 6: Footer Slides Up over the FAQ background ───
+        tl.addLabel("footerStart")
+          .set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
+          .to(".footer-scroll-wrapper", { y: "0vh", ease: "power2.out", duration: 1.0 }, "footerStart");
+
+        tl.addLabel("end");
       };
 
-      if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-        (window as any).requestIdleCallback(
-          () => document.fonts.ready.then(buildTimeline),
-          { timeout: 300 }
-        );
-      } else {
-        setTimeout(() => document.fonts.ready.then(buildTimeline), 0);
-      }
+      // 🌟 FIXED: Builds timeline instantly on the next animation frame
+      requestAnimationFrame(buildTimeline);
 
     }, scopeRef);
 
