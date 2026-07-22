@@ -70,7 +70,7 @@
   }
 }
 
-/* ─── Reset & Mobile Viewport Locking ────────────────────────── */
+/* ─── Reset & Base ───────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin:     0;
@@ -86,13 +86,13 @@ html, body {
   text-rendering:          optimizeLegibility;
   
   scroll-behavior:         auto !important; 
-  height:                  auto;
+  min-height:              100%;
   
   scrollbar-width:         none;
   -ms-overflow-style:      none;
 
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y:     none; /* Prevents rubber-band overscroll past top/bottom bounds */
+  overscroll-behavior-y:     none;
 }
 
 html::-webkit-scrollbar,
@@ -121,7 +121,7 @@ body.preloading {
   overflow: hidden !important;
 }
 
-/* ─── Lock Viewport Heights (Fixes Mobile Address Bar Expansion) ─ */
+/* ─── Mobile Viewport Pin Wrapper ─────────────────────────────── */
 .pin-all,
 .pin-all-home,
 .pin-all-contact,
@@ -130,20 +130,15 @@ body.preloading {
 .pin-all-subservices,
 .pin-all-single-project {
   height: 100vh !important;
-  height: 100svh !important; /* Locks height to visible screen area ignoring mobile URL bar */
+  height: 100dvh !important;
   width: 100%;
-  max-height: none !important;
+  position: relative; /* Restored: MUST be relative so GSAP can create scroll document height */
+  overflow: hidden;
 }
 
-/* Override GSAP pin-spacer inline styles on mobile WebKit */
+/* Ensure GSAP pin-spacer keeps proper pointer events */
 .pin-spacer {
-  min-height: 100svh !important;
   pointer-events: auto !important;
-}
-
-.pin-spacer > div {
-  height: 100% !important;
-  max-height: none !important;
 }
 
 .scroll-container {
@@ -155,9 +150,9 @@ body.preloading .scroll-container {
   visibility: hidden;
 }
 
-/* ─── Hardware GPU Layer Promotion Utility ───────────────────── */
+/* ─── GPU Layer Acceleration ─────────────────────────────────── */
 .gpu-accelerated {
-  will-change: transform, opacity, clip-path;
+  will-change: transform, opacity;
   transform: translate3d(0, 0, 0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;

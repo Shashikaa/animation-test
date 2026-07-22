@@ -40,7 +40,10 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Ignore mobile address bar height triggers to prevent scroll jumps on reverse drag
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+
     ScrollTrigger.config({
       ignoreMobileResize: true,
       autoRefreshEvents: "DOMContentLoaded,load,visibilitychange"
@@ -49,9 +52,8 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
     if (isTouchDevice) {
-      if (thumbRef.current) {
-        const parentTrack = thumbRef.current.parentElement;
-        if (parentTrack) parentTrack.style.display = "none";
+      if (thumbRef.current?.parentElement) {
+        thumbRef.current.parentElement.style.display = "none";
       }
       onScrollReady?.();
       return;

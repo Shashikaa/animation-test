@@ -30,7 +30,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
-  // Lock scrolling during intro cleanly
+  // Lock scrolling during preloader / intro
   useEffect(() => {
     const locked = !preloaderDone || !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
@@ -39,7 +39,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // ONLY refresh ScrollTrigger if width changes (e.g., orientation change), NOT address bar height
+  // Refresh ScrollTrigger only on width/orientation change, ignoring address bar toggle
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -57,12 +57,11 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Structural configurations & GPU layer promotion
+  // Initial structural configurations
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     
     const ctx = gsap.context(() => {
-      // Force ScrollTrigger to ignore mobile address bar resize events completely
       ScrollTrigger.config({ 
         ignoreMobileResize: true,
         autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
@@ -136,9 +135,9 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
           pin: true,
           pinType: "fixed",
           anticipatePin: 1,
-          preventOverlaps: true, // Stops timeline steps from overlapping on rapid reverse drag
-          fastScrollEnd: true,   // Aligns timeline state instantly on fast flicks
-          invalidateOnRefresh: true
+          preventOverlaps: true,
+          fastScrollEnd: true,
+          invalidateOnRefresh: false,
         },
       });
 
