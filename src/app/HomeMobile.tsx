@@ -37,6 +37,7 @@ function executeInlineSplitting(selector: string) {
     const inner = document.createElement("span");
     inner.className = "custom-line-inner";
     inner.style.display = "block";
+    inner.style.opacity = "0"; // Prevents split line flash before GSAP animates it
     inner.textContent = lineText;
 
     wrapper.appendChild(inner);
@@ -71,7 +72,7 @@ export default function HomeMobile() {
     };
   }, [preloaderDone, introDone]);
 
-  // Handle iOS address bar expansion/collapse gracefully (Same feature from About & Contact)
+  // Handle iOS address bar expansion/collapse gracefully
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -89,7 +90,7 @@ export default function HomeMobile() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // 1. INITIAL STATES RESET
+  // 1. INITIAL STATES RESET & PRE-PAINT TEXT SPLITTING
   useLayoutEffect(() => {
     if (!preloaderDone) return;
 
@@ -98,6 +99,10 @@ export default function HomeMobile() {
         ignoreMobileResize: false,
         autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
       });
+
+      // Split text IMMEDIATELY before layout is painted to prevent DOM text flash
+      executeInlineSplitting(".hero-right-text");
+      executeInlineSplitting(".hero-secondary-para");
 
       gsap.set([
         ".hero-bg-wrapper", ".hero-bg", ".section-10", 
@@ -111,10 +116,15 @@ export default function HomeMobile() {
       gsap.set(".hero-gradient-bg", { opacity: 1, visibility: "visible" });
       
       gsap.set([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 1, y: 0 });
-      gsap.set([".hero-right-text", ".hero-secondary-para"], { opacity: 1, visibility: "hidden" });
+      
+      // Ensure hero animated text targets stay completely invisible during layout setup
+      gsap.set([".hero-right-text", ".hero-secondary-para"], { opacity: 0, visibility: "hidden" });
+      gsap.set([".hero-right-text .custom-line-inner", ".hero-secondary-para .custom-line-inner"], { opacity: 0, yPercent: 100 });
+      
       gsap.set(".hero-secondary-text-wrap", { height: "auto" });
 
-      gsap.set(".section-2", { display: "block", clipPath: "none", zIndex: 95, yPercent: 100, opacity: 1, force3D: true });
+      // Position Section 2 offscreen (yPercent: 100)
+      gsap.set(".section-2", { display: "block", clipPath: "none", zIndex: 95, yPercent: 100, opacity: 1, visibility: "visible", force3D: true });
       gsap.set(".s2-mob-scroll-wrapper", { opacity: 0, yPercent: 100, y: 0 }); 
       gsap.set([".s2-title-main", ".s2-title-sub", ".s2-body"], { opacity: 1, y: 0, visibility: "visible" });
       
@@ -206,9 +216,6 @@ export default function HomeMobile() {
             let cachedFlightX = 0;
             let cachedScrollWrapperY = 0;
 
-            executeInlineSplitting(".hero-right-text");
-            executeInlineSplitting(".hero-secondary-para");
-
             const tl = gsap.timeline({
               defaults: { 
                 ease: "none",
@@ -218,9 +225,9 @@ export default function HomeMobile() {
                 trigger: ".home-pin-master",
                 start: "top top",
                 end: "+=18000",
-                scrub: 2, // Smooth momentum scroll matching About & Contact
+                scrub: 2,
                 pin: true,
-                pinType: "fixed", // Forces GSAP to use fixed positioning matching About/Contact
+                pinType: "fixed",
                 anticipatePin: 1,
                 preventOverlaps: true, 
                 fastScrollEnd: true, 
@@ -264,7 +271,7 @@ export default function HomeMobile() {
                 ease: "power1.inOut"
               }, "heroStart")
 
-              .set(".hero-right-text", { visibility: "visible" }, `heroStart+=${ACTION * 0.5}`)
+              .set(".hero-right-text", { visibility: "visible", opacity: 1 }, `heroStart+=${ACTION * 0.5}`)
               .addLabel("heroRightReveal", `heroStart+=${ACTION * 0.5}`)
               .to(".hero-right-text .custom-line-inner", {
                 opacity: 1,
@@ -282,7 +289,7 @@ export default function HomeMobile() {
                 ease: "power1.in"
               }, "heroRightHide")
 
-              .set(".hero-secondary-para", { visibility: "visible" }, `heroRightHide+=${ACTION * 0.5}`)
+              .set(".hero-secondary-para", { visibility: "visible", opacity: 1 }, `heroRightHide+=${ACTION * 0.5}`)
               .addLabel("heroLeftReveal", `heroRightHide+=${ACTION * 0.5}`)
               .to(".hero-secondary-para .custom-line-inner", {
                 opacity: 1,
@@ -312,7 +319,6 @@ export default function HomeMobile() {
 
             // ── SECTION 2 INNER MOBILE ANIMATIONS WITH SMOOTH scaleX TRANSITIONS ──
             tl.addLabel("s2TextDismissal", "textLanding")
-              // 1. Fade out initial Frame 1 text
               .to([".s2-title-main", ".s2-title-sub", ".s2-body"], { 
                 opacity: 0, 
                 y: -60, 
@@ -320,7 +326,6 @@ export default function HomeMobile() {
                 ease: "power2.in"
               }, "s2TextDismissal")
               
-              // 2. Start scrolling text-only wrapper up
               .addLabel("s2MobileScrollStart", "s2TextDismissal+=" + (ACTION * 0.4))
               .to(".s2-mob-scroll-wrapper", { opacity: 1, duration: ACTION * 0.2 }, "s2MobileScrollStart")
               .fromTo(".s2-mob-scroll-wrapper", 
@@ -333,21 +338,18 @@ export default function HomeMobile() {
                 "s2MobileScrollStart"
               )
 
-              // 3. Background Image Transition 1
               .to(".s2-mob-clip-bg-1", {
                 scaleX: 1,
                 duration: ACTION * 0.6,
                 ease: "power2.inOut"
               }, "s2MobileScrollStart+=" + (ACTION * 0.3))
 
-              // 4. Background Image Transition 2
               .to(".s2-mob-clip-bg-2", {
                 scaleX: 1,
                 duration: ACTION * 0.6,
                 ease: "power2.inOut"
               }, "s2MobileScrollStart+=" + (ACTION * 1.1))
 
-              // 5. Background Image Transition 3
               .to(".s2-mob-clip-bg-3", {
                 scaleX: 1,
                 duration: ACTION * 0.6,
@@ -395,25 +397,23 @@ export default function HomeMobile() {
 
               .to({}, { duration: DEAD_SCROLL }) 
 
-// ── SECTION 9 SLIDE UP ──
-tl.addLabel("sec9Start", ">")
-  .set(".section-9", { visibility: "visible" }, "sec9Start")
-  .fromTo(".section-9", { yPercent: 100 }, { yPercent: 0, duration: ACTION }, "sec9Start")
-  .to(".section-appsec", { yPercent: -10, duration: ACTION }, "sec9Start")
-  .to(".s9-bg-img", { scale: 1, yPercent: 0, duration: ACTION }, "sec9Start")
-  
-  .to(".s9-title", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.3")
-  .to(".s9-para", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.3");
+            // ── SECTION 9 SLIDE UP ──
+            tl.addLabel("sec9Start", ">")
+              .set(".section-9", { visibility: "visible" }, "sec9Start")
+              .fromTo(".section-9", { yPercent: 100 }, { yPercent: 0, duration: ACTION }, "sec9Start")
+              .to(".section-appsec", { yPercent: -10, duration: ACTION }, "sec9Start")
+              .to(".s9-bg-img", { scale: 1, yPercent: 0, duration: ACTION }, "sec9Start")
+              
+              .to(".s9-title", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.3")
+              .to(".s9-para", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.3");
 
-// REMOVED: .to({}, { duration: DEAD_SCROLL })  <-- This was causing the pause before CTA starts
+            // ── CTA REVEAL ──
+            tl.addLabel("ctaStart", ">")
+              .set(".section-cta", { visibility: "visible" }, "ctaStart")
+              .to(".section-cta", { yPercent: 0, duration: ACTION }, "ctaStart") 
+              .to(".s9-bg-img", { yPercent: -10, duration: ACTION }, "ctaStart")
 
-// ── CTA REVEAL ──
-tl.addLabel("ctaStart", ">")
-  .set(".section-cta", { visibility: "visible" }, "ctaStart")
-  .to(".section-cta", { yPercent: 0, duration: ACTION }, "ctaStart") 
-  .to(".s9-bg-img", { yPercent: -10, duration: ACTION }, "ctaStart")
-
-  .to({}, { duration: DEAD_SCROLL }); // Pause stays here so user can read CTA before Footer arrives
+              .to({}, { duration: DEAD_SCROLL });
 
             // ── FOOTER REVEAL ──
             tl.addLabel("footerStart", ">")
@@ -482,6 +482,13 @@ tl.addLabel("ctaStart", ">")
           -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
         }
+
+        /* Hide unsplit animated hero text before JS runs */
+        .hero-right-text,
+        .hero-secondary-para {
+          opacity: 0;
+          visibility: hidden;
+        }
       `}</style>
 
       <div className="home-pin-master pin-all-home relative w-full overflow-hidden">
@@ -492,7 +499,10 @@ tl.addLabel("ctaStart", ">")
         </div>
 
         {/* Layer 2: Section Two */}
-        <div className="section-2 gpu-accelerated absolute inset-0 h-full w-full">
+        <div 
+          className="section-2 gpu-accelerated absolute inset-0 h-full w-full"
+          style={{ visibility: "hidden" }}
+        >
           <SectionTwo />
         </div>
 
