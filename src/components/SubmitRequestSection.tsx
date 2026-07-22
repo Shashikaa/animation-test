@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import WaterBackground from "./Ripplecanvas";
+
 
 export default function SubmitRequestSection({ onClose }: { onClose?: () => void }) {
   const [activeTab, setActiveTab] = useState<"request" | "callback">("request");
@@ -271,7 +271,7 @@ export default function SubmitRequestSection({ onClose }: { onClose?: () => void
           className="absolute inset-0 w-full h-full object-cover z-0"
         />
 
-        <WaterBackground />
+
 
         {/* LEFT */}
         <div className="sar-left relative z-10 !font-display !font-[300] !leading-1.2">

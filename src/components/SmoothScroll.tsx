@@ -6,7 +6,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import { usePathname } from "next/navigation";
 import { useSite } from "../app/context/SiteContext";
-import { setScrollVelocity } from "../app/utils/scrollVelocity";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -41,9 +40,15 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    // Enable GSAP config for responsive mobile calculations
+    ScrollTrigger.config({
+      ignoreMobileResize: false,
+      autoRefreshEvents: "DOMContentLoaded,load,visibilitychange"
+    });
+
     const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
-    // Native Touch Fallback: cleanly bypass Lenis
+    // Native Touch Fallback: bypass Lenis on mobile, let GSAP scrub handle pins smoothly
     if (isTouchDevice) {
       if (thumbRef.current) {
         const parentTrack = thumbRef.current.parentElement;
@@ -86,8 +91,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       const dt = now - lastTime || 1;
       const y = e.scroll; 
 
-      setScrollVelocity(Math.abs((y - lastY) / dt) * 1000);
-      
       lastY = y;
       lastTime = now;
 
@@ -126,7 +129,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     return () => {
       clearTimeout(scrollTimerRef.current);
-      setScrollVelocity(0);
       gsap.ticker.remove(tickerCallback);
       lenis.destroy();
       if (smootherRef) {

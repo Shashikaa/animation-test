@@ -47,7 +47,6 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
 
     const handleResize = () => {
       const currentHeight = window.innerHeight;
-      // Only refresh ScrollTrigger if the height change is significant (URL bar show/hide)
       if (Math.abs(currentHeight - lastHeight) > 40) {
         lastHeight = currentHeight;
         ScrollTrigger.refresh();
@@ -119,7 +118,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // Section Transition Scroll Timeline
+  // Section Transition Scroll Timeline (scrub: 1.2 provides weighted inertia on mobile touch)
   useEffect(() => {
     if (!introDone) return;
 
@@ -132,9 +131,9 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
           trigger: ".about-pin",
           start: "top top",
           end: "+=5000",
-          scrub: 0.5,
+          scrub: 1.2, 
           pin: true,
-          pinType: "fixed", // Forces GSAP to use position: fixed pinning which handles iOS screen resizes cleanly
+          pinType: "fixed",
           anticipatePin: 1,
           invalidateOnRefresh: true
         },
@@ -249,7 +248,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
 
         .gpu-accelerated {
           will-change: transform, opacity, clip-path;
-          transform: translateZ(0);
+          transform: translate3d(0,0,0);
           -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
         }
