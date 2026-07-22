@@ -30,11 +30,21 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
+  // Robust touch-locking for iOS/Android without setting overflow: hidden on body
   useEffect(() => {
     const locked = !preloaderDone || !introDone;
-    document.body.style.overflow = locked ? "hidden" : "";
+    
+    if (locked) {
+      document.body.style.touchAction = "none";
+      document.body.style.pointerEvents = "none";
+    } else {
+      document.body.style.touchAction = "";
+      document.body.style.pointerEvents = "";
+    }
+
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+      document.body.style.pointerEvents = "";
     };
   }, [preloaderDone, introDone]);
 
@@ -43,6 +53,9 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     if (!preloaderDone) return;
     
     const ctx = gsap.context(() => {
+      // Ignore mobile address bar show/hide updates to prevent resize glitches
+      ScrollTrigger.config({ ignoreMobileResize: true });
+
       gsap.set(".about-hero-bg", { scale: 1.3 });
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
 
@@ -57,12 +70,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
 
       gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0 });
 
-      // Clean setup for Section 5 container placement
-      gsap.set(".about-section-five", { 
-        yPercent: 100
-      });
-
-      // UPGRADED: Increased base background scale slightly to prevent any blank edge leaks during heavy translations
+      gsap.set(".about-section-five", { yPercent: 100 });
       gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0 });
       gsap.set([".about-section-five .s5-static-title", ".about-section-five .s5-static-desc"], { y: 0, opacity: 1 });
       
@@ -77,7 +85,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // Hero Intro Scale & Fade Sequence (Page Load Animations)
+  // Hero Intro Scale & Fade Sequence
   useEffect(() => {
     if (!preloaderDone) return;
 
@@ -119,8 +127,8 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
         scrollTrigger: {
           trigger: ".about-pin",
           start: "top top",
-          end: "+=12500", 
-          scrub: 0.2,    
+          end: "+=6000", // Tightened for mobile touch responsiveness
+          scrub: 0.1,    // Smoother GPU catch-up on touch
           pin: true,
           anticipatePin: 1,
           invalidateOnRefresh: true
@@ -128,17 +136,8 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
       });
 
       // Section 1
-      tl.to(".about-section-one", {
-        yPercent: 0,
-        duration: ACTION,
-        ease: "power2.inOut"
-      })
-      .to(".about-hero-bg", {
-        scale: 1.0,
-        yPercent: -10, 
-        duration: ACTION,
-        ease: "power2.inOut"
-      }, "<");
+      tl.to(".about-section-one", { yPercent: 0, duration: ACTION, ease: "power2.inOut" })
+        .to(".about-hero-bg", { scale: 1.0, yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "<");
 
       tl.to({}, { duration: DEAD_SCROLL }); 
 
@@ -161,54 +160,40 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
       // Section 4
       tl.set(".about-section-four", { visibility: "visible" })
         .addLabel("sec3to4Transition")
-        .to(".about-section-three", {
-          yPercent: -100,
-          duration: ACTION,
-          ease: "power2.inOut"
-        }, "sec3to4Transition")
+        .to(".about-section-three", { yPercent: -100, duration: ACTION, ease: "power2.inOut" }, "sec3to4Transition")
         .fromTo(".about-section-four .s4-img-bg", 
           { yPercent: 15 },
-          { 
-            yPercent: 0, 
-            duration: ACTION, 
-            ease: "power2.inOut" 
-          }, 
+          { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, 
           "sec3to4Transition"
         );
       
       tl.to({}, { duration: DEAD_SCROLL }); 
 
-      // ── SECTION 5 PANEL SLIDE UP REVEAL ──
+      // Section 5
       tl.addLabel("sec5Start")
         .set(".about-section-five", { visibility: "visible" }, "sec5Start")
-        .to(".about-section-five", { 
-          yPercent: 0, 
-          duration: 2.2, 
-          ease: "power2.inOut" 
-        }, "sec5Start");
+        .to(".about-section-five", { yPercent: 0, duration: 2.2, ease: "power2.inOut" }, "sec5Start");
 
-      // UPGRADED: Amplified `yPercent` to -35 and extended duration to 9.0. 
-      // This forces the image to physically travel further and move noticeably faster with every scroll increment.
       tl.fromTo(".about-section-five .s5-bg", 
         { yPercent: 5, scale: 1.25 }, 
-        { yPercent: -25, scale: 1.25, ease: "none", duration: 9.0 }, 
+        { yPercent: -25, scale: 1.25, ease: "none", duration: 6.0 }, 
         "sec5Start"
       );
 
       tl.addLabel("sec5FullyRevealed", "sec5Start+=2.2");
 
-      // ── SECTION 5 CARDS CROSSFADE ──
-      tl.addLabel("sec5_card2", "sec5FullyRevealed+=1.5")
-        .to(".about-section-five .s5-slide-card-0", { opacity: 0, duration: 1.0, ease: "power2.out" }, "sec5_card2")
-        .to(".about-section-five .s5-slide-card-1", { opacity: 1, pointerEvents: "auto", duration: 1.0, ease: "power2.out" }, "sec5_card2");
+      // Section 5 Cards
+      tl.addLabel("sec5_card2", "sec5FullyRevealed+=0.6")
+        .to(".about-section-five .s5-slide-card-0", { opacity: 0, duration: 0.8, ease: "power2.out" }, "sec5_card2")
+        .to(".about-section-five .s5-slide-card-1", { opacity: 1, pointerEvents: "auto", duration: 0.8, ease: "power2.out" }, "sec5_card2");
 
-      tl.addLabel("sec5_card3", "sec5_card2+=2.0")
-        .to(".about-section-five .s5-slide-card-1", { opacity: 0, duration: 1.0, ease: "power2.out" }, "sec5_card3")
-        .to(".about-section-five .s5-slide-card-2", { opacity: 1, pointerEvents: "auto", duration: 1.0, ease: "power2.out" }, "sec5_card3");
+      tl.addLabel("sec5_card3", "sec5_card2+=1.0")
+        .to(".about-section-five .s5-slide-card-1", { opacity: 0, duration: 0.8, ease: "power2.out" }, "sec5_card3")
+        .to(".about-section-five .s5-slide-card-2", { opacity: 1, pointerEvents: "auto", duration: 0.8, ease: "power2.out" }, "sec5_card3");
 
-      tl.to({}, { duration: 1.5 }); 
+      tl.to({}, { duration: 0.2 }); 
 
-      // ── CTA REVEAL TRACK ──
+      // CTA
       tl.addLabel("ctaStart", ">")
         .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
         .to(".about-section-cta", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart") 
@@ -216,7 +201,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // ── FOOTER REVEAL TRACK ──
+      // Footer
       tl.addLabel("footerStart", ">")
         .to([".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"], { opacity: 0, duration: ACTION * 0.3, ease: "none" }, "footerStart")
         .set(".about-footer-wrap", { visibility: "visible" }, "footerStart+=0.1")
@@ -232,7 +217,8 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     <div ref={scopeRef}>
       <style jsx global>{`
         .pin-all {
-          height: 100lvh; 
+          /* Using 100dvh prevents jumpiness when Mobile Safari search bar shows/hides */
+          height: 100dvh; 
         }
       `}</style>
 

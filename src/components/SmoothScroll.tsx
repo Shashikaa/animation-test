@@ -25,13 +25,25 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   const pathname = usePathname();
   const lenisRef = useRef<Lenis | null>(null);
 
+  // Lock native mobile scroll until preloader is finished
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Detect touch environments safely
+    const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    
+    if (isTouchDevice && !preloaderDone) {
+      const preventTouch = (e: TouchEvent) => e.preventDefault();
+      window.addEventListener("touchmove", preventTouch, { passive: false });
+      return () => window.removeEventListener("touchmove", preventTouch);
+    }
+  }, [preloaderDone]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
-    // Bails cleanly on touch interactions to leave default scrolling uninhibited
+    // Native Touch Fallback: cleanly bypass Lenis
     if (isTouchDevice) {
       if (thumbRef.current) {
         const parentTrack = thumbRef.current.parentElement;
@@ -41,7 +53,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       return;
     }
 
-    // Lenis Engine Instance Setup - Desktop Only
+    // Lenis Setup for Desktop
     const lenis = new Lenis({
       syncTouch: false,
       touchMultiplier: 0,
