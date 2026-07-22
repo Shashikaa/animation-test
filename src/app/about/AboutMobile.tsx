@@ -132,7 +132,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
           trigger: ".about-pin",
           start: "top top",
           end: "+=5000",
-          scrub: 2,
+          scrub: 1,
           pin: true,
           pinType: "fixed", // Forces GSAP to use position: fixed pinning which handles iOS screen resizes cleanly
           anticipatePin: 1,
