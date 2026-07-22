@@ -163,47 +163,61 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
 
         const revealedElements = new Set<string>();
 
-        const tl = gsap.timeline({
-          defaults: { ease: "none" }, 
-          scrollTrigger: {
-            trigger: ".services-hero-master",
-            start: "top top",
-            end: "+=10800",
-            scrub: scrubValue,
-            pin: true,
-            pinSpacing: true,
-            anticipatePin: 1,
-            preventOverlaps: true,
-            invalidateOnRefresh: true,
-            snap: {
-              snapTo: (progress) => {
-                const labels = Object.keys(tl.labels).map(name => tl.labels[name] / tl.totalDuration());
-                labels.sort((a, b) => a - b);
-                
-                const currentProg = tl.progress();
-                const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+const tl = gsap.timeline({
+  defaults: { ease: "none" }, 
+  scrollTrigger: {
+    trigger: ".services-hero-master",
+    start: "top top",
+    end: "+=9000",
+    scrub: scrubValue,
+    pin: true,
+    pinSpacing: true,
+    anticipatePin: 1,
+    preventOverlaps: true,
+    invalidateOnRefresh: true,
+    snap: {
+      snapTo: (progress) => {
+        const totalDuration = tl.totalDuration();
+        if (!totalDuration) return progress;
 
-                for (let i = 0; i < labels.length - 1; i++) {
-                  const start = labels[i];
-                  const end = labels[i + 1];
+        const currentProg = tl.progress();
 
-                  if (currentProg >= start && currentProg <= end) {
-                    const localProgress = (currentProg - start) / (end - start);
-                    if (isForward) {
-                      return localProgress >= 0.35 ? end : start;
-                    } else {
-                      return localProgress <= 0.40 ? start : end;
-                    }
-                  }
-                }
-                return progress;
-              },
-              duration: { min: 0.3, max: 0.6 },
-              delay: 0.01,
-              ease: "power1.inOut",
+        // 1. Get exact start/end progress values for Section 2 (Slider)
+        const sec2StartProgress = (tl.labels["sec2Start"] || 0) / totalDuration;
+        const appsecStartProgress = (tl.labels["appsecStart"] || 1) / totalDuration;
+
+        // 2. 🚫 DISABLE SNAP ONLY FOR THE SLIDER ZONE
+        if (currentProg >= sec2StartProgress && currentProg <= appsecStartProgress) {
+          return currentProg; // No snap calculation inside the slider!
+        }
+
+        // 3. ✅ KEEP SNAP FOR EVERYTHING ELSE (Hero, Section 1, App Sec, Footer, etc.)
+        const labels = Object.keys(tl.labels).map(name => tl.labels[name] / totalDuration);
+        labels.sort((a, b) => a - b);
+        
+        const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+
+        for (let i = 0; i < labels.length - 1; i++) {
+          const start = labels[i];
+          const end = labels[i + 1];
+
+          if (currentProg >= start && currentProg <= end) {
+            const localProgress = (currentProg - start) / (end - start);
+            if (isForward) {
+              return localProgress >= 0.35 ? end : start;
+            } else {
+              return localProgress <= 0.40 ? start : end;
             }
-          },
-        });
+          }
+        }
+        return progress;
+      },
+      duration: { min: 0.3, max: 0.6 },
+      delay: 0.01,
+      ease: "power1.inOut",
+    }
+  },
+});
 
         const addPlayOnceTextReveal = (labelName: string, timeOffset: number, selector: string) => {
           const absoluteTime = tl.labels[labelName] + timeOffset;
@@ -234,17 +248,20 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
           }
         };
 
-        // ── HERO HOLD BUFFER ──
-        tl.addLabel("heroStart")
-          .set(".hero-text-wrap", { transformOrigin: "left bottom" }, 0)
-          .to(".hero-text-wrap", { y: 60, scale: 0.75, duration: 1.0 }, 0)
-          .to(".services-hero-top-layer", { width: "60%", duration: 1.0 }, 0);
+// ── HERO HOLD BUFFER ──
+tl.addLabel("heroStart")
+  .set(".hero-btn", { pointerEvents: "auto", zIndex: 50 })
+  .set(".hero-text-wrap", { transformOrigin: "left bottom" }, 0)
+  .to(".hero-text-wrap", { y: 60, scale: 0.75, duration: 1.0 }, 0)
+  .to(".services-hero-top-layer", { width: "60%", duration: 1.0 }, 0)
+  // 🌟 FADES OUT BUTTON AT THE EXACT SAME TIME THE HERO IMAGE CLIPS
+  .to(".hero-btn", { opacity: 0, duration: 0.4, ease: "power2.out", pointerEvents: "none" }, 0);
 
-        // ── SECTION 1 SHEET REVEAL ──
-        tl.addLabel("sec1Start")
-          .to(".section-one-wrap", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.0 })
-          .to(".service-hero-bg", { xPercent: -8, scale: 1.6, duration: 1.0 }, "<")
-          .to(".s1-glass-card", { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, "sec1Start+=0.2");
+// ── SECTION 1 SHEET REVEAL ──
+tl.addLabel("sec1Start")
+  .to(".section-one-wrap", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.0 }, "sec1Start")
+  .to(".service-hero-bg", { xPercent: -8, scale: 1.6, duration: 1.0 }, "<")
+  .to(".s1-glass-card", { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, "sec1Start+=0.2");
 
         addPlayOnceTextReveal("sec1Start", 0.35, ".section-one-wrap .reveal-text .gs-line-inner, .section-one-wrap .reveal-text > *");
 
@@ -273,56 +290,56 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
 
         addPlayOnceTextReveal("sec2Start", 1.0, ".services-section-two-wrap .reveal-text .gs-line-inner, .services-section-two-wrap .reveal-text > *");
 
-        // ── SECTION 2 PANEL INTERNAL SLIDES ──
-        tl.addLabel("sec2_card1", "sec2Start+=1.5")
-          .to({}, { duration: 1.0 })
-          .call(() => {
-            const dir = tl.scrollTrigger ? tl.scrollTrigger.direction : 1;
-            triggerSec2Hook(dir < 0 ? 0 : 0);
-          }, [], "sec2_card1");
+// ── SECTION 2 PANEL INTERNAL SLIDES ──
+tl.addLabel("sec2_card1", "sec2Start+=1.5")
+  .to({}, { duration: 1.0 })
+  .call(() => {
+    const dir = tl.scrollTrigger ? tl.scrollTrigger.direction : 1;
+    triggerSec2Hook(dir < 0 ? 0 : 0);
+  }, [], "sec2_card1");
 
-        tl.addLabel("sec2_card2", "sec2_card1+=1.0")
-          .to({}, { duration: 1.0 })
-          .call(() => {
-            const dir = tl.scrollTrigger ? tl.scrollTrigger.direction : 1;
-            triggerSec2Hook(dir < 0 ? 0 : 1);
-          }, [], "sec2_card2");
+tl.addLabel("sec2_card2", "sec2_card1+=1.0")
+  .to({}, { duration: 1.0 })
+  .call(() => {
+    const dir = tl.scrollTrigger ? tl.scrollTrigger.direction : 1;
+    triggerSec2Hook(dir < 0 ? 0 : 1);
+  }, [], "sec2_card2");
 
-        tl.addLabel("sec2_card3", "sec2_card2+=1.0")
-          .to({}, { duration: 1.0 })
-          .call(() => {
-            const dir = tl.scrollTrigger ? tl.scrollTrigger.direction : 1;
-            triggerSec2Hook(dir < 0 ? 1 : 2);
-          }, [], "sec2_card3");
+tl.addLabel("sec2_card3", "sec2_card2+=1.0")
+  .to({}, { duration: 1.0 })
+  .call(() => {
+    const dir = tl.scrollTrigger ? tl.scrollTrigger.direction : 1;
+    triggerSec2Hook(dir < 0 ? 1 : 2);
+  }, [], "sec2_card3");
 
-        tl.addLabel("sec2_card4", "sec2_card3+=1.0")
-          .to({}, { duration: 1.0 })
-          .call(() => {
-            const dir = tl.scrollTrigger ? tl.scrollTrigger.direction : 1;
-            triggerSec2Hook(dir < 0 ? 2 : 3);
-          }, [], "sec2_card4");
+tl.addLabel("sec2_card4", "sec2_card3+=1.0")
+  .to({}, { duration: 1.0 })
+  .call(() => {
+    const dir = tl.scrollTrigger ? tl.scrollTrigger.direction : 1;
+    triggerSec2Hook(dir < 0 ? 2 : 3);
+  }, [], "sec2_card4");
 
-        // ── CARD 4 HOLD TRACK ──
-        tl.addLabel("sec2_card4_hold", "sec2_card4+=1.0")
-          .to({}, { duration: 1.0 })
-          .call(() => {
-            const dir = tl.scrollTrigger ? tl.scrollTrigger.direction : 1;
-            triggerSec2Hook(dir < 0 ? 3 : 3);
-          }, [], "sec2_card4_hold");
+// ── CARD 4 HOLD TRACK (Reduced from 1.0 to 0.3 to remove scroll gap) ──
+tl.addLabel("sec2_card4_hold", "sec2_card4+=0.3")
+  .to({}, { duration: 0.3 })
+  .call(() => {
+    const dir = tl.scrollTrigger ? tl.scrollTrigger.direction : 1;
+    triggerSec2Hook(dir < 0 ? 3 : 3);
+  }, [], "sec2_card4_hold");
 
-        // ── APP SECTION SLIDE OVER ──
-        tl.addLabel("appsecStart", "sec2_card4_hold+=1.0")
-          .set(".services-appsec-wrap", { visibility: "visible" })
-          .to(".services-appsec-wrap", { 
-            yPercent: 0, 
-            duration: 1.0,
-            onStart: () => {
-              triggerSec2Hook(3);
-            },
-            onReverseComplete: () => {
-              triggerSec2Hook(3);
-            }
-          });
+// ── APP SECTION SLIDE OVER ──
+tl.addLabel("appsecStart", "sec2_card4_hold+=0.3")
+  .set(".services-appsec-wrap", { visibility: "visible" })
+  .to(".services-appsec-wrap", { 
+    yPercent: 0, 
+    duration: 1.0,
+    onStart: () => {
+      triggerSec2Hook(3);
+    },
+    onReverseComplete: () => {
+      triggerSec2Hook(3);
+    }
+  });
 
         addPlayOnceTextReveal("appsecStart", 0.35, ".services-appsec-wrap .reveal-text .gs-line-inner, .services-appsec-wrap .reveal-text > *");
 
@@ -367,8 +384,11 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
 
   return (
     <div ref={scopeRef} className="w-full relative">
-      <div className="services-hero-master relative w-full h-screen overflow-hidden bg-black" style={{ visibility: "visible" }}>
-        <Hero />
+      <div className="services-hero-master relative w-full h-screen overflow-hidden bg-black" style={{ visibility: "visible", pointerEvents:"auto" }}>
+{/* HERO (Clickable at start) */}
+    <div className="services-hero-wrap relative z-10 pointer-events-auto w-full h-full">
+      <Hero />
+    </div>
         
         <div className="section-one-wrap absolute inset-0 w-full h-full overflow-hidden" style={{ zIndex: 20 }}>
           <SectionOne />

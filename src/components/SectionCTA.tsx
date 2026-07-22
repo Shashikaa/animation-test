@@ -24,7 +24,7 @@ export default function SectionCTA() {
         {/* Show static background image on mobile and tablet */}
         <div className="block lg:hidden w-full h-full">
           <img 
-            src="/CTA.webp" 
+            src="/CTAmob.webp" 
             alt="Background" 
             className="w-full h-full object-cover"
           />

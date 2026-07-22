@@ -89,24 +89,26 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
 
       if (currentIncoming && currentPrev) {
         if (direction === "next") {
-          gsap.set(currentIncoming, { clipPath: "inset(0 100% 0 0)", zIndex: 2 });
+          // 🌟 BOTTOM TO TOP transition: Set incoming clipped 100% from bottom
+          gsap.set(currentIncoming, { clipPath: "inset(100% 0 0 0)", zIndex: 2 });
           gsap.set(currentPrev, { clipPath: "inset(0 0 0 0)", zIndex: 1 });
 
           gsap.to(currentIncoming, {
-            clipPath: "inset(0 0% 0 0%)",
+            clipPath: "inset(0% 0 0 0)",
             duration: CLIP_DURATION,
             ease: "power2.inOut",
             onComplete: () => {
               gsap.set(currentIncoming, { zIndex: 1 });
-              gsap.set(currentPrev, { zIndex: 0, clipPath: "inset(0 0 0 100%)" });
+              gsap.set(currentPrev, { zIndex: 0, clipPath: "inset(100% 0 0 0)" });
             },
           });
         } else {
+          // 🌟 Reverse direction when scrolling back up
           gsap.set(currentIncoming, { clipPath: "inset(0 0 0 0)", zIndex: 1 });
           gsap.set(currentPrev, { clipPath: "inset(0 0 0 0)", zIndex: 2 });
 
           gsap.to(currentPrev, {
-            clipPath: "inset(0 100% 0 0)",
+            clipPath: "inset(100% 0 0 0)",
             duration: CLIP_DURATION,
             ease: "power2.inOut",
             onComplete: () => {
@@ -213,7 +215,8 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               className={`s3-bg s3-bg-${i + 1} absolute inset-0 w-full h-full`}
               style={{ 
                 zIndex: i === 0 ? 1 : 0, 
-                clipPath: i === 0 ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
+                /* 🌟 Initial clipPath updated for bottom-to-top reveal */
+                clipPath: i === 0 ? "inset(0 0 0 0)" : "inset(100% 0 0 0)",
                 visibility: i === 0 ? "hidden" : "visible"
               }} 
             >
@@ -235,7 +238,11 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
             <div
               key={i}
               className={`s3-bg s3-bg-${i + 1} absolute inset-0 w-full h-full`}
-              style={{ zIndex: i === 0 ? 1 : 0, clipPath: i === 0 ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
+              style={{ 
+                zIndex: i === 0 ? 1 : 0, 
+                /* 🌟 Initial clipPath updated for bottom-to-top reveal */
+                clipPath: i === 0 ? "inset(0 0 0 0)" : "inset(100% 0 0 0)" 
+              }}
             >
               <img src={slide.img} alt="" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#19211C]/95 via-[#19211C]/40 to-transparent z-[2]" />

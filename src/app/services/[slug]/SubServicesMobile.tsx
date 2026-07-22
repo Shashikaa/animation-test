@@ -63,8 +63,9 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
       gsap.set(".services-faq-wrap", { visibility: "hidden", y: "100%" });
       gsap.set(".services-section-two-wrap", { visibility: "hidden", clipPath: "inset(0% 0% 0% 100%)" });
       
-      // CTA and Footer matching About animation config
+      // CTA & Footer Setup matching About structure
       gsap.set([".services-section-cta", ".services-footer-wrap"], { yPercent: 100, visibility: "hidden" });
+      gsap.set([".services-section-cta .cta-inner-desktop", ".services-section-cta .cta-inner-mobile"], { opacity: 1 });
       gsap.set(".services-section-cta", { zIndex: 95 });
       gsap.set(".services-footer-wrap", { zIndex: 96 });
     }, scopeRef);
@@ -106,7 +107,7 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
         scrollTrigger: {
           trigger: ".services-hero-master",
           start: "top top",
-          end: "+=13500", // Increased end tracker weight to fit extended CTA/Footer reveal frames
+          end: "+=9500", // Adjusted scroll length to remove dead space
           pin: true,
           pinSpacing: true,
           scrub: 1, 
@@ -193,38 +194,22 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
           ease: "power1.inOut"
         }, "faq");
 
-      // ── PHASE 3: Transition to Section Two ──
-      scrollTl.addLabel("phase3")
-        .set(".services-section-two-wrap", { visibility: "visible" }, "phase3")
-        .to(".services-section-two-wrap", {
-          clipPath: "inset(0% 0% 0% 0%)", 
-          duration: 3.0, 
-          ease: "power1.inOut",
-          onStart: () => setIsSectionTwoActive(true),
-          onReverseComplete: () => setIsSectionTwoActive(false)
-        }, "phase3");
-
-      useTextReveal(scopeRef, ".s2-reveal-text", {
-        tl: scrollTl,
-        position: "phase3+=1.0",
-        yOffset: 25,
-        stagger: 0.04,
-        duration: 0.8,
-        ease: "power2.out",
-      });
-
-      // ── CTA REVEAL TRACK (Matched with About) ──
-      scrollTl.addLabel("ctaStart")
+      // ── CTA REVEAL TRACK (Directly linked after FAQ) ──
+      scrollTl.addLabel("ctaStart", ">")
         .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
-        .to(".services-section-cta", { yPercent: 0, duration: 4.8 }, "ctaStart")
-        .to(".services-section-two-wrap", { scale: 1.05, duration: 4.8 }, "ctaStart");
+        .to(".services-section-cta", { yPercent: 0, duration: 3.0, ease: "power1.inOut" }, "ctaStart")
+        .to(".services-faq-wrap", { yPercent: -10, duration: 3.0, ease: "power1.inOut" }, "ctaStart");
 
-      // ── FOOTER REVEAL TRACK (Matched with About) ──
-      scrollTl.addLabel("footerStart", "ctaStart+=4.8")
-        .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
-        .to(".services-footer-wrap", { yPercent: 0, duration: 5.5 }, "footerStart")
-        .to(".services-section-two-wrap", { scale: 1.05, duration: 5.5 }, "footerStart")
-        .to(".services-section-cta .cta-inner-desktop", { opacity: 0, duration: 4.0, ease: "power1.out" }, "footerStart");
+      // ── FOOTER REVEAL TRACK (CTA Inner Fades Out) ──
+      scrollTl.addLabel("footerStart", ">")
+        .to([".services-section-cta .cta-inner-desktop", ".services-section-cta .cta-inner-mobile"], { 
+          opacity: 0, 
+          duration: 1.2, 
+          ease: "power1.out" 
+        }, "footerStart")
+        .set(".services-footer-wrap", { visibility: "visible" }, "footerStart+=0.1")
+        .to(".services-footer-wrap", { yPercent: 0, duration: 3.0, ease: "power1.inOut" }, "footerStart+=0.1")
+        .to(".services-faq-wrap", { yPercent: -20, duration: 3.0, ease: "power1.inOut" }, "footerStart+=0.1");
 
     }, scopeRef);
 
