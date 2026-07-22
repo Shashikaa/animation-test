@@ -104,7 +104,7 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
           end: "+=9500", // Expanded tracking space to make room for all mobile sections comfortably
           pin: true,
           pinType: "fixed", // Forces GSAP to use fixed positioning which handles iOS URL bar collapse cleanly
-          scrub: 1, // Buttery smooth touch momentum cushion matching AboutMobile
+          scrub: 0.5, // Buttery smooth touch momentum cushion matching AboutMobile
           anticipatePin: 1,
           invalidateOnRefresh: true,
         }

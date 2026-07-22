@@ -140,7 +140,7 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
           pin: true,
           pinType: "fixed", // Prevents layout pops on mobile WebKit when URL bar collapses
           pinSpacing: true,
-          scrub: 1, 
+          scrub: 0.5, 
           invalidateOnRefresh: true,
           fastScrollEnd: true,
           preventOverlaps: true

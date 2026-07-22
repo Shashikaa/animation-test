@@ -225,7 +225,7 @@ export default function HomeMobile() {
                 trigger: ".home-pin-master",
                 start: "top top",
                 end: "+=18000",
-                scrub: 1,
+                scrub: 0.5,
                 pin: true,
                 pinType: "fixed",
                 anticipatePin: 1,

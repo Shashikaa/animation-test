@@ -152,7 +152,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
       });
 
       const infoSlides = pageData.slides || [];
-      const scrubValue = 1;
+      const scrubValue = 0.5;
 
       const triggerInfoHook = (nextIdx: number) => {
         if (nextIdx !== lastInfoIdx.current) {

@@ -160,7 +160,7 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
           end: "+=8500", // Expanded scroll duration to yield enough headroom for CTA & Footer steps
           pin: true,
           pinType: "fixed", // Eliminates iOS black gap when URL bar collapses
-          scrub: 1, // Buttery smooth touch momentum cushion matching About & Contact Mobile
+          scrub: 0.5, // Buttery smooth touch momentum cushion matching About & Contact Mobile
           anticipatePin: 1,
           invalidateOnRefresh: true,
         }
