@@ -30,7 +30,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
-  // Robust touch-locking for iOS/Android without setting overflow: hidden on body
+  // Prevent background scroll during preloader without layout collapse
   useEffect(() => {
     const locked = !preloaderDone || !introDone;
     
@@ -48,12 +48,11 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // Initial structural configurations
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     
     const ctx = gsap.context(() => {
-      // Ignore mobile address bar show/hide updates to prevent resize glitches
+      // Prevents ScrollTrigger from recalculating height when the browser URL bar collapses/expands
       ScrollTrigger.config({ ignoreMobileResize: true });
 
       gsap.set(".about-hero-bg", { scale: 1.3 });
@@ -115,7 +114,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // Pure Section Transition Scroll Timeline
+  // Section Transition Scroll Timeline
   useEffect(() => {
     if (!introDone) return;
 
@@ -127,8 +126,8 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
         scrollTrigger: {
           trigger: ".about-pin",
           start: "top top",
-          end: "+=6000", // Tightened for mobile touch responsiveness
-          scrub: 0.1,    // Smoother GPU catch-up on touch
+          end: "+=6000",
+          scrub: 0.1,
           pin: true,
           anticipatePin: 1,
           invalidateOnRefresh: true
@@ -217,8 +216,10 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     <div ref={scopeRef}>
       <style jsx global>{`
         .pin-all {
-          /* Using 100dvh prevents jumpiness when Mobile Safari search bar shows/hides */
-          height: 100dvh; 
+          /* Fallback for older browsers */
+          height: 100vh;
+          /* Small Viewport Height: accounts for the address bar when fully open, keeping pinning stable */
+          height: 100svh; 
         }
       `}</style>
 
