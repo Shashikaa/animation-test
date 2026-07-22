@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useSite } from "@/src/app/context/SiteContext";
-// Import normally so the code is already bundled and ready to execute instantly
 import AboutDesktop from "./AboutDesktop";
 import AboutMobile from "./AboutMobile";
 
@@ -17,9 +16,8 @@ export default function AboutPage() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // Avoid rendering a blank state while checking window width on the very first frame
   if (isMobile === null) {
-    return <div className="h-screen w-full " />;
+    return null; // Avoid rendering an artificial 100vh spacer div
   }
 
   return (

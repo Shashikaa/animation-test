@@ -30,48 +30,23 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
-  // Lock background scrolling during preloader & intro sequence
+  // Lock scrolling cleanly without touch-action locks
   useEffect(() => {
     const locked = !preloaderDone || !introDone;
-    
-    if (locked) {
-      document.body.style.touchAction = "none";
-      document.body.style.pointerEvents = "none";
-    } else {
-      document.body.style.touchAction = "";
-      document.body.style.pointerEvents = "";
-    }
-
+    document.body.style.overflow = locked ? "hidden" : "";
     return () => {
-      document.body.style.touchAction = "";
-      document.body.style.pointerEvents = "";
+      document.body.style.overflow = "";
     };
   }, [preloaderDone, introDone]);
 
-  // Dynamic --vh pixel calculation for exact iOS Safari viewport fitting
-  useLayoutEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const updateVh = () => {
-      const vh = window.innerHeight * 0.01;
-      document.documentElement.style.setProperty("--vh", `${vh}px`);
-    };
-
-    updateVh();
-    window.addEventListener("resize", updateVh);
-    return () => window.removeEventListener("resize", updateVh);
-  }, []);
-
-  // Initial structural configurations & GPU layer promotion
+  // Structural Setups
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     
     const ctx = gsap.context(() => {
-      // Allows native scroll events to collapse the browser address bar
-      ScrollTrigger.config({ 
-        ignoreMobileResize: true,
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
-      });
+      // Disable GSAP touch normalization to allow native iOS Safari address bar collapse
+      ScrollTrigger.normalizeScroll(false);
+      ScrollTrigger.config({ ignoreMobileResize: true });
 
       gsap.set(".about-hero-bg", { scale: 1.3, force3D: true });
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30, force3D: true });
@@ -103,37 +78,28 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // Hero Intro Scale & Fade Sequence
+  // Intro Sequence
   useEffect(() => {
     if (!preloaderDone) return;
 
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
-        onComplete: () => setIntroDone(true)
+        onComplete: () => {
+          setIntroDone(true);
+          // Refresh ScrollTrigger after unlocking body overflow
+          setTimeout(() => ScrollTrigger.refresh(), 50);
+        }
       });
 
-      introTl.to(".about-hero-bg", { 
-        scale: 1.1, 
-        duration: 2.2, 
-        ease: "power2.out",
-      }, 0);
-
-      introTl.to([".hero-title", ".hero-desc"], {
-        opacity: 1,
-        y: 0,
-        duration: 1.4,
-        stagger: 0.2,
-        ease: "power3.out",
-      }, 0.4);
-
+      introTl.to(".about-hero-bg", { scale: 1.1, duration: 2.2, ease: "power2.out" }, 0);
+      introTl.to([".hero-title", ".hero-desc"], { opacity: 1, y: 0, duration: 1.4, stagger: 0.2, ease: "power3.out" }, 0.4);
       introTl.to(".about-section-five", { opacity: 1, duration: 1.2, ease: "linear" }, 0.2);
-
     }, scopeRef);
 
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // Section Transition Scroll Timeline
+  // Scroll Timeline
   useEffect(() => {
     if (!introDone) return;
 
@@ -146,8 +112,9 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
           trigger: ".about-pin",
           start: "top top",
           end: "+=5000",
-          scrub: 1, // Lightweight scrub allows native touch momentum to scroll the document and collapse URL bar
+          scrub: 0.2,
           pin: true,
+          pinSpacing: true,
           anticipatePin: 1,
           invalidateOnRefresh: true
         },
@@ -219,16 +186,14 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // Footer Reveal Track (Eliminates Sec 5 Flash)
+      // Footer Reveal Track
       tl.addLabel("footerStart", ">")
         .to([".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"], { 
           opacity: 0, 
           duration: ACTION * 0.4, 
           ease: "power1.inOut" 
         }, "footerStart")
-        // Completely hide Section 5 as CTA inner content finishes fading out
         .set(".about-section-five", { visibility: "hidden" }, `footerStart+=${ACTION * 0.4}`)
-        // Slide up the Footer over the CTA wrapper
         .set(".about-footer-wrap", { visibility: "visible" }, "footerStart")
         .fromTo(".about-footer-wrap", 
           { yPercent: 100 },
@@ -245,9 +210,9 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     <div ref={scopeRef}>
       <style jsx global>{`
         .pin-all {
+          /* Fixed height rule allowing Mobile Safari address bar to hide on vertical drag */
           height: 100vh;
-          height: calc(var(--vh, 1vh) * 100);
-          height: 100dvh;
+          height: 100lvh;
         }
 
         .gpu-accelerated {
@@ -258,7 +223,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
         }
 
         .about-section-cta {
-          background-color: #000; /* Match site background */
+          background-color: #000;
         }
       `}</style>
 
