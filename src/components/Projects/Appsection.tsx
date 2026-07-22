@@ -39,7 +39,7 @@ export default function Appsection() {
             <img 
               src="/phone-mockup.webp" 
               alt="Pool Care Mobile App Mockup" 
-              className="w-full h-auto max-h-[55vh] md:max-h-[55vh] lg:max-h-[70vh] block object-contain !mb-8"
+              className="w-full h-auto max-h-[50vh] md:max-h-[50vh] lg:max-h-[70vh] block object-contain !mb-12 !mt-12"
             />
           </div>
         </div>
@@ -50,7 +50,7 @@ export default function Appsection() {
             Pool Care +
           </span>
 
-          <p className="font-body text-[#F4EEDF] text-sm md:text-base leading-relaxed text-left !mb-8">
+          <p className="font-body text-[#F4EEDF] text-sm md:text-base leading-relaxed text-left !mb-12">
             Pool Care+ keeps you informed and involved from start to finish. Track progress, receive live updates, and follow each stage of your pool project — all in one place.
           </p>
 

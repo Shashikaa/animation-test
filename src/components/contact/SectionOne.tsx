@@ -32,10 +32,10 @@ export default function SectionOne() {
       
       {/* Main Layout Grid Context */}
       {/* Changed md:flex-row to lg:flex-row and md:gap-0 to lg:gap-0 */}
-      <div className="section-container relative z-10 w-full h-full flex flex-col lg:flex-row items-stretch justify-between gap-8 lg:gap-0">
+      <div className="section-container relative z-10 w-full h-full flex flex-col lg:flex-row items-stretch justify-center lg:justify-between gap-12 lg:gap-0">
         
         {/* LEFT SIDE — Completely Static Title Block */}
-        <div className="contact-one-left flex flex-col gap-2 lg:gap-4 justify-start pb-4 select-none !pt-22">
+        <div className="contact-one-left flex flex-col gap-2 lg:gap-4 justify-start pb-4 select-none lg:!pt-22">
           <h2
             className="contact-one-title text-[#F4EEDF] !font-[100]"
             style={{ fontFamily: "var(--font-display)" }}

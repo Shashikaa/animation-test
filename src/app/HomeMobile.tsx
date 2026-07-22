@@ -1,21 +1,21 @@
 "use client";
 
-import { useRef, useEffect, useLayoutEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSite } from "./context/SiteContext";
 import dynamic from "next/dynamic";
 
-import Hero          from "../components/Home/Hero";
-import SectionTwo    from "../components/Home/SectionTwo";
-import SectionCTA    from "../components/SectionCTA";
-import Footer        from "../components/Footer";
+import Hero from "../components/Home/Hero";
+import SectionTwo from "../components/Home/SectionTwo";
+import SectionCTA from "../components/SectionCTA";
+import Footer from "../components/Footer";
 
 const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { ssr: false });
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
-const SectionNine  = dynamic(() => import("../components/Home/SectionNine"),   { ssr: false });
-const SectionTen   = dynamic(() => import("../components/Home/SectionTen"),    { ssr: false });
-const Appsection   = dynamic(() => import("../components/Appsection"),   { ssr: false });
+const SectionNine = dynamic(() => import("../components/Home/SectionNine"), { ssr: false });
+const SectionTen = dynamic(() => import("../components/Home/SectionTen"), { ssr: false });
+const Appsection = dynamic(() => import("../components/Appsection"), { ssr: false });
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -48,13 +48,57 @@ function executeInlineSplitting(selector: string) {
 
 export default function HomeMobile() {
   const contextValues = useSite() as any;
-  const preloaderDone = contextValues.preloaderDone;
-  const onScrollReady = contextValues.onScrollReady ?? (() => {});
+  const preloaderDone = contextValues?.preloaderDone ?? false;
+  const setPreloaderDone = contextValues?.setPreloaderDone ?? (() => {});
+  const onScrollReady = contextValues?.onScrollReady ?? (() => {});
+  
+  const [introDone, setIntroDone] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
+
+  // Initialize page position & sync preloader context
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.history.scrollRestoration = "manual";
+    window.scrollTo(0, 0);
+  }, []);
+
+  // Lock scrolling cleanly during preloader / initial load
+  useEffect(() => {
+    const locked = !preloaderDone || !introDone;
+    document.body.style.overflow = locked ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [preloaderDone, introDone]);
+
+  // Handle iOS address bar expansion/collapse gracefully (Same feature from About & Contact)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let lastHeight = window.innerHeight;
+
+    const handleResize = () => {
+      const currentHeight = window.innerHeight;
+      if (Math.abs(currentHeight - lastHeight) > 40) {
+        lastHeight = currentHeight;
+        ScrollTrigger.refresh();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // 1. INITIAL STATES RESET
   useLayoutEffect(() => {
+    if (!preloaderDone) return;
+
     const ctx = gsap.context(() => {
+      ScrollTrigger.config({ 
+        ignoreMobileResize: false,
+        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
+      });
+
       gsap.set([
         ".hero-bg-wrapper", ".hero-bg", ".section-10", 
         ".s10-img-right-wrap", ".s10-scrollable-container", 
@@ -62,7 +106,7 @@ export default function HomeMobile() {
         ".s8-mob-bg", ".section-9", ".s9-bg-img", ".section-cta", ".footer", ".section-appsec"
       ], { force3D: true });
 
-      gsap.set(".hero", { yPercent: 0, zIndex: 90, display: "block", opacity: 1 });
+      gsap.set(".hero", { yPercent: 0, zIndex: 90, display: "block", opacity: 1, force3D: true });
       gsap.set(".hero-bg-wrapper", { opacity: 1, visibility: "visible", clipPath: "none" });
       gsap.set(".hero-gradient-bg", { opacity: 1, visibility: "visible" });
       
@@ -70,48 +114,52 @@ export default function HomeMobile() {
       gsap.set([".hero-right-text", ".hero-secondary-para"], { opacity: 1, visibility: "hidden" });
       gsap.set(".hero-secondary-text-wrap", { height: "auto" });
 
-      gsap.set(".section-2", { display: "block", clipPath: "none", zIndex: 95, yPercent: 100, opacity: 1 });
+      gsap.set(".section-2", { display: "block", clipPath: "none", zIndex: 95, yPercent: 100, opacity: 1, force3D: true });
       gsap.set(".s2-mob-scroll-wrapper", { opacity: 0, yPercent: 100, y: 0 }); 
       gsap.set([".s2-title-main", ".s2-title-sub", ".s2-body"], { opacity: 1, y: 0, visibility: "visible" });
       
       // RESET ALL THREE MULTI-BG REVEAL LAYERS USING scaleX FOR HARDWARE ACCELERATION
       gsap.set([".s2-mob-clip-bg-1", ".s2-mob-clip-bg-2", ".s2-mob-clip-bg-3"], { 
         scaleX: 0,
-        transformOrigin: "left center"
+        transformOrigin: "left center",
+        force3D: true
       });
 
-      gsap.set(".section-8", { visibility: "hidden", yPercent: 100, zIndex: 100 });
-      gsap.set(".s8-bg-img", { yPercent: 20 });
-      gsap.set(".s8-mob-bg", { scale: 1.35, transformOrigin: "center center" });
+      gsap.set(".section-8", { visibility: "hidden", yPercent: 100, zIndex: 100, force3D: true });
+      gsap.set(".s8-bg-img", { yPercent: 20, force3D: true });
+      gsap.set(".s8-mob-bg", { scale: 1.35, transformOrigin: "center center", force3D: true });
 
-      gsap.set(".section-10", { visibility: "hidden", yPercent: 100, zIndex: 105 });
+      gsap.set(".section-10", { visibility: "hidden", yPercent: 100, zIndex: 105, force3D: true });
       gsap.set(".s10-img-right-wrap", { clipPath: "inset(0% 0% 0% 0%)" });
       gsap.set(".s10-scrollable-container", { y: "0vh" });
 
-      gsap.set(".section-7", { visibility: "hidden", yPercent: 100, zIndex: 110 });
-      gsap.set(".s7-bg-img", { yPercent: 20 });
-      gsap.set(".s7-mob-bg", { scale: 1.35, transformOrigin: "center center" });
+      gsap.set(".section-7", { visibility: "hidden", yPercent: 100, zIndex: 110, force3D: true });
+      gsap.set(".s7-bg-img", { yPercent: 20, force3D: true });
+      gsap.set(".s7-mob-bg", { scale: 1.35, transformOrigin: "center center", force3D: true });
 
-      gsap.set(".section-appsec", { visibility: "hidden", yPercent: 100, zIndex: 115 });
+      gsap.set(".section-appsec", { visibility: "hidden", yPercent: 100, zIndex: 115, force3D: true });
 
-      gsap.set(".section-9", { visibility: "hidden", yPercent: 100, zIndex: 120 });
-      gsap.set(".s9-bg-img", { yPercent: 20, scale: 1.35, transformOrigin: "center center" });
-      gsap.set(".s9-title", { opacity: 0 });
-      gsap.set(".s9-para", { opacity: 0 });
+      gsap.set(".section-9", { visibility: "hidden", yPercent: 100, zIndex: 120, force3D: true });
+      gsap.set(".s9-bg-img", { yPercent: 20, scale: 1.35, transformOrigin: "center center", force3D: true });
+      gsap.set(".s9-title", { opacity: 1 });
+      gsap.set(".s9-para", { opacity: 1 });
 
-      gsap.set(".section-cta", { yPercent: 100, zIndex: 125, visibility: "hidden" });
+      gsap.set(".section-cta", { yPercent: 100, zIndex: 125, visibility: "hidden", force3D: true });
       gsap.set([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
-      gsap.set(".footer", { yPercent: 100, zIndex: 126, visibility: "hidden" });
+      gsap.set(".footer", { yPercent: 100, zIndex: 126, visibility: "hidden", force3D: true });
 
-      gsap.set(".hero-bg", { scale: 1.0, transformOrigin: "center center" });
+      gsap.set(".hero-bg", { scale: 1.0, transformOrigin: "center center", force3D: true });
+
+      // Signal intro setup completion to unleash timeline driver
+      setIntroDone(true);
     }, scopeRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [preloaderDone]);
 
   // 2. MAIN TIMELINE DRIVER
   useEffect(() => {
-    if (!preloaderDone) return;
+    if (!preloaderDone || !introDone) return;
 
     let vvCleanup: (() => void) | null = null;
     let fallbackTimeout: NodeJS.Timeout | null = null;
@@ -120,17 +168,7 @@ export default function HomeMobile() {
     const ctx = gsap.context(() => {
       gsap.ticker.lagSmoothing(0);
 
-      ScrollTrigger.config({
-        ignoreMobileResize: true,
-        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize", 
-      });
-
-      ScrollTrigger.normalizeScroll({
-        allowNestedScroll: true,
-        debounce: false
-      });
-
-      const ACTION      = 2.0; 
+      const ACTION = 2.0; 
       const DEAD_SCROLL = 0.2; 
 
       const waitForMobBgs = (cb: () => void) => {
@@ -154,7 +192,7 @@ export default function HomeMobile() {
 
         waitForMobBgs(() => {
           requestAnimationFrame(() => {
-            const pinEl = document.querySelector(".pin-all") as HTMLElement;
+            const pinEl = document.querySelector(".home-pin-master") as HTMLElement;
 
             ScrollTrigger.refresh(true);
 
@@ -177,15 +215,16 @@ export default function HomeMobile() {
                 lazy: true 
               },
               scrollTrigger: {
-                trigger:              ".pin-all",
-                start:                "top top",
-                end:                  "+=18000",
-                scrub:                true, 
-                pin:                  true,
-                anticipatePin:        1,
-                preventOverlaps:      true, 
-                fastScrollEnd:        true, 
-                invalidateOnRefresh:  true,
+                trigger: ".home-pin-master",
+                start: "top top",
+                end: "+=18000",
+                scrub: 2, // Smooth momentum scroll matching About & Contact
+                pin: true,
+                pinType: "fixed", // Forces GSAP to use fixed positioning matching About/Contact
+                anticipatePin: 1,
+                preventOverlaps: true, 
+                fastScrollEnd: true, 
+                invalidateOnRefresh: true,
                 onRefresh: (self) => {
                   if (pinEl) pinEl.style.removeProperty("max-height");
                   
@@ -356,25 +395,25 @@ export default function HomeMobile() {
 
               .to({}, { duration: DEAD_SCROLL }) 
 
-            // ── SECTION 9 SLIDE UP ──
-            tl.addLabel("sec9Start", ">")
-              .set(".section-9", { visibility: "visible" }, "sec9Start")
-              .fromTo(".section-9", { yPercent: 100 }, { yPercent: 0, duration: ACTION }, "sec9Start")
-              .to(".section-appsec", { yPercent: -10, duration: ACTION }, "sec9Start")
-              .to(".s9-bg-img", { scale: 1, yPercent: 0, duration: ACTION }, "sec9Start")
-              
-              .to(".s9-title", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.3")
-              .to(".s9-para", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.3")
+// ── SECTION 9 SLIDE UP ──
+tl.addLabel("sec9Start", ">")
+  .set(".section-9", { visibility: "visible" }, "sec9Start")
+  .fromTo(".section-9", { yPercent: 100 }, { yPercent: 0, duration: ACTION }, "sec9Start")
+  .to(".section-appsec", { yPercent: -10, duration: ACTION }, "sec9Start")
+  .to(".s9-bg-img", { scale: 1, yPercent: 0, duration: ACTION }, "sec9Start")
+  
+  .to(".s9-title", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.3")
+  .to(".s9-para", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.3");
 
-              .to({}, { duration: DEAD_SCROLL })
+// REMOVED: .to({}, { duration: DEAD_SCROLL })  <-- This was causing the pause before CTA starts
 
-            // ── CTA REVEAL ──
-            tl.addLabel("ctaStart", ">")
-              .set(".section-cta", { visibility: "visible" }, "ctaStart")
-              .to(".section-cta", { yPercent: 0, duration: ACTION }, "ctaStart") 
-              .to(".s9-bg-img", { yPercent: -10, duration: ACTION }, "ctaStart")
+// ── CTA REVEAL ──
+tl.addLabel("ctaStart", ">")
+  .set(".section-cta", { visibility: "visible" }, "ctaStart")
+  .to(".section-cta", { yPercent: 0, duration: ACTION }, "ctaStart") 
+  .to(".s9-bg-img", { yPercent: -10, duration: ACTION }, "ctaStart")
 
-              .to({}, { duration: DEAD_SCROLL })
+  .to({}, { duration: DEAD_SCROLL }); // Pause stays here so user can read CTA before Footer arrives
 
             // ── FOOTER REVEAL ──
             tl.addLabel("footerStart", ">")
@@ -415,55 +454,86 @@ export default function HomeMobile() {
       if (fallbackTimeout) clearTimeout(fallbackTimeout);
       ctx.revert();
     };
-  }, [preloaderDone]);
+  }, [preloaderDone, introDone, onScrollReady]);
 
   return (
-    <div ref={scopeRef}>
+    <div ref={scopeRef} className="min-h-screen w-full bg-black text-white overflow-hidden">
       <style jsx global>{`
-        .pin-all {
-          height: 100lvh; 
+        /* Pin wrapper fills 100% of visible viewport height */
+        .pin-all-home {
+          height: 100vh;
+          height: 100dvh;
+          width: 100%;
+        }
+
+        /* Overrides GSAP inline styles on pin-spacer to prevent viewport black gaps on iOS */
+        .pin-spacer {
+          min-height: 100dvh !important;
+        }
+
+        .pin-spacer > .pin-all-home {
+          height: 100% !important;
+          max-height: none !important;
+        }
+
+        .gpu-accelerated {
+          will-change: transform, opacity;
+          transform: translateZ(0);
+          -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
         }
       `}</style>
 
-      <div className="pin-all relative overflow-hidden">
-        <div className="section-2 absolute inset-0 h-full w-full">
+      <div className="home-pin-master pin-all-home relative w-full overflow-hidden">
+        
+        {/* Layer 1: Hero Component */}
+        <div className="hero gpu-accelerated absolute inset-0 w-full h-full" style={{ pointerEvents: "auto" }}>
+          <Hero />
+        </div>
+
+        {/* Layer 2: Section Two */}
+        <div className="section-2 gpu-accelerated absolute inset-0 h-full w-full">
           <SectionTwo />
         </div>
 
-        <div className="section-8 absolute inset-0 h-full w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        {/* Layer 3: Section Eight */}
+        <div className="section-8 gpu-accelerated absolute inset-0 h-full w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionEight />
         </div>
 
-        <div className="section-10 absolute inset-0 h-full w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        {/* Layer 4: Section Ten */}
+        <div className="section-10 gpu-accelerated absolute inset-0 h-full w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionTen />
         </div>
 
-        <div className="section-7 absolute inset-0 h-full w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        {/* Layer 5: Section Seven */}
+        <div className="section-7 gpu-accelerated absolute inset-0 h-full w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionSeven />
         </div>
 
+        {/* Layer 6: App Section */}
         <div 
-          className="section-appsec absolute inset-x-0 bottom-0 w-full h-[120vh] min-h-[120vh] structural-layer overflow-y-auto overflow-x-hidden bg-black" 
+          className="section-appsec gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[120vh] min-h-[120vh] structural-layer overflow-y-auto overflow-x-hidden bg-black" 
           style={{ pointerEvents: "auto", visibility: "hidden" }}
         >
           <Appsection />
         </div>
 
-        <div className="section-9 absolute inset-0 h-full w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        {/* Layer 7: Section Nine */}
+        <div className="section-9 gpu-accelerated absolute inset-0 h-full w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionNine />
         </div>
 
-        <div className="hero absolute inset-0 h-full w-full" style={{ pointerEvents: "auto" }}>
-          <Hero />
-        </div>
-        
-        <div className="section-cta absolute inset-0 h-full w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        {/* Layer 8: CTA Section */}
+        <div className="section-cta gpu-accelerated absolute inset-0 h-full w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionCTA />
         </div>
-        
-        <div className="footer absolute left-0 bottom-0 w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+
+        {/* Layer 9: Footer */}
+        <div className="footer gpu-accelerated absolute left-0 bottom-0 w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <Footer />
         </div>
+
       </div>
     </div>
   );

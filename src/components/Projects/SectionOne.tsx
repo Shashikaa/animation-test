@@ -26,7 +26,7 @@ export default function SectionOne() {
 
         {/* Row 3: Centered Image Container */}
         <div className="w-full flex justify-center items-center">
-          <div className="relative w-full h-[450px] md:h-auto md:aspect-[4/3] max-h-[650px] overflow-hidden ">
+          <div className="relative w-full h-[45vh] md:h-auto md:aspect-[4/3] max-h-[650px] overflow-hidden ">
             
             <div className="absolute inset-0 w-full h-full overflow-hidden">
               <Image

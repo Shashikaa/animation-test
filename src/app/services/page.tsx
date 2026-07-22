@@ -17,9 +17,8 @@ export default function ServicePage() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // Prevent flash or hydration mismatch while window width resolves
   if (isMobile === null) {
-    return <div className="h-screen w-full" />;
+    return null; // Avoid rendering an artificial 100vh spacer div
   }
 
   return (

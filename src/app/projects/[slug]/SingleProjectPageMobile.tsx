@@ -32,6 +32,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
     document.body.classList.remove("preloading");
   }, []);
 
+  // Lock body scroll during intro cleanly
   useEffect(() => {
     const locked = !preloaderDone || !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
@@ -39,6 +40,24 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
       document.body.style.overflow = "";
     };
   }, [preloaderDone, introDone]);
+
+  // Handle iOS address bar expansion/collapse gracefully
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let lastHeight = window.innerHeight;
+
+    const handleResize = () => {
+      const currentHeight = window.innerHeight;
+      if (Math.abs(currentHeight - lastHeight) > 40) {
+        lastHeight = currentHeight;
+        ScrollTrigger.refresh();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useLayoutEffect(() => {
     if (!preloaderDone) return;
@@ -62,7 +81,6 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
       gsap.set(".footer-scroll-wrapper", { yPercent: 100, visibility: "hidden", zIndex: 80 });
       gsap.set(".faq-content", { opacity: 1, y: 0 });
 
-      // Keep wrapper visible to allow child animations, but prepare text for intro stagger
       gsap.set(".hero-text-wrap", { autoAlpha: 1 });
       gsap.set([".hero-title", ".hero-description"], { autoAlpha: 0, y: 20 });
 
@@ -78,12 +96,16 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
     return () => ctx.revert();
   }, [preloaderDone]);
 
+  // Hero Intro Sequence
   useEffect(() => {
     if (!preloaderDone) return;
 
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
-        onComplete: () => setIntroDone(true)
+        onComplete: () => {
+          setIntroDone(true);
+          setTimeout(() => ScrollTrigger.refresh(), 50);
+        }
       });
 
       const layers = gsap.utils.toArray<HTMLElement>(".hero-image-layer");
@@ -98,6 +120,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
     return () => ctx.revert();
   }, [preloaderDone]);
 
+  // Master Scroll Timeline
   useEffect(() => {
     if (!introDone || !preloaderDone) return;
 
@@ -106,10 +129,11 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
     const ctx = gsap.context(() => {
       gsap.ticker.lagSmoothing(0);
 
-      ScrollTrigger.normalizeScroll(true);
+      // Disable GSAP touch normalization so iOS WebKit handles browser chrome hiding
+      ScrollTrigger.normalizeScroll(false);
 
       ScrollTrigger.config({
-        ignoreMobileResize: true,
+        ignoreMobileResize: false,
         autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize",
       });
 
@@ -128,7 +152,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
       });
 
       const infoSlides = pageData.slides || [];
-      const scrubValue = 0.8;
+      const scrubValue = 1;
 
       const triggerInfoHook = (nextIdx: number) => {
         if (nextIdx !== lastInfoIdx.current) {
@@ -159,6 +183,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
               start: "top top",
               end: `+=12000`,
               pin: true,
+              pinType: "fixed",
               pinSpacing: true,
               scrub: scrubValue,
               anticipatePin: 1,
@@ -238,24 +263,29 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
           scrollTl.set(".faq-scroll-wrapper", { visibility: "visible" }, "faqStart")
                   .to(".faq-scroll-wrapper", { yPercent: 0, ease: "power2.inOut", duration: 3.5 }, "faqStart");
 
-          // ── STEP E: FAQ CONTENT FADES OUT & FOOTER REVEALS ──
-          const footerDuration = 2.5;
+          // ── STEP E: SYNCHRONIZED FAQ CONTENT FADE-OUT & FOOTER SLIDE-UP ──
           scrollTl.addLabel("footerStart", "faqStart+=3.5");
 
+          // FAQ Inner content fades out immediately as footer slides up
           scrollTl.to(
             ".faq-content", 
             { 
               opacity: 0, 
               y: -30, 
-              duration: 1.2, 
-              ease: "power2.in",
+              duration: 0.8, 
+              ease: "power1.inOut",
               pointerEvents: "none" 
             }, 
             "footerStart"
           );
 
           scrollTl.set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
-                  .to(".footer-scroll-wrapper", { yPercent: 0, ease: "power2.out", duration: footerDuration }, "footerStart");
+                  .fromTo(
+                    ".footer-scroll-wrapper",
+                    { yPercent: 100 },
+                    { yPercent: 0, ease: "power2.inOut", duration: 2.2 },
+                    "footerStart"
+                  );
 
           scrollTl.addLabel("end");
         });
@@ -274,7 +304,6 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
 
     return () => {
       vvCleanup?.();
-      ScrollTrigger.normalizeScroll(false);
       ctx.revert();
     };
   }, [introDone, preloaderDone, pageData.images, pageData.slides, pageData.title]);
@@ -282,11 +311,37 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
   return (
     <div 
       ref={scopeRef} 
-      className={`w-full relative ${!introDone ? "h-screen overflow-hidden" : "overflow-x-hidden"}`}
+      className="w-full relative min-h-screen bg-black text-white overflow-hidden"
     >
-      <div className="master-viewport relative w-full h-screen overflow-hidden bg-black" style={{ visibility: "visible" }}>
+      <style jsx global>{`
+        /* Pin wrapper fills 100% of visible viewport height */
+        .pin-all-single-project {
+          height: 100vh;
+          height: 100dvh;
+          width: 100%;
+        }
+
+        /* Overrides GSAP inline styles on pin-spacer to prevent viewport black gaps on iOS */
+        .pin-spacer {
+          min-height: 100dvh !important;
+        }
+
+        .pin-spacer > .pin-all-single-project {
+          height: 100% !important;
+          max-height: none !important;
+        }
+
+        .gpu-accelerated {
+          will-change: transform, opacity;
+          transform: translateZ(0);
+          -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
+        }
+      `}</style>
+
+      <div className="master-viewport pin-all-single-project relative w-full overflow-hidden bg-black" style={{ visibility: "visible" }}>
         
-        <div className="project-hero-master absolute inset-0 w-full h-full">
+        <div className="project-hero-master gpu-accelerated absolute inset-0 w-full h-full">
           <ProjectScrollHero 
             title={pageData.title}
             description={pageData.description}
@@ -295,7 +350,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
         </div>
 
         <div 
-          className="project-info-wrap absolute inset-0 w-full h-full structural-layer"
+          className="project-info-wrap gpu-accelerated absolute inset-0 w-full h-full structural-layer"
           style={{ 
             zIndex: 50, 
             visibility: "hidden", 
@@ -309,7 +364,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
         </div>
 
         <div 
-          className="project-app-wrap absolute inset-x-0 bottom-0 w-full h-[120vh] min-h-[120vh] structural-layer overflow-y-auto overflow-x-hidden"
+          className="project-app-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[120vh] min-h-[120vh] structural-layer overflow-y-auto overflow-x-hidden"
           style={{ 
             zIndex: 60, 
             visibility: "hidden", 
@@ -320,7 +375,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
         </div>
 
         <div 
-          className="faq-scroll-wrapper absolute inset-0 w-full h-full structural-layer overflow-hidden"
+          className="faq-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full structural-layer overflow-hidden"
           style={{ 
             zIndex: 70, 
             visibility: "hidden", 
@@ -331,7 +386,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
         </div>
 
         <div 
-          className="footer-scroll-wrapper absolute inset-0 w-full h-full flex flex-col justify-end pointer-events-none"
+          className="footer-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full flex flex-col justify-end pointer-events-none"
           style={{ 
             zIndex: 80, 
             visibility: "hidden", 

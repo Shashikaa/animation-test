@@ -8,7 +8,7 @@ import ContactHero from "@/src/components/contact/Hero";
 import SectionCTA from "@/src/components/contact/SectionCTA";
 import SectionOne from "@/src/components/contact/SectionOne";
 import FAQSection from "@/src/components/contact/FAQSection";
-import Footer from "@/src/components/Footer"; // Ensure your correct Footer path
+import Footer from "@/src/components/Footer";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -28,21 +28,53 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
+  // Lock scrolling cleanly during intro sequence without disabling touch events
+  useEffect(() => {
+    const locked = !preloaderDone || !introDone;
+    document.body.style.overflow = locked ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [preloaderDone, introDone]);
+
+  // Handle iOS address bar expansion/collapse gracefully
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let lastHeight = window.innerHeight;
+
+    const handleResize = () => {
+      const currentHeight = window.innerHeight;
+      if (Math.abs(currentHeight - lastHeight) > 40) {
+        lastHeight = currentHeight;
+        ScrollTrigger.refresh();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     const ctx = gsap.context(() => {
+      ScrollTrigger.config({ 
+        ignoreMobileResize: false,
+        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
+      });
+
       // Baseline setup
-      gsap.set(".contact-hero-bg", { scale: 1.3, yPercent: 0 });
-      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
+      gsap.set(".contact-hero-bg", { scale: 1.3, yPercent: 0, force3D: true });
+      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30, force3D: true });
       
       // Position subsequent sections below the screen viewport
-      gsap.set(".cta-scroll-wrapper", { y: "100vh" });
-      gsap.set(".section-one-scroll-wrapper", { y: "100vh" });
-      gsap.set(".faq-scroll-wrapper", { y: "100vh" });
-      gsap.set(".footer-scroll-wrapper", { y: "100vh" });
+      gsap.set(".cta-scroll-wrapper", { y: "100vh", force3D: true });
+      gsap.set(".section-one-scroll-wrapper", { y: "100vh", force3D: true });
+      gsap.set(".faq-scroll-wrapper", { y: "100vh", force3D: true });
+      gsap.set(".footer-scroll-wrapper", { y: "100vh", force3D: true });
       
       // Ensure the text wrapper opacity is initialized
-      gsap.set(".faq-content", { opacity: 1 });
+      gsap.set(".faq-content", { opacity: 1, force3D: true });
     }, scopeRef);
     return () => ctx.revert();
   }, [preloaderDone]);
@@ -50,8 +82,13 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
   useEffect(() => {
     if (!preloaderDone) return;
     const ctx = gsap.context(() => {
-      const masterTl = gsap.timeline();
-      masterTl.to(".contact-hero-bg", { scale: 1.0, duration: 2.2, ease: "power2.out", onComplete: () => setIntroDone(true) }, 0)
+      const masterTl = gsap.timeline({
+        onComplete: () => {
+          setIntroDone(true);
+          setTimeout(() => ScrollTrigger.refresh(), 50);
+        }
+      });
+      masterTl.to(".contact-hero-bg", { scale: 1.0, duration: 2.2, ease: "power2.out" }, 0)
               .to([".hero-title", ".hero-desc"], { opacity: 1, y: 0, duration: 1.4, stagger: 0.2, ease: "power3.out" }, 0.4);
     }, scopeRef);
     return () => ctx.revert();
@@ -66,7 +103,9 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
           start: "top top",
           end: "+=9500", // Expanded tracking space to make room for all mobile sections comfortably
           pin: true,
-          scrub: 1.2,
+          pinType: "fixed", // Forces GSAP to use fixed positioning which handles iOS URL bar collapse cleanly
+          scrub: 2, // Buttery smooth touch momentum cushion matching AboutMobile
+          anticipatePin: 1,
           invalidateOnRefresh: true,
         }
       });
@@ -95,30 +134,56 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
 
   return (
     <div ref={scopeRef} className="min-h-screen w-full bg-zinc-950 text-white overflow-hidden">
-      <div className="contact-pin-master relative w-full h-screen">
+      <style jsx global>{`
+        /* Pin wrapper fills 100% of visible viewport height */
+        .pin-all-contact {
+          height: 100vh;
+          height: 100dvh;
+          width: 100%;
+        }
+
+        /* Overrides GSAP inline styles on pin-spacer to prevent viewport black gaps on iOS */
+        .pin-spacer {
+          min-height: 100dvh !important;
+        }
+
+        .pin-spacer > .pin-all-contact {
+          height: 100% !important;
+          max-height: none !important;
+        }
+
+        .gpu-accelerated {
+          will-change: transform, opacity;
+          transform: translateZ(0);
+          -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
+        }
+      `}</style>
+
+      <div className="contact-pin-master pin-all-contact relative w-full overflow-hidden">
         
         {/* Layer 1: Hero Component */}
-        <div className="absolute inset-0 w-full h-full z-10">
+        <div className="gpu-accelerated absolute inset-0 w-full h-full z-10">
           <ContactHero />
         </div>
 
         {/* Layer 2: Slide-up CTA Wrapper */}
-        <div className="cta-scroll-wrapper absolute inset-0 w-full h-full z-20 will-change-transform">
+        <div className="cta-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full z-20">
           <SectionCTA />
         </div>
 
         {/* Layer 3: Section One (Scrollable container for long cards on mobile) */}
-        <div className="section-one-scroll-wrapper absolute inset-0 w-full h-full z-30 overflow-y-auto will-change-transform">
+        <div className="section-one-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full z-30 overflow-y-auto">
           <SectionOne />
         </div>
 
         {/* Layer 4: FAQ Section Layer */}
-        <div className="faq-scroll-wrapper absolute inset-0 w-full h-full z-40 overflow-y-auto will-change-transform">
+        <div className="faq-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full z-40 overflow-y-auto">
           <FAQSection />
         </div>
 
         {/* Layer 5: Footer Layer */}
-        <div className="footer-scroll-wrapper absolute inset-0 w-full h-full z-50 flex flex-col justify-end pointer-events-none will-change-transform">
+        <div className="footer-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full z-50 flex flex-col justify-end pointer-events-none">
           <div className="w-full pointer-events-auto overflow-y-auto max-h-screen">
             <Footer />
           </div>

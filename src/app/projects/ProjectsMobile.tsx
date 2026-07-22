@@ -72,27 +72,50 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
     };
   }, [preloaderDone, introDone]);
 
+  // Handle iOS address bar expansion/collapse gracefully
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let lastHeight = window.innerHeight;
+
+    const handleResize = () => {
+      const currentHeight = window.innerHeight;
+      if (Math.abs(currentHeight - lastHeight) > 40) {
+        lastHeight = currentHeight;
+        ScrollTrigger.refresh();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // 1. Establish precise starting positions cleanly (Matches Desktop Cinematic Base)
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     
     const ctx = gsap.context(() => {
+      ScrollTrigger.config({ 
+        ignoreMobileResize: false,
+        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
+      });
+
       // Starts highly zoomed in (1.6) for the initial cinematic entry
-      gsap.set(".projects-hero-bg", { scale: 1.6, yPercent: 0, transformOrigin: "center center" });
-      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
+      gsap.set(".projects-hero-bg", { scale: 1.6, yPercent: 0, transformOrigin: "center center", force3D: true });
+      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30, force3D: true });
       
       // Ensure scroll paragraphs are completely invisible and hidden at launch
-      gsap.set([".scroll-para-1", ".scroll-para-2"], { opacity: 1, visibility: "hidden" });
+      gsap.set([".scroll-para-1", ".scroll-para-2"], { opacity: 1, visibility: "hidden", force3D: true });
       
       // Setup structural layering
-      gsap.set(".section-one-wrapper", { top: "100vh", height: "auto", zIndex: 20 });
-      gsap.set(".section-two-wrapper", { y: "100vh", zIndex: 30 });
-      gsap.set(".parallax-img-asset", { yPercent: -20 });
+      gsap.set(".section-one-wrapper", { top: "100vh", height: "auto", zIndex: 20, force3D: true });
+      gsap.set(".section-two-wrapper", { y: "100vh", zIndex: 30, force3D: true });
+      gsap.set(".parallax-img-asset", { yPercent: -20, force3D: true });
 
       // Initial States for CTA & Footer matching Services
-      gsap.set(".projects-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
+      gsap.set(".projects-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden", force3D: true });
       gsap.set([".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
-      gsap.set(".projects-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden" });
+      gsap.set(".projects-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden", force3D: true });
     }, scopeRef);
     
     return () => ctx.revert();
@@ -104,7 +127,10 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
     
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({ 
-        onComplete: () => setIntroDone(true) 
+        onComplete: () => {
+          setIntroDone(true);
+          setTimeout(() => ScrollTrigger.refresh(), 50);
+        }
       });
       
       introTl
@@ -133,8 +159,9 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
           start: "top top",
           end: "+=8500", // Expanded scroll duration to yield enough headroom for CTA & Footer steps
           pin: true,
-          pinSpacing: true,
-          scrub: 1.2, 
+          pinType: "fixed", // Eliminates iOS black gap when URL bar collapses
+          scrub: 2, // Buttery smooth touch momentum cushion matching About & Contact Mobile
+          anticipatePin: 1,
           invalidateOnRefresh: true,
         }
       });
@@ -222,12 +249,12 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP E: UNIFIED TRANSITION: CTA -> FOOTER ──
+      // ── STEP E: UNIFIED TRANSITION: CTA -> FOOTER (Hides Sec 2 to prevent flash) ──
       scrollTl.addLabel("footerStart", ">")
         .to([".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"], { opacity: 0, duration: ACTION * 0.3, ease: "none" }, "footerStart")
+        .set(".section-two-wrapper", { visibility: "hidden" }, `footerStart+=${ACTION * 0.3}`)
         .set(".projects-footer-wrap", { visibility: "visible" }, "footerStart+=0.1")
-        .to(".projects-footer-wrap", { yPercent: 0, duration: ACTION, ease: "none" }, "footerStart+=0.1")
-        .to(".section-two-wrapper", { y: "-20vh", duration: ACTION, ease: "none" }, "footerStart+=0.1");
+        .to(".projects-footer-wrap", { yPercent: 0, duration: ACTION, ease: "none" }, "footerStart+=0.1");
 
     }, scopeRef);
 
@@ -248,19 +275,45 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
   return (
     <div 
       ref={scopeRef} 
-      className={`w-full relative bg-[#19211C] ${!introDone ? "h-screen overflow-hidden" : "overflow-x-hidden"}`}
+      className="w-full relative bg-[#19211C] min-h-screen overflow-hidden text-white"
     >
-      <div className="master-viewport relative w-full h-screen overflow-hidden">
+      <style jsx global>{`
+        /* Pin wrapper fills 100% of visible viewport height */
+        .pin-all-projects {
+          height: 100vh;
+          height: 100dvh;
+          width: 100%;
+        }
+
+        /* Overrides GSAP inline styles on pin-spacer to prevent viewport black gaps on iOS */
+        .pin-spacer {
+          min-height: 100dvh !important;
+        }
+
+        .pin-spacer > .pin-all-projects {
+          height: 100% !important;
+          max-height: none !important;
+        }
+
+        .gpu-accelerated {
+          will-change: transform, opacity;
+          transform: translateZ(0);
+          -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
+        }
+      `}</style>
+
+      <div className="master-viewport pin-all-projects relative w-full overflow-hidden">
         
         {/* Layer 1: Hero Section */}
-        <div className="projects-hero-master absolute inset-0 w-full h-full z-10">
+        <div className="projects-hero-master gpu-accelerated absolute inset-0 w-full h-full z-10">
           <ProjectsHero />
         </div>
 
         {/* Layer 2: Section One Container */}
         <div 
           ref={sectionOneRef}
-          className="section-one-wrapper absolute left-0 right-0 w-full h-auto"
+          className="section-one-wrapper gpu-accelerated absolute left-0 right-0 w-full h-auto"
           style={{ top: "100vh", zIndex: 20 }}
         >
           <SectionOne />
@@ -268,7 +321,7 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
 
         {/* Layer 3: Section Two Container */}
         <div 
-          className="section-two-wrapper absolute inset-0 w-full h-full"
+          className="section-two-wrapper gpu-accelerated absolute inset-0 w-full h-full"
           style={{ transform: "translateY(100vh)", zIndex: 30 }}
         >
           <SectionTwo isActive={isSectionTwoActive}/>
@@ -276,7 +329,7 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
 
         {/* Layer 4: Section CTA Block */}
         <div 
-          className="projects-section-cta absolute inset-0 w-full h-full bg-white z-[150]" 
+          className="projects-section-cta gpu-accelerated absolute inset-0 w-full h-full bg-white z-[150]" 
           style={{ 
             pointerEvents: "auto", 
             visibility: "hidden"
@@ -287,7 +340,7 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
 
         {/* Layer 5: Footer Wrapper Frame */}
         <div 
-          className="projects-footer-wrap absolute left-0 bottom-0 w-full z-[151]" 
+          className="projects-footer-wrap gpu-accelerated absolute left-0 bottom-0 w-full z-[151]" 
           style={{ 
             pointerEvents: "auto", 
             visibility: "hidden" 

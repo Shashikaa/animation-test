@@ -102,7 +102,7 @@ export default function SubServiceFAQSection({ data }: FAQSectionProps) {
         </div>
 
         {/* Contact Us Button - Anchored to the exact bottom-right corner of the section block */}
-        <div className="absolute bottom-12 left-6 md:left-10 lg:bottom-16 lg:left-auto lg:right-18 z-30">
+        <div className="absolute bottom-22 left-6 md:left-10 lg:bottom-16 lg:left-auto lg:right-18 z-30">
           <a
             href="/contact-us"
             style={{

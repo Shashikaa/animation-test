@@ -17,7 +17,7 @@ export default function ContactPage() {
 
   // Avoid rendering a blank state while checking window width on the very first frame
   if (isMobile === null) {
-    return <div className="h-screen w-full " />;
+    return null; // Avoid rendering an artificial 100vh spacer div
   }
 
   return isMobile ? (

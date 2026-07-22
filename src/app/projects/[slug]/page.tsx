@@ -34,9 +34,8 @@ export default function SubServicePage({ params }: PageProps) {
 
   // Prevent flash or hydration mismatch while window width resolves
   if (isMobile === null) {
-    return <div className="h-screen w-full bg-[#131313]" />;
+    return null; // Avoid rendering an artificial 100vh spacer div
   }
-
   return (
     <>
       {isMobile ? (

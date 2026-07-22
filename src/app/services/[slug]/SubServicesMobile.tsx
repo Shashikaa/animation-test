@@ -14,12 +14,12 @@ import { FullServiceData } from "./data";
 
 gsap.registerPlugin(ScrollTrigger);
 
-type SubServicesDesktopProps = {
+type SubServicesMobileProps = {
   preloaderDone: boolean;
   pageData: FullServiceData;
 };
 
-export default function SubServicesDesktop({ preloaderDone, pageData }: SubServicesDesktopProps) {
+export default function SubServicesMobile({ preloaderDone, pageData }: SubServicesMobileProps) {
   const { setPreloaderDone } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
   
@@ -44,27 +44,50 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
     };
   }, [preloaderDone, introDone]);
 
+  // Handle iOS address bar expansion/collapse gracefully
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let lastHeight = window.innerHeight;
+
+    const handleResize = () => {
+      const currentHeight = window.innerHeight;
+      if (Math.abs(currentHeight - lastHeight) > 40) {
+        lastHeight = currentHeight;
+        ScrollTrigger.refresh();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     const ctx = gsap.context(() => {
-      gsap.set(".service-hero-bg", { scale: 1.3, xPercent: 0, transformOrigin: "center center" });
-      gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: 30 });
-      gsap.set(".services-hero-top-layer", { width: "100%", xPercent: 0 }); 
-      gsap.set(".section-one-wrap", { clipPath: "inset(100% 0% 0% 0%)" });
+      ScrollTrigger.config({ 
+        ignoreMobileResize: false,
+        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
+      });
+
+      gsap.set(".service-hero-bg", { scale: 1.3, xPercent: 0, transformOrigin: "center center", force3D: true });
+      gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: 30, force3D: true });
+      gsap.set(".services-hero-top-layer", { width: "100%", xPercent: 0, force3D: true }); 
+      gsap.set(".section-one-wrap", { clipPath: "inset(100% 0% 0% 0%)", force3D: true });
       
-      gsap.set(".s10-seq-container", { y: 0 });
+      gsap.set(".s10-seq-container", { y: 0, force3D: true });
       gsap.set(".s10-seq-p", { opacity: 1 });
 
-      gsap.set(".s1-glass-card", { x: 40, opacity: 0 }); 
-      gsap.set([".s1-static-title", ".s1-static-desc"], { opacity: 0, y: 30 });
-      gsap.set([".s1-reveal-top", ".s1-reveal-bottom"], { opacity: 0, y: 40 });
+      gsap.set(".s1-glass-card", { x: 40, opacity: 0, force3D: true }); 
+      gsap.set([".s1-static-title", ".s1-static-desc"], { opacity: 0, y: 30, force3D: true });
+      gsap.set([".s1-reveal-top", ".s1-reveal-bottom"], { opacity: 0, y: 40, force3D: true });
 
       // FAQ panel starts completely below the screen view frame
-      gsap.set(".services-faq-wrap", { visibility: "hidden", y: "100%" });
-      gsap.set(".services-section-two-wrap", { visibility: "hidden", clipPath: "inset(0% 0% 0% 100%)" });
+      gsap.set(".services-faq-wrap", { visibility: "hidden", y: "100%", force3D: true });
+      gsap.set(".services-section-two-wrap", { visibility: "hidden", clipPath: "inset(0% 0% 0% 100%)", force3D: true });
       
       // CTA & Footer Setup matching About structure
-      gsap.set([".services-section-cta", ".services-footer-wrap"], { yPercent: 100, visibility: "hidden" });
+      gsap.set([".services-section-cta", ".services-footer-wrap"], { yPercent: 100, visibility: "hidden", force3D: true });
       gsap.set([".services-section-cta .cta-inner-desktop", ".services-section-cta .cta-inner-mobile"], { opacity: 1 });
       gsap.set(".services-section-cta", { zIndex: 95 });
       gsap.set(".services-footer-wrap", { zIndex: 96 });
@@ -77,7 +100,10 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
 
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
-        onComplete: () => setIntroDone(true)
+        onComplete: () => {
+          setIntroDone(true);
+          setTimeout(() => ScrollTrigger.refresh(), 50);
+        }
       });
 
       introTl.to(".service-hero-bg", {
@@ -102,6 +128,9 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
+      // Disable GSAP touch normalization so iOS WebKit handles browser chrome hiding cleanly
+      ScrollTrigger.normalizeScroll(false);
+
       const scrollTl = gsap.timeline({
         defaults: { ease: "none" }, 
         scrollTrigger: {
@@ -109,17 +138,12 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
           start: "top top",
           end: "+=9500", // Adjusted scroll length to remove dead space
           pin: true,
+          pinType: "fixed", // Prevents layout pops on mobile WebKit when URL bar collapses
           pinSpacing: true,
-          scrub: 1, 
+          scrub: 2, 
           invalidateOnRefresh: true,
           fastScrollEnd: true,
-          preventOverlaps: true,
-          snap: {
-            snapTo: "labels",
-            duration: { min: 0.4, max: 1.0 }, 
-            delay: 0.02,
-            ease: "power1.inOut"
-          }
+          preventOverlaps: true
         }
       });
 
@@ -222,29 +246,61 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
   }, [introDone]);
 
   return (
-    <div ref={scopeRef} className="w-full relative">
-      <div className="services-hero-master relative w-full h-screen overflow-hidden z-10">
+    <div ref={scopeRef} className="w-full relative min-h-screen bg-black text-white overflow-hidden">
+      <style jsx global>{`
+        /* Pin wrapper fills 100% of visible viewport height */
+        .pin-all-subservices {
+          height: 100vh;
+          height: 100dvh;
+          width: 100%;
+        }
+
+        /* Overrides GSAP inline styles on pin-spacer to prevent viewport black gaps on iOS */
+        .pin-spacer {
+          min-height: 100dvh !important;
+        }
+
+        .pin-spacer > .pin-all-subservices {
+          height: 100% !important;
+          max-height: none !important;
+        }
+
+        .gpu-accelerated {
+          will-change: transform, opacity, clip-path;
+          transform: translateZ(0);
+          -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
+        }
+
+        .services-section-cta {
+          background-color: #000;
+        }
+      `}</style>
+
+      <div className="services-hero-master pin-all-subservices relative w-full overflow-hidden z-10">
         
         {/* Layer 1: Hero view base */}
-        <SubServiceHero data={pageData.hero} />
+        <div className="gpu-accelerated absolute inset-0 w-full h-full z-10">
+          <SubServiceHero data={pageData.hero} />
+        </div>
         
         {/* Layer 2: Section One scrolling sheet */}
-        <div className="section-one-wrap absolute inset-0 w-full h-full z-20 overflow-hidden">
+        <div className="section-one-wrap gpu-accelerated absolute inset-0 w-full h-full z-20 overflow-hidden">
           <SubServiceSectionOne data={pageData.sectionOne} />
         </div>
 
         {/* Layer 3: FAQ slide overlay */}
-        <div className="services-faq-wrap absolute inset-0 w-full h-full z-30 overflow-hidden">
+        <div className="services-faq-wrap gpu-accelerated absolute inset-0 w-full h-full z-30 overflow-hidden">
           <SubServiceFAQSection data={pageData.sectionTwo} />
         </div>
 
         {/* Layer 4: Section CTA wrapper */}
-        <div className="services-section-cta absolute bottom-0 left-0 w-full structural-layer">
+        <div className="services-section-cta gpu-accelerated absolute bottom-0 left-0 w-full structural-layer z-[95]">
           <SectionCTA />
         </div>
 
         {/* Layer 5: Footer wrapper */}
-        <div className="services-footer-wrap absolute left-0 bottom-0 w-full structural-layer">
+        <div className="services-footer-wrap gpu-accelerated absolute left-0 bottom-0 w-full structural-layer z-[96]">
           <Footer />
         </div>
         
