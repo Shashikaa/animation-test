@@ -41,16 +41,16 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
     };
   }, [preloaderDone, introDone]);
 
-  // Handle iOS address bar expansion/collapse gracefully
+  // Refresh ScrollTrigger only on width/orientation change, ignoring mobile address bar height toggles
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    let lastHeight = window.innerHeight;
+    let lastWidth = window.innerWidth;
 
     const handleResize = () => {
-      const currentHeight = window.innerHeight;
-      if (Math.abs(currentHeight - lastHeight) > 40) {
-        lastHeight = currentHeight;
+      const currentWidth = window.innerWidth;
+      if (currentWidth !== lastWidth) {
+        lastWidth = currentWidth;
         ScrollTrigger.refresh();
       }
     };
@@ -63,6 +63,11 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
     if (!preloaderDone) return;
 
     const ctx = gsap.context(() => {
+      ScrollTrigger.config({
+        ignoreMobileResize: true,
+        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange",
+      });
+
       gsap.set(".project-hero-master", { zIndex: 10 });
 
       gsap.set(
@@ -124,18 +129,11 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
   useEffect(() => {
     if (!introDone || !preloaderDone) return;
 
-    let vvCleanup: (() => void) | null = null;
-
     const ctx = gsap.context(() => {
       gsap.ticker.lagSmoothing(0);
 
       // Disable GSAP touch normalization so iOS WebKit handles browser chrome hiding
       ScrollTrigger.normalizeScroll(false);
-
-      ScrollTrigger.config({
-        ignoreMobileResize: false,
-        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize",
-      });
 
       const performanceTargets = [
         ".project-hero-master", ".hero-image-layer", ".hero-image-inner",
@@ -152,7 +150,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
       });
 
       const infoSlides = pageData.slides || [];
-      const scrubValue = 1.2; // Weighted mobile inertia matching About, Contact & Projects Mobile
+      const scrubValue = 0.6; // Weighted mobile inertia matching rest of components
 
       const triggerInfoHook = (nextIdx: number) => {
         if (nextIdx !== lastInfoIdx.current) {
@@ -165,15 +163,6 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
 
       const buildTimeline = () => {
         requestAnimationFrame(() => {
-          ScrollTrigger.refresh();
-
-          const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
-          if (vv) {
-            const onVVResize = () => ScrollTrigger.refresh(true);
-            vv.addEventListener("resize", onVVResize);
-            vvCleanup = () => vv.removeEventListener("resize", onVVResize);
-          }
-
           gsap.set(".appsec-phone-wrapper", { y: 30, opacity: 0 });
 
           const scrollTl = gsap.timeline({
@@ -188,7 +177,8 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
               scrub: scrubValue,
               anticipatePin: 1,
               preventOverlaps: true,
-              invalidateOnRefresh: true,
+              fastScrollEnd: true,
+              invalidateOnRefresh: false,
             }
           });
 
@@ -303,7 +293,6 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
     }, scopeRef);
 
     return () => {
-      vvCleanup?.();
       ctx.revert();
     };
   }, [introDone, preloaderDone, pageData.images, pageData.slides, pageData.title]);
@@ -313,32 +302,6 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
       ref={scopeRef} 
       className="w-full relative min-h-screen bg-black text-white overflow-hidden"
     >
-      <style jsx global>{`
-        /* Pin wrapper fills 100% of visible viewport height */
-        .pin-all-single-project {
-          height: 100vh;
-          height: 100dvh;
-          width: 100%;
-        }
-
-        /* Overrides GSAP inline styles on pin-spacer to prevent viewport black gaps on iOS */
-        .pin-spacer {
-          min-height: 100dvh !important;
-        }
-
-        .pin-spacer > .pin-all-single-project {
-          height: 100% !important;
-          max-height: none !important;
-        }
-
-        .gpu-accelerated {
-          will-change: transform, opacity;
-          transform: translate3d(0, 0, 0);
-          -webkit-backface-visibility: hidden;
-          backface-visibility: hidden;
-        }
-      `}</style>
-
       <div className="master-viewport pin-all-single-project relative w-full overflow-hidden bg-black" style={{ visibility: "visible" }}>
         
         <div className="project-hero-master gpu-accelerated absolute inset-0 w-full h-full">

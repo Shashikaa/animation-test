@@ -44,16 +44,16 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
     };
   }, [preloaderDone, introDone]);
 
-  // Handle iOS address bar expansion/collapse gracefully
+  // Refresh ScrollTrigger only on width/orientation change, ignoring mobile address bar height toggles
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    let lastHeight = window.innerHeight;
+    let lastWidth = window.innerWidth;
 
     const handleResize = () => {
-      const currentHeight = window.innerHeight;
-      if (Math.abs(currentHeight - lastHeight) > 40) {
-        lastHeight = currentHeight;
+      const currentWidth = window.innerWidth;
+      if (currentWidth !== lastWidth) {
+        lastWidth = currentWidth;
         ScrollTrigger.refresh();
       }
     };
@@ -66,7 +66,7 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
     if (!preloaderDone) return;
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ 
-        ignoreMobileResize: false,
+        ignoreMobileResize: true,
         autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
       });
 
@@ -140,8 +140,8 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
           pin: true,
           pinType: "fixed", // Prevents layout pops on mobile WebKit when URL bar collapses
           pinSpacing: true,
-          scrub: 1.2, // Weighted mobile touch momentum matching rest of mobile components
-          invalidateOnRefresh: true,
+          scrub: 0.6, // Weighted mobile touch momentum matching rest of mobile components
+          invalidateOnRefresh: false,
           fastScrollEnd: true,
           preventOverlaps: true
         }
@@ -247,36 +247,6 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
 
   return (
     <div ref={scopeRef} className="w-full relative min-h-screen bg-black text-white overflow-hidden">
-      <style jsx global>{`
-        /* Pin wrapper fills 100% of visible viewport height */
-        .pin-all-subservices {
-          height: 100vh;
-          height: 100dvh;
-          width: 100%;
-        }
-
-        /* Overrides GSAP inline styles on pin-spacer to prevent viewport black gaps on iOS */
-        .pin-spacer {
-          min-height: 100dvh !important;
-        }
-
-        .pin-spacer > .pin-all-subservices {
-          height: 100% !important;
-          max-height: none !important;
-        }
-
-        .gpu-accelerated {
-          will-change: transform, opacity, clip-path;
-          transform: translate3d(0, 0, 0);
-          -webkit-backface-visibility: hidden;
-          backface-visibility: hidden;
-        }
-
-        .services-section-cta {
-          background-color: #000;
-        }
-      `}</style>
-
       <div className="services-hero-master pin-all-subservices relative w-full overflow-hidden z-10">
         
         {/* Layer 1: Hero view base */}

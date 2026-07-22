@@ -37,16 +37,16 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // Handle iOS address bar expansion/collapse gracefully
+  // Refresh ScrollTrigger only on width/orientation change, ignoring mobile address bar height changes
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    let lastHeight = window.innerHeight;
+    let lastWidth = window.innerWidth;
 
     const handleResize = () => {
-      const currentHeight = window.innerHeight;
-      if (Math.abs(currentHeight - lastHeight) > 40) {
-        lastHeight = currentHeight;
+      const currentWidth = window.innerWidth;
+      if (currentWidth !== lastWidth) {
+        lastWidth = currentWidth;
         ScrollTrigger.refresh();
       }
     };
@@ -59,7 +59,7 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
     if (!preloaderDone) return;
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ 
-        ignoreMobileResize: false,
+        ignoreMobileResize: true,
         autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
       });
 
@@ -104,9 +104,11 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
           end: "+=9500", // Expanded tracking space to make room for all mobile sections comfortably
           pin: true,
           pinType: "fixed", // Forces GSAP to use fixed positioning which handles iOS URL bar collapse cleanly
-          scrub: 1.2, // Weighted inertia matching AboutMobile for smooth mobile scrolling
+          scrub: 0.6, // Weighted inertia matching AboutMobile for smooth mobile scrolling
           anticipatePin: 1,
-          invalidateOnRefresh: true,
+          preventOverlaps: true,
+          fastScrollEnd: true,
+          invalidateOnRefresh: false,
         }
       });
 
@@ -134,32 +136,6 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
 
   return (
     <div ref={scopeRef} className="min-h-screen w-full bg-zinc-950 text-white overflow-hidden">
-      <style jsx global>{`
-        /* Pin wrapper fills 100% of visible viewport height */
-        .pin-all-contact {
-          height: 100vh;
-          height: 100dvh;
-          width: 100%;
-        }
-
-        /* Overrides GSAP inline styles on pin-spacer to prevent viewport black gaps on iOS */
-        .pin-spacer {
-          min-height: 100dvh !important;
-        }
-
-        .pin-spacer > .pin-all-contact {
-          height: 100% !important;
-          max-height: none !important;
-        }
-
-        .gpu-accelerated {
-          will-change: transform, opacity;
-          transform: translate3d(0, 0, 0);
-          -webkit-backface-visibility: hidden;
-          backface-visibility: hidden;
-        }
-      `}</style>
-
       <div className="contact-pin-master pin-all-contact relative w-full overflow-hidden">
         
         {/* Layer 1: Hero Component */}

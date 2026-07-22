@@ -72,16 +72,16 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // Handle iOS address bar expansion/collapse gracefully
+  // Refresh ScrollTrigger only on width/orientation change, ignoring mobile address bar height toggles
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    let lastHeight = window.innerHeight;
+    let lastWidth = window.innerWidth;
 
     const handleResize = () => {
-      const currentHeight = window.innerHeight;
-      if (Math.abs(currentHeight - lastHeight) > 40) {
-        lastHeight = currentHeight;
+      const currentWidth = window.innerWidth;
+      if (currentWidth !== lastWidth) {
+        lastWidth = currentWidth;
         ScrollTrigger.refresh();
       }
     };
@@ -96,7 +96,7 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
     
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ 
-        ignoreMobileResize: false,
+        ignoreMobileResize: true,
         autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
       });
 
@@ -160,9 +160,11 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
           end: "+=8500", // Expanded scroll duration to yield enough headroom for CTA & Footer steps
           pin: true,
           pinType: "fixed", // Eliminates iOS black gap when URL bar collapses
-          scrub: 1.2, // Weighted mobile touch momentum matching About & Contact Mobile
+          scrub: 0.6, // Weighted mobile touch momentum matching rest of mobile components
           anticipatePin: 1,
-          invalidateOnRefresh: true,
+          preventOverlaps: true,
+          fastScrollEnd: true,
+          invalidateOnRefresh: false,
         }
       });
 
@@ -258,13 +260,8 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
 
     }, scopeRef);
 
-    const refreshTimeout = setTimeout(() => {
-      ScrollTrigger.refresh();
-    }, 150);
-
     return () => {
       ctx.revert();
-      clearTimeout(refreshTimeout);
       if (scopeRef.current) {
         restoreTextReveal(scopeRef.current, ".scroll-para-1");
         restoreTextReveal(scopeRef.current, ".scroll-para-2");
@@ -277,32 +274,6 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
       ref={scopeRef} 
       className="w-full relative bg-[#19211C] min-h-screen overflow-hidden text-white"
     >
-      <style jsx global>{`
-        /* Pin wrapper fills 100% of visible viewport height */
-        .pin-all-projects {
-          height: 100vh;
-          height: 100dvh;
-          width: 100%;
-        }
-
-        /* Overrides GSAP inline styles on pin-spacer to prevent viewport black gaps on iOS */
-        .pin-spacer {
-          min-height: 100dvh !important;
-        }
-
-        .pin-spacer > .pin-all-projects {
-          height: 100% !important;
-          max-height: none !important;
-        }
-
-        .gpu-accelerated {
-          will-change: transform, opacity;
-          transform: translate3d(0, 0, 0);
-          -webkit-backface-visibility: hidden;
-          backface-visibility: hidden;
-        }
-      `}</style>
-
       <div className="master-viewport pin-all-projects relative w-full overflow-hidden">
         
         {/* Layer 1: Hero Section */}

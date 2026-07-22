@@ -44,16 +44,16 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // Handle iOS address bar expansion/collapse gracefully
+  // Refresh ScrollTrigger only on width/orientation change, ignoring mobile address bar height toggles
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    let lastHeight = window.innerHeight;
+    let lastWidth = window.innerWidth;
 
     const handleResize = () => {
-      const currentHeight = window.innerHeight;
-      if (Math.abs(currentHeight - lastHeight) > 40) {
-        lastHeight = currentHeight;
+      const currentWidth = window.innerWidth;
+      if (currentWidth !== lastWidth) {
+        lastWidth = currentWidth;
         ScrollTrigger.refresh();
       }
     };
@@ -67,7 +67,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
     if (!preloaderDone) return;
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ 
-        ignoreMobileResize: false,
+        ignoreMobileResize: true,
         autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
       });
 
@@ -159,9 +159,11 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
           end: "+=10000",
           pin: true,
           pinType: "fixed", // Eliminates iOS black gap when URL bar collapses
-          scrub: 1.2, // Weighted mobile touch momentum matching rest of mobile components
+          scrub: 0.6, // Weighted mobile touch momentum matching rest of mobile components
           anticipatePin: 1,
-          invalidateOnRefresh: true
+          preventOverlaps: true,
+          fastScrollEnd: true,
+          invalidateOnRefresh: false,
         }
       });
 
@@ -257,36 +259,6 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
 
   return (
     <div ref={scopeRef}>
-      <style jsx global>{`
-        /* Pin wrapper fills 100% of visible viewport height */
-        .pin-all-services {
-          height: 100vh;
-          height: 100dvh;
-          width: 100%;
-        }
-
-        /* Overrides GSAP inline styles on pin-spacer to prevent viewport black gaps on iOS */
-        .pin-spacer {
-          min-height: 100dvh !important;
-        }
-
-        .pin-spacer > .pin-all-services {
-          height: 100% !important;
-          max-height: none !important;
-        }
-
-        .gpu-accelerated {
-          will-change: transform, opacity, clip-path;
-          transform: translate3d(0, 0, 0);
-          -webkit-backface-visibility: hidden;
-          backface-visibility: hidden;
-        }
-
-        .services-section-cta {
-          background-color: #000;
-        }
-      `}</style>
-
       <div className="services-pin-master pin-all-services relative w-full overflow-hidden">
         
         {/* Layer 1: Hero Block */}

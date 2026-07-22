@@ -131,7 +131,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
           trigger: ".about-pin",
           start: "top top",
           end: "+=5000",
-          scrub: 1.2, 
+          scrub: 0.6, 
           pin: true,
           pinType: "fixed",
           anticipatePin: 1,
