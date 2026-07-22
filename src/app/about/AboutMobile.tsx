@@ -44,9 +44,11 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     if (!preloaderDone) return;
     
     const ctx = gsap.context(() => {
-      // Disable GSAP touch normalization to allow native iOS Safari address bar collapse
-      ScrollTrigger.normalizeScroll(false);
-      ScrollTrigger.config({ ignoreMobileResize: true });
+      // Allows GSAP to automatically adjust pinned container height on URL bar resize
+      ScrollTrigger.config({ 
+        ignoreMobileResize: false,
+        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange,resize"
+      });
 
       gsap.set(".about-hero-bg", { scale: 1.3, force3D: true });
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30, force3D: true });
@@ -86,7 +88,6 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
       const introTl = gsap.timeline({
         onComplete: () => {
           setIntroDone(true);
-          // Refresh ScrollTrigger after unlocking body overflow
           setTimeout(() => ScrollTrigger.refresh(), 50);
         }
       });
@@ -209,10 +210,16 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
   return (
     <div ref={scopeRef}>
       <style jsx global>{`
+        /* Stretches the container dynamically when the browser URL bar collapses */
         .pin-all {
-          /* Fixed height rule allowing Mobile Safari address bar to hide on vertical drag */
           height: 100vh;
-          height: 100lvh;
+          height: 100dvh;
+          min-height: -webkit-fill-available;
+        }
+
+        /* Forces GSAP pin-spacer wrapper to stretch dynamically with the viewport */
+        .pin-spacer {
+          min-height: 100dvh !important;
         }
 
         .gpu-accelerated {
