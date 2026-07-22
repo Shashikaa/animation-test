@@ -104,7 +104,7 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
           end: "+=9500", // Expanded tracking space to make room for all mobile sections comfortably
           pin: true,
           pinType: "fixed", // Forces GSAP to use fixed positioning which handles iOS URL bar collapse cleanly
-          scrub: 0.5, // Buttery smooth touch momentum cushion matching AboutMobile
+          scrub: 1.2, // Weighted inertia matching AboutMobile for smooth mobile scrolling
           anticipatePin: 1,
           invalidateOnRefresh: true,
         }
@@ -154,7 +154,7 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
 
         .gpu-accelerated {
           will-change: transform, opacity;
-          transform: translateZ(0);
+          transform: translate3d(0, 0, 0);
           -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
         }

@@ -225,7 +225,7 @@ export default function HomeMobile() {
                 trigger: ".home-pin-master",
                 start: "top top",
                 end: "+=18000",
-                scrub: 0.5,
+                scrub: 1.2, // Weighted mobile touch momentum matching rest of mobile pages
                 pin: true,
                 pinType: "fixed",
                 anticipatePin: 1,
@@ -478,7 +478,7 @@ export default function HomeMobile() {
 
         .gpu-accelerated {
           will-change: transform, opacity;
-          transform: translateZ(0);
+          transform: translate3d(0, 0, 0);
           -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
         }
@@ -523,7 +523,7 @@ export default function HomeMobile() {
 
         {/* Layer 6: App Section */}
         <div 
-          className="section-appsec gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[120vh] min-h-[120vh] structural-layer overflow-y-auto overflow-x-hidden bg-black" 
+          className="section-appsec gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[125vh] min-h-[120vh] structural-layer overflow-y-auto overflow-x-hidden bg-black" 
           style={{ pointerEvents: "auto", visibility: "hidden" }}
         >
           <Appsection />

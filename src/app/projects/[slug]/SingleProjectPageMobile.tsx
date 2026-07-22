@@ -152,7 +152,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
       });
 
       const infoSlides = pageData.slides || [];
-      const scrubValue = 0.5;
+      const scrubValue = 1.2; // Weighted mobile inertia matching About, Contact & Projects Mobile
 
       const triggerInfoHook = (nextIdx: number) => {
         if (nextIdx !== lastInfoIdx.current) {
@@ -333,7 +333,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
 
         .gpu-accelerated {
           will-change: transform, opacity;
-          transform: translateZ(0);
+          transform: translate3d(0, 0, 0);
           -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
         }

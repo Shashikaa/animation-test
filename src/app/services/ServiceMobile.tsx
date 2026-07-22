@@ -159,7 +159,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
           end: "+=10000",
           pin: true,
           pinType: "fixed", // Eliminates iOS black gap when URL bar collapses
-          scrub: 0.5, // Buttery smooth touch momentum cushion matching About & Contact Mobile
+          scrub: 1.2, // Weighted mobile touch momentum matching rest of mobile components
           anticipatePin: 1,
           invalidateOnRefresh: true
         }
@@ -277,7 +277,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
 
         .gpu-accelerated {
           will-change: transform, opacity, clip-path;
-          transform: translateZ(0);
+          transform: translate3d(0, 0, 0);
           -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
         }
@@ -320,7 +320,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
 
         {/* Layer 4: App Section Slide Up Wrapper */}
         <div 
-          className="services-appsec-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[120vh] min-h-[120vh] overflow-y-auto overflow-x-hidden bg-black" 
+          className="services-appsec-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[124vh] min-h-[120vh] overflow-y-auto overflow-x-hidden bg-black" 
           style={{ 
             zIndex: 35,
             pointerEvents: "auto",

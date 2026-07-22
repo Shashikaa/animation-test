@@ -140,7 +140,7 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
           pin: true,
           pinType: "fixed", // Prevents layout pops on mobile WebKit when URL bar collapses
           pinSpacing: true,
-          scrub: 0.5, 
+          scrub: 1.2, // Weighted mobile touch momentum matching rest of mobile components
           invalidateOnRefresh: true,
           fastScrollEnd: true,
           preventOverlaps: true
@@ -267,7 +267,7 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
 
         .gpu-accelerated {
           will-change: transform, opacity, clip-path;
-          transform: translateZ(0);
+          transform: translate3d(0, 0, 0);
           -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
         }
