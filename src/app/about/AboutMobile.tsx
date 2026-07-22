@@ -39,8 +39,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // Handle mobile resize safely: IGNORE address bar expand/collapse (height changes)
-  // Only refresh ScrollTrigger when width changes (e.g. screen orientation change)
+  // ONLY refresh ScrollTrigger if width changes (e.g., orientation change), NOT address bar height
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -58,12 +57,12 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Initial structural configurations & GPU layer promotion
+  // Structural configurations & GPU layer promotion
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     
     const ctx = gsap.context(() => {
-      // Force ScrollTrigger to ignore mobile address bar resize triggers globally
+      // Force ScrollTrigger to ignore mobile address bar resize events completely
       ScrollTrigger.config({ 
         ignoreMobileResize: true,
         autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
@@ -120,7 +119,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // Section Transition Scroll Timeline
+  // Master Section Transition Scroll Timeline
   useEffect(() => {
     if (!introDone) return;
 
@@ -137,8 +136,8 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
           pin: true,
           pinType: "fixed",
           anticipatePin: 1,
-          preventOverlaps: true, // Prevents timeline animation steps from firing out of order on fast scroll
-          fastScrollEnd: true,   // Instantly completes current phase on rapid flicks
+          preventOverlaps: true, // Stops timeline steps from overlapping on rapid reverse drag
+          fastScrollEnd: true,   // Aligns timeline state instantly on fast flicks
           invalidateOnRefresh: true
         },
       });
@@ -231,38 +230,6 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
 
   return (
     <div ref={scopeRef}>
-      <style jsx global>{`
-        /* 1. Ensure pin wrapper always fills 100% of visible viewport height */
-        .pin-all {
-          height: 100vh;
-          height: 100dvh;
-          width: 100%;
-        }
-
-        /* 2. OVERRIDE GSAP INLINE STYLES ON PIN-SPACER:
-           Prevents the spacer from clipping when iOS address bar disappears */
-        .pin-spacer {
-          min-height: 100dvh !important;
-          pointer-events: auto !important;
-        }
-
-        .pin-spacer > .pin-all {
-          height: 100% !important;
-          max-height: none !important;
-        }
-
-        .gpu-accelerated {
-          will-change: transform, opacity, clip-path;
-          transform: translate3d(0,0,0);
-          -webkit-backface-visibility: hidden;
-          backface-visibility: hidden;
-        }
-
-        .about-section-cta {
-          background-color: #000;
-        }
-      `}</style>
-
       <div 
         className="about-pin pin-all relative w-full overflow-hidden"
         style={{ visibility: "visible" }}

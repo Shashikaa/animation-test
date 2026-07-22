@@ -70,14 +70,14 @@
   }
 }
 
-/* ─── Reset & Base ───────────────────────────────────────────── */
+/* ─── Reset & Mobile Viewport Locking ────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin:     0;
   padding:    0;
 }
 
-html {
+html, body {
   background-color:        #000;
   scrollbar-gutter:        stable;
   color-scheme:            light dark;
@@ -92,10 +92,15 @@ html {
   -ms-overflow-style:      none;
 
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: none;
+  overscroll-behavior-y:     none; /* Prevents rubber-band overscroll past top/bottom bounds */
 }
 
-html::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+html::-webkit-scrollbar,
+body::-webkit-scrollbar { 
+  display: none !important; 
+  width: 0 !important; 
+  height: 0 !important; 
+}
 
 body {
   background:   var(--background);
@@ -103,41 +108,41 @@ body {
   font-family:  var(--font-body);
   font-size:    var(--text-body);
   line-height:  var(--leading-body);
-  height:       auto;
   overflow-x:   hidden;
-  
-  scrollbar-width:    none;
-  -ms-overflow-style: none;
-
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: none;
 }
-
-body::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
 
 .site-root {
   overflow-x: hidden;
   position:   relative;
 }
 
-/* ─── Preloader lock ─────────────────────────────────────────── */
+/* ─── Preloader Lock ─────────────────────────────────────────── */
 body.preloading {
   overflow: hidden !important;
 }
 
-/* ─── Pin wrapper height (iOS Address Bar Collapsible Fix) ───── */
-.pin-all {
-  height: 100vh;
-  height: calc(var(--vh, 1vh) * 100);
-  height: 100dvh;
+/* ─── Lock Viewport Heights (Fixes Mobile Address Bar Expansion) ─ */
+.pin-all,
+.pin-all-home,
+.pin-all-contact,
+.pin-all-projects,
+.pin-all-services,
+.pin-all-subservices,
+.pin-all-single-project {
+  height: 100vh !important;
+  height: 100svh !important; /* Locks height to visible screen area ignoring mobile URL bar */
+  width: 100%;
   max-height: none !important;
 }
 
+/* Override GSAP pin-spacer inline styles on mobile WebKit */
 .pin-spacer {
+  min-height: 100svh !important;
   pointer-events: auto !important;
 }
 
-.pin-spacer > .pin-all {
+.pin-spacer > div {
+  height: 100% !important;
   max-height: none !important;
 }
 
@@ -150,7 +155,15 @@ body.preloading .scroll-container {
   visibility: hidden;
 }
 
-/* ─── Section wrappers ───────────────────────────────────────── */
+/* ─── Hardware GPU Layer Promotion Utility ───────────────────── */
+.gpu-accelerated {
+  will-change: transform, opacity, clip-path;
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* ─── Section Wrappers ───────────────────────────────────────── */
 .section-six-wrapper,
 .section-nine-wrapper {
   overflow: hidden;
@@ -239,7 +252,7 @@ body.preloading .scroll-container {
 .transition      { transition: all var(--duration-base) var(--ease-out); }
 .transition-fast { transition: all var(--duration-fast) var(--ease-out); }
 
-/* ─── Responsive h2 & p ──────────────────────────────────────── */
+/* ─── Responsive Headings & Paragraphs ────────────────────────── */
 h2, h1 {
   font-size:   72px;
   line-height: 1.15;
@@ -260,7 +273,7 @@ p {
   p  { font-size: 16px; }
 }
 
-/* ─── Reduced motion ─────────────────────────────────────────── */
+/* ─── Reduced Motion ─────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -272,7 +285,7 @@ p {
   }
 }
 
-/* Apply styles only on desktop screens (1024px and wider) */
+/* ─── Desktop Reveal States ──────────────────────────────────── */
 @media screen and (min-width: 1024px) {
   .reveal-text {
     opacity: 0;
