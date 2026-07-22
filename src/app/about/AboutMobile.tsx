@@ -30,7 +30,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
-  // Lock scrolling cleanly without touch-action locks
+  // Lock scrolling during intro cleanly
   useEffect(() => {
     const locked = !preloaderDone || !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
@@ -39,15 +39,33 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // Structural Setups
+  // Handle iOS address bar expansion/collapse gracefully
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let lastHeight = window.innerHeight;
+
+    const handleResize = () => {
+      const currentHeight = window.innerHeight;
+      // Only refresh ScrollTrigger if the height change is significant (URL bar show/hide)
+      if (Math.abs(currentHeight - lastHeight) > 40) {
+        lastHeight = currentHeight;
+        ScrollTrigger.refresh();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Initial structural configurations & GPU layer promotion
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     
     const ctx = gsap.context(() => {
-      // Allows GSAP to automatically adjust pinned container height on URL bar resize
       ScrollTrigger.config({ 
         ignoreMobileResize: false,
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange,resize"
+        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
       });
 
       gsap.set(".about-hero-bg", { scale: 1.3, force3D: true });
@@ -80,7 +98,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // Intro Sequence
+  // Hero Intro Sequence
   useEffect(() => {
     if (!preloaderDone) return;
 
@@ -95,12 +113,13 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
       introTl.to(".about-hero-bg", { scale: 1.1, duration: 2.2, ease: "power2.out" }, 0);
       introTl.to([".hero-title", ".hero-desc"], { opacity: 1, y: 0, duration: 1.4, stagger: 0.2, ease: "power3.out" }, 0.4);
       introTl.to(".about-section-five", { opacity: 1, duration: 1.2, ease: "linear" }, 0.2);
+
     }, scopeRef);
 
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // Scroll Timeline
+  // Section Transition Scroll Timeline
   useEffect(() => {
     if (!introDone) return;
 
@@ -115,7 +134,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
           end: "+=5000",
           scrub: 0.2,
           pin: true,
-          pinSpacing: true,
+          pinType: "fixed", // Forces GSAP to use position: fixed pinning which handles iOS screen resizes cleanly
           anticipatePin: 1,
           invalidateOnRefresh: true
         },
@@ -210,16 +229,22 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
   return (
     <div ref={scopeRef}>
       <style jsx global>{`
-        /* Stretches the container dynamically when the browser URL bar collapses */
+        /* 1. Ensure pin wrapper always fills 100% of visible viewport height */
         .pin-all {
           height: 100vh;
           height: 100dvh;
-          min-height: -webkit-fill-available;
+          width: 100%;
         }
 
-        /* Forces GSAP pin-spacer wrapper to stretch dynamically with the viewport */
+        /* 2. OVERRIDE GSAP INLINE STYLES ON PIN-SPACER:
+           Prevents the spacer from clipping when iOS address bar disappears */
         .pin-spacer {
           min-height: 100dvh !important;
+        }
+
+        .pin-spacer > .pin-all {
+          height: 100% !important;
+          max-height: none !important;
         }
 
         .gpu-accelerated {
