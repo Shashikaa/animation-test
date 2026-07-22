@@ -117,24 +117,14 @@ body::-webkit-scrollbar { display: none !important; width: 0 !important; height:
 /* ─── Preloader lock ─────────────────────────────────────────── */
 body.preloading {
   overflow: hidden !important;
-  height:   100vh !important;
 }
 
-/* ─── Pin wrapper height (iOS Fix) ────────────────────────────── */
+/* ─── Pin wrapper height (iOS Address Bar Collapsible Fix) ───── */
 .pin-all {
-  /* Fallback for older browsers */
   height: 100vh;
-  /* Dynamic Viewport Height: adapts precisely to visible screen on iOS */
-  height: 100dvh; 
-  min-height: -webkit-fill-available; /* Native iOS WebKit fix */
+  height: calc(var(--vh, 1vh) * 100);
+  height: 100dvh;
   max-height: none !important;
-}
-
-/* Fix for html/body height on mobile iOS */
-@supports (-webkit-touch-callout: none) {
-  html, body {
-    min-height: -webkit-fill-available;
-  }
 }
 
 .pin-spacer > .pin-all {
@@ -205,7 +195,6 @@ body.preloading .scroll-container {
 .row     { display: flex; align-items: center; }
 .stack   { display: flex; flex-direction: column; }
 
-/* Fixed Typo Here */
 .section-container {
   width:          100%;
 

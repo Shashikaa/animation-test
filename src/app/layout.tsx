@@ -26,9 +26,9 @@ const cormorantGaramond = Cormorant_Garamond({
 
 const canelaText = localFont({
   src: [
-    { path: "../../public/fonts/CanelaText-Thin-Trial.otf",      weight: "100", style: "normal" },
-    { path: "../../public/fonts/Canela-Light-Trial.otf",         weight: "300", style: "normal" },
-    { path: "../../public/fonts/CanelaText-Regular-Trial.otf",   weight: "400", style: "normal" },
+    { path: "../../public/fonts/CanelaText-Thin-Trial.otf",     weight: "100", style: "normal" },
+    { path: "../../public/fonts/Canela-Light-Trial.otf",        weight: "300", style: "normal" },
+    { path: "../../public/fonts/CanelaText-Regular-Trial.otf",  weight: "400", style: "normal" },
     { path: "../../public/fonts/Canela-RegularItalic-Trial.otf", weight: "400", style: "italic" },
   ],
   variable: "--font-display",
@@ -43,7 +43,6 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased`}>
-      {/* Note: "preloading" class is safely handled and stripped by your Preloader toggle logic */}
       <body className="flex flex-col min-h-screen preloading" suppressHydrationWarning>
         <SiteProvider>
           <SmoothScroll>
@@ -55,7 +54,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </main>
           </SmoothScroll>
 
-          {/* This component safely captures performance metrics, lag spikes, and timeouts */}
           <PreloaderToggle />
         </SiteProvider>
       </body>

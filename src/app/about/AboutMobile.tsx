@@ -48,24 +48,30 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     };
   }, [preloaderDone, introDone]);
 
+  // Dynamic --vh pixel calculation for exact iOS Safari viewport fitting
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const updateVh = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty("--vh", `${vh}px`);
+    };
+
+    updateVh();
+    window.addEventListener("resize", updateVh);
+    return () => window.removeEventListener("resize", updateVh);
+  }, []);
+
   // Initial structural configurations & GPU layer promotion
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     
     const ctx = gsap.context(() => {
+      // Allows native scroll events to collapse the browser address bar
       ScrollTrigger.config({ 
         ignoreMobileResize: true,
         autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
       });
-
-      // Enable ScrollTrigger normalize for silky smooth touch acceleration
-      if (ScrollTrigger.isTouch) {
-        ScrollTrigger.normalizeScroll({
-          allowNestedScroll: true,
-          lockAxis: true,
-          momentum: 1,
-        });
-      }
 
       gsap.set(".about-hero-bg", { scale: 1.3, force3D: true });
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30, force3D: true });
@@ -140,7 +146,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
           trigger: ".about-pin",
           start: "top top",
           end: "+=5000",
-          scrub: 0.5, // 0.5s lag creates a liquid-feeling momentum cushion on touch
+          scrub: 1, // Lightweight scrub allows native touch momentum to scroll the document and collapse URL bar
           pin: true,
           anticipatePin: 1,
           invalidateOnRefresh: true
@@ -240,7 +246,8 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
       <style jsx global>{`
         .pin-all {
           height: 100vh;
-          height: 100svh; /* Prevents address bar resize jumps */
+          height: calc(var(--vh, 1vh) * 100);
+          height: 100dvh;
         }
 
         .gpu-accelerated {
@@ -251,7 +258,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
         }
 
         .about-section-cta {
-          background-color: #000; /* Match your site's section background */
+          background-color: #000; /* Match site background */
         }
       `}</style>
 

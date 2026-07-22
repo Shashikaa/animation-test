@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Image from "next/image";
 
 interface HeroProps {
   isMobile?: boolean; 
@@ -9,9 +10,8 @@ interface HeroProps {
 export default function Hero({ isMobile = false }: HeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
 
-  // Define your image paths here
   const desktopImg = "/hero-about.webp";
-  const mobileImg = "/hero-about-mobile.webp"; // <-- Add your mobile image path here
+  const mobileImg = "/hero-about-mobile.webp";
   
   const bgImage = isMobile ? mobileImg : desktopImg;
 
@@ -24,15 +24,24 @@ export default function Hero({ isMobile = false }: HeroProps) {
         style={{ zIndex: 1, clipPath: "inset(0% 0% 0% 0%)" }}
       >
         <div
-          className="about-hero-bg absolute left-0 right-0 bg-cover bg-center"
+          className="about-hero-bg absolute left-0 right-0"
           style={{
             top: "-10%",
             bottom: "-10%",
-            backgroundImage: `url('${bgImage}')`, // <-- Dynamically switched
-            willChange: "transform",                 
-            backfaceVisibility: "hidden",            
+            willChange: "transform",
+            backfaceVisibility: "hidden",
           }}
-        />
+        >
+          <Image
+            src={bgImage}
+            alt="Grand Pools Hero"
+            fill
+            priority // <-- Instructs Next.js to preload this immediately at top priority
+            quality={90}
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+        </div>
       </div>
 
       {/* RIGHT HALF OF IMAGE */}
@@ -41,20 +50,28 @@ export default function Hero({ isMobile = false }: HeroProps) {
         style={{ zIndex: 1, clipPath: "inset(0% 0% 0% 0%)" }}
       >
         <div
-          className="about-hero-bg absolute left-0 right-0 bg-cover bg-center"
+          className="about-hero-bg absolute left-0 right-0"
           style={{
             top: "-10%",
             bottom: "-10%",
-            backgroundImage: `url('${bgImage}')`, // <-- Dynamically switched
-            willChange: "transform",                 
-            backfaceVisibility: "hidden",            
+            willChange: "transform",
+            backfaceVisibility: "hidden",
           }}
-        />
+        >
+          <Image
+            src={bgImage}
+            alt="Grand Pools Hero"
+            fill
+            priority // <-- Instructs Next.js to preload this immediately at top priority
+            quality={90}
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+        </div>
       </div>
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 z-[2]" />
 
-      {/* ONLY ONE INSTANCE OF TEXT REQUIRED */}
       <div 
         className="about-hero-text-wrap section-container relative z-10 h-full flex flex-col justify-end !pb-22"
       >
