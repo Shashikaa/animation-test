@@ -121,7 +121,7 @@ body.preloading {
   overflow: hidden !important;
 }
 
-/* ─── Mobile Viewport Pin Wrapper ─────────────────────────────── */
+/* ─── Full-Height Viewport Pin Wrapper (iOS + Android Unified Fix) ─── */
 .pin-all,
 .pin-all-home,
 .pin-all-contact,
@@ -130,15 +130,22 @@ body.preloading {
 .pin-all-subservices,
 .pin-all-single-project {
   height: 100vh !important;
-  height: 100dvh !important;
+  height: calc(var(--vh, 1vh) * 100) !important;
+  height: 100lvh !important; /* Forces true full-bleed height on iOS Safari */
   width: 100%;
-  position: relative; /* Restored: MUST be relative so GSAP can create scroll document height */
+  position: relative;
   overflow: hidden;
 }
 
-/* Ensure GSAP pin-spacer keeps proper pointer events */
+/* Lock GSAP pin-spacer on iOS and Android */
 .pin-spacer {
+  min-height: 100lvh !important;
   pointer-events: auto !important;
+}
+
+.pin-spacer > div {
+  height: 100% !important;
+  max-height: none !important;
 }
 
 .scroll-container {

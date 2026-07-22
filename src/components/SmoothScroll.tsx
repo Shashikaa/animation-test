@@ -24,6 +24,18 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   const pathname = usePathname();
   const lenisRef = useRef<Lenis | null>(null);
 
+  // Set initial --vh CSS variable for precise iOS viewport calculation
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const setVh = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty("--vh", `${vh}px`);
+    };
+
+    setVh();
+  }, []);
+
   // Lock native mobile scroll until preloader is finished
   useEffect(() => {
     if (typeof window === "undefined") return;

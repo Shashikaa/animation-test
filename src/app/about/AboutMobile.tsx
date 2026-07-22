@@ -39,7 +39,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // Refresh ScrollTrigger only on width/orientation change, ignoring address bar toggle
+  // Refresh ScrollTrigger only on width/orientation change, ignoring iOS address bar height changes
   useEffect(() => {
     if (typeof window === "undefined") return;
 
