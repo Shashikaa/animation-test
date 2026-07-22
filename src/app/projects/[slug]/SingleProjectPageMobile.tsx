@@ -150,7 +150,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
       });
 
       const infoSlides = pageData.slides || [];
-      const scrubValue = 0.6; // Weighted mobile inertia matching rest of components
+      const scrubValue = 1.2; // Weighted mobile inertia matching rest of components
 
       const triggerInfoHook = (nextIdx: number) => {
         if (nextIdx !== lastInfoIdx.current) {

@@ -159,7 +159,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
           end: "+=10000",
           pin: true,
           pinType: "fixed", // Eliminates iOS black gap when URL bar collapses
-          scrub: 0.6, // Weighted mobile touch momentum matching rest of mobile components
+          scrub: 1.2, // Weighted mobile touch momentum matching rest of mobile components
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,

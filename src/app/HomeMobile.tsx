@@ -225,7 +225,7 @@ export default function HomeMobile() {
                 trigger: ".home-pin-master",
                 start: "top top",
                 end: "+=7500",        // Tightened scroll length so dragging feels immediate
-                scrub: 0.6,          // Direct, snappy touch tracking
+                scrub: 1.2,          // Direct, snappy touch tracking
                 pin: true,
                 pinType: "fixed",
                 anticipatePin: 1,
