@@ -40,15 +40,14 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Enable GSAP config for responsive mobile calculations
+    // Ignore mobile address bar height triggers to prevent scroll jumps on reverse drag
     ScrollTrigger.config({
-      ignoreMobileResize: false,
+      ignoreMobileResize: true,
       autoRefreshEvents: "DOMContentLoaded,load,visibilitychange"
     });
 
     const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
-    // Native Touch Fallback: bypass Lenis on mobile, let GSAP scrub handle pins smoothly
     if (isTouchDevice) {
       if (thumbRef.current) {
         const parentTrack = thumbRef.current.parentElement;

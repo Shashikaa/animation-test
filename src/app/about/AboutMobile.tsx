@@ -39,16 +39,17 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // Handle iOS address bar expansion/collapse gracefully
+  // Handle mobile resize safely: IGNORE address bar expand/collapse (height changes)
+  // Only refresh ScrollTrigger when width changes (e.g. screen orientation change)
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    let lastHeight = window.innerHeight;
+    let lastWidth = window.innerWidth;
 
     const handleResize = () => {
-      const currentHeight = window.innerHeight;
-      if (Math.abs(currentHeight - lastHeight) > 40) {
-        lastHeight = currentHeight;
+      const currentWidth = window.innerWidth;
+      if (currentWidth !== lastWidth) {
+        lastWidth = currentWidth;
         ScrollTrigger.refresh();
       }
     };
@@ -62,8 +63,9 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     if (!preloaderDone) return;
     
     const ctx = gsap.context(() => {
+      // Force ScrollTrigger to ignore mobile address bar resize triggers globally
       ScrollTrigger.config({ 
-        ignoreMobileResize: false,
+        ignoreMobileResize: true,
         autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
       });
 
@@ -118,7 +120,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // Section Transition Scroll Timeline (scrub: 1.2 provides weighted inertia on mobile touch)
+  // Section Transition Scroll Timeline
   useEffect(() => {
     if (!introDone) return;
 
@@ -135,6 +137,8 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
           pin: true,
           pinType: "fixed",
           anticipatePin: 1,
+          preventOverlaps: true, // Prevents timeline animation steps from firing out of order on fast scroll
+          fastScrollEnd: true,   // Instantly completes current phase on rapid flicks
           invalidateOnRefresh: true
         },
       });
@@ -239,6 +243,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
            Prevents the spacer from clipping when iOS address bar disappears */
         .pin-spacer {
           min-height: 100dvh !important;
+          pointer-events: auto !important;
         }
 
         .pin-spacer > .pin-all {
