@@ -30,7 +30,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
-  // Prevent background scroll during preloader without layout collapse
+  // Lock background scrolling during preloader & intro sequence
   useEffect(() => {
     const locked = !preloaderDone || !introDone;
     
@@ -48,37 +48,50 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     };
   }, [preloaderDone, introDone]);
 
+  // Initial structural configurations & GPU layer promotion
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     
     const ctx = gsap.context(() => {
-      // Prevents ScrollTrigger from recalculating height when the browser URL bar collapses/expands
-      ScrollTrigger.config({ ignoreMobileResize: true });
+      ScrollTrigger.config({ 
+        ignoreMobileResize: true,
+        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
+      });
 
-      gsap.set(".about-hero-bg", { scale: 1.3 });
-      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
+      // Enable ScrollTrigger normalize for silky smooth touch acceleration
+      if (ScrollTrigger.isTouch) {
+        ScrollTrigger.normalizeScroll({
+          allowNestedScroll: true,
+          lockAxis: true,
+          momentum: 1,
+        });
+      }
 
-      gsap.set(".about-section-one", { yPercent: 100 });
-      gsap.set(".about-section-two", { visibility: "hidden", yPercent: 100 });
+      gsap.set(".about-hero-bg", { scale: 1.3, force3D: true });
+      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30, force3D: true });
+
+      gsap.set(".about-section-one", { yPercent: 100, force3D: true });
+      gsap.set(".about-section-two", { visibility: "hidden", yPercent: 100, force3D: true });
       
       gsap.set(".about-section-three", { 
         visibility: "hidden", 
         clipPath: "inset(100% 0% 0% 0%)",
-        WebkitClipPath: "inset(100% 0% 0% 0%)"
+        WebkitClipPath: "inset(100% 0% 0% 0%)",
+        force3D: true
       });
 
-      gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0 });
+      gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0, force3D: true });
 
-      gsap.set(".about-section-five", { yPercent: 100 });
-      gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0 });
+      gsap.set(".about-section-five", { yPercent: 100, force3D: true });
+      gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0, force3D: true });
       gsap.set([".about-section-five .s5-static-title", ".about-section-five .s5-static-desc"], { y: 0, opacity: 1 });
       
-      gsap.set(".about-section-five .s5-slide-card", { opacity: 0, pointerEvents: "none" });
-      gsap.set(".about-section-five .s5-slide-card-0", { opacity: 1, pointerEvents: "auto" });
+      gsap.set(".about-section-five .s5-slide-card", { opacity: 0, pointerEvents: "none", force3D: true });
+      gsap.set(".about-section-five .s5-slide-card-0", { opacity: 1, pointerEvents: "auto", force3D: true });
 
-      gsap.set(".about-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
+      gsap.set(".about-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden", force3D: true });
       gsap.set([".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
-      gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden" });
+      gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden", force3D: true });
     }, scopeRef);
 
     return () => ctx.revert();
@@ -126,8 +139,8 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
         scrollTrigger: {
           trigger: ".about-pin",
           start: "top top",
-          end: "+=6000",
-          scrub: 0.1,
+          end: "+=5000",
+          scrub: 0.5, // 0.5s lag creates a liquid-feeling momentum cushion on touch
           pin: true,
           anticipatePin: 1,
           invalidateOnRefresh: true
@@ -168,7 +181,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
       
       tl.to({}, { duration: DEAD_SCROLL }); 
 
-      // Section 5
+      // Section 5 Reveal
       tl.addLabel("sec5Start")
         .set(".about-section-five", { visibility: "visible" }, "sec5Start")
         .to(".about-section-five", { yPercent: 0, duration: 2.2, ease: "power2.inOut" }, "sec5Start");
@@ -181,7 +194,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
 
       tl.addLabel("sec5FullyRevealed", "sec5Start+=2.2");
 
-      // Section 5 Cards
+      // Section 5 Card Transitions
       tl.addLabel("sec5_card2", "sec5FullyRevealed+=0.6")
         .to(".about-section-five .s5-slide-card-0", { opacity: 0, duration: 0.8, ease: "power2.out" }, "sec5_card2")
         .to(".about-section-five .s5-slide-card-1", { opacity: 1, pointerEvents: "auto", duration: 0.8, ease: "power2.out" }, "sec5_card2");
@@ -192,7 +205,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
 
       tl.to({}, { duration: 0.2 }); 
 
-      // CTA
+      // CTA Reveal Track
       tl.addLabel("ctaStart", ">")
         .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
         .to(".about-section-cta", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart") 
@@ -200,12 +213,22 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // Footer
+      // Footer Reveal Track (Eliminates Sec 5 Flash)
       tl.addLabel("footerStart", ">")
-        .to([".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"], { opacity: 0, duration: ACTION * 0.3, ease: "none" }, "footerStart")
-        .set(".about-footer-wrap", { visibility: "visible" }, "footerStart+=0.1")
-        .to(".about-footer-wrap", { yPercent: 0, duration: ACTION, ease: "none" }, "footerStart+=0.1") 
-        .to(".about-section-five", { yPercent: -20, duration: ACTION, ease: "none" }, "footerStart+=0.1");
+        .to([".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"], { 
+          opacity: 0, 
+          duration: ACTION * 0.4, 
+          ease: "power1.inOut" 
+        }, "footerStart")
+        // Completely hide Section 5 as CTA inner content finishes fading out
+        .set(".about-section-five", { visibility: "hidden" }, `footerStart+=${ACTION * 0.4}`)
+        // Slide up the Footer over the CTA wrapper
+        .set(".about-footer-wrap", { visibility: "visible" }, "footerStart")
+        .fromTo(".about-footer-wrap", 
+          { yPercent: 100 },
+          { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, 
+          "footerStart"
+        );
 
     }, scopeRef);
 
@@ -216,10 +239,19 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     <div ref={scopeRef}>
       <style jsx global>{`
         .pin-all {
-          /* Fallback for older browsers */
           height: 100vh;
-          /* Small Viewport Height: accounts for the address bar when fully open, keeping pinning stable */
-          height: 100svh; 
+          height: 100svh; /* Prevents address bar resize jumps */
+        }
+
+        .gpu-accelerated {
+          will-change: transform, opacity, clip-path;
+          transform: translateZ(0);
+          -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
+        }
+
+        .about-section-cta {
+          background-color: #000; /* Match your site's section background */
         }
       `}</style>
 
@@ -227,20 +259,20 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
         className="about-pin pin-all relative w-full overflow-hidden"
         style={{ visibility: "visible" }}
       >
-        <div className="about-hero-panel-left absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
+        <div className="about-hero-panel-left gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
           <Hero isMobile={true} />
         </div>
 
-        <div className="about-section-one absolute inset-0 w-full h-full" style={{ zIndex: 20 }}>
+        <div className="about-section-one gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 20 }}>
           <SectionOne />
         </div>
 
-        <div className="about-section-two absolute inset-0 w-full h-full" style={{ zIndex: 30 }}>
+        <div className="about-section-two gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 30 }}>
           <SectionTwo />
         </div>
 
         <div 
-          className="about-section-three absolute inset-0 w-full h-full" 
+          className="about-section-three gpu-accelerated absolute inset-0 w-full h-full" 
           style={{ 
             zIndex: 40, 
             clipPath: "inset(100% 0% 0% 0%)",
@@ -250,12 +282,12 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
           <SectionThree />
         </div>
 
-        <div className="about-section-four absolute inset-0 w-full h-full" style={{ zIndex: 35 }}>
+        <div className="about-section-four gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 35 }}>
           <SectionFour />
         </div>
 
         <div 
-          className="about-section-five absolute inset-0 w-full h-full" 
+          className="about-section-five gpu-accelerated absolute inset-0 w-full h-full" 
           style={{ 
             zIndex: 45,
             opacity: 0,
@@ -265,11 +297,11 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
           <SectionFive />
         </div>
 
-        <div className="about-section-cta absolute inset-0 w-full h-full z-[150]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        <div className="about-section-cta gpu-accelerated absolute inset-0 w-full h-full z-[150]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionCTA />
         </div>
 
-        <div className="about-footer-wrap absolute left-0 bottom-0 w-full z-[151]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        <div className="about-footer-wrap gpu-accelerated absolute left-0 bottom-0 w-full z-[151]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <Footer />
         </div>
       </div>

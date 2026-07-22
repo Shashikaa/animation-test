@@ -120,17 +120,20 @@ body.preloading {
   height:   100vh !important;
 }
 
-/* ─── Pin wrapper height ─────────────────────────────────────── */
+/* ─── Pin wrapper height (iOS Fix) ────────────────────────────── */
 .pin-all {
-  height:     100lvh;
-  min-height: 100lvh;
+  /* Fallback for older browsers */
+  height: 100vh;
+  /* Dynamic Viewport Height: adapts precisely to visible screen on iOS */
+  height: 100dvh; 
+  min-height: -webkit-fill-available; /* Native iOS WebKit fix */
   max-height: none !important;
 }
 
-@supports not (height: 100lvh) {
-  .pin-all {
-    height:     100vh;
-    min-height: 100vh;
+/* Fix for html/body height on mobile iOS */
+@supports (-webkit-touch-callout: none) {
+  html, body {
+    min-height: -webkit-fill-available;
   }
 }
 
