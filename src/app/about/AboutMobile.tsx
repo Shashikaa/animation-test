@@ -146,7 +146,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
           trigger: ".about-pin",
           start: "top top",
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
-          scrub: 0.8, // Faster, touch-responsive scrub damping
+          scrub: 1.2, // Faster, touch-responsive scrub damping
           pin: true,
           pinType: "fixed",
           anticipatePin: 1,
