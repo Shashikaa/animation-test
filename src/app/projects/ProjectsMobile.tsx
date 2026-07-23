@@ -17,7 +17,7 @@ type ContactProps = {
   preloaderDone: boolean;
 };
 
-// Exact line splitting utility ported from Desktop
+// Line splitting utility
 function executeMobileSplitting(selector: string) {
   const elements = document.querySelectorAll(selector);
   elements.forEach((element) => {
@@ -72,7 +72,7 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // Refresh ScrollTrigger only on width/orientation change, ignoring mobile address bar height toggles
+  // Refresh ScrollTrigger only on width/orientation change
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -90,7 +90,7 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // 1. Establish precise starting positions cleanly (Matches Desktop Cinematic Base)
+  // 1. Establish precise starting positions cleanly
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     
@@ -100,19 +100,15 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
         autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
       });
 
-      // Starts highly zoomed in (1.6) for the initial cinematic entry
       gsap.set(".projects-hero-bg", { scale: 1.6, yPercent: 0, transformOrigin: "center center", force3D: true });
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30, force3D: true });
       
-      // Ensure scroll paragraphs are completely invisible and hidden at launch
       gsap.set([".scroll-para-1", ".scroll-para-2"], { opacity: 1, visibility: "hidden", force3D: true });
       
-      // Setup structural layering
       gsap.set(".section-one-wrapper", { top: "100vh", height: "auto", zIndex: 20, force3D: true });
       gsap.set(".section-two-wrapper", { y: "100vh", zIndex: 30, force3D: true });
       gsap.set(".parallax-img-asset", { yPercent: -20, force3D: true });
 
-      // Initial States for CTA & Footer matching Services
       gsap.set(".projects-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden", force3D: true });
       gsap.set([".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
       gsap.set(".projects-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden", force3D: true });
@@ -121,7 +117,7 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // 2. Play Intro Cinematic (Zoom out from 1.6 to 1.3 on load)
+  // 2. Play Intro Cinematic
   useEffect(() => {
     if (!preloaderDone) return;
     
@@ -141,26 +137,25 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // 3. Master Single Timeline Scroll Pin & Layering Controller
+  // 3. Master Scroll Timeline & Layering Controller
   useEffect(() => {
     if (!introDone) return;
 
-    // Split text into line elements prior to building the scroll timeline
     executeMobileSplitting(".scroll-para-1");
     executeMobileSplitting(".scroll-para-2");
 
     const ctx = gsap.context(() => {
-      const ACTION = 2.0;
-      const DEAD_SCROLL = 0.4;
+      const ACTION = 1.8;
+      const DEAD_SCROLL = 0.2;
 
       const scrollTl = gsap.timeline({
         scrollTrigger: {
           trigger: ".master-viewport",
           start: "top top",
-          end: "+=8500", // Expanded scroll duration to yield enough headroom for CTA & Footer steps
+          end: "+=6500", // Adjusted for snappy mobile gesture responsiveness
           pin: true,
-          pinType: "fixed", // Eliminates iOS black gap when URL bar collapses
-          scrub: 1.2, // Weighted mobile touch momentum matching rest of mobile components
+          pinType: "fixed",
+          scrub: 1.0,
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -168,27 +163,25 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
         }
       });
 
-      // ── STEP A: TEXT SWAPPING SEQUENCE (Line-by-line reveal matching Desktop) ──
-      
-      // Initial Setup: Hide all individual inner lines down out of frame initially
+      // ── STEP A: FAST HERO TEXT SWAPPING (MATCHES HOME HERO SPEED) ──
       scrollTl.set([".scroll-para-1 .custom-line-inner", ".scroll-para-2 .custom-line-inner"], { opacity: 0, yPercent: 100 }, 0);
 
-      // 1. Initial Hero Title / Desc Fades & Shifts Out
-      scrollTl.to(".hero-text-wrap", { opacity: 0, y: -30, ease: "power1.inOut", duration: 1.5 }, 0);
-      scrollTl.set(".hero-text-wrap", { visibility: "hidden" }, 1.5);
+      // 1. Hero text vanishes fast on initial touch scroll
+      scrollTl.to(".hero-text-wrap", { opacity: 0, y: -30, ease: "power2.in", duration: 0.5 }, 0);
+      scrollTl.set(".hero-text-wrap", { visibility: "hidden" }, 0.5);
       
       // 2. Paragraph 1 Entrance
-      scrollTl.set(".scroll-para-1", { visibility: "visible" }, 1.5);
+      scrollTl.set(".scroll-para-1", { visibility: "visible" }, 0.5);
       scrollTl.to(".scroll-para-1 .custom-line-inner", { 
         opacity: 1, 
         yPercent: 0, 
-        stagger: 0.1, 
-        duration: 2.0, 
+        stagger: 0.05, 
+        duration: 1.0, 
         ease: "power2.out" 
-      }, 1.5);
+      }, 0.5);
 
       // Paragraph 1 Exit
-      scrollTl.to(".scroll-para-1 .custom-line-inner", { opacity: 0, y: -30, ease: "power1.in", duration: 1.5 }, "+=1.5");
+      scrollTl.to(".scroll-para-1 .custom-line-inner", { opacity: 0, y: -30, ease: "power1.in", duration: 0.8 }, "+=0.6");
       scrollTl.set(".scroll-para-1", { visibility: "hidden" });
       
       // 3. Paragraph 2 Entrance
@@ -196,16 +189,16 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
       scrollTl.to(".scroll-para-2 .custom-line-inner", { 
         opacity: 1, 
         yPercent: 0, 
-        stagger: 0.1, 
-        duration: 2.0, 
+        stagger: 0.05, 
+        duration: 1.0, 
         ease: "power2.out" 
       }, ">");
       
       // Paragraph 2 Exit
-      scrollTl.to(".scroll-para-2 .custom-line-inner", { opacity: 0, y: -60, ease: "power1.in", duration: 2.0 }, "+=1.5");
+      scrollTl.to(".scroll-para-2 .custom-line-inner", { opacity: 0, y: -40, ease: "power1.in", duration: 0.8 }, "+=0.6");
       scrollTl.set(".scroll-para-2", { visibility: "hidden" });
 
-      // ── HOOK UP THE UPWARD TRANSLATION OVER TEXT PHASE ──
+      // Background subtle translation during text sequence
       scrollTl.fromTo(
         ".projects-hero-bg", 
         { yPercent: 0 }, 
@@ -222,28 +215,28 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
 
       scrollTl.to(".section-one-wrapper", {
         y: () => `-${getSectionOneScrollDistance()}`,
-        duration: 4.0, 
+        duration: 3.5, 
         ease: "none"
       }, "+=0.1");
 
       scrollTl.to(".parallax-img-asset", {
         yPercent: 20,
         ease: "none",
-        duration: 4.0
+        duration: 3.5
       }, "<");
 
       // ── STEP C: SECTION TWO SLIDES UP OVER SECTION ONE ──
       scrollTl.to(".section-two-wrapper", {
         y: "0vh",
-        duration: 2.5,
+        duration: 2.0,
         ease: "power2.inOut",
         onStart: () => setIsSectionTwoActive(true),
         onReverseComplete: () => setIsSectionTwoActive(false)
-      }, "+=0.5");
+      }, "+=0.2");
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP D: UNIFIED TRANSITION: SECTION TWO -> CTA ──
+      // ── STEP D: SECTION TWO -> CTA ──
       scrollTl.addLabel("ctaStart", ">")
         .set(".projects-section-cta", { visibility: "visible" }, "ctaStart")
         .to(".projects-section-cta", { yPercent: 0, duration: ACTION, ease: "none" }, "ctaStart")
@@ -251,12 +244,20 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP E: UNIFIED TRANSITION: CTA -> FOOTER (Hides Sec 2 to prevent flash) ──
+      // ── STEP E: CTA -> FOOTER (FAST CTA FADE + FOOTER SLIDE-UP) ──
       scrollTl.addLabel("footerStart", ">")
-        .to([".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"], { opacity: 0, duration: ACTION * 0.3, ease: "none" }, "footerStart")
-        .set(".section-two-wrapper", { visibility: "hidden" }, `footerStart+=${ACTION * 0.3}`)
-        .set(".projects-footer-wrap", { visibility: "visible" }, "footerStart+=0.1")
-        .to(".projects-footer-wrap", { yPercent: 0, duration: ACTION, ease: "none" }, "footerStart+=0.1");
+        .to([".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"], { 
+          opacity: 0, 
+          duration: ACTION * 0.4, 
+          ease: "power1.in" 
+        }, "footerStart")
+        .set(".section-two-wrapper", { visibility: "hidden" }, `footerStart+=${ACTION * 0.4}`)
+        .set(".projects-footer-wrap", { visibility: "visible" }, "footerStart")
+        .to(".projects-footer-wrap", { 
+          yPercent: 0, 
+          duration: ACTION, 
+          ease: "power2.out" 
+        }, "footerStart");
 
     }, scopeRef);
 

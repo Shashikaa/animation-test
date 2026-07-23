@@ -141,6 +141,8 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
+      ScrollTrigger.normalizeScroll(false);
+
       const ACTION = 2.0;
 
       const triggerSec2Hook = (nextIdx: number) => {
@@ -156,10 +158,10 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
         scrollTrigger: {
           trigger: ".services-pin-master",
           start: "top top",
-          end: "+=10000",
+          end: "+=7500", // Normalized ratio for smooth mobile touch response
           pin: true,
-          pinType: "fixed", // Eliminates iOS black gap when URL bar collapses
-          scrub: 1.2, // Weighted mobile touch momentum matching rest of mobile components
+          pinType: "fixed",
+          scrub: 1.0,
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -241,7 +243,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
         .to(".services-section-cta", { yPercent: 0, duration: ACTION, ease: "none" }, "ctaStart")
         .to(".services-appsec-wrap", { yPercent: -10, duration: ACTION, ease: "none" }, "ctaStart");
 
-      // ── STEP G: CTA -> FOOTER (Fades CTA inner content & hides Appsec layer to prevent flashing) ──
+      // ── STEP G: CTA -> FOOTER ──
       tl.addLabel("footerStart")
         .to([".services-section-cta .cta-inner-mobile", ".services-section-cta .cta-inner-desktop"], { 
           opacity: 0, 
@@ -268,7 +270,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
 
         {/* Layer 2: Section One */}
         <div 
-          className="services-section-one-wrap gpu-accelerated absolute inset-0 w-full h-full overflow-y-auto" 
+          className="services-section-one-wrap gpu-accelerated absolute inset-0 w-full h-full" 
           style={{ 
             zIndex: 20,
             clipPath: "inset(100% 0% 0% 0%)",
@@ -281,7 +283,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
 
         {/* Layer 3: Section Two Context */}
         <div 
-          className="services-section-two-wrap gpu-accelerated absolute inset-0 w-full h-full overflow-y-auto" 
+          className="services-section-two-wrap gpu-accelerated absolute inset-0 w-full h-full" 
           style={{ 
             zIndex: 30,
             visibility: "hidden"
@@ -292,7 +294,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
 
         {/* Layer 4: App Section Slide Up Wrapper */}
         <div 
-          className="services-appsec-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[124vh] min-h-[120vh] overflow-y-auto overflow-x-hidden bg-black" 
+          className="services-appsec-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[124vh] min-h-[120vh] overflow-x-hidden bg-black" 
           style={{ 
             zIndex: 35,
             pointerEvents: "auto",

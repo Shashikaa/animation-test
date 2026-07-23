@@ -41,7 +41,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
     };
   }, [preloaderDone, introDone]);
 
-  // Refresh ScrollTrigger only on width/orientation change, ignoring mobile address bar height toggles
+  // Refresh ScrollTrigger only on width/orientation change
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -132,7 +132,6 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
     const ctx = gsap.context(() => {
       gsap.ticker.lagSmoothing(0);
 
-      // Disable GSAP touch normalization so iOS WebKit handles browser chrome hiding
       ScrollTrigger.normalizeScroll(false);
 
       const performanceTargets = [
@@ -150,7 +149,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
       });
 
       const infoSlides = pageData.slides || [];
-      const scrubValue = 1.2; // Weighted mobile inertia matching rest of components
+      const scrubValue = 1.2;
 
       const triggerInfoHook = (nextIdx: number) => {
         if (nextIdx !== lastInfoIdx.current) {
@@ -161,134 +160,125 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
         }
       };
 
-      const buildTimeline = () => {
-        requestAnimationFrame(() => {
-          gsap.set(".appsec-phone-wrapper", { y: 30, opacity: 0 });
+      gsap.set(".appsec-phone-wrapper", { y: 30, opacity: 0 });
 
-          const scrollTl = gsap.timeline({
-            defaults: { ease: "none" },
-            scrollTrigger: {
-              trigger: ".master-viewport",
-              start: "top top",
-              end: `+=12000`,
-              pin: true,
-              pinType: "fixed",
-              pinSpacing: true,
-              scrub: scrubValue,
-              anticipatePin: 1,
-              preventOverlaps: true,
-              fastScrollEnd: true,
-              invalidateOnRefresh: false,
-            }
-          });
+      const scrollTl = gsap.timeline({
+        defaults: { ease: "none" },
+        scrollTrigger: {
+          trigger: ".master-viewport",
+          start: "top top",
+          end: `+=8500`, // Slightly tightened to keep the snappy response
+          pin: true,
+          pinType: "fixed",
+          pinSpacing: true,
+          scrub: scrubValue,
+          anticipatePin: 1,
+          preventOverlaps: true,
+          fastScrollEnd: true,
+          invalidateOnRefresh: false,
+        }
+      });
 
-          // ── STEP A: HERO TRANSITION & INFO SECTION SLIDE UP ──
-          scrollTl.addLabel("start", 0);
+      // ── STEP A: HERO TRANSITION & INFO SECTION SLIDE UP (HOME SPEED MATCH) ──
+      scrollTl.addLabel("start", 0);
 
-          scrollTl.set(".project-info-wrap", { visibility: "visible" }, 0)
-                  .to(".project-info-wrap", { 
-                    yPercent: 0, 
-                    duration: 3.0, 
-                    ease: "power2.out",
-                    onStart: () => setIsProjectInfoActive(true),
-                    onReverseComplete: () => {
-                      setIsProjectInfoActive(false);
-                      triggerInfoHook(0);
-                    }
-                  }, 0);
+      scrollTl.to(".hero-text-wrap", { 
+        autoAlpha: 0, 
+        y: -30, 
+        duration: 1.0, 
+        ease: "power1.inOut" 
+      }, 0);
 
-          scrollTl.to(".hero-text-wrap", { autoAlpha: 0, y: -40, duration: 2.0 }, 0);
+      scrollTl.set(".project-info-wrap", { visibility: "visible" }, 0)
+              .to(".project-info-wrap", { 
+                yPercent: 0, 
+                duration: 1.8, 
+                ease: "power2.inOut",
+                onStart: () => setIsProjectInfoActive(true),
+                onReverseComplete: () => {
+                  setIsProjectInfoActive(false);
+                  triggerInfoHook(0);
+                }
+              }, 0);
+
+      scrollTl.call(() => {
+        triggerInfoHook(0);
+      }, [], 0.8);
+
+      // ── STEP B: SEQUENTIAL INNER INFO SLIDES ──
+      if (infoSlides.length > 0) {
+        infoSlides.forEach((_, index) => {
+          if (index === 0) return;
+
+          const slideLabel = `info_slide_${index}`;
+          scrollTl.addLabel(slideLabel);
+
+          const currentImgLayer = `.info-img-layer-${index}`;
+          const innerImage = `${currentImgLayer} .info-image-inner`;
+
+          scrollTl.to(currentImgLayer, {
+            clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+            duration: 3.5,
+            ease: "power2.inOut"
+          }, slideLabel);
+
+          scrollTl.fromTo(innerImage, 
+            { scale: 1.25 },
+            { scale: 1.0, duration: 3.5, ease: "power2.out" },
+            slideLabel
+          );
 
           scrollTl.call(() => {
-            triggerInfoHook(0);
-          }, [], 1.5);
+            const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
+            triggerInfoHook(isForward ? index : index - 1);
+          }, [], `${slideLabel}+=1.5`);
+        });
+      }
 
-          // ── STEP B: SEQUENTIAL INNER INFO SLIDES ──
-          if (infoSlides.length > 0) {
-            infoSlides.forEach((_, index) => {
-              if (index === 0) return;
+      scrollTl.to({}, { duration: 1.5 });
 
-              const slideLabel = `info_slide_${index}`;
-              scrollTl.addLabel(slideLabel);
+      // ── STEP C: APP SECTION SLIDES UP OVER INFO WRAP ──
+      scrollTl.addLabel("appSectionStart");
 
-              const currentImgLayer = `.info-img-layer-${index}`;
-              const innerImage = `${currentImgLayer} .info-image-inner`;
+      scrollTl.set(".project-app-wrap", { visibility: "visible" }, "appSectionStart")
+              .to(".project-app-wrap", { yPercent: 0, duration: 3.5, ease: "power2.inOut" }, "appSectionStart");
 
-              scrollTl.to(currentImgLayer, {
-                clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-                duration: 3.5,
-                ease: "power2.inOut"
-              }, slideLabel);
+      scrollTl.to(
+        ".appsec-phone-wrapper",
+        { y: 0, opacity: 1, duration: 1.5, ease: "power2.out" },
+        "appSectionStart+=1.0"
+      );
 
-              scrollTl.fromTo(innerImage, 
-                { scale: 1.25 },
-                { scale: 1.0, duration: 3.5, ease: "power2.out" },
-                slideLabel
+      // ── STEP D: FAQ SECTION SLIDES UP OVER APP WRAP ──
+      scrollTl.addLabel("faqStart", "appSectionStart+=3.5");
+
+      scrollTl.set(".faq-scroll-wrapper", { visibility: "visible" }, "faqStart")
+              .to(".faq-scroll-wrapper", { yPercent: 0, ease: "power2.inOut", duration: 3.5 }, "faqStart");
+
+      // ── STEP E: SYNCHRONIZED FAQ FADE-OUT & FOOTER SLIDE-UP ──
+      scrollTl.addLabel("footerStart", "faqStart+=3.5");
+
+      scrollTl.to(
+        ".faq-content", 
+        { 
+          opacity: 0, 
+          y: -40, 
+          duration: 1.0, 
+          ease: "power2.in",
+          pointerEvents: "none" 
+        }, 
+        "footerStart"
+      );
+
+      scrollTl.set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
+              .fromTo(
+                ".footer-scroll-wrapper",
+                { yPercent: 100 },
+                { yPercent: 0, ease: "power2.out", duration: 2.5 },
+                "footerStart"
               );
 
-              scrollTl.call(() => {
-                const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
-                triggerInfoHook(isForward ? index : index - 1);
-              }, [], `${slideLabel}+=1.5`);
-            });
-          }
-
-          scrollTl.to({}, { duration: 1.5 });
-
-          // ── STEP C: APP SECTION SLIDES UP OVER INFO WRAP ──
-          scrollTl.addLabel("appSectionStart");
-
-          scrollTl.set(".project-app-wrap", { visibility: "visible" }, "appSectionStart")
-                  .to(".project-app-wrap", { yPercent: 0, duration: 3.5, ease: "power2.inOut" }, "appSectionStart");
-
-          scrollTl.to(
-            ".appsec-phone-wrapper",
-            { y: 0, opacity: 1, duration: 1.5, ease: "power2.out" },
-            "appSectionStart+=1.0"
-          );
-
-          // ── STEP D: FAQ SECTION SLIDES UP OVER APP WRAP ──
-          scrollTl.addLabel("faqStart", "appSectionStart+=3.5");
-
-          scrollTl.set(".faq-scroll-wrapper", { visibility: "visible" }, "faqStart")
-                  .to(".faq-scroll-wrapper", { yPercent: 0, ease: "power2.inOut", duration: 3.5 }, "faqStart");
-
-          // ── STEP E: SYNCHRONIZED FAQ CONTENT FADE-OUT & FOOTER SLIDE-UP ──
-          scrollTl.addLabel("footerStart", "faqStart+=3.5");
-
-          // FAQ Inner content fades out immediately as footer slides up
-          scrollTl.to(
-            ".faq-content", 
-            { 
-              opacity: 0, 
-              y: -30, 
-              duration: 0.8, 
-              ease: "power1.inOut",
-              pointerEvents: "none" 
-            }, 
-            "footerStart"
-          );
-
-          scrollTl.set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
-                  .fromTo(
-                    ".footer-scroll-wrapper",
-                    { yPercent: 100 },
-                    { yPercent: 0, ease: "power2.inOut", duration: 2.2 },
-                    "footerStart"
-                  );
-
-          scrollTl.addLabel("end");
-        });
-      };
-
-      if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-        (window as any).requestIdleCallback(
-          () => document.fonts.ready.then(buildTimeline),
-          { timeout: 300 }
-        );
-      } else {
-        setTimeout(() => document.fonts.ready.then(buildTimeline), 0);
-      }
+      scrollTl.addLabel("end");
 
     }, scopeRef);
 
@@ -327,7 +317,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
         </div>
 
         <div 
-          className="project-app-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[120vh] min-h-[120vh] structural-layer overflow-y-auto overflow-x-hidden"
+          className="project-app-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[120vh] min-h-[120vh] structural-layer"
           style={{ 
             zIndex: 60, 
             visibility: "hidden", 

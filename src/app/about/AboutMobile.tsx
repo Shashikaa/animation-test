@@ -19,6 +19,11 @@ type AboutMobileProps = {
   preloaderDone: boolean;
 };
 
+// Faster, snappier touch scroll parameters
+const PX_PER_MAIN_PANEL = 850; // Faster section slide-up
+const PX_PER_SUB_STEP = 350;   // Quick card step transition
+const PAUSE_PX = 100;          // Tight dead-scroll window
+
 export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
   const { setPreloaderDone } = useSite(); 
   const [introDone, setIntroDone] = useState(false);
@@ -123,15 +128,25 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-      const ACTION = 2.0;
-      const DEAD_SCROLL = 0.4;
+      const ACTION = 1.4; // Faster animation duration
+      const DEAD_SCROLL = 0.2; // Shorter pause between sections
+
+      const MAIN_PANELS_COUNT = 7;
+      const SUB_STEPS_COUNT = 2;
+      const PAUSES_COUNT = 5;
+
+      const DYNAMIC_SCROLL_TRACK = 
+        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
+        (SUB_STEPS_COUNT * PX_PER_SUB_STEP) + 
+        (PAUSES_COUNT * PAUSE_PX);
 
       const tl = gsap.timeline({
+        defaults: { ease: "none", lazy: true },
         scrollTrigger: {
           trigger: ".about-pin",
           start: "top top",
-          end: "+=5000",
-          scrub: 1.2, 
+          end: `+=${DYNAMIC_SCROLL_TRACK}`,
+          scrub: 0.8, // Faster, touch-responsive scrub damping
           pin: true,
           pinType: "fixed",
           anticipatePin: 1,
@@ -141,19 +156,19 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
         },
       });
 
-      // Section 1
+      // ── Step 1: Section 1 ──
       tl.to(".about-section-one", { yPercent: 0, duration: ACTION, ease: "power2.inOut" })
         .to(".about-hero-bg", { scale: 1.0, yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "<");
 
       tl.to({}, { duration: DEAD_SCROLL }); 
 
-      // Section 2
+      // ── Step 2: Section 2 ──
       tl.set(".about-section-two", { visibility: "visible" })
         .to(".about-section-two", { yPercent: 0, duration: ACTION, ease: "power2.inOut" });
       
       tl.to({}, { duration: DEAD_SCROLL }); 
 
-      // Section 3
+      // ── Step 3: Section 3 ──
       tl.set(".about-section-three", { visibility: "visible" })
         .fromTo(
           ".about-section-three",
@@ -163,7 +178,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
       
       tl.to({}, { duration: DEAD_SCROLL }); 
 
-      // Section 4
+      // ── Step 4: Section 4 ──
       tl.set(".about-section-four", { visibility: "visible" })
         .addLabel("sec3to4Transition")
         .to(".about-section-three", { yPercent: -100, duration: ACTION, ease: "power2.inOut" }, "sec3to4Transition")
@@ -175,31 +190,31 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
       
       tl.to({}, { duration: DEAD_SCROLL }); 
 
-      // Section 5 Reveal
+      // ── Step 5: Section 5 Reveal ──
       tl.addLabel("sec5Start")
         .set(".about-section-five", { visibility: "visible" }, "sec5Start")
-        .to(".about-section-five", { yPercent: 0, duration: 2.2, ease: "power2.inOut" }, "sec5Start");
+        .to(".about-section-five", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec5Start");
 
       tl.fromTo(".about-section-five .s5-bg", 
         { yPercent: 5, scale: 1.25 }, 
-        { yPercent: -25, scale: 1.25, ease: "none", duration: 6.0 }, 
+        { yPercent: -25, scale: 1.25, ease: "none", duration: ACTION * 2.0 }, 
         "sec5Start"
       );
 
-      tl.addLabel("sec5FullyRevealed", "sec5Start+=2.2");
+      tl.addLabel("sec5FullyRevealed", `sec5Start+=${ACTION}`);
 
-      // Section 5 Card Transitions
-      tl.addLabel("sec5_card2", "sec5FullyRevealed+=0.6")
-        .to(".about-section-five .s5-slide-card-0", { opacity: 0, duration: 0.8, ease: "power2.out" }, "sec5_card2")
-        .to(".about-section-five .s5-slide-card-1", { opacity: 1, pointerEvents: "auto", duration: 0.8, ease: "power2.out" }, "sec5_card2");
+      // ── Section 5 Inner Cards ──
+      tl.addLabel("sec5_card2", "sec5FullyRevealed+=0.2")
+        .to(".about-section-five .s5-slide-card-0", { opacity: 0, duration: 0.6, ease: "power2.out" }, "sec5_card2")
+        .to(".about-section-five .s5-slide-card-1", { opacity: 1, pointerEvents: "auto", duration: 0.6, ease: "power2.out" }, "sec5_card2");
 
-      tl.addLabel("sec5_card3", "sec5_card2+=1.0")
-        .to(".about-section-five .s5-slide-card-1", { opacity: 0, duration: 0.8, ease: "power2.out" }, "sec5_card3")
-        .to(".about-section-five .s5-slide-card-2", { opacity: 1, pointerEvents: "auto", duration: 0.8, ease: "power2.out" }, "sec5_card3");
+      tl.addLabel("sec5_card3", "sec5_card2+=0.6")
+        .to(".about-section-five .s5-slide-card-1", { opacity: 0, duration: 0.6, ease: "power2.out" }, "sec5_card3")
+        .to(".about-section-five .s5-slide-card-2", { opacity: 1, pointerEvents: "auto", duration: 0.6, ease: "power2.out" }, "sec5_card3");
 
-      tl.to({}, { duration: 0.2 }); 
+      tl.to({}, { duration: DEAD_SCROLL }); 
 
-      // CTA Reveal Track
+      // ── Step 6: CTA Reveal Track ──
       tl.addLabel("ctaStart", ">")
         .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
         .to(".about-section-cta", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart") 
@@ -207,7 +222,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // Footer Reveal Track
+      // ── Step 7: Footer Reveal Track ──
       tl.addLabel("footerStart", ">")
         .to([".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"], { 
           opacity: 0, 

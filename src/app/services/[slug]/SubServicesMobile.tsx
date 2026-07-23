@@ -4,7 +4,7 @@ import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSite } from "@/src/app/context/SiteContext";
-import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal";
+import { restoreTextReveal } from "@/src/app/utils/useTextReveal";
 import SubServiceHero from "@/src/components/Service/SubServiceHero";
 import SubServiceSectionOne from "@/src/components/Service/SubServiceSectionOne";
 import SubServiceFAQSection from "@/src/components/Service/SubServiceFAQSection";
@@ -24,7 +24,6 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
   const scopeRef = useRef<HTMLDivElement>(null);
   
   const [introDone, setIntroDone] = useState(false);
-  const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -44,7 +43,7 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
     };
   }, [preloaderDone, introDone]);
 
-  // Refresh ScrollTrigger only on width/orientation change, ignoring mobile address bar height toggles
+  // Refresh ScrollTrigger only on width/orientation change
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -82,11 +81,9 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
       gsap.set([".s1-static-title", ".s1-static-desc"], { opacity: 0, y: 30, force3D: true });
       gsap.set([".s1-reveal-top", ".s1-reveal-bottom"], { opacity: 0, y: 40, force3D: true });
 
-      // FAQ panel starts completely below the screen view frame
       gsap.set(".services-faq-wrap", { visibility: "hidden", y: "100%", force3D: true });
-      gsap.set(".services-section-two-wrap", { visibility: "hidden", clipPath: "inset(0% 0% 0% 100%)", force3D: true });
+      gsap.set(".faq-content", { opacity: 1, y: 0 });
       
-      // CTA & Footer Setup matching About structure
       gsap.set([".services-section-cta", ".services-footer-wrap"], { yPercent: 100, visibility: "hidden", force3D: true });
       gsap.set([".services-section-cta .cta-inner-desktop", ".services-section-cta .cta-inner-mobile"], { opacity: 1 });
       gsap.set(".services-section-cta", { zIndex: 95 });
@@ -128,59 +125,60 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-      // Disable GSAP touch normalization so iOS WebKit handles browser chrome hiding cleanly
       ScrollTrigger.normalizeScroll(false);
+
+      const ACTION = 1.8;
 
       const scrollTl = gsap.timeline({
         defaults: { ease: "none" }, 
         scrollTrigger: {
           trigger: ".services-hero-master",
           start: "top top",
-          end: "+=9500", // Adjusted scroll length to remove dead space
+          end: "+=6500", // Snappy scroll track length matching Home/Projects
           pin: true,
-          pinType: "fixed", // Prevents layout pops on mobile WebKit when URL bar collapses
+          pinType: "fixed",
           pinSpacing: true,
-          scrub: 1.2, // Weighted mobile touch momentum matching rest of mobile components
+          scrub: 1.0,
           invalidateOnRefresh: false,
           fastScrollEnd: true,
           preventOverlaps: true
         }
       });
 
-      // ── PHASE 1: Compress Hero Layout ──
+      // ── PHASE 1: ULTRA FAST HERO EXIT ──
       scrollTl.addLabel("phase1")
         .to(".hero-text-wrap", {
           opacity: 0,
-          y: -40,
-          duration: 0.8,
-          ease: "power1.out"
+          y: -30,
+          duration: 0.4,
+          ease: "power2.in"
         }, "phase1")
         .to(".services-hero-top-layer", {
           width: "calc(100% - 600px)", 
-          xPercent: -10,              
-          duration: 3.0, 
+          xPercent: -10,               
+          duration: 1.5, 
           ease: "power1.inOut",
-         }, "phase1+=0.1");
+         }, "phase1");
 
-      // ── PHASE 2: Reveal Section One Sheet ──
-      scrollTl.addLabel("phase2")
+      // ── PHASE 2: REVEAL SECTION ONE SHEET ──
+      scrollTl.addLabel("phase2", "phase1+=0.5")
         .to(".section-one-wrap", {
           clipPath: "inset(0% 0% 0% 0%)",
-          duration: 3.0, 
+          duration: 2.0, 
           ease: "power1.inOut"
         }, "phase2")
         .to(".service-hero-bg", {
           scale: 1.1,     
-          duration: 3.0, 
+          duration: 2.0, 
           ease: "power1.inOut",
         }, "phase2");
 
-      // ── PHASE 2.5: Scale Up Cleanly ──
+      // ── PHASE 2.5: EXPAND IMAGE CONTAINER ──
       scrollTl.addLabel("phase2_expanded")
         .to([".s10-para-top", ".s10-title"], {
           opacity: 0,
-          y: -45,
-          duration: 1.2,
+          y: -35,
+          duration: 0.8,
           ease: "power2.in"
         }, "phase2_expanded")
         
@@ -190,50 +188,60 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
           right: "0px",
           bottom: "0px",
           borderRadius: "0px",
-          duration: 3.0, 
+          duration: 2.0, 
           ease: "power2.inOut"
         }, "phase2_expanded")
         
         .to(".s10-img-element", {
           scale: 1.06,
-          duration: 3.0, 
+          duration: 2.0, 
           ease: "power2.inOut"
         }, "phase2_expanded");
 
       // ── SEQUENTIAL PARAGRAPHS ROLL UP ──
       scrollTl.addLabel("text1")
-              .to(".s10-seq-container", { y: -380, duration: 3.0 })
+              .to(".s10-seq-container", { y: -380, duration: 2.0 })
               .addLabel("text2")
-              .to(".s10-seq-container", { y: -760, duration: 3.0 })
+              .to(".s10-seq-container", { y: -760, duration: 2.0 })
               .addLabel("text3")
-              .to(".s10-seq-container", { y: -1100, duration: 3.0 })
+              .to(".s10-seq-container", { y: -1100, duration: 2.0 })
               .addLabel("text4");
 
-      // ── PHASE 2.6: FAQ Section Slide Up ──
+      // ── PHASE 2.6: FAQ SECTION SLIDE UP ──
       scrollTl.addLabel("faq", "text4")
         .set(".services-faq-wrap", { visibility: "visible" }, "faq")
         .to(".services-faq-wrap", {
           y: "0%",
-          duration: 3.0, 
+          duration: 2.0, 
           ease: "power1.inOut"
         }, "faq");
 
-      // ── CTA REVEAL TRACK (Directly linked after FAQ) ──
+      // ── CTA REVEAL TRACK ──
       scrollTl.addLabel("ctaStart", ">")
         .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
-        .to(".services-section-cta", { yPercent: 0, duration: 3.0, ease: "power1.inOut" }, "ctaStart")
-        .to(".services-faq-wrap", { yPercent: -10, duration: 3.0, ease: "power1.inOut" }, "ctaStart");
+        .to(".services-section-cta", { yPercent: 0, duration: ACTION, ease: "power1.inOut" }, "ctaStart")
+        .to(".services-faq-wrap", { yPercent: -10, duration: ACTION, ease: "power1.inOut" }, "ctaStart");
 
-      // ── FOOTER REVEAL TRACK (CTA Inner Fades Out) ──
+      // ── FOOTER REVEAL TRACK (SYNCHRONIZED FAQ FADE & FOOTER SLIDE) ──
       scrollTl.addLabel("footerStart", ">")
+        .to(".faq-content", {
+          opacity: 0,
+          y: -40,
+          duration: ACTION * 0.4,
+          ease: "power2.in",
+          pointerEvents: "none"
+        }, "footerStart")
         .to([".services-section-cta .cta-inner-desktop", ".services-section-cta .cta-inner-mobile"], { 
           opacity: 0, 
-          duration: 1.2, 
+          duration: ACTION * 0.4, 
           ease: "power1.out" 
         }, "footerStart")
-        .set(".services-footer-wrap", { visibility: "visible" }, "footerStart+=0.1")
-        .to(".services-footer-wrap", { yPercent: 0, duration: 3.0, ease: "power1.inOut" }, "footerStart+=0.1")
-        .to(".services-faq-wrap", { yPercent: -20, duration: 3.0, ease: "power1.inOut" }, "footerStart+=0.1");
+        .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
+        .to(".services-footer-wrap", { 
+          yPercent: 0, 
+          duration: ACTION, 
+          ease: "power2.out" 
+        }, "footerStart");
 
     }, scopeRef);
 
