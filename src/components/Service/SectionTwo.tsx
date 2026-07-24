@@ -10,11 +10,6 @@ const slides = [
     desc: "Whether you're creating a peaceful backyard retreat or an entertainer’s dream, we bring your vision to life with tailored designs, expert craftsmanship, and a seamless building process from start to finish.",
   },
   {
-    img: "/hero.webp",
-    label: "Concrete Pool Renovation",
-    desc: "Breathe new life into your existing pool with high-quality renovations. Whether it needs resurfacing, structural repairs, or a modern upgrade, we ensure a seamless transformation with lasting results.",
-  },
-  {
     img: "/pool-new.webp",
     label: "Pool Equipment & Installation",
     desc: "Breathe new life into your existing pool with high-quality renovations. Whether it needs resurfacing, structural repairs, or a modern upgrade, we ensure a seamless transformation with lasting results.",
@@ -27,46 +22,96 @@ const slides = [
 ];
 
 const CLIP_DURATION = 0.6;
+const TEXT_DURATION = 0.55;
 
 type SectionTwoProps = {
   isActive: boolean;
 };
+
+function splitElementIntoLines(el: HTMLElement) {
+  if (el.dataset.originalHtml !== undefined) return;
+
+  el.dataset.originalHtml = el.innerHTML;
+  el.style.transform = "none";
+
+  el.innerHTML = el.innerHTML.replace(/(\S+)/g, '<span class="gs-word">$1</span>');
+  const words = Array.from(el.querySelectorAll<HTMLElement>(".gs-word"));
+
+  const lineMap = new Map<number, HTMLElement[]>();
+  words.forEach((w) => {
+    const top = Math.round(w.getBoundingClientRect().top);
+    if (!lineMap.has(top)) lineMap.set(top, []);
+    lineMap.get(top)!.push(w);
+  });
+
+  const lines = Array.from(lineMap.values());
+  el.innerHTML = "";
+
+  lines.forEach((group) => {
+    const lineOuter = document.createElement("span");
+    lineOuter.className = "gs-line";
+    lineOuter.style.cssText =
+      "display:block; overflow:hidden; padding-bottom:0.25em; margin-bottom:-0.25em;";
+
+    const lineInner = document.createElement("span");
+    lineInner.className = "gs-line-inner";
+    lineInner.style.cssText =
+      "display:block; will-change:transform, opacity; padding-bottom:0.25em;";
+
+    group.forEach((w, i) => {
+      lineInner.appendChild(w);
+      if (i < group.length - 1) {
+        lineInner.appendChild(document.createTextNode(" "));
+      }
+    });
+
+    lineOuter.appendChild(lineInner);
+    el.appendChild(lineOuter);
+  });
+}
 
 export default function SectionTwo({ isActive }: SectionTwoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const currentRef = useRef<number>(0);
   const [current, setCurrent] = useState(0);
 
-  function animateTextIn(selector: string) {
+  function animateTextIn(index: number) {
     if (!containerRef.current) return;
-    const targets = containerRef.current.querySelectorAll(`${selector} .s3-line-inner`);
-    gsap.killTweensOf(targets);
-    gsap.fromTo(
-      Array.from(targets),
-      { y: 25, opacity: 0 },
-      {
-        y: 0,
-        opacity: 1,
-        duration: 0.4,
-        ease: "power2.out",
-        stagger: 0.04,
-      }
+    const targets = containerRef.current.querySelectorAll(
+      `.s3-text-group-${index + 1} .gs-line-inner`
     );
+    targets.forEach((inner, idx) => {
+      gsap.killTweensOf(inner);
+      gsap.fromTo(
+        inner,
+        { y: 30, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: TEXT_DURATION,
+          ease: "power2.out",
+          delay: idx * 0.03,
+        }
+      );
+    });
   }
 
-  function animateTextOut(selector: string, callback?: () => void) {
+  function animateTextOut(index: number, callback?: () => void) {
     if (!containerRef.current) return;
-    const targets = containerRef.current.querySelectorAll(`${selector} .s3-line-inner`);
+    const targets = containerRef.current.querySelectorAll(
+      `.s3-text-group-${index + 1} .gs-line-inner`
+    );
     if (targets.length === 0) {
       if (callback) callback();
       return;
     }
-    gsap.killTweensOf(targets);
+    gsap.killTweensOf(Array.from(targets));
     gsap.to(Array.from(targets), {
       y: -20,
       opacity: 0,
-      duration: 0.2,
-      ease: "power1.in",
+      duration: 0.35,
+      ease: "power2.in",
+      stagger: 0.02,
       onComplete: callback,
     });
   }
@@ -79,7 +124,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
     setCurrent(next);
 
     const targetPanels = [".s2-desktop-section", ".s3-mobile-section"];
-    
+
     targetPanels.forEach((panel) => {
       const allBgs = containerRef.current!.querySelectorAll(`${panel} .s3-bg`);
       gsap.killTweensOf(allBgs);
@@ -89,7 +134,6 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
 
       if (currentIncoming && currentPrev) {
         if (direction === "next") {
-          // 🌟 BOTTOM TO TOP transition: Set incoming clipped 100% from bottom
           gsap.set(currentIncoming, { clipPath: "inset(100% 0 0 0)", zIndex: 2 });
           gsap.set(currentPrev, { clipPath: "inset(0 0 0 0)", zIndex: 1 });
 
@@ -103,7 +147,6 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
             },
           });
         } else {
-          // 🌟 Reverse direction when scrolling back up
           gsap.set(currentIncoming, { clipPath: "inset(0 0 0 0)", zIndex: 1 });
           gsap.set(currentPrev, { clipPath: "inset(0 0 0 0)", zIndex: 2 });
 
@@ -119,9 +162,38 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
       }
     });
 
-    animateTextOut(`.s3-text-group-${prev + 1}`, () => {
-      animateTextIn(`.s3-text-group-${next + 1}`);
+    animateTextOut(prev, () => {
+      slides.forEach((_, i) => {
+        const el = containerRef.current?.querySelector(`.s3-text-group-${i + 1}`) as HTMLElement;
+        if (el) {
+          el.style.opacity = i === next ? "1" : "0";
+          el.style.pointerEvents = i === next ? "auto" : "none";
+          el.style.visibility = i === next ? "visible" : "hidden";
+        }
+      });
+      animateTextIn(next);
     });
+  }, []);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const timeout = setTimeout(() => {
+      if (!containerRef.current) return;
+      const splitTargets = containerRef.current.querySelectorAll<HTMLElement>(".split-text-target");
+      splitTargets.forEach((el) => splitElementIntoLines(el));
+
+      slides.forEach((_, i) => {
+        if (i !== 0) {
+          gsap.set(
+            containerRef.current!.querySelectorAll(`.s3-text-group-${i + 1} .gs-line-inner`),
+            { y: 30, opacity: 0 }
+          );
+        }
+      });
+    }, 50);
+
+    return () => clearTimeout(timeout);
   }, []);
 
   useEffect(() => {
@@ -135,10 +207,9 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
     };
   }, [goTo]);
 
-  // Ensure active text is displayed when Section Two turns active
   useEffect(() => {
     if (isActive && containerRef.current) {
-      animateTextIn(`.s3-text-group-${currentRef.current + 1}`);
+      animateTextIn(currentRef.current);
     }
   }, [isActive]);
 
@@ -156,20 +227,17 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
             opacity: current === i ? 1 : 0,
             pointerEvents: current === i ? "auto" : "none",
             visibility: current === i ? "visible" : "hidden",
-            transition: "opacity 0.25s ease, visibility 0.25s",
+            transition: "opacity 0.4s ease, visibility 0.4s",
           }}
         >
-          {/* Main Title */}
-          <div className="s3-line-wrap overflow-hidden w-full">
-            <h2 className="s3-line-inner font-display text-[#F4EEDF] text-3xl md:text-5xl lg:text-[70px] tracking-wide leading-[1.1] font-light">
-              {slide.label}
-            </h2>
-          </div>
+          {/* Title with Split Text */}
+          <h2 className="split-text-target font-display text-[#F4EEDF] text-3xl md:text-5xl lg:text-[70px] tracking-wide leading-[1.1] font-light">
+            {slide.label}
+          </h2>
 
-          {/* Indicator & Description */}
+          {/* Indicators and Description */}
           <div className="flex flex-row items-stretch gap-4 md:gap-6">
-            
-            {/* 4 Vertical Bars Indicator */}
+            {/* 3 Vertical Bars Indicator */}
             <div className="flex flex-col gap-[4px] py-1 justify-center">
               {slides.map((_, barIdx) => (
                 <div
@@ -181,9 +249,9 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               ))}
             </div>
 
-            {/* Description Text */}
-            <div className="s3-line-wrap overflow-hidden flex-1">
-              <p className="s3-line-inner font-body text-[#F4EEDF]/80 text-[13px] md:text-[16px] leading-relaxed max-w-[420px]">
+            {/* Description Paragraph with Split Text */}
+            <div className="flex-1">
+              <p className="split-text-target font-body text-[#F4EEDF]/80 text-[13px] md:text-[16px] leading-relaxed max-w-[420px]">
                 {slide.desc}
               </p>
             </div>
@@ -195,6 +263,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
 
   return (
     <div ref={containerRef} className="w-full h-full">
+      {/* DESKTOP LAYOUT */}
       <section className="s2-desktop-section hidden md:block w-full h-screen relative overflow-hidden bg-transparent">
         <div className="absolute inset-0 z-10 flex flex-row w-full h-full pointer-events-none">
           <div className="s2-left-panel absolute left-0 top-0 w-1/2 h-full overflow-hidden bg-black" style={{ willChange: "transform" }}>
@@ -215,7 +284,6 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               className={`s3-bg s3-bg-${i + 1} absolute inset-0 w-full h-full`}
               style={{ 
                 zIndex: i === 0 ? 1 : 0, 
-                /* 🌟 Initial clipPath updated for bottom-to-top reveal */
                 clipPath: i === 0 ? "inset(0 0 0 0)" : "inset(100% 0 0 0)",
                 visibility: i === 0 ? "hidden" : "visible"
               }} 
@@ -240,7 +308,6 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               className={`s3-bg s3-bg-${i + 1} absolute inset-0 w-full h-full`}
               style={{ 
                 zIndex: i === 0 ? 1 : 0, 
-                /* 🌟 Initial clipPath updated for bottom-to-top reveal */
                 clipPath: i === 0 ? "inset(0 0 0 0)" : "inset(100% 0 0 0)" 
               }}
             >
@@ -250,7 +317,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
           ))}
         </div>
         <div className="s2-inner-fade-target absolute inset-0 z-10 w-full h-full pointer-events-none">
-           {renderTextContent()}
+          {renderTextContent()}
         </div>
       </section>
     </div>

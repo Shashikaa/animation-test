@@ -25,9 +25,10 @@ type AboutDesktopProps = {
 export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
   const { setPreloaderDone } = useSite();
   const [introDone, setIntroDone] = useState(false);
+  const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
   
-  const activeCardRef = useRef<number>(0);
+  const lastSec5Idx = useRef<number>(-1);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -68,9 +69,6 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         visibility: "hidden", 
         yPercent: 100
       });
-      
-      gsap.set(".s5-slide-card-0", { opacity: 1, pointerEvents: "auto" });
-      gsap.set([".s5-slide-card-1", ".s5-slide-card-2"], { opacity: 0, pointerEvents: "none" });
       
       gsap.set([".about-section-cta", ".about-footer-wrap"], { yPercent: 100, visibility: "hidden" });
       gsap.set(".about-section-cta", { zIndex: 95 });
@@ -177,7 +175,7 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
           scrollTrigger: {
             trigger: ".about-pin",
             start: "top top",
-            end: "+=9600", 
+            end: "+=10600", // Increased total scroll track height to accommodate dead scroll
             scrub: scrubValue, 
             pin: true,
             pinSpacing: true,
@@ -235,28 +233,13 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
           }, [], absoluteTime);
         };
 
-        const triggerCardFade = (targetIndex: number) => {
-          if (activeCardRef.current === targetIndex) return;
-          
-          const outboundSelector = `.s5-slide-card-${activeCardRef.current}`;
-          const inboundSelector = `.s5-slide-card-${targetIndex}`;
-          activeCardRef.current = targetIndex;
-
-          gsap.to(outboundSelector, {
-            opacity: 0,
-            duration: 0.6,
-            ease: "power2.inOut",
-            pointerEvents: "none",
-            overwrite: "auto"
-          });
-
-          gsap.to(inboundSelector, {
-            opacity: 1,
-            duration: 0.6,
-            ease: "power2.inOut",
-            pointerEvents: "auto",
-            overwrite: "auto"
-          });
+        const triggerSec5Hook = (nextIdx: number) => {
+          if (nextIdx !== lastSec5Idx.current) {
+            lastSec5Idx.current = nextIdx;
+            if ((window as any)._sec5GoTo) {
+              (window as any)._sec5GoTo(nextIdx);
+            }
+          }
         };
 
         tl.set(".about-hero-panel-left", { clipPath: "inset(0% 50% 0% 0%)" }, 0);
@@ -300,22 +283,34 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         tl.addLabel("sec5Start")
           .set(".about-section-five", { visibility: "visible" })
           .to(".about-section-four .s4-img-bg", { scale: 1.03, yPercent: -10, duration: 1.0 })
-          .fromTo(".about-section-five", { yPercent: 100 }, { yPercent: 0, duration: 1.0 }, "<")
+          .fromTo(".about-section-five", { yPercent: 100 }, { 
+            yPercent: 0, 
+            duration: 1.0,
+            onStart: () => setIsSectionFiveActive(true),
+            onReverseComplete: () => {
+              setIsSectionFiveActive(false);
+              triggerSec5Hook(0);
+            }
+          }, "<")
           .fromTo(".s5-bg", { yPercent: 0, scale: 1.2 }, { yPercent: 0, scale: 1.15, duration: 1.0 }, "<");
         
-        tl.call(() => triggerCardFade(0), [], "sec5Start+=1.0");
+        tl.call(() => triggerSec5Hook(0), [], "sec5Start+=1.0");
 
         // ── SECTION 5 INTERNAL SLIDE CARDS ──
         tl.addLabel("sec5_card2", "sec5Start+=1.0")
           .to(".s5-bg", { yPercent: -10, duration: 1.0 })
-          .call(() => triggerCardFade(1), [], "sec5_card2+=1.0");
+          .call(() => triggerSec5Hook(1), [], "sec5_card2+=1.0");
 
         tl.addLabel("sec5_card3", "sec5_card2+=1.0")
           .to(".s5-bg", { yPercent: -20, duration: 1.0 })
-          .call(() => triggerCardFade(2), [], "sec5_card3+=1.0");
+          .call(() => triggerSec5Hook(2), [], "sec5_card3+=1.0");
+
+        // 🌟 DEAD SCROLL BUFFER (PAUSE AFTER 3RD CARD)
+        tl.addLabel("sec5_hold", "sec5_card3+=1.0")
+          .to({}, { duration: 1.0 }); // Holds the 3rd card stationary on screen during user scroll
 
         // ── CTA REVEAL TRACK ──
-        tl.addLabel("ctaStart", "sec5_card3+=1.0")
+        tl.addLabel("ctaStart", "sec5_hold+=1.0")
           .set(".about-section-cta", { visibility: "visible" })
           .to(".about-section-cta", { yPercent: 0, duration: 1.0 })
           .to(".about-section-five", { scale: 1.0, duration: 1.0 }, "<");
@@ -330,7 +325,6 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         tl.addLabel("end");
       };
 
-      // 🌟 FIXED: Instantly builds the timeline on the next frame without font-loading stalls
       requestAnimationFrame(buildTimeline);
 
     }, scopeRef);
@@ -380,7 +374,7 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
         </div>
         
         <div className="about-section-five absolute inset-0 h-full w-full structural-layer" style={{ zIndex: 60 }}>
-          <SectionFive />
+          <SectionFive isActive={isSectionFiveActive} />
         </div>
         
         <div className="about-section-cta absolute bottom-0 left-0 w-full structural-layer" style={{ zIndex: 70 }}>

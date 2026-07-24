@@ -19,15 +19,17 @@ type AboutMobileProps = {
   preloaderDone: boolean;
 };
 
-// Faster, snappier touch scroll parameters
-const PX_PER_MAIN_PANEL = 850; // Faster section slide-up
-const PX_PER_SUB_STEP = 350;   // Quick card step transition
-const PAUSE_PX = 100;          // Tight dead-scroll window
+// Touch scroll parameters
+const PX_PER_MAIN_PANEL = 850;
+const PX_PER_SUB_STEP = 350;  
+const PAUSE_PX = 100;         
 
 export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
   const { setPreloaderDone } = useSite(); 
   const [introDone, setIntroDone] = useState(false);
+  const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
+  const lastSec5Idx = useRef<number>(-1);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -44,7 +46,6 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // Refresh ScrollTrigger only on width/orientation change, ignoring iOS address bar height changes
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -62,7 +63,6 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Initial structural configurations
   useLayoutEffect(() => {
     if (!preloaderDone) return;
     
@@ -89,10 +89,6 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
 
       gsap.set(".about-section-five", { yPercent: 100, force3D: true });
       gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0, force3D: true });
-      gsap.set([".about-section-five .s5-static-title", ".about-section-five .s5-static-desc"], { y: 0, opacity: 1 });
-      
-      gsap.set(".about-section-five .s5-slide-card", { opacity: 0, pointerEvents: "none", force3D: true });
-      gsap.set(".about-section-five .s5-slide-card-0", { opacity: 1, pointerEvents: "auto", force3D: true });
 
       gsap.set(".about-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden", force3D: true });
       gsap.set([".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
@@ -128,8 +124,8 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-      const ACTION = 1.4; // Faster animation duration
-      const DEAD_SCROLL = 0.2; // Shorter pause between sections
+      const ACTION = 1.4; 
+      const DEAD_SCROLL = 0.2; 
 
       const MAIN_PANELS_COUNT = 7;
       const SUB_STEPS_COUNT = 2;
@@ -140,13 +136,22 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
         (SUB_STEPS_COUNT * PX_PER_SUB_STEP) + 
         (PAUSES_COUNT * PAUSE_PX);
 
+      const triggerSec5Hook = (nextIdx: number) => {
+        if (nextIdx !== lastSec5Idx.current) {
+          lastSec5Idx.current = nextIdx;
+          if ((window as any)._sec5GoTo) {
+            (window as any)._sec5GoTo(nextIdx);
+          }
+        }
+      };
+
       const tl = gsap.timeline({
         defaults: { ease: "none", lazy: true },
         scrollTrigger: {
           trigger: ".about-pin",
           start: "top top",
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
-          scrub: 1.2, // Faster, touch-responsive scrub damping
+          scrub: 1.2,
           pin: true,
           pinType: "fixed",
           anticipatePin: 1,
@@ -193,7 +198,16 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
       // ── Step 5: Section 5 Reveal ──
       tl.addLabel("sec5Start")
         .set(".about-section-five", { visibility: "visible" }, "sec5Start")
-        .to(".about-section-five", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec5Start");
+        .to(".about-section-five", { 
+          yPercent: 0, 
+          duration: ACTION, 
+          ease: "power2.inOut",
+          onStart: () => setIsSectionFiveActive(true),
+          onReverseComplete: () => {
+            setIsSectionFiveActive(false);
+            triggerSec5Hook(0);
+          }
+        }, "sec5Start");
 
       tl.fromTo(".about-section-five .s5-bg", 
         { yPercent: 5, scale: 1.25 }, 
@@ -205,12 +219,10 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
 
       // ── Section 5 Inner Cards ──
       tl.addLabel("sec5_card2", "sec5FullyRevealed+=0.2")
-        .to(".about-section-five .s5-slide-card-0", { opacity: 0, duration: 0.6, ease: "power2.out" }, "sec5_card2")
-        .to(".about-section-five .s5-slide-card-1", { opacity: 1, pointerEvents: "auto", duration: 0.6, ease: "power2.out" }, "sec5_card2");
+        .call(() => triggerSec5Hook(1), [], "sec5_card2");
 
       tl.addLabel("sec5_card3", "sec5_card2+=0.6")
-        .to(".about-section-five .s5-slide-card-1", { opacity: 0, duration: 0.6, ease: "power2.out" }, "sec5_card3")
-        .to(".about-section-five .s5-slide-card-2", { opacity: 1, pointerEvents: "auto", duration: 0.6, ease: "power2.out" }, "sec5_card3");
+        .call(() => triggerSec5Hook(2), [], "sec5_card3");
 
       tl.to({}, { duration: DEAD_SCROLL }); 
 
@@ -283,7 +295,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
             visibility: "hidden"
           }}
         >
-          <SectionFive />
+          <SectionFive isActive={isSectionFiveActive} />
         </div>
 
         <div className="about-section-cta gpu-accelerated absolute inset-0 w-full h-full z-[150]" style={{ pointerEvents: "auto", visibility: "hidden" }}>

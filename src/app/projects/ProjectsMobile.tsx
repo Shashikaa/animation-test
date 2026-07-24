@@ -17,6 +17,11 @@ type ContactProps = {
   preloaderDone: boolean;
 };
 
+// Standardized metrics matching AboutMobile & ContactMobile
+const PX_PER_MAIN_PANEL = 850; 
+const PX_PER_SUB_STEP = 350;   
+const PAUSE_PX = 100;          
+
 // Line splitting utility
 function executeMobileSplitting(selector: string) {
   const elements = document.querySelectorAll(selector);
@@ -145,17 +150,29 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
     executeMobileSplitting(".scroll-para-2");
 
     const ctx = gsap.context(() => {
-      const ACTION = 1.8;
+      const ACTION = 1.4;
       const DEAD_SCROLL = 0.2;
 
+      // Projects Page: 4 Main Panel Moves (Hero->Sec1, Sec1->Sec2, Sec2->CTA, CTA->Footer)
+      // 2 Sub-steps (Paragraph 1 & 2 swaps) + 4 Pause windows
+      const MAIN_PANELS_COUNT = 4;
+      const SUB_STEPS_COUNT = 2;
+      const PAUSES_COUNT = 4;
+
+      const DYNAMIC_SCROLL_TRACK = 
+        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
+        (SUB_STEPS_COUNT * PX_PER_SUB_STEP) + 
+        (PAUSES_COUNT * PAUSE_PX);
+
       const scrollTl = gsap.timeline({
+        defaults: { ease: "none", lazy: true },
         scrollTrigger: {
           trigger: ".master-viewport",
           start: "top top",
-          end: "+=6500", // Adjusted for snappy mobile gesture responsiveness
+          end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: 1.0,
+          scrub: 1.2, // Strictly set to 1.2
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -163,7 +180,7 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
         }
       });
 
-      // ── STEP A: FAST HERO TEXT SWAPPING (MATCHES HOME HERO SPEED) ──
+      // ── STEP A: FAST HERO TEXT SWAPPING ──
       scrollTl.set([".scroll-para-1 .custom-line-inner", ".scroll-para-2 .custom-line-inner"], { opacity: 0, yPercent: 100 }, 0);
 
       // 1. Hero text vanishes fast on initial touch scroll
@@ -176,12 +193,12 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
         opacity: 1, 
         yPercent: 0, 
         stagger: 0.05, 
-        duration: 1.0, 
+        duration: 0.8, 
         ease: "power2.out" 
       }, 0.5);
 
       // Paragraph 1 Exit
-      scrollTl.to(".scroll-para-1 .custom-line-inner", { opacity: 0, y: -30, ease: "power1.in", duration: 0.8 }, "+=0.6");
+      scrollTl.to(".scroll-para-1 .custom-line-inner", { opacity: 0, y: -30, ease: "power1.in", duration: 0.6 }, "+=0.4");
       scrollTl.set(".scroll-para-1", { visibility: "hidden" });
       
       // 3. Paragraph 2 Entrance
@@ -190,12 +207,12 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
         opacity: 1, 
         yPercent: 0, 
         stagger: 0.05, 
-        duration: 1.0, 
+        duration: 0.8, 
         ease: "power2.out" 
       }, ">");
       
       // Paragraph 2 Exit
-      scrollTl.to(".scroll-para-2 .custom-line-inner", { opacity: 0, y: -40, ease: "power1.in", duration: 0.8 }, "+=0.6");
+      scrollTl.to(".scroll-para-2 .custom-line-inner", { opacity: 0, y: -40, ease: "power1.in", duration: 0.6 }, "+=0.4");
       scrollTl.set(".scroll-para-2", { visibility: "hidden" });
 
       // Background subtle translation during text sequence
@@ -215,48 +232,50 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
 
       scrollTl.to(".section-one-wrapper", {
         y: () => `-${getSectionOneScrollDistance()}`,
-        duration: 3.5, 
-        ease: "none"
+        duration: ACTION * 1.5, 
+        ease: "power2.inOut"
       }, "+=0.1");
 
       scrollTl.to(".parallax-img-asset", {
         yPercent: 20,
         ease: "none",
-        duration: 3.5
+        duration: ACTION * 1.5
       }, "<");
+
+      scrollTl.to({}, { duration: DEAD_SCROLL });
 
       // ── STEP C: SECTION TWO SLIDES UP OVER SECTION ONE ──
       scrollTl.to(".section-two-wrapper", {
         y: "0vh",
-        duration: 2.0,
+        duration: ACTION,
         ease: "power2.inOut",
         onStart: () => setIsSectionTwoActive(true),
         onReverseComplete: () => setIsSectionTwoActive(false)
-      }, "+=0.2");
+      });
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
       // ── STEP D: SECTION TWO -> CTA ──
       scrollTl.addLabel("ctaStart", ">")
         .set(".projects-section-cta", { visibility: "visible" }, "ctaStart")
-        .to(".projects-section-cta", { yPercent: 0, duration: ACTION, ease: "none" }, "ctaStart")
-        .to(".section-two-wrapper", { y: "-10vh", duration: ACTION, ease: "none" }, "ctaStart");
+        .to(".projects-section-cta", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart")
+        .to(".section-two-wrapper", { y: "-10vh", duration: ACTION, ease: "power2.inOut" }, "ctaStart");
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP E: CTA -> FOOTER (FAST CTA FADE + FOOTER SLIDE-UP) ──
+      // ── STEP E: CTA -> FOOTER ──
       scrollTl.addLabel("footerStart", ">")
         .to([".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"], { 
           opacity: 0, 
           duration: ACTION * 0.4, 
-          ease: "power1.in" 
+          ease: "power1.inOut" 
         }, "footerStart")
         .set(".section-two-wrapper", { visibility: "hidden" }, `footerStart+=${ACTION * 0.4}`)
         .set(".projects-footer-wrap", { visibility: "visible" }, "footerStart")
         .to(".projects-footer-wrap", { 
           yPercent: 0, 
           duration: ACTION, 
-          ease: "power2.out" 
+          ease: "power2.inOut" 
         }, "footerStart");
 
     }, scopeRef);

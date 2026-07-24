@@ -9,10 +9,12 @@ export default function PreloaderToggle() {
   const pathname = usePathname();
   const { preloaderDone } = useSite();
 
-  // 🌟 CRITICAL FIX: If the preloader is marked done, completely remove it from the DOM.
-  // This prevents it from overlaying and freezing on back/forward actions.
+  // 🌟 Bypass preloader on terms/policy pages
+  if (pathname === "/terms" || pathname === "/privacy-policy") return null;
+
+  // If the preloader is marked done, completely remove it from the DOM.
   if (preloaderDone) return null;
-  
+
   return pathname === "/" ? (
     <PreloaderWrapper key={pathname} />
   ) : (

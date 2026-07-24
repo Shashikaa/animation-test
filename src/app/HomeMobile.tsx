@@ -19,6 +19,11 @@ const Appsection = dynamic(() => import("../components/Appsection"), { ssr: fals
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Standardized Metrics matching About, Contact, Services, SubServices & Projects
+const PX_PER_MAIN_PANEL = 850; 
+const PX_PER_SUB_STEP = 350;   
+const PAUSE_PX = 100;          
+
 // Inline splitting utility
 function executeInlineSplitting(selector: string) {
   const element = document.querySelector(selector) as HTMLElement;
@@ -176,12 +181,22 @@ export default function HomeMobile() {
       const ACTION = 1.8;
       const DEAD_SCROLL = 0.4; 
 
+      // Dynamic calculation: 8 main panel moves, 5 sub steps, 8 pause holds
+      const MAIN_PANELS_COUNT = 8;
+      const SUB_STEPS_COUNT = 5;
+      const PAUSES_COUNT = 8;
+
+      const DYNAMIC_SCROLL_TRACK = 
+        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
+        (SUB_STEPS_COUNT * PX_PER_SUB_STEP) + 
+        (PAUSES_COUNT * PAUSE_PX);
+
       const tl = gsap.timeline({
         defaults: { ease: "none", lazy: true },
         scrollTrigger: {
           trigger: ".home-pin-master",
           start: "top top",
-          end: "+=8500",
+          end: `+=${DYNAMIC_SCROLL_TRACK}`,
           scrub: 1.2,
           pin: true,
           pinType: "fixed",

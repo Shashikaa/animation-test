@@ -24,7 +24,6 @@ export interface FullServiceData {
   hero: SubServiceHeroData;
   sectionOne: SectionOneData;
   sectionTwo: SectionTwoData;
-
 }
 
 export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
@@ -89,12 +88,10 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
         { question: 'How long does new pool construction take?', answer: 'Most custom shotcrete pools require 8 to 12 weeks depending on site access and structural complexity.' },
         { question: 'What is included in the new pool construction service?', answer: 'Yes, we handle all engineering submissions, environmental zoning clearances, and construction permits.' },
         { question: 'Can I customise the shape and features of my pool?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' },
-             { question: 'Do you handle permits and approvals?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' },
+        { question: 'Do you handle permits and approvals?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' },
         { question: 'How do I get started with a new pool build?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' }
-
       ]
-    },
-
+    }
   },
   'Pool Equipment & Installation': {
     slug: 'pool-equipment-and-installation',
@@ -144,7 +141,6 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
         { question: 'How do vanishing edge parameters perform?', answer: 'They leverage lower catch basins paired with dedicated balance valves to handle subtle pool water overflow smoothly.' }
       ]
     }
-
   },
   'Commercial Pool Construction': {
     slug: 'commercial-pool-construction',
@@ -194,51 +190,5 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
         { question: 'Is it possible to convert an older pool to salt chlorination?', answer: 'Absolutely. We seamlessly swap in inline electrolytic cells during the plumbing overhaul phase.' }
       ]
     }
-
-  },
-  'equipment-maintenance': {
-    slug: 'concrete-pool-renovations',
-    hero: {
-      title: 'Advanced Mechanics',
-      subtitle: 'Pristine Water Quality',
-      bgImageUrl: '/images/equipment-hero.webp',
-      tabs: [
-        {
-          label: 'System Engineering',
-          type: 'paragraph',
-          content: 'Designing high-efficiency mechanical rooms that maintain optimal chemical configurations automatically, so your water stays crystal clear with minimal footprint.'
-        },
-        {
-          label: 'Mechanical Features',
-          type: 'points',
-          content: [
-            'Variable speed smart circulation pumps',
-            'UV and ozone sanitation system integration',
-            'Proactive digital control automation monitoring'
-          ]
-        }
-      ]
-    },
-    sectionOne: {
-      title: 'Precision Hydraulic Engineering',
-      paragraph: 'Our complex mechanical room setups maximize water flow turnover rates while drastically lowering electrical expenditure, combining robust commercial performance with clean architectural styling.',
-      bgImageUrl: '/images/equipment-details-bg.webp',
-      sideImageUrl: '/images/equipment-details.webp',
-      fourParagraphs: [
-        'Variable-speed circulation systems scale loop frequencies dynamically for quiet operations.',
-        'Synergized UV-C and ozone secondary loops terminate persistent chloramine residues.',
-        'Live telemetry arrays stream monitoring diagnostics to your smartphone application.',
-        'Advanced automated dosing loops minimize manual acid and sanitizer handling.'
-      ]
-    },
-    sectionTwo: {
-      title: 'Mechanical System Diagnostics',
-      bgImageUrl: '/images/equipment-features.webp',
-      faqs: [
-        { question: 'How much energy do variable speed smart pumps save?', answer: 'They drop your circulation draw rates by up to 70% compared to legacy single-speed hardware matrices.' },
-        { question: 'What are the operational impacts of UV & Ozone setups?', answer: 'They lower standard chlorine consumption profiles drastically by taking on the heavy secondary oxidation load.' }
-      ]
-    },
-
   }
 };

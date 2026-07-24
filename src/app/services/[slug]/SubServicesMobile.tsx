@@ -19,6 +19,11 @@ type SubServicesMobileProps = {
   pageData: FullServiceData;
 };
 
+// Standardized Metrics
+const PX_PER_MAIN_PANEL = 850; 
+const PX_PER_SUB_STEP = 350;   
+const PAUSE_PX = 100;          
+
 export default function SubServicesMobile({ preloaderDone, pageData }: SubServicesMobileProps) {
   const { setPreloaderDone } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
@@ -43,7 +48,6 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
     };
   }, [preloaderDone, introDone]);
 
-  // Refresh ScrollTrigger only on width/orientation change
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -127,58 +131,83 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
     const ctx = gsap.context(() => {
       ScrollTrigger.normalizeScroll(false);
 
-      const ACTION = 1.8;
+      const ACTION = 1.4;
+      const DEAD_SCROLL = 0.2;
+
+      const MAIN_PANELS_COUNT = 4;
+      const SUB_STEPS_COUNT = 3;
+      const PAUSES_COUNT = 5;
+
+      const DYNAMIC_SCROLL_TRACK = 
+        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
+        (SUB_STEPS_COUNT * PX_PER_SUB_STEP) + 
+        (PAUSES_COUNT * PAUSE_PX);
 
       const scrollTl = gsap.timeline({
-        defaults: { ease: "none" }, 
+        defaults: { ease: "none", lazy: true }, 
         scrollTrigger: {
           trigger: ".services-hero-master",
           start: "top top",
-          end: "+=6500", // Snappy scroll track length matching Home/Projects
+          end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
           pinSpacing: true,
-          scrub: 1.0,
+          scrub: 1.2,
           invalidateOnRefresh: false,
           fastScrollEnd: true,
           preventOverlaps: true
         }
       });
 
-      // ── PHASE 1: ULTRA FAST HERO EXIT ──
+      // ── PHASE 1: FULL HERO REVEAL & CLIPPING FIX ──
       scrollTl.addLabel("phase1")
+        // Text clears quickly so it doesn't wrap/cramp while full clipping happens
         .to(".hero-text-wrap", {
           opacity: 0,
           y: -30,
-          duration: 0.4,
+          duration: ACTION * 0.25,
           ease: "power2.in"
         }, "phase1")
+
+        // 1. Force the clip layer to expand completely across tab/mobile viewports
         .to(".services-hero-top-layer", {
-          width: "calc(100% - 600px)", 
-          xPercent: -10,               
-          duration: 1.5, 
-          ease: "power1.inOut",
-         }, "phase1");
+          width: "0%", 
+          xPercent: -100,
+          duration: ACTION, 
+          ease: "power2.inOut",
+        }, "phase1")
+
+        // 2. Synchronize full scale/alignment for the background
+        .to(".service-hero-bg", {
+          scale: 1.0,
+          duration: ACTION,
+          ease: "power2.inOut"
+        }, "phase1");
+
+      // Hold pause after Hero completes BEFORE Section 1 starts
+      scrollTl.to({}, { duration: DEAD_SCROLL });
 
       // ── PHASE 2: REVEAL SECTION ONE SHEET ──
-      scrollTl.addLabel("phase2", "phase1+=0.5")
+      scrollTl.addLabel("phase2")
         .to(".section-one-wrap", {
           clipPath: "inset(0% 0% 0% 0%)",
-          duration: 2.0, 
-          ease: "power1.inOut"
+          duration: ACTION, 
+          ease: "power2.inOut"
         }, "phase2")
         .to(".service-hero-bg", {
-          scale: 1.1,     
-          duration: 2.0, 
-          ease: "power1.inOut",
+          scale: 1.05,     
+          duration: ACTION, 
+          ease: "power2.inOut",
         }, "phase2");
+
+      scrollTl.to({}, { duration: DEAD_SCROLL });
 
       // ── PHASE 2.5: EXPAND IMAGE CONTAINER ──
       scrollTl.addLabel("phase2_expanded")
         .to([".s10-para-top", ".s10-title"], {
           opacity: 0,
           y: -35,
-          duration: 0.8,
+          duration: 0.6,
           ease: "power2.in"
         }, "phase2_expanded")
         
@@ -188,41 +217,47 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
           right: "0px",
           bottom: "0px",
           borderRadius: "0px",
-          duration: 2.0, 
+          duration: ACTION, 
           ease: "power2.inOut"
         }, "phase2_expanded")
         
         .to(".s10-img-element", {
           scale: 1.06,
-          duration: 2.0, 
+          duration: ACTION, 
           ease: "power2.inOut"
         }, "phase2_expanded");
 
       // ── SEQUENTIAL PARAGRAPHS ROLL UP ──
       scrollTl.addLabel("text1")
-              .to(".s10-seq-container", { y: -380, duration: 2.0 })
-              .addLabel("text2")
-              .to(".s10-seq-container", { y: -760, duration: 2.0 })
-              .addLabel("text3")
-              .to(".s10-seq-container", { y: -1100, duration: 2.0 })
-              .addLabel("text4");
+        .to(".s10-seq-container", { y: -380, duration: ACTION, ease: "power2.inOut" })
+        .addLabel("text2")
+        .to(".s10-seq-container", { y: -760, duration: ACTION, ease: "power2.inOut" })
+        .addLabel("text3")
+        .to(".s10-seq-container", { y: -1100, duration: ACTION, ease: "power2.inOut" })
+        .addLabel("text4");
+
+      scrollTl.to({}, { duration: DEAD_SCROLL });
 
       // ── PHASE 2.6: FAQ SECTION SLIDE UP ──
       scrollTl.addLabel("faq", "text4")
         .set(".services-faq-wrap", { visibility: "visible" }, "faq")
         .to(".services-faq-wrap", {
           y: "0%",
-          duration: 2.0, 
-          ease: "power1.inOut"
+          duration: ACTION, 
+          ease: "power2.inOut"
         }, "faq");
+
+      scrollTl.to({}, { duration: DEAD_SCROLL });
 
       // ── CTA REVEAL TRACK ──
       scrollTl.addLabel("ctaStart", ">")
         .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
-        .to(".services-section-cta", { yPercent: 0, duration: ACTION, ease: "power1.inOut" }, "ctaStart")
-        .to(".services-faq-wrap", { yPercent: -10, duration: ACTION, ease: "power1.inOut" }, "ctaStart");
+        .to(".services-section-cta", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart")
+        .to(".services-faq-wrap", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "ctaStart");
 
-      // ── FOOTER REVEAL TRACK (SYNCHRONIZED FAQ FADE & FOOTER SLIDE) ──
+      scrollTl.to({}, { duration: DEAD_SCROLL });
+
+      // ── FOOTER REVEAL TRACK ──
       scrollTl.addLabel("footerStart", ">")
         .to(".faq-content", {
           opacity: 0,
@@ -234,13 +269,13 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
         .to([".services-section-cta .cta-inner-desktop", ".services-section-cta .cta-inner-mobile"], { 
           opacity: 0, 
           duration: ACTION * 0.4, 
-          ease: "power1.out" 
+          ease: "power1.inOut" 
         }, "footerStart")
         .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
         .to(".services-footer-wrap", { 
           yPercent: 0, 
           duration: ACTION, 
-          ease: "power2.out" 
+          ease: "power2.inOut" 
         }, "footerStart");
 
     }, scopeRef);

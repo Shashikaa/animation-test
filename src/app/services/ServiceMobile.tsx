@@ -17,6 +17,11 @@ type ServicesMobileProps = {
   preloaderDone: boolean;
 };
 
+// Standardized Metrics matching AboutMobile, ContactMobile, ProjectsMobile & SubServicesMobile
+const PX_PER_MAIN_PANEL = 850; 
+const PX_PER_SUB_STEP = 350;   
+const PAUSE_PX = 100;          
+
 export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
   const { setPreloaderDone } = useSite(); 
   const [introDone, setIntroDone] = useState(false);
@@ -44,7 +49,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // Refresh ScrollTrigger only on width/orientation change, ignoring mobile address bar height toggles
+  // Refresh ScrollTrigger only on width/orientation change
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -143,7 +148,19 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
     const ctx = gsap.context(() => {
       ScrollTrigger.normalizeScroll(false);
 
-      const ACTION = 2.0;
+      const ACTION = 1.4;
+      const DEAD_SCROLL = 0.2;
+
+      // Services Page: 6 Main Panel Moves
+      // 3 Slide track steps inside Sec 2 + 4 Pause windows
+      const MAIN_PANELS_COUNT = 6;
+      const SUB_STEPS_COUNT = 3; 
+      const PAUSES_COUNT = 4;
+
+      const DYNAMIC_SCROLL_TRACK = 
+        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
+        (SUB_STEPS_COUNT * PX_PER_SUB_STEP) + 
+        (PAUSES_COUNT * PAUSE_PX);
 
       const triggerSec2Hook = (nextIdx: number) => {
         if (nextIdx !== lastSec2Idx.current) {
@@ -155,13 +172,14 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
       };
 
       const tl = gsap.timeline({
+        defaults: { ease: "none", lazy: true },
         scrollTrigger: {
           trigger: ".services-pin-master",
           start: "top top",
-          end: "+=7500", // Normalized ratio for smooth mobile touch response
+          end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: 1.0,
+          scrub: 1.2,
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -187,6 +205,8 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
         ease: "power2.inOut"
       }, 0);
 
+      tl.to({}, { duration: DEAD_SCROLL });
+
       // ── STEP B: Section One un-clips OVER Hero ──
       tl.set(".services-section-one-wrap", { visibility: "visible" })
         .to(".services-section-one-wrap", {
@@ -195,6 +215,8 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
           duration: ACTION,
           ease: "power2.inOut"
         });
+
+      tl.to({}, { duration: DEAD_SCROLL });
 
       // ── STEP C: Section Two & Text Slide Up Together ──
       tl.set(".services-section-two-wrap", { visibility: "visible" })
@@ -215,44 +237,50 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
           ease: "power2.inOut"
         }, "<");
 
-      // ── STEP D: SLIDE TRACK STEPPER ──
+      // ── STEP D: SLIDE TRACK STEPPER (3 SLIDES) ──
       tl.to({}, { 
-        duration: 4.0,
+        duration: ACTION * 1.5,
         onUpdate: function() {
           const p = this.progress();
-          if (p < 0.25) triggerSec2Hook(0);
-          else if (p < 0.50) triggerSec2Hook(1);
-          else if (p < 0.75) triggerSec2Hook(2);
-          else triggerSec2Hook(3);
+          if (p < 0.33) triggerSec2Hook(0);
+          else if (p < 0.66) triggerSec2Hook(1);
+          else triggerSec2Hook(2);
         }
       });
 
+      tl.to({}, { duration: DEAD_SCROLL });
+
       // ── STEP E: App Section slides up over Section Two ──
       tl.set(".services-appsec-wrap", { visibility: "visible" })
+        .to(".s2-inner-fade-target", { opacity: 1, duration: ACTION * 0.5 }, "appsecStart")
         .to(".services-appsec-wrap", {
           yPercent: 0,
           duration: ACTION,
           ease: "power2.inOut",
-          onStart: () => triggerSec2Hook(3),
-          onReverseComplete: () => triggerSec2Hook(3)
-        });
+          onStart: () => triggerSec2Hook(2),
+          onReverseComplete: () => triggerSec2Hook(2)
+        }, "appsecStart");
+
+      tl.to({}, { duration: DEAD_SCROLL });
 
       // ── STEP F: APP SECTION -> CTA ──
       tl.addLabel("ctaStart")
         .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
-        .to(".services-section-cta", { yPercent: 0, duration: ACTION, ease: "none" }, "ctaStart")
-        .to(".services-appsec-wrap", { yPercent: -10, duration: ACTION, ease: "none" }, "ctaStart");
+        .to(".services-section-cta", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart")
+        .to(".services-appsec-wrap", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "ctaStart");
+
+      tl.to({}, { duration: DEAD_SCROLL });
 
       // ── STEP G: CTA -> FOOTER ──
       tl.addLabel("footerStart")
         .to([".services-section-cta .cta-inner-mobile", ".services-section-cta .cta-inner-desktop"], { 
           opacity: 0, 
-          duration: ACTION * 0.3, 
+          duration: ACTION * 0.4, 
           ease: "power1.inOut" 
         }, "footerStart")
-        .set(".services-appsec-wrap", { visibility: "hidden" }, `footerStart+=${ACTION * 0.3}`)
-        .set(".services-footer-wrap", { visibility: "visible" }, "footerStart+=0.1")
-        .to(".services-footer-wrap", { yPercent: 0, duration: ACTION, ease: "none" }, "footerStart+=0.1");
+        .set(".services-appsec-wrap", { visibility: "hidden" }, `footerStart+=${ACTION * 0.4}`)
+        .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
+        .to(".services-footer-wrap", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "footerStart");
 
     }, scopeRef);
 

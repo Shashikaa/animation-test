@@ -16,6 +16,10 @@ type ContactProps = {
   preloaderDone: boolean;
 };
 
+// Standardized Metrics to align with AboutMobile feel
+const PX_PER_MAIN_PANEL = 850; 
+const PAUSE_PX = 100;
+
 export default function ContactMobile({ preloaderDone }: ContactProps) {
   const { setPreloaderDone } = useSite();
   const [introDone, setIntroDone] = useState(false);
@@ -28,7 +32,6 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
-  // Lock scrolling cleanly during preloader / intro
   useEffect(() => {
     const locked = !preloaderDone || !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
@@ -37,7 +40,6 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
     };
   }, [preloaderDone, introDone]);
 
-  // Refresh ScrollTrigger only on width/orientation change
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -55,7 +57,6 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Baseline setup matching AboutMobile structure
   useLayoutEffect(() => {
     if (!preloaderDone) return;
 
@@ -79,7 +80,6 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // Intro Sequence
   useEffect(() => {
     if (!preloaderDone) return;
 
@@ -97,21 +97,28 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
     return () => ctx.revert();
   }, [preloaderDone]);
 
-// Master Scroll Timeline
   useEffect(() => {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-      const ACTION = 2.0;
+      const ACTION = 1.4;
+      const DEAD_SCROLL = 0.2;
+
+      // Contact Page: 4 Main transitions (Hero->CTA, CTA->Sec1, Sec1->FAQ, FAQ->Footer) + 3 Dead Scroll pauses
+      const MAIN_PANELS_COUNT = 4;
+      const PAUSES_COUNT = 3;
+
+      const DYNAMIC_SCROLL_TRACK = (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + (PAUSES_COUNT * PAUSE_PX);
 
       const tl = gsap.timeline({
+        defaults: { ease: "none", lazy: true },
         scrollTrigger: {
           trigger: ".contact-pin-master",
           start: "top top",
-          end: "+=5000",
+          end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: 1.2,
+          scrub: 1.2, // Kept to 1.2 across all pages
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -120,21 +127,21 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
       });
 
       tl
-        // ─── PHASE 1: Hero content fades out / CTA moves up ───
         .to(".contact-hero-bg", { yPercent: -15, ease: "none", duration: ACTION }, 0)
         .to(".hero-text-wrap", { opacity: 0, y: -40, ease: "power1.in", duration: ACTION * 0.75 }, 0)
         .to(".cta-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: ACTION }, 0)
 
-        // ─── PHASE 2: Section One comes up ───
+        .to({}, { duration: DEAD_SCROLL })
+
         .to(".section-one-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: ACTION }, ">")
 
-        // ─── PHASE 3: FAQ Section glides over Section One ───
+        .to({}, { duration: DEAD_SCROLL })
+
         .to(".faq-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: ACTION }, ">")
 
-        // ─── PHASE 4 & 5: FAQ Fades out quickly WHILE Footer slides up simultaneously ───
+        .to({}, { duration: DEAD_SCROLL })
+
         .addLabel("footerStart", ">")
-        
-        // Fast fade-out (completes in the first 40% of the footer's movement)
         .to(".faq-content", { 
           opacity: 0, 
           y: -40, 
@@ -142,7 +149,6 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
           duration: ACTION * 0.4 
         }, "footerStart")
         
-        // Footer starts sliding up at the exact same time
         .to(".footer-scroll-wrapper", { 
           y: "0vh", 
           ease: "power2.out", 
@@ -158,27 +164,22 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
     <div ref={scopeRef} className="min-h-screen w-full bg-zinc-950 text-white overflow-hidden">
       <div className="contact-pin-master pin-all-contact relative w-full overflow-hidden">
         
-        {/* Layer 1: Hero Component */}
         <div className="gpu-accelerated absolute inset-0 w-full h-full z-10">
           <ContactHero />
         </div>
 
-        {/* Layer 2: Slide-up CTA Wrapper */}
         <div className="cta-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full z-20">
           <SectionCTA />
         </div>
 
-        {/* Layer 3: Section One */}
         <div className="section-one-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full z-30">
           <SectionOne />
         </div>
 
-        {/* Layer 4: FAQ Section Layer */}
         <div className="faq-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full z-40">
           <FAQSection />
         </div>
 
-        {/* Layer 5: Footer Layer */}
         <div className="footer-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full z-50 flex flex-col justify-end pointer-events-none">
           <div className="w-full pointer-events-auto">
             <Footer />

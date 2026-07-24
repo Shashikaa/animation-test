@@ -17,17 +17,28 @@ function splitElementIntoLines(el: HTMLElement) {
   el.dataset.originalHtml = el.innerHTML;
   el.style.transform = "none";
 
-  el.innerHTML = el.innerHTML.replace(/(\S+)/g, '<span class="gs-word">$1</span>');
+  // Wrap words and prevent internal hyphen splitting during line calculation
+  el.innerHTML = el.innerHTML.replace(/(\S+)/g, '<span class="gs-word" style="display:inline-block; white-space:nowrap;">$1</span>');
   const words = Array.from(el.querySelectorAll<HTMLElement>(".gs-word"));
 
-  const lineMap = new Map<number, HTMLElement[]>();
+  // Group words into lines using a 6px threshold buffer to avoid subpixel layout bugs
+  const lines: HTMLElement[][] = [];
   words.forEach((w) => {
-    const top = Math.round(w.getBoundingClientRect().top);
-    if (!lineMap.has(top)) lineMap.set(top, []);
-    lineMap.get(top)!.push(w);
+    const top = w.getBoundingClientRect().top;
+    let added = false;
+    for (const line of lines) {
+      const lineTop = line[0].getBoundingClientRect().top;
+      if (Math.abs(top - lineTop) < 6) { // 6px tolerance threshold
+        line.push(w);
+        added = true;
+        break;
+      }
+    }
+    if (!added) {
+      lines.push([w]);
+    }
   });
 
-  const lines = Array.from(lineMap.values());
   el.innerHTML = "";
 
   lines.forEach((group) => {
@@ -42,6 +53,8 @@ function splitElementIntoLines(el: HTMLElement) {
       "display:block; will-change:transform, opacity; padding-bottom:0.25em;";
 
     group.forEach((w, i) => {
+      w.style.display = ""; // Reset inline-block back to default
+      w.style.whiteSpace = "";
       lineInner.appendChild(w);
       if (i < group.length - 1) {
         lineInner.appendChild(document.createTextNode(" "));
@@ -97,10 +110,25 @@ export default function ProjectInfoSlide({ slides, isActive = true }: ProjectInf
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const timeout = setTimeout(() => {
+    const runSplitLogic = () => {
       if (!containerRef.current) return;
+
+      const blocks = containerRef.current.querySelectorAll<HTMLElement>(".info-text-block");
+      const savedStyles: Array<{ visibility: string; opacity: string }> = [];
+
+      blocks.forEach((b) => {
+        savedStyles.push({ visibility: b.style.visibility, opacity: b.style.opacity });
+        b.style.visibility = "visible";
+        b.style.opacity = "1";
+      });
+
       const splitTargets = containerRef.current.querySelectorAll<HTMLElement>(".split-text-target");
       splitTargets.forEach((el) => splitElementIntoLines(el));
+
+      blocks.forEach((b, i) => {
+        b.style.visibility = savedStyles[i].visibility;
+        b.style.opacity = savedStyles[i].opacity;
+      });
 
       slides.forEach((_, i) => {
         if (i !== 0) {
@@ -110,9 +138,16 @@ export default function ProjectInfoSlide({ slides, isActive = true }: ProjectInf
           });
         }
       });
-    }, 50);
+    };
 
-    return () => clearTimeout(timeout);
+    // Wait until fonts are 100% loaded before splitting text
+    if (document.fonts) {
+      document.fonts.ready.then(() => {
+        setTimeout(runSplitLogic, 50);
+      });
+    } else {
+      setTimeout(runSplitLogic, 150);
+    }
   }, [slides]);
 
   useEffect(() => {
@@ -122,11 +157,9 @@ export default function ProjectInfoSlide({ slides, isActive = true }: ProjectInf
 
       currentRef.current = nextIdx;
 
-      // Animate out old slide text and bring in new slide text
       animateTextOut(prevIdx, () => {
         if (!containerRef.current) return;
-        
-        // Hide all non-active text blocks
+
         slides.forEach((_, i) => {
           const el = containerRef.current?.querySelector(`.slide-text-${i}`) as HTMLElement;
           if (el) {
@@ -150,16 +183,16 @@ export default function ProjectInfoSlide({ slides, isActive = true }: ProjectInf
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 w-full h-full overflow-hidden bg-[#131313] project-info-master z-[20]"
+      className="absolute inset-0 w-full h-full overflow-y-auto lg:overflow-hidden bg-[#131313] project-info-master z-[20]"
     >
-      <div className="w-full h-full flex flex-col md:grid md:grid-cols-2">
+      <div className="w-full min-h-full flex flex-col lg:grid lg:grid-cols-2">
         {/* Text Column */}
-        <div className="relative w-full h-1/2 md:h-full order-1 md:order-2 bg-[#EFECE6] !p-6 md:!p-16 lg:!p-20 flex flex-col justify-center z-[60] text-[#131313]">
-          <div className="relative w-full h-full flex flex-col justify-center md:justify-between md:pt-20 md:pb-8">
+        <div className="relative w-full h-auto min-h-[50vh] lg:h-full order-1 lg:order-2 bg-[#EFECE6] !p-6 md:!p-16 lg:!p-20 flex flex-col justify-center z-[60] text-[#131313]">
+          <div className="relative w-full h-full flex flex-col justify-center  md:pt-20 md:pb-8">
             {slides.map((slide, index) => (
               <div
                 key={`info-text-${index}`}
-                className={`info-text-block slide-text-${index} absolute inset-0 flex flex-col justify-center md:justify-between !gap-4 md:!gap-8`}
+                className={`info-text-block slide-text-${index} absolute inset-0 flex flex-col justify-center  !gap-4 md:!gap-8`}
                 style={{
                   opacity: index === 0 ? 1 : 0,
                   pointerEvents: index === 0 ? "auto" : "none",
@@ -181,7 +214,7 @@ export default function ProjectInfoSlide({ slides, isActive = true }: ProjectInf
         </div>
 
         {/* Image Layer Column */}
-        <div className="relative w-full h-1/2 md:h-full order-2 md:order-1 overflow-hidden bg-[#1e1e1e]">
+        <div className="relative w-full h-[50vh] lg:h-full order-2 lg:order-1 overflow-hidden bg-[#1e1e1e]">
           {slides.map((slide, index) => (
             <div
               key={`info-img-layer-${index}`}

@@ -17,6 +17,11 @@ type SubServicesMobileProps = {
   pageData: FullServiceData;
 };
 
+// Standardized Metrics to align exact scroll feel with AboutMobile
+const PX_PER_MAIN_PANEL = 850; 
+const PX_PER_SUB_STEP = 350;   
+const PAUSE_PX = 100;          
+
 export default function SingleProjectPageMobile({ preloaderDone, pageData }: SubServicesMobileProps) {
   const scopeRef = useRef<HTMLDivElement>(null);
   const [introDone, setIntroDone] = useState(false);
@@ -148,8 +153,20 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
         });
       });
 
+      const ACTION = 1.4;
+      const DEAD_SCROLL = 0.2;
       const infoSlides = pageData.slides || [];
-      const scrubValue = 1.2;
+
+      // 4 Main Panel Moves (Hero->Info, Info->App, App->FAQ, FAQ->Footer)
+      // Sub-steps for extra info slides beyond the first one
+      const MAIN_PANELS_COUNT = 4;
+      const SUB_STEPS_COUNT = Math.max(0, infoSlides.length - 1);
+      const PAUSES_COUNT = 4;
+
+      const DYNAMIC_SCROLL_TRACK = 
+        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
+        (SUB_STEPS_COUNT * PX_PER_SUB_STEP) + 
+        (PAUSES_COUNT * PAUSE_PX);
 
       const triggerInfoHook = (nextIdx: number) => {
         if (nextIdx !== lastInfoIdx.current) {
@@ -163,15 +180,15 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
       gsap.set(".appsec-phone-wrapper", { y: 30, opacity: 0 });
 
       const scrollTl = gsap.timeline({
-        defaults: { ease: "none" },
+        defaults: { ease: "none", lazy: true },
         scrollTrigger: {
           trigger: ".master-viewport",
           start: "top top",
-          end: `+=8500`, // Slightly tightened to keep the snappy response
+          end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
           pinSpacing: true,
-          scrub: scrubValue,
+          scrub: 1.2, // Strictly set to 1.2
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -179,20 +196,20 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
         }
       });
 
-      // ── STEP A: HERO TRANSITION & INFO SECTION SLIDE UP (HOME SPEED MATCH) ──
+      // ── STEP A: HERO TRANSITION & INFO SECTION SLIDE UP ──
       scrollTl.addLabel("start", 0);
 
       scrollTl.to(".hero-text-wrap", { 
         autoAlpha: 0, 
         y: -30, 
-        duration: 1.0, 
-        ease: "power1.inOut" 
+        duration: ACTION * 0.75, 
+        ease: "power2.in" 
       }, 0);
 
       scrollTl.set(".project-info-wrap", { visibility: "visible" }, 0)
               .to(".project-info-wrap", { 
                 yPercent: 0, 
-                duration: 1.8, 
+                duration: ACTION, 
                 ease: "power2.inOut",
                 onStart: () => setIsProjectInfoActive(true),
                 onReverseComplete: () => {
@@ -203,7 +220,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
 
       scrollTl.call(() => {
         triggerInfoHook(0);
-      }, [], 0.8);
+      }, [], 0.6);
 
       // ── STEP B: SEQUENTIAL INNER INFO SLIDES ──
       if (infoSlides.length > 0) {
@@ -218,52 +235,56 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
 
           scrollTl.to(currentImgLayer, {
             clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-            duration: 3.5,
+            duration: ACTION,
             ease: "power2.inOut"
           }, slideLabel);
 
           scrollTl.fromTo(innerImage, 
             { scale: 1.25 },
-            { scale: 1.0, duration: 3.5, ease: "power2.out" },
+            { scale: 1.0, duration: ACTION, ease: "power2.out" },
             slideLabel
           );
 
           scrollTl.call(() => {
             const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
             triggerInfoHook(isForward ? index : index - 1);
-          }, [], `${slideLabel}+=1.5`);
+          }, [], `${slideLabel}+=0.6`);
         });
       }
 
-      scrollTl.to({}, { duration: 1.5 });
+      scrollTl.to({}, { duration: DEAD_SCROLL });
 
       // ── STEP C: APP SECTION SLIDES UP OVER INFO WRAP ──
       scrollTl.addLabel("appSectionStart");
 
       scrollTl.set(".project-app-wrap", { visibility: "visible" }, "appSectionStart")
-              .to(".project-app-wrap", { yPercent: 0, duration: 3.5, ease: "power2.inOut" }, "appSectionStart");
+              .to(".project-app-wrap", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "appSectionStart");
 
       scrollTl.to(
         ".appsec-phone-wrapper",
-        { y: 0, opacity: 1, duration: 1.5, ease: "power2.out" },
-        "appSectionStart+=1.0"
+        { y: 0, opacity: 1, duration: ACTION * 0.8, ease: "power2.out" },
+        "appSectionStart+=0.4"
       );
 
+      scrollTl.to({}, { duration: DEAD_SCROLL });
+
       // ── STEP D: FAQ SECTION SLIDES UP OVER APP WRAP ──
-      scrollTl.addLabel("faqStart", "appSectionStart+=3.5");
+      scrollTl.addLabel("faqStart");
 
       scrollTl.set(".faq-scroll-wrapper", { visibility: "visible" }, "faqStart")
-              .to(".faq-scroll-wrapper", { yPercent: 0, ease: "power2.inOut", duration: 3.5 }, "faqStart");
+              .to(".faq-scroll-wrapper", { yPercent: 0, ease: "power2.inOut", duration: ACTION }, "faqStart");
+
+      scrollTl.to({}, { duration: DEAD_SCROLL });
 
       // ── STEP E: SYNCHRONIZED FAQ FADE-OUT & FOOTER SLIDE-UP ──
-      scrollTl.addLabel("footerStart", "faqStart+=3.5");
+      scrollTl.addLabel("footerStart");
 
       scrollTl.to(
         ".faq-content", 
         { 
           opacity: 0, 
           y: -40, 
-          duration: 1.0, 
+          duration: ACTION * 0.4, 
           ease: "power2.in",
           pointerEvents: "none" 
         }, 
@@ -274,7 +295,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
               .fromTo(
                 ".footer-scroll-wrapper",
                 { yPercent: 100 },
-                { yPercent: 0, ease: "power2.out", duration: 2.5 },
+                { yPercent: 0, ease: "power2.inOut", duration: ACTION },
                 "footerStart"
               );
 
@@ -317,7 +338,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
         </div>
 
         <div 
-          className="project-app-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[120vh] min-h-[120vh] structural-layer"
+          className="project-app-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[120vh] md:h-[100vh]  structural-layer"
           style={{ 
             zIndex: 60, 
             visibility: "hidden", 

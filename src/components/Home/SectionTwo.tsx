@@ -103,13 +103,11 @@ export default function SectionTwo() {
 
       {/* CONTENT BLOCK OVERLAY (FIRST FRAME TEXT) */}
       <div className="section-container absolute inset-0 z-10 h-full flex flex-col justify-end pointer-events-none">
-        <div className="flex flex-col items-end text-right gap-2 lg:gap-3 p-4 md:p-8">
-          <h2 className="s2-title-main font-display text-[#F4EEDF] !font-[100] text-3xl md:text-5xl reveal-text">
-            Premium Pool <br />
-          </h2>
-          <p className="s2-title-sub font-body text-[#F4EEDF] text-sm md:text-base reveal-text">
-            Solution for Every Need
-          </p>
+        <div className="s2-body flex flex-col  items-end text-right gap-2 lg:gap-3 p-4 md:p-8">
+
+                      <p className="reveal-text text-[#F4EEDF] font-body text-sm md:text-base leading-relaxed text-right w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px]">
+              From renovations to new builds, we design and construct pools that combine style, functionality, and durability.
+            </p>
         </div>
       </div>
 
@@ -117,10 +115,13 @@ export default function SectionTwo() {
       <div className="absolute inset-0 z-20 grid grid-cols-1 lg:grid-cols-2 w-full h-full pointer-events-none">
         {/* LEFT COLUMN: LANDING REFERENCE */}
         <div className="relative h-full overflow-hidden !pt-58 md:!pt-66 lg:!pt-36">
-          <div className="s2-body w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px] !mb-33 md:!mb-80 lg:!mb-0 h-[100px] !ml-[20px] md:!ml-[30px] lg:!ml-[65px]">
-            <p className="reveal-text text-[#F4EEDF] font-body text-sm md:text-base leading-relaxed text-left">
-              From renovations to new builds, we design and construct pools that combine style, functionality, and durability.
-            </p>
+          <div className="   !mb-33 md:!mb-80 lg:!mb-0 h-[100px] !ml-[20px] md:!ml-[30px] lg:!ml-[65px]">
+          <h2 className="s2-title-main font-display text-[#F4EEDF] !font-[100] text-3xl md:text-5xl reveal-text ">
+            Premium Pool 
+          </h2>
+          <p className="s2-title-sub font-body text-[#F4EEDF] text-sm md:text-base reveal-text">
+            Solution for Every Need
+          </p>
           </div>
         </div>
 

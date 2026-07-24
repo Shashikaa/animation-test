@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, MutableR
 import { usePathname } from "next/navigation";
 
 export const PAGES_WITH_OWN_PRELOADER: string[] = [];
+const EXCLUDED_PRELOADER_PATHS = ["/terms", "/privacy-policy"];
 
 interface SiteContextProps {
   menuOpen: boolean;
@@ -20,7 +21,7 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
   const [preloaderDone, setPreloaderDone] = useState(false);
   const pathname = usePathname();
   const smootherRef = useRef<any>(null);
-  
+
   const isBrowserNavRef = useRef(false);
   const isFirstMountRef = useRef(true);
 
@@ -36,6 +37,13 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // 🌟 If current route is excluded, mark as done immediately
+    if (EXCLUDED_PRELOADER_PATHS.includes(pathname)) {
+      setPreloaderDone(true);
+      document.body.classList.remove("preloading");
+      return;
+    }
+
     if (isBrowserNavRef.current) {
       isBrowserNavRef.current = false;
       return;
@@ -43,7 +51,7 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
 
     if (isFirstMountRef.current && pathname === "/") {
       isFirstMountRef.current = false;
-      return; 
+      return;
     }
 
     // Standard Navigation Configuration resets safely
@@ -59,13 +67,13 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   return (
-    <SiteContext.Provider 
-      value={{ 
-        menuOpen, 
-        setMenuOpen, 
-        preloaderDone, 
-        setPreloaderDone, 
-        smootherRef 
+    <SiteContext.Provider
+      value={{
+        menuOpen,
+        setMenuOpen,
+        preloaderDone,
+        setPreloaderDone,
+        smootherRef,
       }}
     >
       {children}

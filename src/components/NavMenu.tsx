@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconMark } from "./IconMark";
 import { HEADER_LOGO_SCALE, LOGO_COLOR, LOGO_ICON_W, LOGO_ICON_H, LOGO_GAP } from "./Preloader";
@@ -48,7 +48,6 @@ function PoolsSVG({ width, height }: { width: number; height: number }) {
   );
 }
 
-// Global logo link element template wrapped with <a> tag
 function SharedLogoMarkup({ onClose }: { onClose?: () => void }) {
   return (
     <a
@@ -56,7 +55,7 @@ function SharedLogoMarkup({ onClose }: { onClose?: () => void }) {
       onClick={onClose}
       id="header-logo-inner"
       style={{
-        display: "flex",
+        display: "inline-flex",
         alignItems: "center",
         gap: LOGO_GAP,
         position: "relative",
@@ -85,13 +84,12 @@ function SharedLogoMarkup({ onClose }: { onClose?: () => void }) {
   );
 }
 
-// Close button updated to use /closebtn.svg from the public folder
-function CloseButton({ onClick }: { onClick: () => void }) {
+function CloseButton({ onClick, className }: { onClick: () => void; className?: string }) {
   return (
     <button
       onClick={onClick}
       aria-label="Close menu"
-      className="!flex !items-center !justify-center !p-1.5 !bg-transparent !border-none !cursor-pointer !opacity-85 hover:!opacity-100 hover:!rotate-90 !transition-[opacity,transform] !duration-200 !ease-in-out"
+      className={`!flex !items-center !justify-center !p-1.5 !bg-transparent !border-none !cursor-pointer !opacity-85 hover:!opacity-100 hover:!rotate-90 !transition-[opacity,transform] !duration-200 !ease-in-out ${className ?? ""}`}
     >
       <img src="/closebtn.svg" alt="Close" className="!w-8 !h-8 !block !object-contain" />
     </button>
@@ -100,25 +98,21 @@ function CloseButton({ onClick }: { onClick: () => void }) {
 
 interface Layer { index: number; key: number }
 
-function ImagePanel({ activeIndex, isReverse }: { activeIndex: number; isReverse: boolean }) {
-  const [layers, setLayers] = useState<Layer[]>([{ index: 0, key: 0 }]);
-  const keyRef       = useRef(1);
-  const prevIndexRef = useRef(0);
+function ImagePanel({ activeIndex }: { activeIndex: number }) {
+  const [layers, setLayers] = useState<Layer[]>([{ index: activeIndex, key: 0 }]);
+  const keyRef = useRef(1);
 
   useEffect(() => {
-    if (activeIndex === prevIndexRef.current) return;
-    prevIndexRef.current = activeIndex;
-    keyRef.current += 1;
-    const newKey = keyRef.current;
     setLayers(prev => {
-      const bottom = prev[prev.length - 1];
-      return [bottom, { index: activeIndex, key: newKey }];
+      const currentBottom = prev[prev.length - 1];
+      if (currentBottom.index === activeIndex) return prev;
+      keyRef.current += 1;
+      return [currentBottom, { index: activeIndex, key: keyRef.current }];
     });
   }, [activeIndex]);
 
-  const DURATION = 0.85;
-  const EASE     = [0.16, 1, 0.3, 1] as const;
-  const incomingClipInitial = isReverse ? "inset(0% 0% 100% 0%)" : "inset(100% 0% 0% 0%)";
+  const DURATION = 0.65;
+  const EASE = [0.16, 1, 0.3, 1] as const;
 
   return (
     <div className="!relative !w-full !h-full !overflow-hidden">
@@ -127,29 +121,26 @@ function ImagePanel({ activeIndex, isReverse }: { activeIndex: number; isReverse
         return isIncoming ? (
           <motion.div
             key={layer.key}
-            initial={{ clipPath: incomingClipInitial }}
+            initial={{ clipPath: "inset(100% 0% 0% 0%)" }}
             animate={{ clipPath: "inset(0% 0% 0% 0%)" }}
             transition={{ duration: DURATION, ease: EASE }}
             onAnimationComplete={() => setLayers(prev => prev.slice(-1))}
-            className="!absolute !inset-0"
+            className="!absolute !inset-0 !z-10"
           >
             <motion.img
               src={NAV_LINKS[layer.index].image}
               alt={NAV_LINKS[layer.index].label}
-              initial={{ scale: 1.12 }}
+              initial={{ scale: 1.1 }}
               animate={{ scale: 1 }}
               transition={{ duration: DURATION, ease: EASE }}
               className="!w-full !h-full !object-cover !block"
             />
           </motion.div>
         ) : (
-          <div key={layer.key} className="!absolute !inset-0 !overflow-hidden">
-            <motion.img
+          <div key={layer.key} className="!absolute !inset-0 !z-0 !overflow-hidden">
+            <img
               src={NAV_LINKS[layer.index].image}
               alt={NAV_LINKS[layer.index].label}
-              initial={{ scale: 1 }}
-              animate={{ scale: layers.length > 1 ? 1.08 : 1 }}
-              transition={{ duration: DURATION, ease: EASE }}
               className="!w-full !h-full !object-cover !block"
             />
           </div>
@@ -249,22 +240,23 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
             <CloseButton onClick={onClose} />
           </div>
 
-          <div className="!flex-1 !flex !flex-col !px-12 !pt-[60px]">
+          <div className="!flex-1 !flex !flex-col !px-6 md:!px-10 !pt-[80px]">
             <motion.nav
               variants={linkContainerVariants}
               initial="hidden"
               animate="visible"
               exit="hidden"
+              className="!flex !flex-col !items-start"
             >
               {NAV_LINKS.map(({ label, href }) => (
                 <motion.div key={label} variants={linkVariants} className="!overflow-hidden">
                   <a
                     href={href}
                     onClick={onClose}
-                    className="!block !no-underline !leading-[2.5] !cursor-pointer"
+                    className="!inline-block !no-underline !leading-[3.0] md:!leading-[4.5] !cursor-pointer"
                   >
                     <span
-                      className="font-display !inline-block !select-none !font-normal !text-[24px] !leading-none !text-[#F4EEDF] !uppercase !tracking-wider"
+                      className="font-display !inline-block !select-none !font-normal !text-[24px] md:!text-[30px] !leading-none !text-[#F4EEDF] !uppercase !tracking-wider"
                     >
                       {label}
                     </span>
@@ -280,7 +272,7 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="!px-12 !pb-[68px]"
+            className="!px-6 md:!px-10 !pb-[68px]"
           >
             <div className="font-body !mb-6">
               <p className="!m-0 !mb-3 !text-sm">
@@ -317,21 +309,48 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
 
 // ── DESKTOP/TABLET MENU ───────────────────────────────────
 function DesktopMenu({ open, onClose }: NavMenuProps) {
+  const initialActiveIndex = useMemo(() => {
+    if (typeof window === "undefined") return 0;
+    const currentPath = window.location.pathname;
+    const idx = NAV_LINKS.findIndex(link => link.href === currentPath);
+    return idx !== -1 ? idx : 0;
+  }, []);
+
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [activeIndex,   setActiveIndex]  = useState(0);
-  const menuRef   = useRef<HTMLDivElement>(null);
-  const isHovered = hoveredIndex !== null;
-  const isReverse = !isHovered;
+  const [activeIndex, setActiveIndex]   = useState(initialActiveIndex);
+  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseEnter = (i: number) => {
+  useEffect(() => {
+    if (hoveredIndex === null) {
+      setActiveIndex(initialActiveIndex);
+    }
+  }, [initialActiveIndex, hoveredIndex]);
+
+  const handleMouseEnter = useCallback((i: number) => {
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    
     setHoveredIndex(i);
-    if (i !== activeIndex) setActiveIndex(i);
-  };
+    
+    hoverTimerRef.current = setTimeout(() => {
+      setActiveIndex(i);
+    }, 50);
+  }, []);
 
-  const handleMouseLeave = () => {
-    setHoveredIndex(null);
-    if (activeIndex !== 0) setActiveIndex(0);
-  };
+  const handleMouseLeaveNav = useCallback(() => {
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    
+    hoverTimerRef.current = setTimeout(() => {
+      setHoveredIndex(null);
+      setActiveIndex(initialActiveIndex);
+    }, 100);
+  }, [initialActiveIndex]);
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -372,21 +391,27 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
             willChange: "transform, opacity",
           }}
         >
-          {/* ── LEFT PANEL (Smaller panel: 38% width) ── */}
+          {/* Top-Right Absolute Close Button for Desktop/Tablet */}
+          <CloseButton 
+            onClick={onClose} 
+            className="!absolute !top-8 !right-8 lg:!right-12 !z-[30]" 
+          />
+
+          {/* ── LEFT PANEL ── */}
           <div className="!relative !flex !flex-col !justify-between !pt-8 !pb-12 !px-12 lg:!px-16 !w-full !h-full !z-10">
-            {/* Top Left Linked Logo Area */}
-            <div className="!flex !items-center !h-12">
+            {/* Header section with Logo */}
+            <div className="!flex !items-center !justify-between !h-12 !w-full">
               <SharedLogoMarkup onClose={onClose} />
             </div>
 
-            {/* Nav Menu Links Center Section */}
             <div className="!my-auto !py-8">
               <motion.nav
                 variants={linkContainerVariants}
                 initial="hidden"
                 animate="visible"
                 exit="hidden"
-                className="!flex !flex-col !gap-5"
+                onMouseLeave={handleMouseLeaveNav}
+                className="!flex !flex-col !gap-8 !items-start"
               >
                 {NAV_LINKS.map(({ label, href }, i) => (
                   <motion.div key={label} variants={linkVariants} className="!overflow-hidden">
@@ -396,14 +421,12 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
                       isActive={hoveredIndex === i}
                       onClose={onClose}
                       onMouseEnter={() => handleMouseEnter(i)}
-                      onMouseLeave={handleMouseLeave}
                     />
                   </motion.div>
                 ))}
               </motion.nav>
             </div>
 
-            {/* Bottom Contact & Social Links Section */}
             <motion.div
               key="desktop-bottom"
               variants={bottomVariants}
@@ -439,14 +462,9 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
             </motion.div>
           </div>
 
-          {/* ── RIGHT PANEL (Larger panel covering full right screen) ── */}
+          {/* ── RIGHT PANEL (Desktops only) ── */}
           <div className="!hidden lg:!block !relative !w-full !h-full !overflow-hidden">
-            <ImagePanel activeIndex={activeIndex} isReverse={isReverse} />
-            
-            {/* Close Button using /closebtn.svg floating on Top Right */}
-            <div className="!absolute !top-8 !right-12 !z-20">
-              <CloseButton onClick={onClose} />
-            </div>
+            <ImagePanel activeIndex={activeIndex} />
           </div>
         </motion.div>
       )}
@@ -459,7 +477,8 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
+    // Standardize mobile/tablet switch breakpoint at 1023px (Tailwind lg boundary)
+    const mq = window.matchMedia("(max-width: 1023px)");
     setIsMobile(mq.matches);
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener("change", handler);
@@ -471,12 +490,12 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
     : <DesktopMenu open={open} onClose={onClose} />;
 }
 
-// ── NAV LINK (desktop/tablet only) ──
+// ── NAV LINK ──
 function NavLink({
-  label, href, isActive, onClose, onMouseEnter, onMouseLeave,
+  label, href, isActive, onClose, onMouseEnter,
 }: {
   label: string; href: string; isActive: boolean; onClose: () => void;
-  onMouseEnter: () => void; onMouseLeave: () => void;
+  onMouseEnter: () => void;
 }) {
   const isCurrentPage = typeof window !== "undefined" && window.location.pathname === href;
   const highlighted = isActive || isCurrentPage;
@@ -486,17 +505,15 @@ function NavLink({
       href={href}
       onClick={onClose}
       onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
       onFocus={onMouseEnter}
-      onBlur={onMouseLeave}
-      className="!block !no-underline !leading-none !cursor-pointer"
+      className="!inline-block !no-underline !leading-none !cursor-pointer"
     >
       <span
         className="font-display !inline-block !select-none !font-normal !uppercase !not-italic !leading-none !transition-[color,letter-spacing] !duration-[250ms,350ms] !ease-in-out"
         style={{
           fontSize: "clamp(22px, 2vw, 28px)",
           color: highlighted ? "#F4EEDF" : "rgba(244, 238, 223, 0.6)",
-          letterSpacing: "0.08em",
+
         }}
       >
         {label}

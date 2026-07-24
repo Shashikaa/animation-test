@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import gsap from "gsap";
 
 const slides = [
@@ -21,15 +21,167 @@ const slides = [
   },
 ];
 
-export default function SectionFive() {
-  useEffect(() => {
-    // Smooth opacity system base layers setup
-    gsap.set(".s5-slide-card", { opacity: 0, pointerEvents: "none" });
-    gsap.set(".s5-slide-card-0", { opacity: 1, pointerEvents: "auto" });
+const TEXT_DURATION = 0.55;
+
+/**
+ * Wraps target inner words/lines inside .gs-line and .gs-line-inner elements
+ * to achieve clean overflow-hidden line reveals matching SectionTwo.
+ */
+function splitElementIntoLines(el: HTMLElement) {
+  if (el.dataset.originalHtml !== undefined) return;
+
+  el.dataset.originalHtml = el.innerHTML;
+  el.style.transform = "none";
+
+  el.innerHTML = el.innerHTML.replace(/(\S+)/g, '<span class="gs-word">$1</span>');
+  const words = Array.from(el.querySelectorAll<HTMLElement>(".gs-word"));
+
+  const lineMap = new Map<number, HTMLElement[]>();
+  words.forEach((w) => {
+    const top = Math.round(w.getBoundingClientRect().top);
+    if (!lineMap.has(top)) lineMap.set(top, []);
+    lineMap.get(top)!.push(w);
+  });
+
+  const lines = Array.from(lineMap.values());
+  el.innerHTML = "";
+
+  lines.forEach((group) => {
+    const lineOuter = document.createElement("span");
+    lineOuter.className = "gs-line";
+    lineOuter.style.cssText =
+      "display:block; overflow:hidden; padding-bottom:0.25em; margin-bottom:-0.25em;";
+
+    const lineInner = document.createElement("span");
+    lineInner.className = "gs-line-inner";
+    lineInner.style.cssText =
+      "display:block; will-change:transform, opacity; padding-bottom:0.25em;";
+
+    group.forEach((w, i) => {
+      lineInner.appendChild(w);
+      if (i < group.length - 1) {
+        lineInner.appendChild(document.createTextNode(" "));
+      }
+    });
+
+    lineOuter.appendChild(lineInner);
+    el.appendChild(lineOuter);
+  });
+}
+
+type SectionFiveProps = {
+  isActive?: boolean;
+};
+
+export default function SectionFive({ isActive = true }: SectionFiveProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const currentRef = useRef<number>(0);
+  const [current, setCurrent] = useState(0);
+
+  // Animates the split lines into view sequentially
+  function animateTextIn(index: number) {
+    if (!containerRef.current) return;
+    const targets = containerRef.current.querySelectorAll(
+      `.s5-text-group-${index + 1} .gs-line-inner`
+    );
+    targets.forEach((inner, idx) => {
+      gsap.killTweensOf(inner);
+      gsap.fromTo(
+        inner,
+        { y: 30, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: TEXT_DURATION,
+          ease: "power2.out",
+          delay: idx * 0.03,
+        }
+      );
+    });
+  }
+
+  // Animates the active text lines out of view
+  function animateTextOut(index: number, callback?: () => void) {
+    if (!containerRef.current) return;
+    const targets = containerRef.current.querySelectorAll(
+      `.s5-text-group-${index + 1} .gs-line-inner`
+    );
+    if (targets.length === 0) {
+      if (callback) callback();
+      return;
+    }
+    gsap.killTweensOf(Array.from(targets));
+    gsap.to(Array.from(targets), {
+      y: -20,
+      opacity: 0,
+      duration: 0.35,
+      ease: "power2.in",
+      stagger: 0.02,
+      onComplete: callback,
+    });
+  }
+
+  const goTo = useCallback((next: number) => {
+    const prev = currentRef.current;
+    if (next === prev || !containerRef.current) return;
+
+    currentRef.current = next;
+    setCurrent(next);
+
+    animateTextOut(prev, () => {
+      slides.forEach((_, i) => {
+        const el = containerRef.current?.querySelector(`.s5-text-group-${i + 1}`) as HTMLElement;
+        if (el) {
+          el.style.opacity = i === next ? "1" : "0";
+          el.style.pointerEvents = i === next ? "auto" : "none";
+          el.style.visibility = i === next ? "visible" : "hidden";
+        }
+      });
+      animateTextIn(next);
+    });
   }, []);
 
+  // Initialize line splits on mount
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const timeout = setTimeout(() => {
+      if (!containerRef.current) return;
+      const splitTargets = containerRef.current.querySelectorAll<HTMLElement>(".s5-split-text-target");
+      splitTargets.forEach((el) => splitElementIntoLines(el));
+
+      slides.forEach((_, i) => {
+        if (i !== 0) {
+          gsap.set(
+            containerRef.current!.querySelectorAll(`.s5-text-group-${i + 1} .gs-line-inner`),
+            { y: 30, opacity: 0 }
+          );
+        }
+      });
+    }, 50);
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  // Expose step controller hook globally for GSAP ScrollTrigger timelines
+  useEffect(() => {
+    (window as any)._sec5GoTo = (targetIdx: number) => {
+      if (targetIdx === currentRef.current) return;
+      goTo(targetIdx);
+    };
+    return () => {
+      delete (window as any)._sec5GoTo;
+    };
+  }, [goTo]);
+
+  useEffect(() => {
+    if (isActive && containerRef.current) {
+      animateTextIn(currentRef.current);
+    }
+  }, [isActive]);
+
   return (
-    <section className="relative w-full h-full min-h-screen overflow-hidden flex flex-col lg:grid lg:grid-cols-2 bg-[#F4EEDF]">
+    <section ref={containerRef} className="relative w-full h-full min-h-screen overflow-hidden flex flex-col lg:grid lg:grid-cols-2 bg-[#F4EEDF]">
       
       {/* TOP / LEFT SIDE: Image + Title Overlay */}
       <div className="relative w-full h-[65svh] lg:h-full lg:min-h-screen overflow-hidden bg-[#19211C]">
@@ -37,16 +189,14 @@ export default function SectionFive() {
         <div className="s5-bg absolute -top-[20%] left-0 w-full h-[140%] bg-cover bg-center will-change-transform bg-[url('/projects.webp')]" />
         
         <div className="absolute z-10 bottom-[30px] md:bottom-[60px] left-[24px] md:left-[65px] flex flex-col !gap-2 md:!gap-4 overflow-hidden">
-          {/* Added .s5-title class anchor here */}
           <h2
-            className=" text-3xl sm:text-4xl md:text-5xl lg:text-6xl !font-[100] text-[#F4EEDF]"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl !font-[100] text-[#F4EEDF]"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Decades of Expertise
           </h2>
-          {/* Added .s5-desc class anchor here */}
           <p 
-            className=" text-sm sm:text-base md:text-lg text-[#F4EEDF]" 
+            className="text-sm sm:text-base md:text-lg text-[#F4EEDF]" 
             style={{ fontFamily: "var(--font-body)" }}
           >
             Unmatched Craftsmanship
@@ -54,22 +204,28 @@ export default function SectionFive() {
         </div>
       </div>
 
-      {/* BOTTOM / RIGHT SIDE: Smooth Fixed Card Container Area */}
+      {/* BOTTOM / RIGHT SIDE: Animated Card Container Area */}
       <div className="s5-right-panel relative w-full flex-1 lg:h-full lg:min-h-screen bg-[#F4EEDF] flex items-center justify-center px-6 py-8 md:px-12">
         <div className="relative w-full max-w-[320px] h-[180px] sm:h-[220px] lg:h-[250px] bg-[#F4EEDF]">
           {slides.map((slide, i) => (
             <div
               key={i}
-              className={`s5-slide-card s5-slide-card-${i} absolute inset-0 flex flex-col justify-center gap-2 md:gap-4 w-full h-full`}
+              className={`s5-text-group s5-text-group-${i + 1} absolute inset-0 flex flex-col justify-center gap-2 md:gap-4 w-full h-full`}
+              style={{
+                opacity: current === i ? 1 : 0,
+                pointerEvents: current === i ? "auto" : "none",
+                visibility: current === i ? "visible" : "hidden",
+                transition: "opacity 0.4s ease, visibility 0.4s",
+              }}
             >
-              <h3 className="font-normal text-[#19211C] font-body text-4xl sm:text-5xl lg:text-3xl">
+              <h3 className="s5-split-text-target font-normal text-[#19211C] font-body text-4xl sm:text-5xl lg:text-3xl">
                 {slide.stat}
               </h3>
               <div className="flex flex-col gap-1">
-                <p className="font-medium text-sm sm:text-base text-[#19211C]">
+                <p className="s5-split-text-target font-medium text-sm sm:text-base text-[#19211C]">
                   {slide.label}
                 </p>
-                <p className="text-xs sm:text-sm md:text-base text-[#19211C]/80" style={{ fontFamily: "var(--font-body)" }}>
+                <p className="s5-split-text-target text-xs sm:text-sm md:text-base text-[#19211C]/80" style={{ fontFamily: "var(--font-body)" }}>
                   {slide.desc}
                 </p>
               </div>

@@ -135,7 +135,7 @@ export default function SectionCTA() {
 
         {/* Form — single column on mobile, changes to desktop grid on tablet (md:) */}
         <div
-          className="flex flex-col md:grid md:grid-cols-2 gap-2 md:gap-x-[72px] md:gap-y-4 w-full max-w-[500px] md:max-w-[100%] md:!mt-12 "
+          className="flex flex-col md:grid md:grid-cols-2 gap-2 md:gap-x-[72px] md:gap-y-4 w-full max-w-[500px] md:max-w-[100%] !mt-8 md:!mt-34 "
           style={{
             margin: "0 auto",
           }}
