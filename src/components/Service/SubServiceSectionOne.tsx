@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import WaveCanvas from "../WaveCanvas"; 
 import { SectionOneData } from "../../app/services/[slug]/data";
 
 type SubServiceSectionOneProps = {
@@ -31,23 +30,14 @@ export default function SubServiceSectionOne({ data }: SubServiceSectionOneProps
       ref={sectionRef}
       className="s10-section relative w-full h-screen overflow-hidden bg-[#0a0a0a]"
     >
-      {/* ── Background WebGL Layer with Dark Overlay ── */}
-{/* ── Background WebGL Layer (Desktop) / Static Image Layer (Mobile & Tablet) ── */}
-<div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full mix-blend-normal">
-  {/* Show WebGL canvas only on desktop (large screens and up) */}
-  <div className="hidden lg:block w-full h-full">
-    <WaveCanvas imageSrc="/pool-dark-bg.webp" />
-  </div>
-
-  {/* Show static background image on mobile and tablet (hidden on desktop) */}
-  <div className="block lg:hidden w-full h-full">
-    <img 
-      src="/pool-dark-bg.webp" 
-      alt="Background" 
-      className="w-full h-full object-cover"
-    />
-  </div>
-</div>
+      {/* ── Background Static Image Layer ── */}
+      <div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full mix-blend-normal">
+        <img 
+          src="/pool-dark-bg.webp" 
+          alt="Background" 
+          className="w-full h-full object-cover"
+        />
+      </div>
 
       {/* ── Foreground Layout Grid ── */}
       <div className="s10-content-initial section-container relative z-10 w-full h-full flex flex-col justify-between max-lg:justify-start max-lg:gap-4 !pt-[100px] lg:!pt-[18vh] pb-[10vh]">
@@ -83,7 +73,7 @@ export default function SubServiceSectionOne({ data }: SubServiceSectionOneProps
         <img
           src={data.sideImageUrl} 
           alt={data.title}
-          className="s10-img-element w-full   h-full object-cover origin-center relative z-10"
+          className="s10-img-element w-full h-full object-cover origin-center relative z-10"
         />
         {/* Image Specific Dark Overlay */}
         <div className="absolute inset-0 bg-black/20 z-20 pointer-events-none mix-blend-multiply" />

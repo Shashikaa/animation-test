@@ -1,12 +1,11 @@
-// components/SectionCTA.tsx
 "use client";
 import { useState, useRef, useEffect } from "react";
-import WaveCanvas from "./WaveCanvas"; // Path verified matching Section 10
+import WaveCanvas from "./WaveCanvas";
 
 export default function SectionCTA() {
   return (
     <section
-      className="section-cta !min-h-screen"
+      className="about-section-cta section-cta !min-h-screen"
       style={{
         position: "relative",
         width: "100%",
@@ -14,12 +13,11 @@ export default function SectionCTA() {
         overflow: "hidden",
       }}
     >
-<div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full">
+      <div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full">
         {/* Show WebGL canvas only on desktop */}
-
-      <div className="hidden lg:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
-        <WaveCanvas imageSrc="/CTA.webp" />
-      </div>
+        <div className="hidden lg:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
+          <WaveCanvas imageSrc="/CTA.webp" />
+        </div>
 
         {/* Show static background image on mobile and tablet */}
         <div className="block lg:hidden w-full h-full">
@@ -31,10 +29,7 @@ export default function SectionCTA() {
         </div>
       </div>
 
-
-      {/* ══════════════════════════════════════════
-          DESKTOP layout — completely unchanged
-          ══════════════════════════════════════════ */}
+      {/* DESKTOP layout */}
       <div
         className="hidden lg:flex section-container cta-inner-desktop "
         style={{
@@ -45,7 +40,6 @@ export default function SectionCTA() {
           gap: 44,
           height: "100%",
           maxWidth: 1440,
-   
           padding: "0 48px",
         }}
       >
@@ -54,7 +48,7 @@ export default function SectionCTA() {
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <h2
               className="font-display"
-              style={{ color: "#F4EEDF",  fontWeight: 100,  margin: 0 }}
+              style={{ color: "#F4EEDF", fontWeight: 100, margin: 0 }}
             >
               Ready to Build Your Dream 
             </h2>
@@ -92,9 +86,7 @@ export default function SectionCTA() {
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════
-          MOBILE + TABLET layout
-          ══════════════════════════════════════════ */}
+      {/* MOBILE + TABLET layout */}
       <div
         className="flex lg:hidden cta-inner-mobile"
         style={{
@@ -108,7 +100,6 @@ export default function SectionCTA() {
           gap: 0,
         }}
       >
-        {/* Title */}
         <h2
           className="font-display !max-w-[300px] md:!max-w-[430px] "
           style={{
@@ -120,7 +111,6 @@ export default function SectionCTA() {
           Ready to Build Your Dream 
         </h2>
 
-        {/* Para */}
         <p
           className="font-body max-w-[500px]"
           style={{
@@ -133,7 +123,6 @@ export default function SectionCTA() {
           crafted for your space and lifestyle. Reach out to get started today.
         </p>
 
-        {/* Form — single column on mobile, changes to desktop grid on tablet (md:) */}
         <div
           className="flex flex-col md:grid md:grid-cols-2 gap-2 md:gap-x-[72px] md:gap-y-4 w-full max-w-[500px] md:max-w-[100%] !mt-8 md:!mt-34 "
           style={{
@@ -146,13 +135,10 @@ export default function SectionCTA() {
           <CtaInput placeholder="Post Code" name="postCode_mobile" isMobile />
           <CtaSelect placeholder="Budget Type" options={["Residential", "Commercial", "Mixed Use"]} name="budgetType_mobile" isMobile />
           <CtaSelect placeholder="Budget Range" options={["$10k – $30k", "$30k – $75k", "$75k – $150k", "$150k+"]} name="budgetRange_mobile" isMobile />
-          
-          {/* On tablet grid, make the final select pull cleanly or balance out */}
           <CtaSelect placeholder="Preferred Contract Method" options={["Fixed Price", "Cost Plus", "Design & Build", "Negotiated"]} name="contractMethod_mobile" isMobile />
           <div className="hidden md:block" />
         </div>
 
-        {/* Submit — Centered via self-center */}
         <div style={{ marginTop: 44 }} className="self-center md:!self-start">
           <SubmitButton />
         </div>
@@ -161,7 +147,6 @@ export default function SectionCTA() {
   );
 }
 
-/* ── Submit button ── */
 function SubmitButton() {
   return (
     <button
@@ -199,7 +184,6 @@ function SubmitButton() {
   );
 }
 
-/* ── Input ── */
 function CtaInput({ 
   placeholder, 
   type = "text", 
@@ -250,7 +234,6 @@ function CtaInput({
   );
 }
 
-/* ── Custom Dropdown Menu with Figma Gradient ── */
 function CtaSelect({ 
   placeholder, 
   options, 
@@ -269,11 +252,8 @@ function CtaSelect({
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        boxSetIsOpen(false);
+        setIsOpen(false);
       }
-    }
-    function boxSetIsOpen(val: boolean) {
-      setIsOpen(val);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);

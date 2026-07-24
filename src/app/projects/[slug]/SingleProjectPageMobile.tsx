@@ -13,7 +13,6 @@ import { FullServiceData } from "./data";
 gsap.registerPlugin(ScrollTrigger);
 
 type SubServicesMobileProps = {
-  preloaderDone: boolean;
   pageData: FullServiceData;
 };
 
@@ -22,7 +21,7 @@ const PX_PER_MAIN_PANEL = 850;
 const PX_PER_SUB_STEP = 350;   
 const PAUSE_PX = 100;          
 
-export default function SingleProjectPageMobile({ preloaderDone, pageData }: SubServicesMobileProps) {
+export default function SingleProjectPageMobile({ pageData }: SubServicesMobileProps) {
   const scopeRef = useRef<HTMLDivElement>(null);
   const [introDone, setIntroDone] = useState(false);
   const [isProjectInfoActive, setIsProjectInfoActive] = useState(false);
@@ -39,12 +38,12 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
 
   // Lock body scroll during intro cleanly
   useEffect(() => {
-    const locked = !preloaderDone || !introDone;
+    const locked = !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [preloaderDone, introDone]);
+  }, [introDone]);
 
   // Refresh ScrollTrigger only on width/orientation change
   useEffect(() => {
@@ -65,8 +64,6 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
   }, []);
 
   useLayoutEffect(() => {
-    if (!preloaderDone) return;
-
     const ctx = gsap.context(() => {
       ScrollTrigger.config({
         ignoreMobileResize: true,
@@ -104,12 +101,10 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
     }, scopeRef);
 
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   // Hero Intro Sequence
   useEffect(() => {
-    if (!preloaderDone) return;
-
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
         onComplete: () => {
@@ -128,11 +123,11 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
     }, scopeRef);
 
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   // Master Scroll Timeline
   useEffect(() => {
-    if (!introDone || !preloaderDone) return;
+    if (!introDone) return;
 
     const ctx = gsap.context(() => {
       gsap.ticker.lagSmoothing(0);
@@ -306,7 +301,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
     return () => {
       ctx.revert();
     };
-  }, [introDone, preloaderDone, pageData.images, pageData.slides, pageData.title]);
+  }, [introDone, pageData.images, pageData.slides, pageData.title]);
 
   return (
     <div 
@@ -338,7 +333,7 @@ export default function SingleProjectPageMobile({ preloaderDone, pageData }: Sub
         </div>
 
         <div 
-          className="project-app-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[120vh] md:h-[100vh]  structural-layer"
+          className="project-app-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[120vh] md:h-[100vh] structural-layer"
           style={{ 
             zIndex: 60, 
             visibility: "hidden", 

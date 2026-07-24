@@ -127,7 +127,7 @@ useEffect(() => {
         
         {/* Dark Overlay */}
         <div 
-          className="absolute inset-0 z-10 pointer-events-none opacity-20" 
+          className="absolute inset-0 z-10 pointer-events-none opacity-10" 
           style={{ background: "linear-gradient(135deg, #162D24 0%, #094146 100%)" }} 
         />
         

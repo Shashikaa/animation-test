@@ -18,11 +18,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
-type AboutDesktopProps = {
-  preloaderDone: boolean;
-};
-
-export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
+export default function AboutDesktop() {
   const { setPreloaderDone } = useSite();
   const [introDone, setIntroDone] = useState(false);
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
@@ -42,12 +38,12 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
   }, [setPreloaderDone]);
 
   useEffect(() => {
-    const locked = !preloaderDone || !introDone;
+    const locked = !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [preloaderDone, introDone]);
+  }, [introDone]);
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -78,8 +74,6 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
   }, []);
 
   useEffect(() => {
-    if (!preloaderDone) return;
-
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
         onComplete: () => setIntroDone(true)
@@ -101,7 +95,7 @@ export default function AboutDesktop({ preloaderDone }: AboutDesktopProps) {
     }, scopeRef);
 
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   useEffect(() => {
     if (!introDone) return;

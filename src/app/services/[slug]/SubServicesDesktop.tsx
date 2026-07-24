@@ -17,11 +17,10 @@ gsap.registerPlugin(ScrollTrigger);
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
 type SubServicesDesktopProps = {
-  preloaderDone: boolean;
   pageData: FullServiceData;
 };
 
-export default function SubServicesDesktop({ preloaderDone, pageData }: SubServicesDesktopProps) {
+export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps) {
   const { setPreloaderDone } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
   
@@ -38,19 +37,19 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
   }, [setPreloaderDone]);
 
   useEffect(() => {
-    const locked = !preloaderDone || !introDone;
+    const locked = !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [preloaderDone, introDone]);
+  }, [introDone]);
 
   useLayoutEffect(() => {
-    if (!preloaderDone) return;
     const ctx = gsap.context(() => {
       gsap.set(".service-hero-bg", { scale: 1.3, xPercent: 0, transformOrigin: "center center" });
-      gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: 30 });
-      gsap.set(".services-hero-top-layer", { width: "100%", xPercent: 0 }); 
+      gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: -60 });
+      gsap.set(".services-hero-top-layer", { width: "100%" }); 
+      
       gsap.set(".section-one-wrap", { clipPath: "inset(100% 0% 0% 0%)" });
       
       gsap.set(".s10-seq-container", { y: 0 });
@@ -70,18 +69,16 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
       gsap.set(".services-footer-wrap", { zIndex: 96 });
     }, scopeRef);
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   useEffect(() => {
-    if (!preloaderDone) return;
-
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
         onComplete: () => setIntroDone(true)
       });
 
       introTl.to(".service-hero-bg", {
-        scale: 1.0, 
+        scale: 1.1, 
         duration: 2.2,
         ease: "power2.out"
       }, 0);
@@ -96,7 +93,7 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
     }, scopeRef);
 
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   useEffect(() => {
     if (!introDone) return;
@@ -130,7 +127,6 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
       });
 
       const scrubValue = 1.2;
-      const revealedElements = new Set<string>();
 
       const buildTimeline = () => {
         ScrollTrigger.refresh();
@@ -185,20 +181,13 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
           }
         });
 
-        // ── PHASE 1: Compress Hero Layout ──
-        tl.addLabel("phase1")
-          .to(".hero-text-wrap", {
-            opacity: 0,
-            y: -40,
-            duration: 1.0,
-            ease: "power1.out"
-          }, "phase1")
-          .to(".services-hero-top-layer", {
-            width: "calc(100% - 600px)", 
-            xPercent: -10,                     
-            duration: 1.0, 
-            ease: "power1.inOut",
-           }, "phase1+=0.1");
+        // ── PHASE 1: HERO HOLD BUFFER (Matched exactly with ServicesDesktop) ──
+        tl.addLabel("heroStart")
+          .set(".hero-btn", { pointerEvents: "auto", zIndex: 50 })
+          .set(".hero-text-wrap", { transformOrigin: "left bottom" }, 0)
+          .to(".hero-text-wrap", { y: 10, scale: 0.75, duration: 1.0 }, 0)
+          .to(".services-hero-top-layer", { width: "60%", duration: 1.0 }, 0)
+          .to(".hero-btn", { opacity: 0, duration: 0.1, ease: "power2.out", pointerEvents: "none" }, 0);
 
         // ── PHASE 2: Reveal Section One Sheet ──
         tl.addLabel("sec1Start")
@@ -208,7 +197,8 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
             ease: "power1.inOut"
           }, "sec1Start")
           .to(".service-hero-bg", {
-            scale: 1.1,    
+            xPercent: -8,
+            scale: 1.6,    
             duration: 1.0, 
             ease: "power1.inOut",
           }, "sec1Start");
@@ -275,7 +265,6 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
         tl.addLabel("end");
       };
 
-      // 🌟 FIXED: Instantly builds the timeline on the next animation frame without font-loading stalls
       requestAnimationFrame(buildTimeline);
 
     }, scopeRef);
@@ -297,7 +286,9 @@ export default function SubServicesDesktop({ preloaderDone, pageData }: SubServi
       <div className="services-hero-master relative w-full h-screen overflow-hidden z-10 bg-black" style={{ visibility: "visible" }}>
         
         {/* Layer 1: Hero view base */}
-        <SubServiceHero data={pageData.hero} />
+        <div className="services-hero-wrap relative z-10 pointer-events-auto w-full h-full">
+          <SubServiceHero data={pageData.hero} />
+        </div>
         
         {/* Layer 2: Section One scrolling sheet */}
         <div className="section-one-wrap absolute inset-0 w-full h-full z-20 overflow-hidden">

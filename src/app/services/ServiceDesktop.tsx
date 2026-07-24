@@ -16,11 +16,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
-type ServicesDesktopProps = {
-  preloaderDone: boolean;
-};
-
-export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps) {
+export default function ServicesDesktop() {
   const { setPreloaderDone } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
   
@@ -40,15 +36,14 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
   }, [setPreloaderDone]);
 
   useEffect(() => {
-    const locked = !preloaderDone || !introDone;
+    const locked = !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [preloaderDone, introDone]);
+  }, [introDone]);
 
   useLayoutEffect(() => {
-    if (!preloaderDone) return;
     const ctx = gsap.context(() => {
       gsap.set(".service-hero-bg", { scale: 1.3, xPercent: 0, transformOrigin: "center center" });
       gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: -60 });
@@ -64,16 +59,14 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
 
       gsap.set(".services-appsec-wrap", { visibility: "hidden", yPercent: 100 });
 
-      gsap.set([".services-section-cta", ".services-footer-wrap"], { yPercent: 100, visibility: "hidden" });
-      gsap.set(".services-section-cta", { zIndex: 70 });
-      gsap.set(".services-footer-wrap", { zIndex: 80 });
+      // Matched directly with HomeDesktop staging model
+      gsap.set(".services-section-cta", { display: "none", yPercent: 100, zIndex: 120 });
+      gsap.set(".services-footer-wrap", { display: "none", yPercent: 100, zIndex: 125 });
     }, scopeRef);
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   useEffect(() => {
-    if (!preloaderDone) return;
-
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
         onComplete: () => setIntroDone(true)
@@ -95,7 +88,7 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
     }, scopeRef);
 
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   useEffect(() => {
     if (!introDone) return;
@@ -180,16 +173,13 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
 
                 const currentProg = tl.progress();
 
-                // Get exact progress boundaries for the Section 2 internal slider
                 const sec2Card1Progress = (tl.labels["sec2_card1"] || 0) / totalDuration;
                 const appsecStartProgress = (tl.labels["appsecStart"] || 1) / totalDuration;
 
-                // 1. DISABLE SNAP ONLY INSIDE Section 2 internal slider (between Card 1 and App Section entry)
                 if (currentProg > sec2Card1Progress && currentProg < appsecStartProgress) {
                   return currentProg;
                 }
 
-                // 2. Define key snap points BEFORE and AFTER Section 2 slider
                 const snapLabels = [
                   "heroStart", 
                   "sec1Start", 
@@ -301,23 +291,17 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
         // ── SECTION 2 PANEL INTERNAL SLIDES (3 CARDS ONLY) ──
         tl.addLabel("sec2_card1", "sec2Start+=1.5")
           .to({}, { duration: 1.0 })
-          .call(() => {
-            triggerSec2Hook(0);
-          }, [], "sec2_card1");
+          .call(() => triggerSec2Hook(0), [], "sec2_card1");
 
         tl.addLabel("sec2_card2", "sec2_card1+=1.0")
           .to({}, { duration: 1.0 })
-          .call(() => {
-            triggerSec2Hook(1);
-          }, [], "sec2_card2");
+          .call(() => triggerSec2Hook(1), [], "sec2_card2");
 
         tl.addLabel("sec2_card3", "sec2_card2+=1.0")
           .to({}, { duration: 1.0 })
-          .call(() => {
-            triggerSec2Hook(2);
-          }, [], "sec2_card3");
+          .call(() => triggerSec2Hook(2), [], "sec2_card3");
 
-        // ── APP SECTION SLIDE OVER (Directly chained to Slide 3) ──
+        // ── APP SECTION SLIDE OVER ──
         tl.addLabel("appsecStart", "sec2_card3+=0.8")
           .set(".services-appsec-wrap", { visibility: "visible" })
           .to(".s2-inner-fade-target", { opacity: 1, duration: 0.5 }, "appsecStart")
@@ -331,16 +315,16 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
 
         addPlayOnceTextReveal("appsecStart", 0.35, ".services-appsec-wrap .reveal-text .gs-line-inner, .services-appsec-wrap .reveal-text > *");
 
-        // ── CTA REVEAL TRACK ──
+        // ── CTA REVEAL TRACK (Matched with HomeDesktop logic) ──
         tl.addLabel("ctaStart")
-          .set(".services-section-cta", { visibility: "visible" })
-          .to(".services-section-cta", { yPercent: 0, duration: 1.0 })
+          .set(".services-section-cta", { display: "block", zIndex: 120 })
+          .to(".services-section-cta", { yPercent: 0, duration: 1.0, ease: "power2.out" }, "ctaStart")
           .to(".services-appsec-wrap", { scale: 1.0, duration: 1.0 }, "<");
 
-        // ── FOOTER REVEAL TRACK ──
+        // ── FOOTER REVEAL TRACK (Matched with HomeDesktop logic) ──
         tl.addLabel("footerStart")
-          .set(".services-footer-wrap", { visibility: "visible" })
-          .to(".services-footer-wrap", { yPercent: 0, duration: 1.0 })
+          .set(".services-footer-wrap", { display: "block", zIndex: 125 })
+          .to(".services-footer-wrap", { yPercent: 0, duration: 1.0, ease: "power2.out" }, "footerStart")
           .to(".services-appsec-wrap", { scale: 1.05, duration: 1.0 }, "<")
           .to(".services-section-cta .cta-inner-desktop", { opacity: 0, duration: 0.7, ease: "power1.out" }, "<");
         
@@ -372,7 +356,7 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
 
   return (
     <div ref={scopeRef} className="w-full relative">
-      <div className="services-hero-master relative w-full h-screen overflow-hidden bg-black" style={{ visibility: "visible", pointerEvents:"auto" }}>
+      <div className="services-hero-master relative w-full h-screen overflow-hidden bg-black" style={{ visibility: "visible" }}>
         {/* HERO */}
         <div className="services-hero-wrap relative z-10 pointer-events-auto w-full h-full">
           <Hero />
@@ -390,11 +374,11 @@ export default function ServicesDesktop({ preloaderDone }: ServicesDesktopProps)
           <Appsection />
         </div>
         
-        <div className="services-section-cta absolute bottom-0 left-0 w-full structural-layer" style={{ zIndex: 70 }}>
+        <div className="services-section-cta absolute inset-0 h-full w-full structural-layer">
           <SectionCTA />
         </div>
         
-        <div className="services-footer-wrap absolute left-0 bottom-0 w-full structural-layer" style={{ zIndex: 80 }}>
+        <div className="services-footer-wrap absolute left-0 bottom-0 w-full structural-layer">
           <Footer />
         </div>
       </div>

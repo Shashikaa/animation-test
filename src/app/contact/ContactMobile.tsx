@@ -12,15 +12,11 @@ import Footer from "@/src/components/Footer";
 
 gsap.registerPlugin(ScrollTrigger);
 
-type ContactProps = {
-  preloaderDone: boolean;
-};
-
 // Standardized Metrics to align with AboutMobile feel
 const PX_PER_MAIN_PANEL = 850; 
 const PAUSE_PX = 100;
 
-export default function ContactMobile({ preloaderDone }: ContactProps) {
+export default function ContactMobile() {
   const { setPreloaderDone } = useSite();
   const [introDone, setIntroDone] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
@@ -33,12 +29,12 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
   }, [setPreloaderDone]);
 
   useEffect(() => {
-    const locked = !preloaderDone || !introDone;
+    const locked = !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [preloaderDone, introDone]);
+  }, [introDone]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -58,8 +54,6 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
   }, []);
 
   useLayoutEffect(() => {
-    if (!preloaderDone) return;
-
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ 
         ignoreMobileResize: true,
@@ -78,11 +72,9 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
     }, scopeRef);
 
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   useEffect(() => {
-    if (!preloaderDone) return;
-
     const ctx = gsap.context(() => {
       const masterTl = gsap.timeline({
         onComplete: () => {
@@ -95,7 +87,7 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
     }, scopeRef);
 
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   useEffect(() => {
     if (!introDone) return;
@@ -141,19 +133,20 @@ export default function ContactMobile({ preloaderDone }: ContactProps) {
 
         .to({}, { duration: DEAD_SCROLL })
 
-        .addLabel("footerStart", ">")
-        .to(".faq-content", { 
-          opacity: 0, 
-          y: -40, 
-          ease: "power2.in", 
-          duration: ACTION * 0.4 
-        }, "footerStart")
-        
-        .to(".footer-scroll-wrapper", { 
-          y: "0vh", 
-          ease: "power2.out", 
-          duration: ACTION 
-        }, "footerStart");
+.addLabel("footerStart", ">")
+// Fade out FAQ content rapidly right as the footer begins moving
+.to(".faq-content", { 
+  opacity: 0, 
+  y: -40, 
+  ease: "power3.in", // Sharper ease for a faster visual exit
+  duration: ACTION * 0.1 // Reduced from 0.4 to 0.25 so it vanishes immediately
+}, "footerStart")
+
+.to(".footer-scroll-wrapper", { 
+  y: "0vh", 
+  ease: "power2.out", 
+  duration: ACTION 
+}, "footerStart");
 
     }, scopeRef);
 

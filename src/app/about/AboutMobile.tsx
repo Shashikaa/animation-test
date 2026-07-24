@@ -15,16 +15,12 @@ import { useSite } from "@/src/app/context/SiteContext";
 
 gsap.registerPlugin(ScrollTrigger);
 
-type AboutMobileProps = {
-  preloaderDone: boolean;
-};
-
 // Touch scroll parameters
 const PX_PER_MAIN_PANEL = 850;
 const PX_PER_SUB_STEP = 350;  
 const PAUSE_PX = 100;         
 
-export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
+export default function AboutMobile() {
   const { setPreloaderDone } = useSite(); 
   const [introDone, setIntroDone] = useState(false);
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
@@ -37,14 +33,14 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
-  // Lock scrolling during preloader / intro
+  // Lock scrolling during intro
   useEffect(() => {
-    const locked = !preloaderDone || !introDone;
+    const locked = !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [preloaderDone, introDone]);
+  }, [introDone]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -64,8 +60,6 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
   }, []);
 
   useLayoutEffect(() => {
-    if (!preloaderDone) return;
-    
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ 
         ignoreMobileResize: true,
@@ -96,12 +90,10 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     }, scopeRef);
 
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   // Hero Intro Sequence
   useEffect(() => {
-    if (!preloaderDone) return;
-
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
         onComplete: () => {
@@ -117,7 +109,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
     }, scopeRef);
 
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   // Master Section Transition Scroll Timeline
   useEffect(() => {
@@ -230,7 +222,7 @@ export default function AboutMobile({ preloaderDone }: AboutMobileProps) {
       tl.addLabel("ctaStart", ">")
         .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
         .to(".about-section-cta", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart") 
-        .to(".about-section-five", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "ctaStart");
+        .to(".about-section-five", { yPercent: -2, duration: ACTION, ease: "power2.inOut" }, "ctaStart");
 
       tl.to({}, { duration: DEAD_SCROLL });
 

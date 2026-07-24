@@ -3,10 +3,9 @@
 import { useState, useEffect } from "react";
 import ContactDesktop from "./ContactDesktop";
 import ContactMobile from "./ContactMobile";
-import { useSite } from "@/src/app/context/SiteContext";
+
 export default function ContactPage() {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
-  const { preloaderDone } = useSite();
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1025);
@@ -20,9 +19,5 @@ export default function ContactPage() {
     return null; // Avoid rendering an artificial 100vh spacer div
   }
 
-  return isMobile ? (
-    <ContactMobile preloaderDone={preloaderDone} />
-  ) : (
-    <ContactDesktop preloaderDone={preloaderDone} />
-  );
+  return isMobile ? <ContactMobile /> : <ContactDesktop />;
 }

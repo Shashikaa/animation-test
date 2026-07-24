@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSite } from "@/src/app/context/SiteContext";
 import AboutDesktop from "./AboutDesktop";
 import AboutMobile from "./AboutMobile";
 
 export default function AboutPage() {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
-  const { preloaderDone } = useSite();
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1025);
@@ -23,8 +21,8 @@ export default function AboutPage() {
   return (
     <>
       {isMobile 
-        ? <AboutMobile preloaderDone={preloaderDone} />
-        : <AboutDesktop preloaderDone={preloaderDone} />
+        ? <AboutMobile />
+        : <AboutDesktop />
       }
     </>
   );

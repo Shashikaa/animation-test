@@ -2,7 +2,6 @@
 
 import { useEffect, useState, use } from "react";
 import { notFound } from "next/navigation";
-import { useSite } from "@/src/app/context/SiteContext";
 
 import { GRAND_POOLS_DATA } from "./data";
 import SingleProjectPageDesktop from "./SingleProjectPageDesktop";
@@ -17,7 +16,6 @@ export default function SubServicePage({ params }: PageProps) {
   const pageData = GRAND_POOLS_DATA[slug];
   
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
-  const { preloaderDone } = useSite();
 
   // Instantly trigger a 404 page if someone types an invalid slug
   if (!pageData) {
@@ -36,12 +34,13 @@ export default function SubServicePage({ params }: PageProps) {
   if (isMobile === null) {
     return null; // Avoid rendering an artificial 100vh spacer div
   }
+
   return (
     <>
       {isMobile ? (
-        <SingleProjectPageMobile pageData={pageData} preloaderDone={preloaderDone} />
+        <SingleProjectPageMobile pageData={pageData} />
       ) : (
-        <SingleProjectPageDesktop pageData={pageData} preloaderDone={preloaderDone} />
+        <SingleProjectPageDesktop pageData={pageData} />
       )}
     </>
   );

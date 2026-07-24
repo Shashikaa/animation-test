@@ -2,17 +2,9 @@
 
 /* ─── Tailwind v4 Theme ──────────────────────────────────────── */
 @theme {
-  --font-display:   'Canela Text Trial', Georgia, serif;
-  --font-cormorant: 'Cormorant Garamond', Georgia, serif;
-  --font-body:      'Instrument Sans', sans-serif;
-}
-
-@font-face {
-  font-family: 'Canela Text Trial';
-  src: url('/fonts/Canela-Light-Trial.otf') format('opentype');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
+  --font-display:   var(--font-display), Georgia, serif;
+  --font-cormorant: var(--font-cormorant), Georgia, serif;
+  --font-body:      var(--font-body), sans-serif;
 }
 
 /* ─── Design Tokens ──────────────────────────────────────────── */

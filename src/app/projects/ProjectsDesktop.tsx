@@ -14,7 +14,7 @@ import Footer from "@/src/components/Footer";
 gsap.registerPlugin(ScrollTrigger);
 
 type ContactProps = {
-  preloaderDone: boolean;
+  preloaderDone?: boolean;
 };
 
 function executeDesktopSplitting(selector: string) {
@@ -47,7 +47,7 @@ function executeDesktopSplitting(selector: string) {
   });
 }
 
-export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
+export default function ProjectsDesktop({ preloaderDone = true }: ContactProps) {
   const { setPreloaderDone } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
   const sectionOneRef = useRef<HTMLDivElement>(null);
@@ -65,19 +65,17 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
-  // Handle body scrolling lock while preloading or intro running
+  // Handle body scrolling lock while intro running
   useEffect(() => {
-    const locked = !preloaderDone || !introDone;
+    const locked = !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [preloaderDone, introDone]);
+  }, [introDone]);
 
   // 1. Establish precise starting positions cleanly BEFORE browser paint
   useLayoutEffect(() => {
-    if (!preloaderDone) return;
-    
     const ctx = gsap.context(() => {
       gsap.set(".projects-hero-bg", { scale: 1.6, yPercent: 0, transformOrigin: "center center" });
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
@@ -89,17 +87,15 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
       gsap.set(".parallax-img-asset", { yPercent: -20 });
 
       gsap.set([".projects-section-cta", ".projects-footer-wrap"], { yPercent: 100, visibility: "hidden" });
-      gsap.set(".projects-section-cta", { zIndex: 70 });
-      gsap.set(".projects-footer-wrap", { zIndex: 80 });
+      gsap.set(".projects-section-cta", { zIndex: 95 });
+      gsap.set(".projects-footer-wrap", { zIndex: 96 });
     }, scopeRef);
     
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   // 2. Play Intro Cinematic cleanly without delaying layout staging
   useEffect(() => {
-    if (!preloaderDone) return;
-    
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({ 
         onComplete: () => setIntroDone(true) 
@@ -111,7 +107,7 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
     }, scopeRef);
     
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   // 3. Master Single Timeline Scroll Pin & Layering Controller
   useEffect(() => {
@@ -315,7 +311,9 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
         // ── STEP D: CTA REVEAL TRACK ──
         scrollTl.addLabel("ctaStart", "sectionTwoStart+=2.5");
         scrollTl.set(".projects-section-cta", { visibility: "visible" }, "ctaStart")
-          .to(".projects-section-cta", { yPercent: 0, duration: 4.8 }, "ctaStart");
+          .to(".projects-section-cta", { yPercent: 0, duration: 4.8 }, "ctaStart")
+          // Pure pointer event switch so SectionTwo stays 100% visible beneath without blocking CTA Canvas events
+          .set(".section-two-wrapper", { pointerEvents: "none" }, "ctaStart");
 
         // ── STEP E: FOOTER REVEAL TRACK ──
         scrollTl.addLabel("footerStart", "ctaStart+=4.8")
@@ -326,7 +324,6 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
         scrollTl.addLabel("end");
       };
 
-      // 🌟 FIXED: Builds timeline instantly on the next frame without font-loading stalls
       requestAnimationFrame(buildTimeline);
 
     }, scopeRef);
@@ -372,8 +369,8 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
         
         {/* Layer 4: CTA Section Container */}
         <div
-          className="projects-section-cta absolute bottom-0 left-0 w-full structural-layer"
-          style={{ zIndex: 70 }}
+          className="projects-section-cta absolute bottom-0 left-0 w-full h-full structural-layer pointer-events-auto"
+          style={{ zIndex: 95 }}
         >
           <SectionCTA />
         </div>
@@ -381,7 +378,7 @@ export default function ProjectsDesktop({ preloaderDone }: ContactProps) {
         {/* Layer 5: Footer Container */}
         <div
           className="projects-footer-wrap absolute left-0 bottom-0 w-full structural-layer"
-          style={{ zIndex: 80 }}
+          style={{ zIndex: 96 }}
         >
           <Footer />
         </div>

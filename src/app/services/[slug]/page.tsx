@@ -2,7 +2,6 @@
 
 import { useEffect, useState, use } from "react";
 import { notFound } from 'next/navigation';
-import { useSite } from "@/src/app/context/SiteContext";
 import SubServicesDesktop from "./SubServicesDesktop";
 import SubServicesMobile from "./SubServicesMobile";
 import { GRAND_POOLS_DATA } from './data';
@@ -16,7 +15,6 @@ export default function SubServicePage({ params }: PageProps) {
   const pageData = GRAND_POOLS_DATA[slug];
   
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
-  const { preloaderDone } = useSite();
 
   // Instantly trigger a 404 page if someone types an invalid slug
   if (!pageData) {
@@ -39,9 +37,9 @@ export default function SubServicePage({ params }: PageProps) {
   return (
     <>
       {isMobile ? (
-        <SubServicesMobile pageData={pageData} preloaderDone={preloaderDone} />
+        <SubServicesMobile pageData={pageData} />
       ) : (
-        <SubServicesDesktop preloaderDone={preloaderDone} pageData={pageData} />
+        <SubServicesDesktop pageData={pageData} />
       )}
     </>
   );

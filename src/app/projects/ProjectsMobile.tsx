@@ -3,7 +3,6 @@
 import { useRef, useEffect, useState, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useSite } from "@/src/app/context/SiteContext";
 import ProjectsHero from "../../components/Projects/ProjectsHero";
 import { restoreTextReveal } from "@/src/app/utils/useTextReveal";
 import SectionOne from "@/src/components/Projects/SectionOne";
@@ -12,10 +11,6 @@ import SectionCTA from "@/src/components/SectionCTA";
 import Footer from "@/src/components/Footer";
 
 gsap.registerPlugin(ScrollTrigger);
-
-type ContactProps = {
-  preloaderDone: boolean;
-};
 
 // Standardized metrics matching AboutMobile & ContactMobile
 const PX_PER_MAIN_PANEL = 850; 
@@ -53,8 +48,7 @@ function executeMobileSplitting(selector: string) {
   });
 }
 
-export default function ProjectsMobile({ preloaderDone }: ContactProps) {
-  const { setPreloaderDone } = useSite();
+export default function ProjectsMobile() {
   const scopeRef = useRef<HTMLDivElement>(null);
   const sectionOneRef = useRef<HTMLDivElement>(null);
   const [introDone, setIntroDone] = useState(false);
@@ -65,17 +59,15 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
     if (typeof window === "undefined") return;
     window.history.scrollRestoration = "manual";
     window.scrollTo(0, 0);
-    setPreloaderDone(true);
-  }, [setPreloaderDone]);
+  }, []);
 
   // Handle body overflow logic during initial page loading
   useEffect(() => {
-    const locked = !preloaderDone || !introDone;
-    document.body.style.overflow = locked ? "hidden" : "";
+    document.body.style.overflow = introDone ? "" : "hidden";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [preloaderDone, introDone]);
+  }, [introDone]);
 
   // Refresh ScrollTrigger only on width/orientation change
   useEffect(() => {
@@ -97,8 +89,6 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
 
   // 1. Establish precise starting positions cleanly
   useLayoutEffect(() => {
-    if (!preloaderDone) return;
-    
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ 
         ignoreMobileResize: true,
@@ -120,12 +110,10 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
     }, scopeRef);
     
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
-  // 2. Play Intro Cinematic
+  // 2. Play Intro Cinematic immediately
   useEffect(() => {
-    if (!preloaderDone) return;
-    
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({ 
         onComplete: () => {
@@ -140,7 +128,7 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
     }, scopeRef);
     
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   // 3. Master Scroll Timeline & Layering Controller
   useEffect(() => {
@@ -172,7 +160,7 @@ export default function ProjectsMobile({ preloaderDone }: ContactProps) {
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: 1.2, // Strictly set to 1.2
+          scrub: 1.2,
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,

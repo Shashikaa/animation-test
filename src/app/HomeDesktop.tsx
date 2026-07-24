@@ -171,7 +171,7 @@ export default function HomeDesktop() {
           ".section-appsec .custom-line-inner",
           ".section-appsec .reveal-text > *"
         ];
-        gsap.set(allTextInners, { y: 45, opacity: 0 });
+        gsap.set(allTextInners, { y: 45, opacity: 0, immediateRender: true });
 
         ScrollTrigger.refresh();
 
@@ -227,11 +227,13 @@ export default function HomeDesktop() {
           },
         });
 
+        // Plays initial text reveal animation ONCE on forward scroll
         const addPlayOnceTextReveal = (labelName: string, timeOffset: number, selector: string) => {
           const absoluteTime = tl.labels[labelName] + timeOffset;
 
           tl.call(() => {
             const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+
             if (isForward && !revealedElements.has(selector)) {
               revealedElements.add(selector);
 
@@ -284,7 +286,7 @@ export default function HomeDesktop() {
             "sec2Arrived"
           );
 
-        addPlayOnceTextReveal("sec2Arrived", 0.35, s2TextSelector);
+        addPlayOnceTextReveal("sec2Arrived", 0.1, s2TextSelector);
 
         // ── SECTION 2 INNER ANIMATION ──
         tl.addLabel("s2InnerAnimation", "sec2Arrived+=1.5")
@@ -308,7 +310,7 @@ export default function HomeDesktop() {
           .to(".s8-bg-img", { yPercent: 0, duration: 2.0, ease: "none" }, "sec8Start")
           .set(".section-2", { display: "none" }, "sec8Start+=2.0");
 
-        addPlayOnceTextReveal("sec8Start", 0.35, s8TextSelector);
+        addPlayOnceTextReveal("sec8Start", 1.0, s8TextSelector);
 
         // ── SECTION 10 REVEAL ──
         tl.addLabel("sec10Start", "sec8Start+=2.0")
@@ -319,7 +321,7 @@ export default function HomeDesktop() {
           .set(".section-8", { display: "none" }, "sec10Start+=2.0")
           .set(".s10-content-wrap", { opacity: 1, yPercent: 0, y: "100vh" }, "sec10Start");
 
-        addPlayOnceTextReveal("sec10Start", 0.35, s10TextSelector);
+        addPlayOnceTextReveal("sec10Start", 1.0, s10TextSelector);
 
         // ── SECTION 10 INNER PARAGRAPH SLIDE UP ──
         tl.addLabel("sec10TextHide", "sec10Start+=2.0")
@@ -337,7 +339,7 @@ export default function HomeDesktop() {
           .to(".s10-content-wrap", { opacity: 0, y: -60, duration: 1.5, ease: "power2.in" }, "sec7Start")
           .set(".section-10", { display: "none" }, "sec7Start+=2.0");
 
-        addPlayOnceTextReveal("sec7Start", 0.35, s7TextSelector);
+        addPlayOnceTextReveal("sec7Start", 1.0, s7TextSelector);
 
         // ── APPSECTION REVEAL ──
         tl.addLabel("appSecStart", "sec7Start+=2.0")
@@ -350,7 +352,7 @@ export default function HomeDesktop() {
           .to(".appsec-phone-wrapper", { yPercent: 0, duration: 1.5, ease: "power2.out" }, "appSecStart+=0.2")
           .set(".section-7", { display: "none" }, "appSecStart+=2.0");
 
-        addPlayOnceTextReveal("appSecStart", 0.35, appSecTextSelector);
+        addPlayOnceTextReveal("appSecStart", 1.0, appSecTextSelector);
 
         // ── SECTION 9 REVEAL ──
         tl.addLabel("sec9Start", "appSecStart+=2.0")
@@ -408,7 +410,7 @@ export default function HomeDesktop() {
         tl.addLabel("ctaStart", "sec9MainTrack+=0.5")
           .set(".section-cta", { display: "block", zIndex: 120 })
           .to(".section-cta", { yPercent: 0, duration: 2.0, ease: "power2.out" }, "ctaStart")
-          .to(".section-9", { scale: 1.05, duration: 2.0 }, "ctaStart");
+          .to(".section-9", { scale: 1.0, duration: 1.0 }, "ctaStart");
 
         // ── FOOTER REVEAL ──
         tl.addLabel("footerStart", "ctaStart+=2.0")

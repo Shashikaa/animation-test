@@ -3,10 +3,9 @@
 import { useState, useEffect } from "react";
 import ProjectsDesktop from "./ProjectsDesktop";
 import ProjectsMobile from "./ProjectsMobile";
-import { useSite } from "@/src/app/context/SiteContext";
-export default function ContactPage() {
+
+export default function ProjectPage() {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
-  const { preloaderDone } = useSite();
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1025);
@@ -15,14 +14,9 @@ export default function ContactPage() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // Avoid rendering a blank state while checking window width on the very first frame
   if (isMobile === null) {
-    return null; // Avoid rendering an artificial 100vh spacer div
+    return null;
   }
 
-  return isMobile ? (
-    <ProjectsMobile preloaderDone={preloaderDone} />
-  ) : (
-    <ProjectsDesktop preloaderDone={preloaderDone} />
-  );
+  return isMobile ? <ProjectsMobile /> : <ProjectsDesktop />;
 }

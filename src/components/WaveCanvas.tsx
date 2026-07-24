@@ -53,7 +53,6 @@ const loadTextureOffThread = async (url: string): Promise<THREE.Texture> => {
   try {
     const res = await fetch(url, { mode: "cors" });
     const blob = await res.blob();
-    // FIX: Added imageOrientation: 'flipY' to align ImageBitmap with WebGL coordinates
     const bitmap = await createImageBitmap(blob, { 
         premultiplyAlpha: 'none',
         imageOrientation: 'flipY' 
@@ -87,7 +86,7 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
   const [isMobileOrTablet, setIsMobileOrTablet] = useState<boolean | null>(null);
   const [engineReady, setEngineReady] = useState(false);
   const [isInViewport, setIsInViewport] = useState(false);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false); // Track actual video playback
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   
   const appInstanceRef = useRef<any>(null);
 
@@ -138,12 +137,10 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
         await yieldToMain();
         if (destroyed) return;
 
-        // THREE.VideoTexture handles its own frames efficiently, no manual updating needed!
         videoTexture = new VideoTexture(videoRef.current as HTMLVideoElement);
         videoTexture.colorSpace = LinearSRGBColorSpace;
         videoTexture.minFilter = LinearFilter;
         videoTexture.magFilter = LinearFilter;
-        // Optimization: Prevent unnecessary mipmap generation on video frames
         videoTexture.generateMipmaps = false; 
 
         shaderMat = new ShaderMaterial({
@@ -165,9 +162,8 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
         appInstance.liquidPlane.material = shaderMat;
         appInstance.liquidPlane.uniforms = shaderMat.uniforms;
         
-        // Slightly faster decay keeps the bump from propagating out into wide waves
         if (appInstance.liquidPlane.attenuation !== undefined) {
-          appInstance.liquidPlane.attenuation = 0.9; // was 0.95
+          appInstance.liquidPlane.attenuation = 0.9;
         }
 
         if (appInstance.interaction) {
@@ -180,8 +176,8 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
             appInstance.liquidPlane.addDrop(
               appInstance.interaction.nPosition.x,
               appInstance.interaction.nPosition.y,
-              0.015,   // was 0.04 — small, tight bump instead of a wide expanding ripple
-              0.0015   // was 0.004 — gentler push so it doesn't build into a visible wave
+              0.015,
+              0.0015
             );
           };
         }
@@ -249,12 +245,12 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
     };
   }, [isMobileOrTablet, imageSrc]);
 
-  // 3. Viewport Observer
+  // 3. Viewport Observer — Expanded rootMargin handles GSAP pin offset
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new IntersectionObserver(
       ([entry]) => setIsInViewport(entry.isIntersecting),
-      { rootMargin: "100px" }
+      { rootMargin: "1000px" }
     );
     observer.observe(containerRef.current);
     return () => observer.disconnect();
@@ -269,7 +265,6 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
 
     let startVideoFn: () => void;
 
-    // Listen for actual playback start so we can smoothly transition the canvas in
     const handlePlaying = () => {
       setIsVideoPlaying(true);
       onReady?.();
@@ -317,7 +312,6 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
       {!isMobileOrTablet && (
         <canvas
           ref={canvasRef}
-          // We now ensure isVideoPlaying is true before transitioning opacity!
           className={`absolute inset-0 w-full h-full block transition-opacity duration-1000 ease-out ${
             engineReady && isInViewport && isVideoPlaying ? "opacity-100" : "opacity-0"
           }`}

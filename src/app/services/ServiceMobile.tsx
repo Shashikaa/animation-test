@@ -13,16 +13,12 @@ import Footer from "@/src/components/Footer";
 
 gsap.registerPlugin(ScrollTrigger);
 
-type ServicesMobileProps = {
-  preloaderDone: boolean;
-};
-
 // Standardized Metrics matching AboutMobile, ContactMobile, ProjectsMobile & SubServicesMobile
 const PX_PER_MAIN_PANEL = 850; 
 const PX_PER_SUB_STEP = 350;   
 const PAUSE_PX = 100;          
 
-export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
+export default function ServicesMobile() {
   const { setPreloaderDone } = useSite(); 
   const [introDone, setIntroDone] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
@@ -42,12 +38,12 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
 
   // Handle body overflow logic during initial page loading
   useEffect(() => {
-    const locked = !preloaderDone || !introDone;
+    const locked = !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [preloaderDone, introDone]);
+  }, [introDone]);
 
   // Refresh ScrollTrigger only on width/orientation change
   useEffect(() => {
@@ -69,7 +65,6 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
 
   // 1. Set up safe baseline states before animations run
   useLayoutEffect(() => {
-    if (!preloaderDone) return;
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ 
         ignoreMobileResize: true,
@@ -109,12 +104,10 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
       gsap.set(".services-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden", force3D: true });
     }, scopeRef);
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   // 2. Intro Sequence
   useEffect(() => {
-    if (!preloaderDone) return;
-
     const ctx = gsap.context(() => {
       const masterTl = gsap.timeline();
 
@@ -139,7 +132,7 @@ export default function ServicesMobile({ preloaderDone }: ServicesMobileProps) {
     }, scopeRef);
 
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   // 3. Absolute Panel Stacking Scroll Timeline
   useEffect(() => {

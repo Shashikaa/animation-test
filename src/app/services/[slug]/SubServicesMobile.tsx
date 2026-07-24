@@ -15,7 +15,6 @@ import { FullServiceData } from "./data";
 gsap.registerPlugin(ScrollTrigger);
 
 type SubServicesMobileProps = {
-  preloaderDone: boolean;
   pageData: FullServiceData;
 };
 
@@ -24,7 +23,7 @@ const PX_PER_MAIN_PANEL = 850;
 const PX_PER_SUB_STEP = 350;   
 const PAUSE_PX = 100;          
 
-export default function SubServicesMobile({ preloaderDone, pageData }: SubServicesMobileProps) {
+export default function SubServicesMobile({ pageData }: SubServicesMobileProps) {
   const { setPreloaderDone } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
   
@@ -41,12 +40,12 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
   }, [setPreloaderDone]);
 
   useEffect(() => {
-    const locked = !preloaderDone || !introDone;
+    const locked = !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [preloaderDone, introDone]);
+  }, [introDone]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -66,7 +65,6 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
   }, []);
 
   useLayoutEffect(() => {
-    if (!preloaderDone) return;
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ 
         ignoreMobileResize: true,
@@ -94,11 +92,9 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
       gsap.set(".services-footer-wrap", { zIndex: 96 });
     }, scopeRef);
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   useEffect(() => {
-    if (!preloaderDone) return;
-
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
         onComplete: () => {
@@ -123,7 +119,7 @@ export default function SubServicesMobile({ preloaderDone, pageData }: SubServic
     }, scopeRef);
 
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   useEffect(() => {
     if (!introDone) return;

@@ -411,7 +411,7 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
                 animate="visible"
                 exit="hidden"
                 onMouseLeave={handleMouseLeaveNav}
-                className="!flex !flex-col !gap-8 !items-start"
+                className="!flex !flex-col !gap-4 !items-start"
               >
                 {NAV_LINKS.map(({ label, href }, i) => (
                   <motion.div key={label} variants={linkVariants} className="!overflow-hidden">

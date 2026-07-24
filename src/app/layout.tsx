@@ -9,40 +9,58 @@ import PreloaderToggle from "../components/PreloaderToggle";
 import SmoothScroll from "../components/SmoothScroll";
 
 const instrumentSans = Instrument_Sans({
-  subsets:   ["latin"],
-  weight:    ["400", "500", "600", "700"],
-  style:     ["normal", "italic"],
-  variable:  "--font-body",
-  display:   "swap" 
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-body",
+  display: "block", // Set to block to avoid FOUT flickering
 });
 
 const cormorantGaramond = Cormorant_Garamond({
-  subsets:   ["latin"],
-  weight:    ["300", "400", "500", "600", "700"],
-  style:     ["normal", "italic"],
-  variable:  "--font-cormorant",
-  display:   "swap" 
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-cormorant",
+  display: "block", // Set to block to avoid FOUT flickering
 });
 
 const canelaText = localFont({
   src: [
-    { path: "../../public/fonts/CanelaText-Thin-Trial.otf",     weight: "100", style: "normal" },
-    { path: "../../public/fonts/Canela-Light-Trial.otf",        weight: "300", style: "normal" },
-    { path: "../../public/fonts/CanelaText-Regular-Trial.otf",  weight: "400", style: "normal" },
+    { path: "../../public/fonts/CanelaText-Thin-Trial.otf", weight: "100", style: "normal" },
+    { path: "../../public/fonts/Canela-Light-Trial.otf", weight: "300", style: "normal" },
+    { path: "../../public/fonts/CanelaText-Regular-Trial.otf", weight: "400", style: "normal" },
     { path: "../../public/fonts/Canela-RegularItalic-Trial.otf", weight: "400", style: "italic" },
   ],
   variable: "--font-display",
-  display:  "swap",
+  display: "block", // Set to block to avoid FOUT flickering
+  preload: true,
 });
 
 export const metadata: Metadata = {
-  title:       "Grand Pools",
+  title: "Grand Pools",
   description: "Crafting Custom Swimming Pools with Style, Function, and Quality.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased`}>
+      <head>
+        {/* Preload critical local fonts directly */}
+        <link
+          rel="preload"
+          href="/fonts/CanelaText-Regular-Trial.otf"
+          as="font"
+          type="font/otf"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/fonts/Canela-Light-Trial.otf"
+          as="font"
+          type="font/otf"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="flex flex-col min-h-screen preloading" suppressHydrationWarning>
         <SiteProvider>
           <SmoothScroll>

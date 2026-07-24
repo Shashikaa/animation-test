@@ -15,11 +15,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
-type ContactProps = {
-  preloaderDone: boolean;
-};
-
-export default function ContactDesktop({ preloaderDone }: ContactProps) {
+export default function ContactDesktop() {
   const { setPreloaderDone } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
   const [introDone, setIntroDone] = useState(false);
@@ -35,15 +31,14 @@ export default function ContactDesktop({ preloaderDone }: ContactProps) {
   }, [setPreloaderDone]);
 
   useEffect(() => {
-    const locked = !preloaderDone || !introDone;
+    const locked = !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [preloaderDone, introDone]);
+  }, [introDone]);
 
   useLayoutEffect(() => {
-    if (!preloaderDone) return;
     const ctx = gsap.context(() => {
       gsap.set(".contact-hero-bg", { scale: 1.3, y: 0, transformOrigin: "center center" });
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
@@ -58,17 +53,16 @@ export default function ContactDesktop({ preloaderDone }: ContactProps) {
       gsap.set(".contact-right-scroll-track", { y: 0 });
     }, scopeRef);
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   useEffect(() => {
-    if (!preloaderDone) return;
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({ onComplete: () => setIntroDone(true) });
       introTl.to(".contact-hero-bg", { scale: 1.1, duration: 2.2, ease: "power2.out" }, 0)
              .to([".hero-title", ".hero-desc"], { opacity: 1, y: 0, duration: 1.4, stagger: 0.2, ease: "power3.out" }, 0.4);
     }, scopeRef);
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   useEffect(() => {
     if (!introDone) return;
@@ -180,7 +174,7 @@ export default function ContactDesktop({ preloaderDone }: ContactProps) {
         
         // ─── PHASE 5: FAQ Text Content Fades out ───
         tl.addLabel("faqFade")
-          .to(".faq-content", { opacity: 0, y: -30, ease: "power2.in", duration: 1.0 }, "faqFade");
+          .to(".faq-content", { opacity: 0, y: -30, ease: "power2.in", duration: 0.8 }, "faqFade");
 
         // ─── PHASE 6: Footer Slides Up over the FAQ background ───
         tl.addLabel("footerStart")
@@ -190,7 +184,6 @@ export default function ContactDesktop({ preloaderDone }: ContactProps) {
         tl.addLabel("end");
       };
 
-      // 🌟 FIXED: Builds timeline instantly on the next animation frame
       requestAnimationFrame(buildTimeline);
 
     }, scopeRef);

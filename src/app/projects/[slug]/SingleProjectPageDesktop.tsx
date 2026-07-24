@@ -16,11 +16,10 @@ gsap.registerPlugin(ScrollTrigger);
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
 type SubServicesDesktopProps = {
-  preloaderDone: boolean;
   pageData: FullServiceData;
 };
 
-export default function SingleProjectPageDesktop({ preloaderDone, pageData }: SubServicesDesktopProps) {
+export default function SingleProjectPageDesktop({ pageData }: SubServicesDesktopProps) {
   const { setPreloaderDone } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
   
@@ -39,19 +38,17 @@ export default function SingleProjectPageDesktop({ preloaderDone, pageData }: Su
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
-  // 2. Lock body scroll during preload/intro sequences
+  // 2. Lock body scroll during intro sequence
   useEffect(() => {
-    const locked = !preloaderDone || !introDone;
+    const locked = !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [preloaderDone, introDone]);
+  }, [introDone]);
 
   // 3. Offscreen layout setup
   useLayoutEffect(() => {
-    if (!preloaderDone) return;
-
     const ctx = gsap.context(() => {
       gsap.set(".project-hero-master", { zIndex: 10 });
       gsap.set(
@@ -84,12 +81,10 @@ export default function SingleProjectPageDesktop({ preloaderDone, pageData }: Su
     }, scopeRef);
 
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   // 4. Play Intro Cinematic Animation
   useEffect(() => {
-    if (!preloaderDone) return;
-
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
         onComplete: () => setIntroDone(true)
@@ -105,11 +100,11 @@ export default function SingleProjectPageDesktop({ preloaderDone, pageData }: Su
     }, scopeRef);
 
     return () => ctx.revert();
-  }, [preloaderDone]);
+  }, []);
 
   // 5. Master Single ScrollTrigger Timeline
   useEffect(() => {
-    if (!introDone || !preloaderDone) return;
+    if (!introDone) return;
 
     if (isTouchOnly()) {
       ScrollTrigger.normalizeScroll(true);
@@ -289,7 +284,6 @@ export default function SingleProjectPageDesktop({ preloaderDone, pageData }: Su
         scrollTl.addLabel("end");
       };
 
-      // 🌟 FIXED: Instantly builds the timeline on the next animation frame
       requestAnimationFrame(buildTimeline);
 
     }, scopeRef);
@@ -301,7 +295,7 @@ export default function SingleProjectPageDesktop({ preloaderDone, pageData }: Su
       }
       ctx.revert();
     };
-  }, [introDone, preloaderDone, pageData.images, pageData.slides, pageData.title]);
+  }, [introDone, pageData.images, pageData.slides, pageData.title]);
 
   return (
     <div 

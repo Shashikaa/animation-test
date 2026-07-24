@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSite } from "@/src/app/context/SiteContext";
 import ServiceMobile from "./ServiceMobile";
 import ServiceDesktop from "./ServiceDesktop";
 
 export default function ServicePage() {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
-  const { preloaderDone } = useSite();
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1025);
@@ -24,9 +22,9 @@ export default function ServicePage() {
   return (
     <>
       {isMobile ? (
-        <ServiceMobile preloaderDone={preloaderDone} />
+        <ServiceMobile />
       ) : (
-        <ServiceDesktop preloaderDone={preloaderDone} />
+        <ServiceDesktop />
       )}
     </>
   );
