@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { motion, useMotionValue, useTransform, animate, MotionValue } from "framer-motion";
-import WaveCanvas from "./WaveCanvas"; 
 
 export const LOGO_COLOR        = "#F4EEDF";
 export const LOGO_ICON_W       = 160;
@@ -61,44 +60,97 @@ function PoolsSVG({ width, height }: { width: number; height: number }) {
 }
 
 function LogoSVG({
-  waveProgressMV,
   circleProgressMV,
   dotOpacityMV,
   width,
   height,
+  startSweep,
 }: {
-  waveProgressMV: MotionValue<number>;
   circleProgressMV: MotionValue<number>;
   dotOpacityMV: MotionValue<number>;
   width: number;
   height: number;
+  startSweep: boolean;
 }) {
   const fill = "#F4EEDF";
-  // The line now uses waveProgressMV exclusively as an opacity fade-in instead of a clipPath width shift
+
   return (
-    <svg
-      viewBox="385 0 206 178.21"
-      width={width}
-      height={height}
-      style={{ display: "block", flexShrink: 0, overflow: "visible" }}
-      aria-hidden
-    >
-      <motion.g style={{ opacity: waveProgressMV }}>
-        <path fill={fill} d="M571.87,92.4c-.07,2-.22,3.99-.44,5.96l-5.78,1.33h-.03l-.44.11c-.72.17-1.45.35-2.19.53-3.36.82-6.84,1.67-10.32,1.82-9.97.45-17.17-3.48-21.46-11.64-.6-1.17-1.14-.98-2.21-.49l-.14.07c-3.17,1.46-6.3,3.11-9.3,4.91-6.34,4.01-13.21,7.11-20.43,9.19-6.63,1.89-12.93.55-19.84-4.22-6.1-4.2-9.44-10.49-10.22-19.21-.1-1.21-.18-2.43-.26-3.65-.07-1.2-.15-2.41-.26-3.61-.07-.43-.18-.88-.31-1.33-.5.23-.96.51-1.39.84-.99,1.02-2.04,2.08-3.09,3.15-3.56,3.61-7.25,7.35-10.72,11.17-9.08,10.01-19.09,19.3-29.75,27.62-2.34,1.87-4.86,3.56-7.47,5.04,0,0-.01.01-.04.02-.32.18-2.48,1.39-5.07,2.34-.73-1.69-1.41-3.41-2.02-5.16,2.42-.97,4.73-2.32,5.02-2.49h.01l.02-.02c6.65-3.88,12.79-8.61,18.25-14.04,6.33-6.09,12.56-12.42,18.59-18.53,2.92-2.96,5.84-5.92,8.77-8.86l1.29-1.31c2.78-2.83,5.65-5.76,8.43-8.68.71-.75,1.41-1.09,2.06-1,.62.08,1.16.54,1.59,1.36.53.99.86,2.06.98,3.18.11,1.26.09,2.52.07,3.74-.01.49-.02.98-.02,1.46-.13,7.23.86,12.62,3.19,17.49,3.65,7.6,13.25,11.5,21.84,8.89,7.84-2.5,15.38-5.94,22.41-10.22,2.51-1.39,5.12-2.58,7.79-3.57,3.55-1.45,4.56-1.05,6.34,2.47,1.61,3.54,4.46,6.29,8.03,7.76,4.3,1.63,8.96,2.02,13.48,1.12,3.01-.57,6.16-1.26,9.37-2.06h.02l5.65-1.48h0Z" />
-      </motion.g>
+    <div style={{ position: "relative", width, height, flexShrink: 0, overflow: "hidden" }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes waveGpuKeyframeSweep {
+          0% {
+            clip-path: inset(0 100% 0 0);
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          100% {
+            clip-path: inset(0 0 0 0);
+            opacity: 1;
+          }
+        }
+        .pure-gpu-wave-draw {
+          animation: waveGpuKeyframeSweep 1.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          will-change: clip-path, opacity;
+          transform: translateZ(0);
+        }
+      `}} />
 
-      <motion.g style={{ opacity: circleProgressMV }}>
-        <path fill={fill} d="M487.9,5.01c-46.42,0-84.04,37.63-84.04,84.05,0,9.87,1.7,19.34,4.83,28.13.61,1.75,1.29,3.47,2.02,5.16,12.9,29.86,42.6,50.75,77.19,50.75,43.27,0,78.9-32.71,83.53-74.74.22-1.97.37-3.96.44-5.96.05-1.11.07-2.22.07-3.34,0-46.42-37.63-84.05-84.04-84.05h0ZM565.65,99.69c-5.18,38.3-38.02,67.83-77.75,67.83-32.35,0-60.12-19.57-72.12-47.51-.76-1.74-1.44-3.51-2.06-5.31h-.01c-2.77-8.04-4.28-16.66-4.28-25.64,0-43.34,35.13-78.47,78.47-78.47s78.47,35.13,78.47,78.47c0,1.62-.05,3.22-.15,4.81-.11,1.96-.3,3.9-.57,5.82h0Z" />
-        <path fill={fill} d="M410.71,122.35s-.07.03-.1.04c-1.34.48-2.72.87-4.11,1.17-5.63,1.17-10.97-.73-16.32-5.81-3.98-3.78-5.17-8.95-3.55-15.38.29-.92.67-1.77,1.13-2.58.08-.21.18-.42.32-.6.75-1,2.17-1.21,3.18-.46.53.27.89.66,1.04,1.14.21.7-.11,1.42-.44,2.03-1.13,2.15-1.38,4.62-.7,6.96.17.7.4,1.37.68,2.02,2.08,4.79,6.83,7.61,11.75,7.5,1.58-.03,3.14-.44,4.7-1.03l.39-.15c.62,1.74,1.29,3.46,2.03,5.15h0Z" />
-        <path fill={fill} d="M589.72,89.97c-.82,1.99-2.38,3.48-4.33,4.16-4.47,1.74-9.13,3.16-13.84,4.2l-.12.03c.22-1.96.37-3.95.44-5.95l.11-.03c1.2-.33,2.38-.66,3.57-.99,2.47-.71,4.92-1.68,7.29-2.61,1.34-.53,2.68-1.06,4.03-1.55.81-.21,1.59-.32,2.37-.35l.44-.02.07.43c.16.89.15,1.79-.03,2.68h0Z" />
-      </motion.g>
+      {/* 1st Center Wave SVG */}
+      <div
+        className={startSweep ? "pure-gpu-wave-draw" : ""}
+        style={{
+          position: "absolute",
+          inset: 0,
+          clipPath: startSweep ? undefined : "inset(0 100% 0 0)",
+          opacity: startSweep ? undefined : 0,
+        }}
+      >
+        <svg
+          viewBox="385 0 206 178.21"
+          width={width}
+          height={height}
+          style={{ display: "block", flexShrink: 0 }}
+          aria-hidden
+        >
+          <path
+            fill={fill}
+            d="M571.87,92.4c-.07,2-.22,3.99-.44,5.96l-5.78,1.33h-.03l-.44.11c-.72.17-1.45.35-2.19.53-3.36.82-6.84,1.67-10.32,1.82-9.97.45-17.17-3.48-21.46-11.64-.6-1.17-1.14-.98-2.21-.49l-.14.07c-3.17,1.46-6.3,3.11-9.3,4.91-6.34,4.01-13.21,7.11-20.43,9.19-6.63,1.89-12.93.55-19.84-4.22-6.1-4.2-9.44-10.49-10.22-19.21-.1-1.21-.18-2.43-.26-3.65-.07-1.2-.15-2.41-.26-3.61-.07-.43-.18-.88-.31-1.33-.5.23-.96.51-1.39.84-.99,1.02-2.04,2.08-3.09,3.15-3.56,3.61-7.25,7.35-10.72,11.17-9.08,10.01-19.09,19.3-29.75,27.62-2.34,1.87-4.86,3.56-7.47,5.04,0,0-.01.01-.04.02-.32.18-2.48,1.39-5.07,2.34-.73-1.69-1.41-3.41-2.02-5.16,2.42-.97,4.73-2.32,5.02-2.49h.01l.02-.02c6.65-3.88,12.79-8.61,18.25-14.04,6.33-6.09,12.56-12.42,18.59-18.53,2.92-2.96,5.84-5.92,8.77-8.86l1.29-1.31c2.78-2.83,5.65-5.76,8.43-8.68.71-.75,1.41-1.09,2.06-1,.62.08,1.16.54,1.59,1.36.53.99.86,2.06.98,3.18.11,1.26.09,2.52.07,3.74-.01.49-.02.98-.02,1.46-.13,7.23.86,12.62,3.19,17.49,3.65,7.6,13.25,11.5,21.84,8.89,7.84-2.5,15.38-5.94,22.41-10.22,2.51-1.39,5.12-2.58,7.79-3.57,3.55-1.45,4.56-1.05,6.34,2.47,1.61,3.54,4.46,6.29,8.03,7.76,4.3,1.63,8.96,2.02,13.48,1.12,3.01-.57,6.16-1.26,9.37-2.06h.02l5.65-1.48h0Z"
+          />
+        </svg>
+      </div>
 
-      <motion.path
-        fill={fill}
-        style={{ opacity: dotOpacityMV }}
-        d="M591.28,107.71l-1.42-1.6h0c-.97-1.06-2.56-1.27-3.77-.53l-.18.09c-.26.18-.49.4-.68.65-.99,1.3-.74,3.17.55,4.16,1.03.82,2.16,1.53,3.32,2.09.12.07.25.1.4.1.36,0,.81-.21,1.38-.63.06-.04.11-.09.16-.14,1.22-1.09,1.33-2.97.25-4.19,0,0-.01,0-.01,0Z"
-      />
-    </svg>
+      {/* 2nd Circle SVG Fade In */}
+      <svg
+        viewBox="385 0 206 178.21"
+        width={width}
+        height={height}
+        style={{ position: "absolute", top: 0, left: 0, display: "block", overflow: "visible", pointerEvents: "none" }}
+        aria-hidden
+      >
+        <motion.g style={{ opacity: circleProgressMV }}>
+          <path
+            fill={fill}
+            d="M487.9,5.01c-46.42,0-84.04,37.63-84.04,84.05,0,9.87,1.7,19.34,4.83,28.13.61,1.75,1.29,3.47,2.02,5.16,12.9,29.86,42.6,50.75,77.19,50.75,43.27,0,78.9-32.71,83.53-74.74.22-1.97.37-3.96.44-5.96.05-1.11.07-2.22.07-3.34,0-46.42-37.63-84.05-84.04-84.05h0ZM565.65,99.69c-5.18,38.3-38.02,67.83-77.75,67.83-32.35,0-60.12-19.57-72.12-47.51-.76-1.74-1.44-3.51-2.06-5.31h-.01c-2.77-8.04-4.28-16.66-4.28-25.64,0-43.34,35.13-78.47,78.47-78.47s78.47,35.13,78.47,78.47c0,1.62-.05,3.22-.15,4.81-.11,1.96-.3,3.9-.57,5.82h0Z"
+          />
+          <path
+            fill={fill}
+            d="M410.71,122.35s-.07.03-.1.04c-1.34.48-2.72.87-4.11,1.17-5.63,1.17-10.97-.73-16.32-5.81-3.98-3.78-5.17-8.95-3.55-15.38.29-.92.67-1.77,1.13-2.58.08-.21.18-.42.32-.6.75-1,2.17-1.21,3.18-.46.53.27.89.66,1.04,1.14.21.7-.11,1.42-.44,2.03-1.13,2.15-1.38,4.62-.7,6.96.17.7.4,1.37.68,2.02,2.08,4.79,6.83,7.61,11.75,7.5,1.58-.03,3.14-.44,4.7-1.03l.39-.15c.62,1.74,1.29,3.46,2.03,5.15h0Z"
+          />
+          <path
+            fill={fill}
+            d="M589.72,89.97c-.82,1.99-2.38,3.48-4.33,4.16-4.47,1.74-9.13,3.16-13.84,4.2l-.12.03c.22-1.96.37-3.95.44-5.95l.11-.03c1.2-.33,2.38-.66,3.57-.99,2.47-.71,4.92-1.68,7.29-2.61,1.34-.53,2.68-1.06,4.03-1.55.81-.21,1.59-.32,2.37-.35l.44-.02.07.43c.16.89.15,1.79-.03,2.68h0Z"
+          />
+        </motion.g>
+
+        <motion.path
+          fill={fill}
+          style={{ opacity: dotOpacityMV }}
+          d="M591.28,107.71l-1.42-1.6h0c-.97-1.06-2.56-1.27-3.77-.53l-.18.09c-.26.18-.49.4-.68.65-.99,1.3-.74,3.17.55,4.16,1.03.82,2.16,1.53,3.32,2.09.12.07.25.1.4.1.36,0,.81-.21,1.38-.63.06-.04.11-.09.16-.14,1.22-1.09,1.33-2.97.25-4.19,0,0-.01,0-.01,0Z"
+        />
+      </svg>
+    </div>
   );
 }
 
@@ -141,6 +193,7 @@ const wait = (ms: number) =>
 export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [mounted, setMounted] = useState(true);
+  const [startSweep, setStartSweep] = useState(false);
 
   const rScale  = useResponsiveScale();
   const iconW   = LOGO_ICON_W * rScale;
@@ -162,9 +215,12 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
     gTx: number; gTy: number; gScale: number;
     iTx: number; iTy: number; iScale: number;
     pTx: number; pTy: number; pScale: number;
-  } | null>(null);
+  }>({
+    gTx: -300, gTy: -300, gScale: 0.28,
+    iTx: 0, iTy: -300, iScale: 0.28,
+    pTx: 300, pTy: -300, pScale: 0.28
+  });
 
-  const waveProgressMV   = useMotionValue(0);
   const circleProgressMV = useMotionValue(0);
   const dotOpacityMV     = useMotionValue(0);
 
@@ -174,8 +230,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   const textX_right  = useTransform(textProgress, [0, 1], [slideAmt,  0]);
   const textOpacity  = useTransform(textProgress, [0, 0.1, 1], [0, 1, 1]);
 
-  const bgOpacity   = useMotionValue(1);
-  const logoOpacity = useMotionValue(1);
+  const fullPreloaderOpacity = useMotionValue(1);
 
   const grandX = useMotionValue(0); const grandY = useMotionValue(0); const grandS = useMotionValue(1);
   const iconX  = useMotionValue(0); const iconY  = useMotionValue(0); const iconS  = useMotionValue(1);
@@ -190,7 +245,9 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
       !hGrand || !hIcon || !hPools ||
       !grandRef.current || !iconRef.current || !poolsRef.current ||
       !grandSvgRef.current || !iconSvgRef.current || !poolsSvgRef.current
-    ) return false;
+    ) {
+      return true;
+    }
 
     const hGR = hGrand.getBoundingClientRect();
     const hIR = hIcon.getBoundingClientRect();
@@ -202,9 +259,9 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
     const iSR = iconSvgRef.current.getBoundingClientRect();
     const pSR = poolsSvgRef.current.getBoundingClientRect();
 
-    const gScale = hGR.width / gSR.width;
-    const iScale = hIR.width / iSR.width;
-    const pScale = hPR.width / pSR.width;
+    const gScale = hGR.width / (gSR.width || 1);
+    const iScale = hIR.width / (iSR.width || 1);
+    const pScale = hPR.width / (pSR.width || 1);
 
     const gCx = gFR.left + gFR.width  / 2; const gCy = gFR.top + gFR.height / 2;
     const iCx = iFR.left + iFR.width  / 2; const iCy = iFR.top + iFR.height / 2;
@@ -233,6 +290,8 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   };
 
   useEffect(() => {
+    let active = true;
+
     const run = async () => {
       if (document.visibilityState === "hidden") {
         await new Promise<void>((r) => {
@@ -246,84 +305,85 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
         });
       }
 
-      await wait(200);
+      await wait(100);
+      if (!active) return;
 
-      // 1. Uniform Fade In of Center Wave Icon
+      // 1. Hardware GPU keyframe sweep
       setPhase("wave-draw");
-      animate(waveProgressMV, 1, { duration: 1.2, ease: "easeInOut" });
-      await wait(1200);
+      setStartSweep(true);
+      await wait(1250);
+      if (!active) return;
 
-      // 2. Reveal Outer Circle Elements
-      setPhase("text-reveal");
-      animate(circleProgressMV, 1, { duration: 1.0, ease: "easeOut" });
-      animate(dotOpacityMV,     1, { duration: 0.8, ease: "easeOut" });
+      // 2. Outer circle and accents reveal
+      setPhase("circle-appear");
+      animate(circleProgressMV, 1, { duration: 0.9, ease: "easeOut" });
+      animate(dotOpacityMV,     1, { duration: 0.7, ease: "easeOut" });
       await wait(800);
+      if (!active) return;
 
-      // 3. Slide Out Grand / Pools Text strings
+      // 3. Text entrance
+      setPhase("text-reveal");
       animate(textProgress, 1, { duration: 1.1, ease: [0.25, 1, 0.5, 1] });
       await wait(1100);
+      if (!active) return;
 
       setPhase("hold");
-      
-      const layoutReady = preCalculateLayout();
-      if (!layoutReady || !targetsRef.current) {
-        onComplete?.(); setMounted(false); return;
-      }
-      
-      await wait(400);
+
+      // Give 2 animation frames for layout calculation
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      if (!active) return;
+
+      // Measure header DOM targets accurately
+      preCalculateLayout();
 
       const ease = [0.76, 0, 0.24, 1] as const;
-      const dur  = 0.75;
+      const dur  = 0.85;
       const { gTx, gTy, gScale, iTx, iTy, iScale, pTx, pTy, pScale } = targetsRef.current;
 
       setPhase("fly-out");
 
-      animate(grandX, gTx, { duration: dur, ease });
-      animate(grandY, gTy, { duration: dur, ease });
-      animate(grandS, gScale, { duration: dur, ease });
+      // Animate flying logo up to header first before triggering main thread tasks
+      const flyAnimations = [
+        animate(grandX, gTx, { duration: dur, ease }),
+        animate(grandY, gTy, { duration: dur, ease }),
+        animate(grandS, gScale, { duration: dur, ease }),
 
-      animate(iconX,  iTx, { duration: dur, ease });
-      animate(iconY,  iTy, { duration: dur, ease });
-      animate(iconS,  iScale, { duration: dur, ease });
+        animate(iconX,  iTx, { duration: dur, ease }),
+        animate(iconY,  iTy, { duration: dur, ease }),
+        animate(iconS,  iScale, { duration: dur, ease }),
 
-      animate(poolsX, pTx, { duration: dur, ease });
-      animate(poolsY, pTy, { duration: dur, ease });
-      animate(poolsS, pScale, { duration: dur, ease });
+        animate(poolsX, pTx, { duration: dur, ease }),
+        animate(poolsY, pTy, { duration: dur, ease }),
+        animate(poolsS, pScale, { duration: dur, ease })
+      ];
 
-      animate(bgOpacity, 0, { duration: dur, ease });
+      await Promise.all(flyAnimations);
+      if (!active) return;
 
-      setTimeout(() => {
-        const pageContent = document.getElementById("page-content");
-        if (pageContent) {
-          pageContent.style.transition = "none";
-          pageContent.style.visibility = "visible";
-          pageContent.style.opacity    = "0";
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              pageContent.style.transition = `opacity ${dur}s cubic-bezier(0.76,0,0.24,1)`;
-              pageContent.style.opacity    = "1";
-            });
-          });
-        }
-      }, 50);
-
-      await wait(dur * 1000);
-
+      // Fade header logo in
       const headerLogoEl = document.getElementById("header-logo-inner");
       if (headerLogoEl) {
         headerLogoEl.style.transition = "opacity 0.2s ease";
         headerLogoEl.style.opacity    = "1";
       }
 
-      animate(logoOpacity, 0, { duration: 0.2, ease: "easeInOut" });
-      await wait(200);
+      // Signal page completion and unblock body IMMEDIATELY before starting overlay fade-out
+      document.body.classList.remove("preloading");
+      onComplete?.();
+
+      // Fade out preloader overlay seamlessly over visible page
+      await animate(fullPreloaderOpacity, 0, { duration: 0.4, ease: "easeInOut" });
+      if (!active) return;
 
       setPhase("done");
       setMounted(false);
-      onComplete?.();
     };
 
     run();
+
+    return () => {
+      active = false;
+    };
   }, [rScale]);
 
   if (!mounted) return null;
@@ -331,18 +391,21 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
   const layerStyle = { backfaceVisibility: "hidden", transformStyle: "preserve-3d" } as const;
 
   return (
-    <div className="fixed inset-0 z-[9999] h-full overflow-hidden" style={layerStyle}>
-<motion.div
+    <motion.div 
+      className="fixed inset-0 z-[9999] h-full overflow-hidden pointer-events-none" 
+      style={{ opacity: fullPreloaderOpacity, ...layerStyle }}
+    >
+      {/* BACKGROUND GRADIENT & VIDEO */}
+      <div 
         className="absolute inset-0 pointer-events-none"
-        style={{ zIndex: 1, opacity: bgOpacity, ...layerStyle }}
-        initial={{ opacity: 1 }}
+        style={{ zIndex: 1, ...layerStyle }}
       >
         <div 
           className="absolute inset-0 w-full h-full"
-         style={{ background: "linear-gradient(145deg, #0A2B1E 0%, #0E3A28 100%)" }}
+          style={{ background: "linear-gradient(145deg, #0A2B1E 0%, #0E3A28 100%)" }}
         >
           <video
-            src="/videos/Pool-Water-Reflect.mp4"
+            src="/videos/pool-waves.mp4"
             loop
             muted
             playsInline
@@ -353,9 +416,10 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
             style={{ opacity: 0.15, mixBlendMode: "screen" }}
           />
         </div>
-      </motion.div>
+      </div>
 
-      <motion.div
+      {/* FLYING LOGO LAYER */}
+      <div
         style={{
           position: "absolute",
           inset: 0,
@@ -363,7 +427,6 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          opacity: logoOpacity,
           pointerEvents: "none",
           ...layerStyle
         }}
@@ -423,11 +486,11 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
           >
             <div ref={iconSvgRef} style={{ display: "flex", ...layerStyle }}>
               <LogoSVG
-                waveProgressMV={waveProgressMV}
                 circleProgressMV={circleProgressMV}
                 dotOpacityMV={dotOpacityMV}
                 width={iconW}
                 height={iconH}
+                startSweep={startSweep}
               />
             </div>
           </motion.div>
@@ -459,7 +522,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
             </motion.div>
           </motion.div>
         </div>
-      </motion.div>
-    </div>
+      </div>
+    </motion.div>
   );
 }

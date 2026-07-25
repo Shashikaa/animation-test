@@ -17,6 +17,7 @@ import LiquidBackgroundFn from "../app/utils/liquidBackground";
 type WaveCanvasProps = {
   imageSrc?: string;
   onReady?: () => void;
+  preloaderDone?: boolean;
 };
 
 // --- Shaders ---
@@ -78,7 +79,7 @@ const loadTextureOffThread = async (url: string): Promise<THREE.Texture> => {
 
 const yieldToMain = () => new Promise((resolve) => setTimeout(resolve, 30));
 
-export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
+export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: WaveCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -96,8 +97,10 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
     setIsMobileOrTablet(isMobileUA || window.innerWidth <= 1024);
   }, []);
 
-  // 2. Interaction-Triggered Setup
+  // 2. Preloader & Interaction-Triggered WebGL Setup
   useEffect(() => {
+    // 🌟 Hold back WebGL initialization while the preloader is running to prevent UI stutter
+    if (!preloaderDone) return;
     if (isMobileOrTablet === null || isMobileOrTablet || !canvasRef.current || !videoRef.current) return;
 
     let destroyed = false;
@@ -229,7 +232,7 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
     window.addEventListener("mousemove", triggerSetup, { once: true, passive: true });
     window.addEventListener("touchstart", triggerSetup, { once: true, passive: true });
     window.addEventListener("scroll", triggerSetup, { once: true, passive: true });
-    fallbackTimeout = setTimeout(triggerSetup, 3500);
+    fallbackTimeout = setTimeout(triggerSetup, 1000);
 
     return () => {
       destroyed = true;
@@ -243,9 +246,9 @@ export default function WaveCanvas({ imageSrc, onReady }: WaveCanvasProps) {
       if (shaderMat) shaderMat.dispose();
       if (appInstanceRef.current?.dispose) appInstanceRef.current.dispose();
     };
-  }, [isMobileOrTablet, imageSrc]);
+  }, [isMobileOrTablet, imageSrc, preloaderDone]);
 
-  // 3. Viewport Observer — Expanded rootMargin handles GSAP pin offset
+  // 3. Viewport Observer
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new IntersectionObserver(

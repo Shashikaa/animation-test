@@ -1,8 +1,9 @@
 "use client";
+
 import { useState, useRef, useEffect } from "react";
 import WaveCanvas from "./WaveCanvas";
 
-export default function SectionCTA() {
+export default function SectionCTA({ preloaderDone }: { preloaderDone?: boolean }) {
   return (
     <section
       className="about-section-cta section-cta !min-h-screen"
@@ -14,12 +15,12 @@ export default function SectionCTA() {
       }}
     >
       <div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full">
-        {/* Show WebGL canvas only on desktop */}
+        {/* Desktop WebGL canvas */}
         <div className="hidden lg:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
-          <WaveCanvas imageSrc="/CTA.webp" />
+          <WaveCanvas imageSrc="/CTA.webp" preloaderDone={preloaderDone} />
         </div>
 
-        {/* Show static background image on mobile and tablet */}
+        {/* Mobile/Tablet fallback */}
         <div className="block lg:hidden w-full h-full">
           <img 
             src="/CTAmob.webp" 
@@ -31,7 +32,7 @@ export default function SectionCTA() {
 
       {/* DESKTOP layout */}
       <div
-        className="hidden lg:flex section-container cta-inner-desktop "
+        className="hidden lg:flex section-container cta-inner-desktop"
         style={{
           position: "relative",
           zIndex: 10,
@@ -43,7 +44,6 @@ export default function SectionCTA() {
           padding: "0 48px",
         }}
       >
-        {/* LEFT */}
         <div style={{ flex: "0 0 auto", maxWidth: 620, display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <h2
@@ -62,7 +62,6 @@ export default function SectionCTA() {
           </p>
         </div>
 
-        {/* RIGHT: Form */}
         <div style={{ flex: "1 1 auto", maxWidth: 560, display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 72 }}>
             <CtaInput placeholder="Full Name" name="fullName" />
@@ -101,7 +100,7 @@ export default function SectionCTA() {
         }}
       >
         <h2
-          className="font-display !max-w-[300px] md:!max-w-[430px] "
+          className="font-display !max-w-[300px] md:!max-w-[430px]"
           style={{
             color: "#F4EEDF",
             margin: 0,
@@ -124,10 +123,8 @@ export default function SectionCTA() {
         </p>
 
         <div
-          className="flex flex-col md:grid md:grid-cols-2 gap-2 md:gap-x-[72px] md:gap-y-4 w-full max-w-[500px] md:max-w-[100%] !mt-8 md:!mt-34 "
-          style={{
-            margin: "0 auto",
-          }}
+          className="flex flex-col md:grid md:grid-cols-2 gap-2 md:gap-x-[72px] md:gap-y-4 w-full max-w-[500px] md:max-w-[100%] !mt-8 md:!mt-34"
+          style={{ margin: "0 auto" }}
         >
           <CtaInput placeholder="Full Name" name="fullName_mobile" isMobile />
           <CtaInput placeholder="Email" type="email" name="email_mobile" isMobile />

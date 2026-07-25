@@ -108,9 +108,32 @@ body {
   position:   relative;
 }
 
-/* ─── Preloader Lock ─────────────────────────────────────────── */
+/* ─── Preloader Lock & Immediate Page Visibility Fix ───────────── */
 body.preloading {
   overflow: hidden !important;
+}
+
+/* Hide page content while preloading to maximize animation performance */
+body.preloading .scroll-container,
+body.preloading .site-root {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Reveal page content instantly without CSS transitions once preloading ends */
+body:not(.preloading) .scroll-container,
+body:not(.preloading) .site-root {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transition: none !important;
+}
+
+.scroll-container,
+.site-root {
+  position: relative;
+  width: 100%;
 }
 
 /* ─── Full-Height Viewport Pin Wrapper (iOS + Android Unified Fix) ─── */
@@ -138,15 +161,6 @@ body.preloading {
 .pin-spacer > div {
   height: 100% !important;
   max-height: none !important;
-}
-
-.scroll-container {
-  position: relative;
-  width:    100%;
-}
-
-body.preloading .scroll-container {
-  visibility: hidden;
 }
 
 /* ─── GPU Layer Acceleration ─────────────────────────────────── */
@@ -275,7 +289,7 @@ p {
     animation-duration:        0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration:       0.01ms !important;
-    scroll-behavior:           auto !important;
+    scroll-behavior:          auto !important;
   }
 }
 

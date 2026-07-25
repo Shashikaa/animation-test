@@ -61,7 +61,7 @@ export default function HomeDesktop() {
       gsap.set(".hero-bg-wrapper", { opacity: 1, visibility: "visible" });
       gsap.set(".hero-gradient-bg", { opacity: 1, visibility: "visible" });
 
-      gsap.set([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 1, y: 0 });
+      gsap.set([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 1, y: 0, visibility: "visible" });
       gsap.set([".hero-right-text", ".hero-secondary-para"], { opacity: 1, visibility: "hidden" });
       gsap.set(".hero-secondary-text-wrap", { height: "auto" });
 
@@ -93,6 +93,11 @@ export default function HomeDesktop() {
 
   useEffect(() => {
     if (!preloaderDone) return;
+
+    // Ensure hero elements are instantly visible when preloader completes
+    gsap.set(".hero", { display: "block", opacity: 1, zIndex: 90 });
+    gsap.set(".hero-bg-wrapper", { opacity: 1, visibility: "visible" });
+    gsap.set([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 1, y: 0, visibility: "visible" });
 
     if (isTouchOnly()) {
       ScrollTrigger.normalizeScroll(true);
@@ -227,7 +232,6 @@ export default function HomeDesktop() {
           },
         });
 
-        // Plays initial text reveal animation ONCE on forward scroll
         const addPlayOnceTextReveal = (labelName: string, timeOffset: number, selector: string) => {
           const absoluteTime = tl.labels[labelName] + timeOffset;
 
@@ -459,7 +463,7 @@ export default function HomeDesktop() {
         </div>
 
         <div className="section-8 absolute inset-0 h-full w-full structural-layer">
-          <SectionEight />
+          <SectionEight preloaderDone={preloaderDone} />
         </div>
 
         <div className="section-10 absolute inset-0 h-full w-full structural-layer">
@@ -479,7 +483,7 @@ export default function HomeDesktop() {
         </div>
 
         <div className="section-cta absolute inset-0 h-full w-full structural-layer">
-          <SectionCTA />
+          <SectionCTA preloaderDone={preloaderDone} />
         </div>
 
         <div className="hero absolute inset-0 h-full w-full structural-layer">
