@@ -11,12 +11,19 @@ interface NavMenuProps {
 }
 
 const NAV_LINKS = [
+
   { label: "Home", href: "/", image: "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=1400&q=80" },
+
   { label: "About Us", href: "/about", image: "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1400&q=80" },
+
   { label: "Services", href: "/services", image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=80" },
+
   { label: "Projects", href: "/projects", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&q=80" },
+
   { label: "Contact Us", href: "/contact", image: "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=1400&q=80" },
-];
+
+]; 
+
 
 const SOCIAL_LINKS = [
   { label: "Instagram", href: "https://www.instagram.com/grandpools_aus/", src: "/ig.svg" },
@@ -509,7 +516,7 @@ function NavLink({
       className="!inline-block !no-underline !leading-none !cursor-pointer"
     >
       <span
-        className="font-display !inline-block !select-none !font-normal !uppercase !not-italic !leading-none !transition-[color,letter-spacing] !duration-[250ms,350ms] !ease-in-out"
+        className="font-body !inline-block !select-none !font-normal !uppercase !not-italic !leading-none !transition-[color,letter-spacing] !duration-[250ms,350ms] !ease-in-out"
         style={{
           fontSize: "clamp(22px, 2vw, 28px)",
           color: highlighted ? "#F4EEDF" : "rgba(244, 238, 223, 0.6)",

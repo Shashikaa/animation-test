@@ -20,11 +20,11 @@ type WaveCanvasProps = {
   preloaderDone?: boolean;
 };
 
-// --- Shaders ---
 const vertexShader = `
   varying vec2 vUv;
   void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
 `;
+
 const fragmentShader = `
   uniform sampler2D map;             
   uniform sampler2D videoMap;        
@@ -49,7 +49,6 @@ const fragmentShader = `
   }
 `;
 
-// --- Utility: Off-Main-Thread Texture Decoding ---
 const loadTextureOffThread = async (url: string): Promise<THREE.Texture> => {
   try {
     const res = await fetch(url, { mode: "cors" });
@@ -91,15 +90,12 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
   
   const appInstanceRef = useRef<any>(null);
 
-  // 1. Device Detection
   useEffect(() => {
     const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     setIsMobileOrTablet(isMobileUA || window.innerWidth <= 1024);
   }, []);
 
-  // 2. Preloader & Interaction-Triggered WebGL Setup
   useEffect(() => {
-    // 🌟 Hold back WebGL initialization while the preloader is running to prevent UI stutter
     if (!preloaderDone) return;
     if (isMobileOrTablet === null || isMobileOrTablet || !canvasRef.current || !videoRef.current) return;
 
@@ -248,7 +244,6 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
     };
   }, [isMobileOrTablet, imageSrc, preloaderDone]);
 
-  // 3. Viewport Observer
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new IntersectionObserver(
@@ -259,7 +254,6 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
     return () => observer.disconnect();
   }, []);
 
-  // 4. Playback Controller
   useEffect(() => {
     if (!engineReady || !isInViewport || !appInstanceRef.current || !videoRef.current) return;
 
@@ -304,11 +298,13 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
         />
       )}
 
+      {/* Static Fallback Image - Always rendered beneath WebGL so content is visible instantly */}
       {imageSrc && (
         <img
           src={imageSrc}
           alt="Background"
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          style={{ opacity: 1 }}
         />
       )}
       

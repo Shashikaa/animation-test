@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { usePathname } from "next/navigation";
 import { IconMark } from "./IconMark";
-import { HEADER_LOGO_SCALE, LOGO_COLOR, LOGO_ICON_W, LOGO_ICON_H, LOGO_GAP } from "./Preloader";
 import SubmitRequestModal from "./SubmitRequestModal";
 
-export { LOGO_COLOR, LOGO_ICON_W, LOGO_ICON_H, LOGO_GAP, HEADER_LOGO_SCALE };
+export const LOGO_COLOR        = "#F4EEDF";
+export const LOGO_ICON_W       = 160;
+export const LOGO_ICON_H       = 138;
+export const LOGO_GAP          = 10;
+export const HEADER_LOGO_SCALE = 0.28;
 
 function GrandSVG({ width, height }: { width: number; height: number }) {
   return (
@@ -68,44 +70,10 @@ function MenuIcon({ onClick }: { onClick?: () => void }) {
   );
 }
 
-function ContactButton({ onClick }: { onClick?: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      aria-label="Submit a request"
-      style={{
-        background: "none", border: "none", cursor: "pointer", padding: "0",
-        outline: "none", position: "relative", zIndex: 2,
-        display: "flex", alignItems: "center",
-      }}
-    >
-      <span
-        className="contact-btn-label"
-        style={{
-          fontFamily: "'Instrument Sans'",
-          fontWeight: 400,
-          fontSize: "12px",
-          lineHeight: "100%",
-          marginRight: "34px",
-          color: LOGO_COLOR,
-          textTransform: "uppercase" as const,
-          transition: "opacity 0.3s ease",
-        }}
-      >
-        CONTACT US
-      </span>
-      <style>{`
-        .contact-btn-label { opacity: 1; }
-        .contact-btn-label:hover { opacity: 0.6; }
-      `}</style>
-    </button>
-  );
-}
-
 function Logo({
   onClick,
   href = "/",
-  logoVisible = false,
+  logoVisible = true,
 }: {
   onClick?: () => void;
   href?: string;
@@ -123,7 +91,8 @@ function Logo({
         cursor: "pointer",
         opacity: logoVisible ? 1 : 0,
         transition: "opacity 0.25s ease",
-        overflow: "visible"
+        overflow: "visible",
+        pointerEvents: logoVisible ? "auto" : "none"
       }}
       onMouseEnter={e => { if (logoVisible) e.currentTarget.style.opacity = "0.72"; }}
       onMouseLeave={e => { if (logoVisible) e.currentTarget.style.opacity = "1"; }}
@@ -155,7 +124,6 @@ const glassVariants = {
 interface HeaderProps {
   onMenuClick?:    () => void;
   onLogoClick?:    () => void;
-  /** @deprecated — modal is now self-contained; kept for back-compat */
   onContactClick?: () => void;
   logoHref?:       string;
   visible?:        boolean;
@@ -166,23 +134,14 @@ interface HeaderProps {
 export default function Header({
   onMenuClick,
   onLogoClick,
-  onContactClick,
   logoHref    = "/",
   visible     = true,
   menuOpen    = false,
-  logoVisible = false,
+  logoVisible = true,
 }: HeaderProps) {
   const [hovered,   setHovered]   = useState(false);
-  const [isMobile,  setIsMobile]  = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -203,13 +162,7 @@ export default function Header({
     return () => window.removeEventListener("scroll", handleScrollClass);
   }, []);
 
-  // Show the background if it's hovered, if the menu is open, OR if the page has scrolled past 0
   const showGlass = hovered || menuOpen || isScrolled;
-
-  function handleContactClick() {
-    setModalOpen(true);
-    onContactClick?.();
-  }
 
   return (
     <>
@@ -257,7 +210,6 @@ export default function Header({
             background: "linear-gradient(180deg, rgba(10, 43, 30, 0.45) 0%, rgba(14, 58, 40, 0.45) 100%)",
             backdropFilter: "blur(42px) saturate(1.3)",
             WebkitBackdropFilter: "blur(42px) saturate(1.3)",
-     
           }}
         />
         <Logo

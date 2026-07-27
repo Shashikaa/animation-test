@@ -4,11 +4,11 @@ import { useSite } from "../app/context/SiteContext";
 import Preloader from "./Preloader";
 
 export default function PreloaderWrapper() {
-  const { setPreloaderDone } = useSite();
+  const { setPreloaderDone, markBrandPreloaderSeen } = useSite();
 
   const handleComplete = () => {
-    // FIXED: Only clear the scrolling lock when the preloader completely finishes its intro
     document.body.classList.remove("preloading");
+    markBrandPreloaderSeen();
     setPreloaderDone(true);
   };
 

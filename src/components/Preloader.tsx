@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState, useRef } from "react";
 import { motion, useMotionValue, useTransform, animate, MotionValue } from "framer-motion";
 
@@ -32,7 +33,6 @@ function useResponsiveScale() {
   return scale;
 }
 
-// ─── Shared SVG components ────────────────────────────────────────────────────
 function GrandSVG({ width, height }: { width: number; height: number }) {
   return (
     <svg viewBox="0 0 212 30" width={width} height={height} fill="none"
@@ -97,7 +97,6 @@ function LogoSVG({
         }
       `}} />
 
-      {/* 1st Center Wave SVG */}
       <div
         className={startSweep ? "pure-gpu-wave-draw" : ""}
         style={{
@@ -121,7 +120,6 @@ function LogoSVG({
         </svg>
       </div>
 
-      {/* 2nd Circle SVG Fade In */}
       <svg
         viewBox="385 0 206 178.21"
         width={width}
@@ -329,11 +327,9 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
 
       setPhase("hold");
 
-      // Give 2 animation frames for layout calculation
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       if (!active) return;
 
-      // Measure header DOM targets accurately
       preCalculateLayout();
 
       const ease = [0.76, 0, 0.24, 1] as const;
@@ -342,7 +338,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
 
       setPhase("fly-out");
 
-      // Animate flying logo up to header first before triggering main thread tasks
+      // Animate flying logo up to header
       const flyAnimations = [
         animate(grandX, gTx, { duration: dur, ease }),
         animate(grandY, gTy, { duration: dur, ease }),
@@ -367,12 +363,13 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
         headerLogoEl.style.opacity    = "1";
       }
 
-      // Signal page completion and unblock body IMMEDIATELY before starting overlay fade-out
+      // Unlock homepage content instantly before fading out overlay
       document.body.classList.remove("preloading");
+      document.documentElement.classList.remove("preloading", "show-brand-preloader");
       onComplete?.();
 
-      // Fade out preloader overlay seamlessly over visible page
-      await animate(fullPreloaderOpacity, 0, { duration: 0.4, ease: "easeInOut" });
+      // Smoothly fade out preloader overlay over the revealed page
+      await animate(fullPreloaderOpacity, 0, { duration: 0.35, ease: "easeInOut" });
       if (!active) return;
 
       setPhase("done");
@@ -384,7 +381,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
     return () => {
       active = false;
     };
-  }, [rScale]);
+  }, []);
 
   if (!mounted) return null;
 
@@ -395,7 +392,6 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
       className="fixed inset-0 z-[9999] h-full overflow-hidden pointer-events-none" 
       style={{ opacity: fullPreloaderOpacity, ...layerStyle }}
     >
-      {/* BACKGROUND GRADIENT & VIDEO */}
       <div 
         className="absolute inset-0 pointer-events-none"
         style={{ zIndex: 1, ...layerStyle }}
@@ -418,7 +414,6 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
         </div>
       </div>
 
-      {/* FLYING LOGO LAYER */}
       <div
         style={{
           position: "absolute",
@@ -443,7 +438,6 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
             boxSizing: "border-box",
           }}
         >
-          {/* LEFT: GRAND */}
           <motion.div
             ref={grandRef}
             style={{
@@ -470,7 +464,6 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
             </motion.div>
           </motion.div>
 
-          {/* CENTER: ICON */}
           <motion.div
             ref={iconRef}
             style={{
@@ -495,7 +488,6 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
             </div>
           </motion.div>
 
-          {/* RIGHT: POOLS */}
           <motion.div
             ref={poolsRef}
             style={{

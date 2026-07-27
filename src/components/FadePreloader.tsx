@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 type FadePreloaderProps = {
   onExitStart?: () => void;
   onComplete?: () => void;
 };
 
-// Set short durations so the SVG flashes/fades visually without hanging
-const HOLD_DURATION_MS = 100; // Hold briefly so the SVG/gradient actually renders
-const EXIT_DURATION_MS = 400; // Smooth 400ms fade-out transition
+const HOLD_DURATION_MS = 50;
+const EXIT_DURATION_MS = 150;
 
 export default function FadePreloader({
   onExitStart,
@@ -17,10 +16,8 @@ export default function FadePreloader({
 }: FadePreloaderProps) {
   const [visible, setVisible] = useState(true);
   const [fading, setFading] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // 1. Hold briefly to let the SVG render, then trigger exit
     const fadeTimer = setTimeout(() => {
       setFading(true);
       onExitStart?.();
@@ -32,7 +29,6 @@ export default function FadePreloader({
   useEffect(() => {
     if (!fading) return;
 
-    // 2. Complete transition cleanly after the exit duration
     const completeTimer = setTimeout(() => {
       onComplete?.();
       setVisible(false);
@@ -45,8 +41,7 @@ export default function FadePreloader({
 
   return (
     <div
-      ref={rootRef}
-      className="fixed inset-0 z-[9999] overflow-hidden pointer-events-none"
+      className="fixed inset-0 z-[99999] overflow-hidden pointer-events-none"
       style={{
         opacity: fading ? 0 : 1,
         transition: `opacity ${EXIT_DURATION_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`,

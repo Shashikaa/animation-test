@@ -8,9 +8,9 @@ export default function FadePreloaderWrapper() {
   const { setPreloaderDone } = useSite();
   const pathname = usePathname();
 
-  // Reset/Trigger updates when opacity animation starts dropping
   const handleExitStart = () => {
-    // Optional: add a hook here if your header needs a class when fade begins
+    document.body.classList.remove("preloading");
+    setPreloaderDone(true);
   };
 
   const handleComplete = () => {
@@ -18,7 +18,6 @@ export default function FadePreloaderWrapper() {
     setPreloaderDone(true);
   };
 
-  // We add a key tied to pathname to force a fresh mount on every page transition
   return (
     <FadePreloader 
       key={pathname}

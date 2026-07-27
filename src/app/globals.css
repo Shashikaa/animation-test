@@ -70,21 +70,22 @@
 }
 
 html, body {
-  background-color:        #000;
-  scrollbar-gutter:        stable;
-  color-scheme:            light dark;
-  -webkit-font-smoothing:  antialiased;
+  background: linear-gradient(135deg, #162D24 0%, #094146 100%) !important;
+  background-color: #162D24 !important;
+  scrollbar-gutter: stable;
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering:          optimizeLegibility;
+  text-rendering: optimizeLegibility;
   
-  scroll-behavior:         auto !important; 
-  min-height:              100%;
+  scroll-behavior: auto !important; 
+  min-height: 100%;
   
-  scrollbar-width:         none;
-  -ms-overflow-style:      none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y:     none;
+  overscroll-behavior-y: none;
 }
 
 html::-webkit-scrollbar,
@@ -95,7 +96,6 @@ body::-webkit-scrollbar {
 }
 
 body {
-  background:   var(--background);
   color:        var(--foreground);
   font-family:  var(--font-body);
   font-size:    var(--text-body);
@@ -103,40 +103,43 @@ body {
   overflow-x:   hidden;
 }
 
-.site-root {
-  overflow-x: hidden;
-  position:   relative;
-}
+/* ─── Preloader Hide & Lock Rules ───────────────────────────── */
 
-/* ─── Preloader Lock & Immediate Page Visibility Fix ───────────── */
+/* Lock scrolling strictly on html and body while preloading */
+html.preloading,
 body.preloading {
   overflow: hidden !important;
+  touch-action: none !important;
+  background: linear-gradient(135deg, #162D24 0%, #094146 100%) !important;
+  background-color: #162D24 !important;
 }
 
-/* Hide page content while preloading to maximize animation performance */
-body.preloading .scroll-container,
-body.preloading .site-root {
+/* Strictly hide site-root while preloading to eliminate body flashing */
+html.preloading .site-root,
+body.preloading .site-root,
+html.preloading header,
+body.preloading header {
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
 }
 
-/* Reveal page content instantly without CSS transitions once preloading ends */
-body:not(.preloading) .scroll-container,
-body:not(.preloading) .site-root {
-  opacity: 1 !important;
-  visibility: visible !important;
-  pointer-events: auto !important;
-  transition: none !important;
+/* Base site-root behavior once preloading is complete */
+.site-root {
+  overflow-x: hidden;
+  position: relative;
+  width: 100%;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.scroll-container,
-.site-root {
+.scroll-container {
   position: relative;
   width: 100%;
 }
 
-/* ─── Full-Height Viewport Pin Wrapper (iOS + Android Unified Fix) ─── */
+/* ─── Full-Height Viewport Pin Wrapper ───────────────────────── */
 .pin-all,
 .pin-all-home,
 .pin-all-contact,
@@ -146,7 +149,7 @@ body:not(.preloading) .site-root {
 .pin-all-single-project {
   height: 100vh !important;
   height: calc(var(--vh, 1vh) * 100) !important;
-  height: 100lvh !important; /* Forces true full-bleed height on iOS Safari */
+  height: 100lvh !important;
   width: 100%;
   position: relative;
   overflow: hidden;
@@ -164,7 +167,8 @@ body:not(.preloading) .site-root {
 }
 
 /* ─── GPU Layer Acceleration ─────────────────────────────────── */
-.gpu-accelerated {
+.gpu-accelerated,
+.structural-layer {
   will-change: transform, opacity;
   transform: translate3d(0, 0, 0);
   -webkit-backface-visibility: hidden;
@@ -304,3 +308,4 @@ p {
     display: inline-block;
   }
 }
+

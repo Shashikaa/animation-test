@@ -1,21 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
-import { useSite } from "./context/SiteContext";
-
-// Define the common prop type required by both layout types
-interface HomeLayoutProps {
-  preloaderDone: boolean;
-}
-
-// Pass the interface types inside the dynamic generic angle brackets <...>
-const HomeDesktop = dynamic<HomeLayoutProps>(() => import("./HomeDesktop"), { ssr: false });
-const HomeMobile  = dynamic<HomeLayoutProps>(() => import("./HomeMobile"),  { ssr: false });
+import { useState, useEffect } from "react";
+import HomeDesktop from "./HomeDesktop";
+import HomeMobile from "./HomeMobile";
 
 export default function Home() {
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
-  const { preloaderDone } = useSite();
+  const [isMobile, setIsMobile] = useState<boolean>(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1025);
@@ -24,15 +14,5 @@ export default function Home() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  return (
-    <>
-      {isMobile !== null && (
-        isMobile ? (
-          <HomeMobile preloaderDone={preloaderDone} />
-        ) : (
-          <HomeDesktop preloaderDone={preloaderDone} />
-        )
-      )}
-    </>
-  );
+  return isMobile ? <HomeMobile /> : <HomeDesktop />;
 }

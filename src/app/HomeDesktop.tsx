@@ -3,8 +3,8 @@
 import { useRef, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useSite } from "./context/SiteContext";
 import dynamic from "next/dynamic";
+import { useSite } from "./context/SiteContext";
 
 import Hero from "../components/Home/Hero";
 import SectionTwo from "../components/Home/SectionTwo";
@@ -51,13 +51,14 @@ function executeDesktopSplitting(selector: string) {
 }
 
 export default function HomeDesktop() {
-  const contextValues = useSite() as any;
-  const preloaderDone = contextValues.preloaderDone;
   const scopeRef = useRef<HTMLDivElement>(null);
+  const context = useSite();
+  const preloaderDone = context?.preloaderDone ?? false;
 
+  // Set up layout baseline immediately on mount
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.set(".hero", { yPercent: 0, zIndex: 90, display: "block", opacity: 1 });
+      gsap.set(".hero", { yPercent: 0, zIndex: 90, display: "block", opacity: 1, visibility: "visible" });
       gsap.set(".hero-bg-wrapper", { opacity: 1, visibility: "visible" });
       gsap.set(".hero-gradient-bg", { opacity: 1, visibility: "visible" });
 
@@ -91,11 +92,11 @@ export default function HomeDesktop() {
     return () => ctx.revert();
   }, []);
 
+  // Build master timeline and execute text reveals ONLY once preloaderDone === true
   useEffect(() => {
     if (!preloaderDone) return;
 
-    // Ensure hero elements are instantly visible when preloader completes
-    gsap.set(".hero", { display: "block", opacity: 1, zIndex: 90 });
+    gsap.set(".hero", { display: "block", opacity: 1, zIndex: 90, visibility: "visible" });
     gsap.set(".hero-bg-wrapper", { opacity: 1, visibility: "visible" });
     gsap.set([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 1, y: 0, visibility: "visible" });
 
@@ -142,6 +143,7 @@ export default function HomeDesktop() {
       gsap.set(".footer", { yPercent: 100 });
 
       const buildTimeline = () => {
+        // Execute text reveal splitting when DOM elements are fully visible
         useTextReveal(scopeRef, ".section-2 .reveal-text");
         useTextReveal(scopeRef, ".section-8 .reveal-text");
         useTextReveal(scopeRef, ".section-10 .reveal-text");
@@ -456,7 +458,10 @@ export default function HomeDesktop() {
   }, [preloaderDone]);
 
   return (
-    <div ref={scopeRef}>
+    <div 
+      ref={scopeRef}
+      className="home-desktop-scope w-full h-full opacity-100 visible"
+    >
       <div className="pin-all relative h-screen w-screen overflow-hidden bg-black">
         <div className="section-2 absolute inset-0 h-full w-full structural-layer">
           <SectionTwo />
