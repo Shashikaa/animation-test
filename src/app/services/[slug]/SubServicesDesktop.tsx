@@ -16,16 +16,22 @@ gsap.registerPlugin(ScrollTrigger);
 
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
+// Dedicated Desktop Scroll Metrics
+const PX_PER_MAIN_PANEL = 1250;
+const PX_PER_SUB_STEP = 550;
+const PAUSE_PX = 150;
+
 type SubServicesDesktopProps = {
   pageData: FullServiceData;
 };
 
 export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps) {
-  const { setPreloaderDone } = useSite();
+  const { setPreloaderDone, preloaderDone } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
   
   const [introDone, setIntroDone] = useState(false);
 
+  // 1. Scroll restoration & initialization
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.history.scrollRestoration) {
@@ -36,6 +42,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
+  // 2. Lock body scroll during intro sequence
   useEffect(() => {
     const locked = !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
@@ -44,57 +51,67 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     };
   }, [introDone]);
 
+  // 3. Offscreen layout setup (Keeps CTA layout bounds intact for WebGL)
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.set(".service-hero-bg", { scale: 1.3, xPercent: 0, transformOrigin: "center center" });
-      gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: -60 });
-      gsap.set(".services-hero-top-layer", { width: "100%" }); 
-      
-      gsap.set(".section-one-wrap", { clipPath: "inset(100% 0% 0% 0%)" });
-      
-      gsap.set(".s10-seq-container", { y: 0 });
-      gsap.set(".s10-seq-p", { opacity: 1 });
+      ScrollTrigger.config({
+        ignoreMobileResize: true,
+        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange,resize",
+      });
 
-      gsap.set(".s1-glass-card", { x: 40, opacity: 0 }); 
-      gsap.set([".s1-static-title", ".s1-static-desc"], { opacity: 0, y: 30 });
-      gsap.set([".s1-reveal-top", ".s1-reveal-bottom"], { opacity: 0, y: 40 });
-
-      // Panel setups
-      gsap.set(".services-faq-wrap", { visibility: "hidden", y: "100%" });
-      gsap.set(".services-section-two-wrap", { visibility: "hidden", clipPath: "inset(0% 0% 0% 100%)" });
+      gsap.set(".service-hero-bg", { scale: 1.4, xPercent: 0, force3D: true, transformOrigin: "center center" });
+      gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: -60, force3D: true });
+      gsap.set(".services-hero-top-layer", { width: "100%", force3D: true }); 
       
-      // CTA and Footer tracking sets
-      gsap.set([".services-section-cta", ".services-footer-wrap"], { yPercent: 100, visibility: "hidden" });
-      gsap.set(".services-section-cta", { zIndex: 95 });
-      gsap.set(".services-footer-wrap", { zIndex: 96 });
+      gsap.set(".section-one-wrap", { clipPath: "inset(100% 0% 0% 0%)", WebkitClipPath: "inset(100% 0% 0% 0%)", force3D: true });
+      
+      gsap.set(".s10-seq-container", { y: 0, force3D: true });
+      gsap.set(".s10-seq-p", { opacity: 1, force3D: true });
+
+      gsap.set(".s1-glass-card", { x: 40, opacity: 0, force3D: true }); 
+      gsap.set([".s1-static-title", ".s1-static-desc"], { opacity: 0, y: 30, force3D: true });
+      gsap.set([".s1-reveal-top", ".s1-reveal-bottom"], { opacity: 0, y: 40, force3D: true });
+
+      // Panel setups (Normalized to yPercent for consistent WebGL layout calculations)
+      gsap.set(".services-faq-wrap", { visibility: "hidden", yPercent: 100, force3D: true });
+      gsap.set(".services-section-two-wrap", { visibility: "hidden", clipPath: "inset(0% 0% 0% 100%)", WebkitClipPath: "inset(0% 0% 0% 100%)", force3D: true });
+      
+      // CTA and Footer tracking sets (Offscreen staging without display: none for clean WebGL initialization)
+      gsap.set(".services-section-cta", { yPercent: 100, visibility: "hidden", zIndex: 95, force3D: true });
+      gsap.set(".services-footer-wrap", { yPercent: 100, visibility: "hidden", zIndex: 96, force3D: true });
     }, scopeRef);
     return () => ctx.revert();
   }, []);
 
+  // 4. Play Intro Cinematic Animation
   useEffect(() => {
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
-        onComplete: () => setIntroDone(true)
+        onComplete: () => {
+          setIntroDone(true);
+          setTimeout(() => ScrollTrigger.refresh(), 50);
+        }
       });
 
       introTl.to(".service-hero-bg", {
-        scale: 1.1, 
-        duration: 2.2,
+        scale: 1.15, 
+        duration: 1.5,
         ease: "power2.out"
       }, 0);
 
       introTl.to([".hero-title", ".hero-desc", ".hero-btn"], {
         opacity: 1,
         y: 0,
-        duration: 1.4,
-        stagger: 0.2,
-        ease: "power3.out",
-      }, 0.4);
+        duration: 1.0,
+        stagger: 0.15,
+        ease: "power2.out",
+      }, 0.2);
     }, scopeRef);
 
     return () => ctx.revert();
   }, []);
 
+  // 5. Master Single ScrollTrigger Timeline
   useEffect(() => {
     if (!introDone) return;
 
@@ -106,11 +123,6 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
 
     const ctx = gsap.context(() => {
       gsap.ticker.lagSmoothing(0);
-
-      ScrollTrigger.config({
-        ignoreMobileResize: true,
-        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize",
-      });
 
       const performanceTargets = [
         ".services-hero-master", ".service-hero-bg", ".services-hero-top-layer",
@@ -126,8 +138,6 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
         });
       });
 
-      const scrubValue = 1.2;
-
       const buildTimeline = () => {
         ScrollTrigger.refresh();
 
@@ -138,72 +148,98 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
           vvCleanup = () => vv.removeEventListener("resize", onVVResize);
         }
 
+        const MAIN_PANELS_COUNT = 6;
+        const SUB_STEPS_COUNT = 3;
+        const PAUSES_COUNT = 4;
+
+        const DYNAMIC_SCROLL_TRACK = 
+          (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
+          (SUB_STEPS_COUNT * PX_PER_SUB_STEP) + 
+          (PAUSES_COUNT * PAUSE_PX);
+
         const tl = gsap.timeline({
           defaults: { ease: "none" }, 
           scrollTrigger: {
-            trigger: ".services-hero-master",
+            trigger: ".sub-services-pin",
             start: "top top",
-            end: "+=10500", 
-            scrub: scrubValue,
+            end: `+=${DYNAMIC_SCROLL_TRACK}`, 
+            scrub: 1,
             pin: true,
             pinSpacing: true,
             anticipatePin: 1,
             preventOverlaps: true,
             invalidateOnRefresh: true,
-            fastScrollEnd: true,
             snap: {
-              snapTo: (progress) => {
-                const labels = Object.keys(tl.labels).map(name => tl.labels[name] / tl.totalDuration());
-                labels.sort((a, b) => a - b);
-                
-                const currentProg = tl.progress();
-                const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+              directional: false,
+              snapTo: (value, self) => {
+                const totalDur = tl.totalDuration();
+                if (!totalDur) return value;
 
-                for (let i = 0; i < labels.length - 1; i++) {
-                  const start = labels[i];
-                  const end = labels[i + 1];
+                const labelTimes = Array.from(
+                  new Set(
+                    Object.keys(tl.labels).map(name =>
+                      Number((tl.labels[name] / totalDur).toFixed(5))
+                    )
+                  )
+                ).sort((a, b) => a - b);
 
-                  if (currentProg >= start && currentProg <= end) {
-                    const localProgress = (currentProg - start) / (end - start);
-                    if (isForward) {
+                if (labelTimes.length < 2) return value;
+
+                const curProgress = self ? self.progress : value;
+                const isScrollingDown = value >= curProgress;
+
+                for (let i = 0; i < labelTimes.length - 1; i++) {
+                  const start = labelTimes[i];
+                  const end = labelTimes[i + 1];
+
+                  if (curProgress >= start - 0.0001 && curProgress <= end + 0.0001) {
+                    const gap = end - start;
+                    if (gap <= 0.00001) continue;
+
+                    const localProgress = (curProgress - start) / gap;
+
+                    if (isScrollingDown) {
                       return localProgress >= 0.35 ? end : start;
                     } else {
-                      return localProgress <= 0.40 ? start : end;
+                      return localProgress <= 0.50 ? start : end;
                     }
                   }
                 }
-                return progress;
+
+                return value;
               },
-              duration: { min: 0.3, max: 0.6 },
-              delay: 0.01,
-              ease: "power1.inOut"
+              duration: { min: 0.4, max: 0.8 },
+              delay: 0.05,
+              ease: "power3.inOut"
             }
           }
         });
 
-        // ── PHASE 1: HERO HOLD BUFFER (Matched exactly with ServicesDesktop) ──
-        tl.addLabel("heroStart")
-          .set(".hero-btn", { pointerEvents: "auto", zIndex: 50 })
-          .set(".hero-text-wrap", { transformOrigin: "left bottom" }, 0)
-          .to(".hero-text-wrap", { y: 10, scale: 0.75, duration: 1.0 }, 0)
+        // ── HERO HOLD BUFFER ──
+        tl.addLabel("heroStart", 0);
+        tl.set(".hero-btn", { pointerEvents: "auto", zIndex: 50 }, 0);
+        tl.set(".hero-text-wrap", { transformOrigin: "left bottom" }, 0);
+
+        tl.to(".hero-text-wrap", { y: 10, scale: 0.75, duration: 1.0 }, 0)
           .to(".services-hero-top-layer", { width: "60%", duration: 1.0 }, 0)
           .to(".hero-btn", { opacity: 0, duration: 0.1, ease: "power2.out", pointerEvents: "none" }, 0);
 
-        // ── PHASE 2: Reveal Section One Sheet ──
+        // ── SECTION 1 REVEAL ──
         tl.addLabel("sec1Start")
           .to(".section-one-wrap", {
             clipPath: "inset(0% 0% 0% 0%)",
+            WebkitClipPath: "inset(0% 0% 0% 0%)",
             duration: 1.0, 
             ease: "power1.inOut"
           }, "sec1Start")
           .to(".service-hero-bg", {
             xPercent: -8,
-            scale: 1.6,    
+            scale: 1.6,     
             duration: 1.0, 
             ease: "power1.inOut",
           }, "sec1Start");
 
-        // ── PHASE 2.5: Scale Up Cleanly ──
+        // ── SCALE UP ──
         tl.addLabel("sec1Expanded")
           .to([".s10-para-top", ".s10-title"], {
             opacity: 0,
@@ -240,25 +276,31 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
           
         tl.addLabel("text4");
 
-        // ── PHASE 2.6: FAQ Section Slide Up ──
+        // ── FAQ SECTION SLIDE UP ──
         tl.addLabel("faqStart", "text4")
           .set(".services-faq-wrap", { visibility: "visible" }, "faqStart")
           .to(".services-faq-wrap", {
-            y: "0%",
+            yPercent: 0,
             duration: 1.0, 
             ease: "power1.inOut"
           }, "faqStart");
 
         // ── CTA REVEAL TRACK ──
         tl.addLabel("ctaStart")
-          .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
-          .to(".services-section-cta", { yPercent: 0, duration: 1.0 }, "ctaStart")
-          .to(".services-faq-wrap", { scale: 1, duration: 1.0 }, "ctaStart");
+          .set(".services-section-cta", { 
+            visibility: "visible",
+            onStart: () => {
+              // Force WebGL Canvas to recalculate dimensions on reveal
+              window.dispatchEvent(new Event("resize"));
+            }
+          }, "ctaStart")
+          .to(".services-section-cta", { yPercent: 0, duration: 1.0, ease: "power2.out" }, "ctaStart")
+          .to(".services-faq-wrap", { scale: 1.0, duration: 1.0 }, "ctaStart");
 
         // ── FOOTER REVEAL TRACK ──
         tl.addLabel("footerStart")
           .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
-          .to(".services-footer-wrap", { yPercent: 0, duration: 1.0 }, "footerStart")
+          .to(".services-footer-wrap", { yPercent: 0, duration: 1.0, ease: "power2.out" }, "footerStart")
           .to(".services-faq-wrap", { scale: 0.92, duration: 1.0 }, "footerStart")
           .to(".services-section-cta .cta-inner-desktop", { opacity: 0, duration: 0.7, ease: "power1.out" }, "footerStart");
           
@@ -282,8 +324,8 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
   }, [introDone]);
 
   return (
-    <div ref={scopeRef} className="w-full relative">
-      <div className="services-hero-master relative w-full h-screen overflow-hidden z-10 bg-black" style={{ visibility: "visible" }}>
+    <div ref={scopeRef}>
+      <div className="sub-services-pin relative h-screen w-screen overflow-hidden bg-black" style={{ visibility: "visible" }}>
         
         {/* Layer 1: Hero view base */}
         <div className="services-hero-wrap relative z-10 pointer-events-auto w-full h-full">
@@ -301,12 +343,12 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
         </div>
 
         {/* Layer 4: Section CTA wrapper */}
-        <div className="services-section-cta absolute bottom-0 left-0 w-full structural-layer">
-          <SectionCTA />
+        <div className="services-section-cta absolute bottom-0 left-0 w-full structural-layer pointer-events-auto" style={{ zIndex: 95 }}>
+          <SectionCTA preloaderDone={preloaderDone} />
         </div>
 
         {/* Layer 5: Footer wrapper */}
-        <div className="services-footer-wrap absolute left-0 bottom-0 w-full structural-layer">
+        <div className="services-footer-wrap absolute left-0 bottom-0 w-full structural-layer" style={{ zIndex: 96 }}>
           <Footer />
         </div>
         

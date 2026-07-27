@@ -71,14 +71,13 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       return;
     }
 
-    // Lenis Setup for Desktop
+    // Ultrafast, buttery smooth Lenis setup using direct linear interpolation (lerp)
     const lenis = new Lenis({
-      syncTouch: false,
-      touchMultiplier: 0,
-      duration: 1.2,
-      wheelMultiplier: 1.4,  
+      lerp: 0.1,             // Buttery smooth weight interpolation (lower = smoother/silkier)
+      wheelMultiplier: 1.2,   // Natural 1:1 mouse scroll mapping
+      touchMultiplier: 1.0,
       infinite: false,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
     });
 
     lenisRef.current = lenis;
@@ -87,25 +86,23 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       smootherRef.current = lenis;
     }
 
+    // Direct ScrollTrigger update on Lenis scroll tick
+    lenis.on("scroll", () => {
+      ScrollTrigger.update();
+    });
+
+    // High performance GSAP Ticker synchronization
     const tickerCallback = (time: number) => {
       lenis.raf(time * 1000);
     };
+    
     gsap.ticker.add(tickerCallback);
-    gsap.ticker.lagSmoothing(50, 16);
+    gsap.ticker.lagSmoothing(100, 16); // High buffer prevents dropped frame stutters
 
-    let lastY = 0;
-    let lastTime = performance.now();
     let thumbVisible = false;
 
     const handleScroll = (e: any) => {
-      ScrollTrigger.update();
-
-      const now = performance.now();
-      const dt = now - lastTime || 1;
       const y = e.scroll; 
-
-      lastY = y;
-      lastTime = now;
 
       if (!thumbRef.current) return;
       
@@ -193,7 +190,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
             background: "rgba(255,255,255,0.4)",
             borderRadius: "999px",
             opacity: 0,
-            transition: "opacity 0.3s ease, transform 0.1s linear",
+            transition: "opacity 0.3s ease",
             willChange: "transform",
           }}
         />

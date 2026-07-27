@@ -76,7 +76,7 @@ const loadTextureOffThread = async (url: string): Promise<THREE.Texture> => {
   }
 };
 
-const yieldToMain = () => new Promise((resolve) => setTimeout(resolve, 30));
+const yieldToNextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
 
 export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: WaveCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -86,7 +86,6 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
   const [isMobileOrTablet, setIsMobileOrTablet] = useState<boolean | null>(null);
   const [engineReady, setEngineReady] = useState(false);
   const [isInViewport, setIsInViewport] = useState(false);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   
   const appInstanceRef = useRef<any>(null);
 
@@ -109,13 +108,14 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
 
     const setupEngine = async () => {
       try {
-        await yieldToMain();
+        await yieldToNextFrame();
         if (destroyed) return;
 
         if (imageSrc) {
           bgTexture = await loadTextureOffThread(imageSrc);
         }
-        await yieldToMain();
+        
+        await yieldToNextFrame();
         if (destroyed) return;
 
         const originalFromScene = THREE.PMREMGenerator.prototype.fromScene;
@@ -133,7 +133,7 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
         renderer.outputColorSpace = LinearSRGBColorSpace; 
         appInstance.three.scene.add(new AmbientLight(0xffffff, 1.0));
 
-        await yieldToMain();
+        await yieldToNextFrame();
         if (destroyed) return;
 
         videoTexture = new VideoTexture(videoRef.current as HTMLVideoElement);
@@ -182,7 +182,8 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
         }
 
         appInstance.setRain(false);
-        await yieldToMain();
+        
+        await yieldToNextFrame();
         if (destroyed) return;
 
         renderer.compile(appInstance.three.scene, appInstance.three.camera);
@@ -202,6 +203,9 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
         
         updateAspect();
         window.addEventListener("resize", updateAspect);
+        
+        // Render 1 initial frame immediately so the texture is drawn to the canvas before video starts
+        renderer.render(appInstance.three.scene, appInstance.three.camera);
         setEngineReady(true);
 
       } catch (err) {
@@ -219,16 +223,16 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
       clearTimeout(fallbackTimeout);
 
       if ("requestIdleCallback" in window) {
-        (window as any).requestIdleCallback(() => setupEngine(), { timeout: 1000 });
+        (window as any).requestIdleCallback(() => setupEngine(), { timeout: 2000 });
       } else {
-        setTimeout(() => setupEngine(), 200);
+        setTimeout(() => setupEngine(), 300);
       }
     };
 
     window.addEventListener("mousemove", triggerSetup, { once: true, passive: true });
     window.addEventListener("touchstart", triggerSetup, { once: true, passive: true });
     window.addEventListener("scroll", triggerSetup, { once: true, passive: true });
-    fallbackTimeout = setTimeout(triggerSetup, 1000);
+    fallbackTimeout = setTimeout(triggerSetup, 1500);
 
     return () => {
       destroyed = true;
@@ -263,7 +267,6 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
     let startVideoFn: () => void;
 
     const handlePlaying = () => {
-      setIsVideoPlaying(true);
       onReady?.();
     };
     video.addEventListener("playing", handlePlaying);
@@ -311,8 +314,8 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
       {!isMobileOrTablet && (
         <canvas
           ref={canvasRef}
-          className={`absolute inset-0 w-full h-full block transition-opacity duration-1000 ease-out ${
-            engineReady && isInViewport && isVideoPlaying ? "opacity-100" : "opacity-0"
+          className={`absolute inset-0 w-full h-full block transition-opacity duration-500 ease-out ${
+            engineReady ? "opacity-100" : "opacity-0"
           }`}
           style={{ zIndex: 1 }}
         />

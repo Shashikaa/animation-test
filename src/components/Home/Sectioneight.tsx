@@ -1,9 +1,13 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import WaveCanvas from "../WaveCanvas";
+import LazyWaveCanvas from "../LazyWaveCanvas";
 
-export default function SectionEight({ preloaderDone }: { preloaderDone?: boolean }) {
+type SectionEightProps = {
+  preloaderDone?: boolean;
+};
+
+export default function SectionEight({ preloaderDone }: SectionEightProps) {
   const sectionRef   = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const personRef    = useRef<HTMLDivElement>(null);
@@ -116,7 +120,7 @@ export default function SectionEight({ preloaderDone }: { preloaderDone?: boolea
             style={{ willChange: "transform" }}
           >
             <div className="absolute inset-0 z-[1] pointer-events-none w-full h-full">
-              <WaveCanvas imageSrc="/Forest.webp" preloaderDone={preloaderDone} />
+              <LazyWaveCanvas imageSrc="/Forest.webp" preloaderDone={preloaderDone} />
             </div>
           </div>
         </div>

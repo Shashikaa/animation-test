@@ -16,8 +16,13 @@ gsap.registerPlugin(ScrollTrigger);
 
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
+// Dedicated Desktop Scroll Metrics
+const PX_PER_MAIN_PANEL = 1250;
+const PX_PER_SUB_STEP = 550;
+const PAUSE_PX = 150;
+
 export default function ServicesDesktop() {
-  const { setPreloaderDone } = useSite();
+  const { setPreloaderDone, preloaderDone } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
   
   const [introDone, setIntroDone] = useState(false);
@@ -25,6 +30,7 @@ export default function ServicesDesktop() {
   
   const lastSec2Idx = useRef<number>(-1);
 
+  // 1. Scroll restoration & initialization
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.history.scrollRestoration) {
@@ -35,6 +41,7 @@ export default function ServicesDesktop() {
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
+  // 2. Lock body scroll during intro sequence
   useEffect(() => {
     const locked = !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
@@ -43,53 +50,64 @@ export default function ServicesDesktop() {
     };
   }, [introDone]);
 
+  // 3. Offscreen layout setup (Keeps CTA layout bounds intact for WebGL)
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.set(".service-hero-bg", { scale: 1.3, xPercent: 0, transformOrigin: "center center" });
-      gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: -60 });
-      gsap.set(".services-hero-top-layer", { width: "100%" });
-      
-      gsap.set(".section-one-wrap", { clipPath: "inset(100% 0% 0% 0%)" });
-      gsap.set(".s1-glass-card", { x: 40, opacity: 0 }); 
-      
-      gsap.set(".services-section-two-wrap", { visibility: "hidden", opacity: 1 });
-      gsap.set(".s2-left-panel", { yPercent: 100 });
-      gsap.set(".s2-right-panel", { yPercent: -100 });
-      gsap.set(".s2-inner-fade-target", { opacity: 0 });
+      ScrollTrigger.config({
+        ignoreMobileResize: true,
+        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange,resize",
+      });
 
-      gsap.set(".services-appsec-wrap", { visibility: "hidden", yPercent: 100 });
+      gsap.set(".service-hero-bg", { scale: 1.4, xPercent: 0, force3D: true, transformOrigin: "center center" });
+      gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: -60, force3D: true });
+      gsap.set(".services-hero-top-layer", { width: "100%", force3D: true });
+      
+      gsap.set(".section-one-wrap", { clipPath: "inset(100% 0% 0% 0%)", WebkitClipPath: "inset(100% 0% 0% 0%)", force3D: true });
+      gsap.set(".s1-glass-card", { x: 40, opacity: 0, force3D: true }); 
+      
+      gsap.set(".services-section-two-wrap", { visibility: "hidden", opacity: 1, force3D: true });
+      gsap.set(".s2-left-panel", { yPercent: 100, force3D: true });
+      gsap.set(".s2-right-panel", { yPercent: -100, force3D: true });
+      gsap.set(".s2-inner-fade-target", { opacity: 0, force3D: true });
 
-      // Matched directly with HomeDesktop staging model
-      gsap.set(".services-section-cta", { display: "none", yPercent: 100, zIndex: 120 });
-      gsap.set(".services-footer-wrap", { display: "none", yPercent: 100, zIndex: 125 });
+      gsap.set(".services-appsec-wrap", { visibility: "hidden", yPercent: 100, force3D: true });
+
+      // FIX: Standardize offscreen position without using display: none so WebGL context initializes cleanly
+      gsap.set(".services-section-cta", { yPercent: 100, visibility: "hidden", zIndex: 120, force3D: true });
+      gsap.set(".services-footer-wrap", { yPercent: 100, visibility: "hidden", zIndex: 125, force3D: true });
     }, scopeRef);
     return () => ctx.revert();
   }, []);
 
+  // 4. Play Intro Cinematic Animation
   useEffect(() => {
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
-        onComplete: () => setIntroDone(true)
+        onComplete: () => {
+          setIntroDone(true);
+          setTimeout(() => ScrollTrigger.refresh(), 50);
+        }
       });
 
       introTl.to(".service-hero-bg", {
-        scale: 1.1, 
-        duration: 2.2,
+        scale: 1.15, 
+        duration: 1.5,
         ease: "power2.out"
       }, 0);
 
       introTl.to([".hero-title", ".hero-desc", ".hero-btn"], {
         opacity: 1,
         y: 0,
-        duration: 1.4,
-        stagger: 0.2,
-        ease: "power3.out",
-      }, 0.4);
+        duration: 1.0,
+        stagger: 0.15,
+        ease: "power2.out",
+      }, 0.2);
     }, scopeRef);
 
     return () => ctx.revert();
   }, []);
 
+  // 5. Master Single ScrollTrigger Timeline
   useEffect(() => {
     if (!introDone) return;
 
@@ -101,11 +119,6 @@ export default function ServicesDesktop() {
 
     const ctx = gsap.context(() => {
       gsap.ticker.lagSmoothing(0);
-
-      ScrollTrigger.config({
-        ignoreMobileResize: true,
-        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize",
-      });
 
       const performanceTargets = [
         ".services-hero-master", ".service-hero-bg", ".services-hero-top-layer",
@@ -120,8 +133,6 @@ export default function ServicesDesktop() {
           willChange: "transform, opacity, clip-path"
         });
       });
-
-      const scrubValue = 1.2;
 
       useTextReveal(scopeRef, ".section-one-wrap .reveal-text");
       useTextReveal(scopeRef, ".services-section-two-wrap .reveal-text");
@@ -142,6 +153,15 @@ export default function ServicesDesktop() {
         ".services-appsec-wrap .reveal-text > *"
       ], { y: 45, opacity: 0 });
 
+      const triggerSec2Hook = (targetIdx: number) => {
+        if (targetIdx !== lastSec2Idx.current) {
+          lastSec2Idx.current = targetIdx;
+          if (typeof (window as any)._sec2GoTo === "function") {
+            (window as any)._sec2GoTo(targetIdx);
+          }
+        }
+      };
+
       const buildTimeline = () => {
         ScrollTrigger.refresh();
 
@@ -154,68 +174,71 @@ export default function ServicesDesktop() {
 
         const revealedElements = new Set<string>();
 
+        const MAIN_PANELS_COUNT = 6;
+        const SUB_STEPS_COUNT = 2;
+        const PAUSES_COUNT = 4;
+
+        const DYNAMIC_SCROLL_TRACK = 
+          (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
+          (SUB_STEPS_COUNT * PX_PER_SUB_STEP) + 
+          (PAUSES_COUNT * PAUSE_PX);
+
         const tl = gsap.timeline({
           defaults: { ease: "none" }, 
           scrollTrigger: {
-            trigger: ".services-hero-master",
+            trigger: ".services-pin",
             start: "top top",
-            end: "+=6500", 
-            scrub: scrubValue,
+            end: `+=${DYNAMIC_SCROLL_TRACK}`, 
+            scrub: 1,
             pin: true,
             pinSpacing: true,
             anticipatePin: 1,
             preventOverlaps: true,
             invalidateOnRefresh: true,
             snap: {
-              snapTo: (progress) => {
-                const totalDuration = tl.totalDuration();
-                if (!totalDuration) return progress;
+              directional: false,
+              snapTo: (value, self) => {
+                const totalDur = tl.totalDuration();
+                if (!totalDur) return value;
 
-                const currentProg = tl.progress();
+                const labelTimes = Array.from(
+                  new Set(
+                    Object.keys(tl.labels).map(name =>
+                      Number((tl.labels[name] / totalDur).toFixed(5))
+                    )
+                  )
+                ).sort((a, b) => a - b);
 
-                const sec2Card1Progress = (tl.labels["sec2_card1"] || 0) / totalDuration;
-                const appsecStartProgress = (tl.labels["appsecStart"] || 1) / totalDuration;
+                if (labelTimes.length < 2) return value;
 
-                if (currentProg > sec2Card1Progress && currentProg < appsecStartProgress) {
-                  return currentProg;
-                }
+                const curProgress = self ? self.progress : value;
+                const isScrollingDown = value >= curProgress;
 
-                const snapLabels = [
-                  "heroStart", 
-                  "sec1Start", 
-                  "sec2Start", 
-                  "sec2_card1", 
-                  "appsecStart", 
-                  "ctaStart", 
-                  "footerStart", 
-                  "end"
-                ]
-                  .filter(name => tl.labels[name] !== undefined)
-                  .map(name => tl.labels[name] / totalDuration)
-                  .sort((a, b) => a - b);
+                for (let i = 0; i < labelTimes.length - 1; i++) {
+                  const start = labelTimes[i];
+                  const end = labelTimes[i + 1];
 
-                const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+                  if (curProgress >= start - 0.0001 && curProgress <= end + 0.0001) {
+                    const gap = end - start;
+                    if (gap <= 0.00001) continue;
 
-                for (let i = 0; i < snapLabels.length - 1; i++) {
-                  const start = snapLabels[i];
-                  const end = snapLabels[i + 1];
+                    const localProgress = (curProgress - start) / gap;
 
-                  if (currentProg >= start && currentProg <= end) {
-                    const localProgress = (currentProg - start) / (end - start);
-                    if (isForward) {
+                    if (isScrollingDown) {
                       return localProgress >= 0.35 ? end : start;
                     } else {
-                      return localProgress <= 0.40 ? start : end;
+                      return localProgress <= 0.50 ? start : end;
                     }
                   }
                 }
-                return progress;
+
+                return value;
               },
-              duration: { min: 0.3, max: 0.6 },
-              delay: 0.01,
-              ease: "power1.inOut",
+              duration: { min: 0.4, max: 0.8 },
+              delay: 0.05,
+              ease: "power3.inOut"
             }
-          },
+          }
         });
 
         const addPlayOnceTextReveal = (labelName: string, timeOffset: number, selector: string) => {
@@ -238,26 +261,18 @@ export default function ServicesDesktop() {
           }, [], absoluteTime);
         };
 
-        const triggerSec2Hook = (nextIdx: number) => {
-          if (nextIdx !== lastSec2Idx.current) {
-            lastSec2Idx.current = nextIdx;
-            if ((window as any)._sec2GoTo) {
-              (window as any)._sec2GoTo(nextIdx);
-            }
-          }
-        };
-
         // ── HERO HOLD BUFFER ──
-        tl.addLabel("heroStart")
-          .set(".hero-btn", { pointerEvents: "auto", zIndex: 50 })
-          .set(".hero-text-wrap", { transformOrigin: "left bottom" }, 0)
-          .to(".hero-text-wrap", { y: 60, scale: 0.75, duration: 1.0 }, 0)
+        tl.addLabel("heroStart", 0);
+        tl.set(".hero-btn", { pointerEvents: "auto", zIndex: 50 }, 0);
+        tl.set(".hero-text-wrap", { transformOrigin: "left bottom" }, 0);
+
+        tl.to(".hero-text-wrap", { y: 60, scale: 0.75, duration: 1.0 }, 0)
           .to(".services-hero-top-layer", { width: "60%", duration: 1.0 }, 0)
           .to(".hero-btn", { opacity: 0, duration: 0.4, ease: "power2.out", pointerEvents: "none" }, 0);
 
         // ── SECTION 1 SHEET REVEAL ──
         tl.addLabel("sec1Start")
-          .to(".section-one-wrap", { clipPath: "inset(0% 0% 0% 0%)", duration: 1.0 }, "sec1Start")
+          .to(".section-one-wrap", { clipPath: "inset(0% 0% 0% 0%)", WebkitClipPath: "inset(0% 0% 0% 0%)", duration: 1.0 }, "sec1Start")
           .to(".service-hero-bg", { xPercent: -8, scale: 1.6, duration: 1.0 }, "<")
           .to(".s1-glass-card", { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, "sec1Start+=0.2");
 
@@ -288,22 +303,27 @@ export default function ServicesDesktop() {
 
         addPlayOnceTextReveal("sec2Start", 1.0, ".services-section-two-wrap .reveal-text .gs-line-inner, .services-section-two-wrap .reveal-text > *");
 
-        // ── SECTION 2 PANEL INTERNAL SLIDES (3 CARDS ONLY) ──
-        tl.addLabel("sec2_card1", "sec2Start+=1.5")
-          .to({}, { duration: 1.0 })
-          .call(() => triggerSec2Hook(0), [], "sec2_card1");
+        // ── SECTION 2 PANEL INTERNAL SLIDES (WITH REVERSE SYNC HOOKS) ──
+        tl.addLabel("sec2_card1", "sec2Start+=1.5");
+        tl.call(() => {
+          triggerSec2Hook(0);
+        }, [], "sec2_card1");
 
-        tl.addLabel("sec2_card2", "sec2_card1+=1.0")
-          .to({}, { duration: 1.0 })
-          .call(() => triggerSec2Hook(1), [], "sec2_card2");
+        tl.addLabel("sec2_card2", "sec2_card1+=1.0");
+        tl.call(() => {
+          const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+          triggerSec2Hook(isForward ? 1 : 0);
+        }, [], "sec2_card2");
 
-        tl.addLabel("sec2_card3", "sec2_card2+=1.0")
-          .to({}, { duration: 1.0 })
-          .call(() => triggerSec2Hook(2), [], "sec2_card3");
+        tl.addLabel("sec2_card3", "sec2_card2+=1.0");
+        tl.call(() => {
+          const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+          triggerSec2Hook(isForward ? 2 : 1);
+        }, [], "sec2_card3");
 
         // ── APP SECTION SLIDE OVER ──
-        tl.addLabel("appsecStart", "sec2_card3+=0.8")
-          .set(".services-appsec-wrap", { visibility: "visible" })
+        tl.addLabel("appsecStart", "sec2_card3+=0.8");
+        tl.set(".services-appsec-wrap", { visibility: "visible" })
           .to(".s2-inner-fade-target", { opacity: 1, duration: 0.5 }, "appsecStart")
           .to(".services-appsec-wrap", { 
             yPercent: 0, 
@@ -315,15 +335,21 @@ export default function ServicesDesktop() {
 
         addPlayOnceTextReveal("appsecStart", 0.35, ".services-appsec-wrap .reveal-text .gs-line-inner, .services-appsec-wrap .reveal-text > *");
 
-        // ── CTA REVEAL TRACK (Matched with HomeDesktop logic) ──
+        // ── CTA REVEAL TRACK ──
         tl.addLabel("ctaStart")
-          .set(".services-section-cta", { display: "block", zIndex: 120 })
+          .set(".services-section-cta", { 
+            visibility: "visible",
+            onStart: () => {
+              // Force WebGL Canvas to re-calculate viewport dimensions on reveal
+              window.dispatchEvent(new Event("resize"));
+            }
+          })
           .to(".services-section-cta", { yPercent: 0, duration: 1.0, ease: "power2.out" }, "ctaStart")
           .to(".services-appsec-wrap", { scale: 1.0, duration: 1.0 }, "<");
 
-        // ── FOOTER REVEAL TRACK (Matched with HomeDesktop logic) ──
+        // ── FOOTER REVEAL TRACK ──
         tl.addLabel("footerStart")
-          .set(".services-footer-wrap", { display: "block", zIndex: 125 })
+          .set(".services-footer-wrap", { visibility: "visible" })
           .to(".services-footer-wrap", { yPercent: 0, duration: 1.0, ease: "power2.out" }, "footerStart")
           .to(".services-appsec-wrap", { scale: 1.05, duration: 1.0 }, "<")
           .to(".services-section-cta .cta-inner-desktop", { opacity: 0, duration: 0.7, ease: "power1.out" }, "<");
@@ -355,32 +381,39 @@ export default function ServicesDesktop() {
   }, [introDone]);
 
   return (
-    <div ref={scopeRef} className="w-full relative">
-      <div className="services-hero-master relative w-full h-screen overflow-hidden bg-black" style={{ visibility: "visible" }}>
-        {/* HERO */}
+    <div ref={scopeRef}>
+      <div className="services-pin relative h-screen w-screen overflow-hidden bg-black" style={{ visibility: "visible" }}>
+        
+        {/* Layer 1: Hero Container */}
         <div className="services-hero-wrap relative z-10 pointer-events-auto w-full h-full">
           <Hero />
         </div>
         
+        {/* Layer 2: Section One Container */}
         <div className="section-one-wrap absolute inset-0 w-full h-full overflow-hidden" style={{ zIndex: 20 }}>
           <SectionOne />
         </div>
         
+        {/* Layer 3: Section Two Container */}
         <div className="services-section-two-wrap absolute inset-0 w-full h-full overflow-hidden" style={{ zIndex: 30 }}>
           <SectionTwo isActive={isSectionTwoActive} />
         </div>
         
+        {/* Layer 4: App Section Container */}
         <div className="services-appsec-wrap absolute inset-0 w-full h-full overflow-hidden" style={{ zIndex: 35 }}>
           <Appsection />
         </div>
         
-        <div className="services-section-cta absolute inset-0 h-full w-full structural-layer">
-          <SectionCTA />
+        {/* Layer 5: CTA Section Container */}
+        <div className="services-section-cta absolute bottom-0 left-0 w-full structural-layer pointer-events-auto" style={{ zIndex: 120 }}>
+          <SectionCTA preloaderDone={preloaderDone} />
         </div>
         
-        <div className="services-footer-wrap absolute left-0 bottom-0 w-full structural-layer">
+        {/* Layer 6: Footer Container */}
+        <div className="services-footer-wrap absolute left-0 bottom-0 w-full structural-layer" style={{ zIndex: 125 }}>
           <Footer />
         </div>
+
       </div>
     </div>
   );

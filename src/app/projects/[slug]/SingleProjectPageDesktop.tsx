@@ -15,6 +15,11 @@ gsap.registerPlugin(ScrollTrigger);
 
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
+// Controlled Desktop Scroll Metrics
+const PX_PER_MAIN_PANEL = 1150;
+const PX_PER_SUB_STEP = 450;
+const PAUSE_PX = 100;
+
 type SubServicesDesktopProps = {
   pageData: FullServiceData;
 };
@@ -50,6 +55,11 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
   // 3. Offscreen layout setup
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
+      ScrollTrigger.config({
+        ignoreMobileResize: true,
+        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange,resize",
+      });
+
       gsap.set(".project-hero-master", { zIndex: 10 });
       gsap.set(
         [
@@ -61,21 +71,20 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
         { clearProps: "transform" }
       );
 
-      gsap.set(".project-info-wrap", { yPercent: 100, visibility: "hidden", zIndex: 50 });
-      gsap.set(".project-app-wrap", { yPercent: 100, visibility: "hidden", zIndex: 60 });
-      gsap.set(".faq-scroll-wrapper", { yPercent: 100, visibility: "hidden", zIndex: 70 });
-      gsap.set(".footer-scroll-wrapper", { yPercent: 100, visibility: "hidden", zIndex: 80 });
-      gsap.set(".faq-content", { opacity: 1 });
+      gsap.set(".project-info-wrap", { yPercent: 100, visibility: "hidden", zIndex: 50, force3D: true });
+      gsap.set(".project-app-wrap", { yPercent: 100, visibility: "hidden", zIndex: 60, force3D: true });
+      gsap.set(".faq-scroll-wrapper", { yPercent: 100, visibility: "hidden", zIndex: 70, force3D: true });
+      gsap.set(".footer-scroll-wrapper", { yPercent: 100, visibility: "hidden", zIndex: 80, force3D: true });
+      gsap.set(".faq-content", { opacity: 1, force3D: true });
 
-      // Keep wrapper visible to allow child animations, but prepare text for intro stagger
       gsap.set(".hero-text-wrap", { autoAlpha: 1 });
-      gsap.set([".hero-title", ".hero-description"], { autoAlpha: 0, y: 30 });
+      gsap.set([".hero-title", ".hero-description"], { autoAlpha: 0, y: 30, force3D: true });
 
       const layers = gsap.utils.toArray<HTMLElement>(".hero-image-layer");
       if (layers.length > 0) {
         const firstInnerImg = layers[0].querySelector(".hero-image-inner");
         if (firstInnerImg) {
-          gsap.set(firstInnerImg, { scale: 1.6, transformOrigin: "center center" });
+          gsap.set(firstInnerImg, { scale: 1.4, force3D: true, transformOrigin: "center center" });
         }
       }
     }, scopeRef);
@@ -87,16 +96,24 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
   useEffect(() => {
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
-        onComplete: () => setIntroDone(true)
+        onComplete: () => {
+          setIntroDone(true);
+          setTimeout(() => ScrollTrigger.refresh(), 50);
+        }
       });
 
       const layers = gsap.utils.toArray<HTMLElement>(".hero-image-layer");
       const firstInnerImg = layers[0]?.querySelector(".hero-image-inner");
 
       introTl
-        .to(firstInnerImg, { scale: 1.3, duration: 2.2, ease: "power2.out" }, 0)
-        .to(".hero-title", { autoAlpha: 1, y: 0, duration: 1.4, ease: "power3.out" }, 0.4)
-        .to(".hero-description", { autoAlpha: 1, y: 0, duration: 1.4, ease: "power3.out" }, 0.6);
+        .to(firstInnerImg, { scale: 1.15, duration: 1.5, ease: "power2.out" }, 0)
+        .to([".hero-title", ".hero-description"], { 
+          autoAlpha: 1, 
+          y: 0, 
+          duration: 1.0, 
+          stagger: 0.15, 
+          ease: "power2.out" 
+        }, 0.2);
     }, scopeRef);
 
     return () => ctx.revert();
@@ -115,11 +132,6 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     const ctx = gsap.context(() => {
       gsap.ticker.lagSmoothing(0);
 
-      ScrollTrigger.config({
-        ignoreMobileResize: true,
-        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize",
-      });
-
       const performanceTargets = [
         ".project-hero-master", ".hero-image-layer", ".hero-image-inner",
         ".project-info-wrap", ".info-text-block", ".info-img-layer",
@@ -135,13 +147,13 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
       });
 
       const infoSlides = pageData.slides || [];
-      const scrubValue = 1.2;
 
-      const triggerInfoHook = (nextIdx: number) => {
-        if (nextIdx !== lastInfoIdx.current) {
-          lastInfoIdx.current = nextIdx;
-          if ((window as any)._projectInfoGoTo) {
-            (window as any)._projectInfoGoTo(nextIdx);
+      // Unified dispatch helper for slide index changes
+      const triggerInfoHook = (targetIdx: number) => {
+        if (targetIdx !== lastInfoIdx.current) {
+          lastInfoIdx.current = targetIdx;
+          if (typeof (window as any)._projectInfoGoTo === "function") {
+            (window as any)._projectInfoGoTo(targetIdx);
           }
         }
       };
@@ -158,48 +170,69 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
 
         gsap.set(".appsec-phone-wrapper", { y: 40, opacity: 0 });
 
+        const innerSlideSteps = Math.max(infoSlides.length - 1, 0);
+        const MAIN_PANELS_COUNT = 4; 
+        const PAUSES_COUNT = 3;
+
+        const DYNAMIC_SCROLL_TRACK =
+          (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) +
+          (innerSlideSteps * PX_PER_SUB_STEP) +
+          (PAUSES_COUNT * PAUSE_PX);
+
         const scrollTl = gsap.timeline({
           defaults: { ease: "none" },
           scrollTrigger: {
-            trigger: ".master-viewport",
+            trigger: ".single-project-pin",
             start: "top top",
-            end: `+=18000`,
+            end: `+=${DYNAMIC_SCROLL_TRACK}`,
             pin: true,
             pinSpacing: true,
-            scrub: scrubValue,
+            scrub: 1,
             anticipatePin: 1,
             preventOverlaps: true,
-            fastScrollEnd: true,
             invalidateOnRefresh: true,
             snap: {
-              snapTo: (progress) => {
-                const labels = Object.keys(scrollTl.labels).map(
-                  name => scrollTl.labels[name] / scrollTl.totalDuration()
-                );
-                labels.sort((a, b) => a - b);
+              directional: false,
+              snapTo: (value, self) => {
+                const totalDur = scrollTl.totalDuration();
+                if (!totalDur) return value;
 
-                const currentProg = scrollTl.progress();
-                const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
+                const labelTimes = Array.from(
+                  new Set(
+                    Object.keys(scrollTl.labels).map(name =>
+                      Number((scrollTl.labels[name] / totalDur).toFixed(5))
+                    )
+                  )
+                ).sort((a, b) => a - b);
 
-                for (let i = 0; i < labels.length - 1; i++) {
-                  const start = labels[i];
-                  const end = labels[i + 1];
+                if (labelTimes.length < 2) return value;
 
-                  if (currentProg >= start && currentProg <= end) {
-                    const localProgress = (currentProg - start) / (end - start);
+                const curProgress = self ? self.progress : value;
+                const isScrollingDown = value >= curProgress;
 
-                    if (isForward) {
+                for (let i = 0; i < labelTimes.length - 1; i++) {
+                  const start = labelTimes[i];
+                  const end = labelTimes[i + 1];
+
+                  if (curProgress >= start - 0.0001 && curProgress <= end + 0.0001) {
+                    const gap = end - start;
+                    if (gap <= 0.00001) continue;
+
+                    const localProgress = (curProgress - start) / gap;
+
+                    if (isScrollingDown) {
                       return localProgress >= 0.35 ? end : start;
                     } else {
-                      return localProgress <= 0.40 ? start : end;
+                      return localProgress <= 0.50 ? start : end;
                     }
                   }
                 }
-                return progress;
+
+                return value;
               },
-              duration: { min: 0.3, max: 0.6 },
-              delay: 0.01,
-              ease: "power1.inOut"
+              duration: { min: 0.4, max: 0.8 },
+              delay: 0.05,
+              ease: "power3.inOut"
             }
           }
         });
@@ -210,7 +243,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
         scrollTl.set(".project-info-wrap", { visibility: "visible" }, 0)
                 .to(".project-info-wrap", { 
                   yPercent: 0, 
-                  duration: 2.0,
+                  duration: 1.5,
                   ease: "power2.out",
                   onStart: () => setIsProjectInfoActive(true),
                   onReverseComplete: () => {
@@ -219,67 +252,77 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
                   }
                 }, 0);
 
-        scrollTl.to(".hero-text-wrap", { autoAlpha: 0, y: -60, duration: 1.5 }, 0);
+        scrollTl.to(".hero-text-wrap", { autoAlpha: 0, y: -60, duration: 1.2 }, 0);
 
-        scrollTl.call(() => triggerInfoHook(0), [], 1.0);
+        scrollTl.addLabel("info_slide_0", 1.5);
+        scrollTl.call(() => triggerInfoHook(0), [], 1.5);
 
-        // ── INNER INFO SLIDES SWITCHING ──
+        // ── SYNCHRONIZED INNER SLIDES & REVERSE HOOKS ──
         if (infoSlides.length > 0) {
           infoSlides.forEach((_, index) => {
             if (index === 0) return;
 
             const slideLabel = `info_slide_${index}`;
-            scrollTl.addLabel(slideLabel);
-
             const currentImgLayer = `.info-img-layer-${index}`;
             const innerImage = `${currentImgLayer} .info-image-inner`;
 
-            scrollTl.to(currentImgLayer, {
-              clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-              duration: 2.5,
-              ease: "power2.inOut"
-            }, slideLabel);
-
-            scrollTl.fromTo(innerImage, 
-              { scale: 1.25 },
-              { scale: 1.0, duration: 2.5, ease: "power2.out" },
-              slideLabel
-            );
-
+            // Forward transition start trigger
             scrollTl.call(() => {
               const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
-              triggerInfoHook(isForward ? index : index - 1);
-            }, [], `${slideLabel}+=1.0`);
+              if (isForward) {
+                triggerInfoHook(index);
+              }
+            }, [], `+=0.1`);
+
+            // Synchronized image clip-path reveal & scale animation
+            scrollTl.to(currentImgLayer, {
+              clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+              duration: 1.5,
+              ease: "power2.inOut"
+            })
+            .fromTo(innerImage, 
+              { scale: 1.25 },
+              { scale: 1.0, duration: 1.5, ease: "power2.out" },
+              "<"
+            )
+            .addLabel(slideLabel);
+
+            // Backward transition trigger (runs when scrubbing back past this label)
+            scrollTl.call(() => {
+              const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
+              if (!isForward) {
+                triggerInfoHook(index - 1);
+              }
+            }, [], slideLabel);
           });
         }
 
         scrollTl.addLabel("infoSlidesEnd");
-        scrollTl.to({}, { duration: 1.5 }, "infoSlidesEnd");
 
         // ── APP SECTION SLIDE UP OVER INFO WRAP ──
         scrollTl.addLabel("appSectionStart");
 
         scrollTl.set(".project-app-wrap", { visibility: "visible" }, "appSectionStart")
-                .to(".project-app-wrap", { yPercent: 0, duration: 2.0, ease: "power2.inOut" }, "appSectionStart");
+                .to(".project-app-wrap", { yPercent: 0, duration: 1.5, ease: "power2.inOut" }, "appSectionStart");
 
         scrollTl.to(
           ".appsec-phone-wrapper",
-          { y: 0, opacity: 1, duration: 1.5, ease: "power2.out" },
-          "appSectionStart+=0.5"
+          { y: 0, opacity: 1, duration: 1.2, ease: "power2.out" },
+          "appSectionStart+=0.3"
         );
 
         // ── FAQ SECTION SLIDES UP ──
-        scrollTl.addLabel("faqStart", "appSectionStart+=2.0");
+        scrollTl.addLabel("faqStart", "appSectionStart+=1.5");
         scrollTl.set(".faq-scroll-wrapper", { visibility: "visible" }, "faqStart")
-                .to(".faq-scroll-wrapper", { yPercent: 0, ease: "power2.inOut", duration: 2.0 }, "faqStart");
+                .to(".faq-scroll-wrapper", { yPercent: 0, ease: "power2.inOut", duration: 1.5 }, "faqStart");
 
         // ── COMBINED FAQ FADE & FOOTER SLIDE ──
-        scrollTl.addLabel("footerStart", "faqStart+=2.0");
+        scrollTl.addLabel("footerStart", "faqStart+=1.5");
         
-        scrollTl.to(".faq-content", { opacity: 0, y: -30, ease: "power2.in", duration: 1.0 }, "footerStart");
+        scrollTl.to(".faq-content", { opacity: 0, y: -30, ease: "power2.in", duration: 0.8 }, "footerStart");
         
         scrollTl.set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
-                .to(".footer-scroll-wrapper", { yPercent: 0, ease: "power2.out", duration: 2.0 }, "footerStart");
+                .to(".footer-scroll-wrapper", { yPercent: 0, ease: "power2.out", duration: 1.5 }, "footerStart");
 
         scrollTl.addLabel("end");
       };
@@ -302,7 +345,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
       ref={scopeRef} 
       className={`w-full relative ${!introDone ? "h-screen overflow-hidden" : "overflow-x-hidden"}`}
     >
-      <div className="master-viewport relative w-full h-screen overflow-hidden bg-black" style={{ visibility: "visible" }}>
+      <div className="single-project-pin relative w-full h-screen overflow-hidden bg-black" style={{ visibility: "visible" }}>
         
         {/* Layer 1: Presentation Hero Canvas */}
         <div className="project-hero-master absolute inset-0 w-full h-full">
