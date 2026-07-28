@@ -19,22 +19,16 @@ export default function LazyWaveCanvas({ imageSrc, preloaderDone }: LazyWaveCanv
   useEffect(() => {
     if (!preloaderDone) return;
 
-    let timerId: NodeJS.Timeout;
-
-    // Load Three.js during browser IDLE periods so it never blocks GSAP animations
-    const scheduleLoad = () => {
-      if ("requestIdleCallback" in window) {
-        (window as any).requestIdleCallback(() => setShouldRender(true), { timeout: 3000 });
-      } else {
-        timerId = setTimeout(() => setShouldRender(true), 1500);
-      }
-    };
-
-    // Trigger idle load after preloader is completely done
-    scheduleLoad();
+    // Yield 1 frame after preloader completes to let UI animations finish setup,
+    // then immediately mount WaveCanvas so WebGL is initialized before the user scrolls to CTA.
+    let animationFrameId: number;
+    
+    animationFrameId = requestAnimationFrame(() => {
+      setShouldRender(true);
+    });
 
     return () => {
-      if (timerId) clearTimeout(timerId);
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
   }, [preloaderDone]);
 
@@ -43,7 +37,6 @@ export default function LazyWaveCanvas({ imageSrc, preloaderDone }: LazyWaveCanv
       {shouldRender ? (
         <WaveCanvas imageSrc={imageSrc} preloaderDone={preloaderDone} />
       ) : (
-        /* Instant image fallback while WebGL compiles silently */
         <img
           src={imageSrc}
           alt="Background"

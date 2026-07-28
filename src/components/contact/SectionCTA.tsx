@@ -56,11 +56,11 @@ export default function SectionCTA({
       </div>
 
       {/* Mobile Layout */}
-      <div className="flex lg:hidden cta-inner-mobile relative z-10 flex-col justify-center h-full px-[20px]">
-        <h2 className="font-display text-[#F4EEDF] m-0 mb-5 !max-w-[300px] md:!max-w-[430px]">
+      <div className="flex lg:hidden section-container cta-inner-mobile relative z-10 flex-col justify-center h-full px-[20px]">
+        <h2 className="font-display text-[#F4EEDF] m-0 !mb-5 !max-w-[300px] md:!max-w-[430px]">
           Ready to Build Your Dream
         </h2>
-        <p className="font-body text-[#F4EEDF] m-0 mb-6 max-w-[500px]">
+        <p className="font-body text-[#F4EEDF] m-0 !mb-4 max-w-[500px]">
           Let&apos;s bring your vision to life with a custom-designed pool
           crafted for your space and lifestyle. Reach out to get started today.
         </p>

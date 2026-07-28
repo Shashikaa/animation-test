@@ -168,14 +168,14 @@ export default function CtaForm({
           }
         >
           <CtaInput
-            placeholder="Phone No. (e.g. 0412 345 678)"
+            placeholder="Phone No *"
             type="tel"
             name={getName("phone")}
             isMobile={isMobile}
             hasError={invalidFields.includes(getName("phone"))}
           />
           <CtaInput
-            placeholder="Post Code (e.g. 2000)"
+            placeholder="Post Code *"
             name={getName("postCode")}
             isMobile={isMobile}
             hasError={invalidFields.includes(getName("postCode"))}
@@ -191,14 +191,14 @@ export default function CtaForm({
         >
           <CtaSelect
             key={`bt_${resetKey}`}
-            placeholder="Budget Type"
+            placeholder="Budget Type *"
             options={["Residential", "Commercial", "Mixed Use"]}
             name={getName("budgetType")}
             isMobile={isMobile}
           />
           <CtaSelect
             key={`br_${resetKey}`}
-            placeholder="Budget Range"
+            placeholder="Budget Range *"
             options={["$10k – $30k", "$30k – $75k", "$75k – $150k", "$150k+"]}
             name={getName("budgetRange")}
             isMobile={isMobile}
@@ -214,7 +214,7 @@ export default function CtaForm({
         >
           <CtaSelect
             key={`cm_${resetKey}`}
-            placeholder="Preferred Contract Method"
+            placeholder="Preferred Contract Method *"
             options={[
               "Fixed Price",
               "Cost Plus",

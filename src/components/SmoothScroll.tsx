@@ -71,10 +71,10 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       return;
     }
 
-    // Ultrafast, buttery smooth Lenis setup using direct linear interpolation (lerp)
+// Ultrafast, buttery smooth Lenis setup with slightly faster scroll response
     const lenis = new Lenis({
-      lerp: 0.1,             // Buttery smooth weight interpolation (lower = smoother/silkier)
-      wheelMultiplier: 1.2,   // Natural 1:1 mouse scroll mapping
+      lerp: 0.14,              // Increased from 0.1 to 0.14 (higher = faster response to scroll)
+      wheelMultiplier: 1.4,    // Increased from 1.2 to 1.4 (travels slightly more distance per wheel tick)
       touchMultiplier: 1.0,
       infinite: false,
       smoothWheel: true,

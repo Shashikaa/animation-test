@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import * as THREE from "three";
 import {
   AmbientLight,
@@ -54,8 +55,8 @@ const loadTextureOffThread = async (url: string): Promise<THREE.Texture> => {
     const res = await fetch(url, { mode: "cors" });
     const blob = await res.blob();
     const bitmap = await createImageBitmap(blob, { 
-        premultiplyAlpha: 'none',
-        imageOrientation: 'flipY' 
+      premultiplyAlpha: 'none',
+      imageOrientation: 'flipY' 
     });
     const texture = new THREE.Texture(bitmap);
     texture.colorSpace = LinearSRGBColorSpace;
@@ -76,46 +77,41 @@ const loadTextureOffThread = async (url: string): Promise<THREE.Texture> => {
   }
 };
 
-const yieldToNextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
-
 export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: WaveCanvasProps) {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   
   const [isMobileOrTablet, setIsMobileOrTablet] = useState<boolean | null>(null);
   const [engineReady, setEngineReady] = useState(false);
-  const [isInViewport, setIsInViewport] = useState(false);
-  
   const appInstanceRef = useRef<any>(null);
 
   useEffect(() => {
+    if (!isHome) return;
     const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     setIsMobileOrTablet(isMobileUA || window.innerWidth <= 1024);
-  }, []);
+  }, [isHome]);
 
   useEffect(() => {
-    if (!preloaderDone) return;
-    if (isMobileOrTablet === null || isMobileOrTablet || !canvasRef.current || !videoRef.current) return;
+    // Return early on non-home pages or mobile/tablet viewports
+    if (!isHome || isMobileOrTablet === null || isMobileOrTablet) return;
 
     let destroyed = false;
-    let setupInitiated = false;
-    let fallbackTimeout: NodeJS.Timeout;
-    
     let bgTexture: THREE.Texture | null = null;
     let videoTexture: THREE.VideoTexture | null = null;
     let shaderMat: THREE.ShaderMaterial | null = null;
+    let animationFrameId: number;
 
     const setupEngine = async () => {
-      try {
-        await yieldToNextFrame();
-        if (destroyed) return;
+      if (!canvasRef.current || appInstanceRef.current) return;
 
+      try {
         if (imageSrc) {
           bgTexture = await loadTextureOffThread(imageSrc);
         }
-        
-        await yieldToNextFrame();
         if (destroyed) return;
 
         const originalFromScene = THREE.PMREMGenerator.prototype.fromScene;
@@ -125,29 +121,31 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
         appInstanceRef.current = appInstance;
         THREE.PMREMGenerator.prototype.fromScene = originalFromScene;
 
-        appInstance.three.maxPixelRatio = Math.min(window.devicePixelRatio, 1.5);
-        appInstance.three.resize();
+        appInstance.three.maxPixelRatio = Math.min(window.devicePixelRatio, 1.25);
         
+        const initialWidth = canvasRef.current.clientWidth || window.innerWidth;
+        const initialHeight = canvasRef.current.clientHeight || window.innerHeight;
+        appInstance.three.renderer.setSize(initialWidth, initialHeight);
+
         const renderer = appInstance.three.renderer;
         renderer.toneMapping = NoToneMapping;
         renderer.outputColorSpace = LinearSRGBColorSpace; 
         appInstance.three.scene.add(new AmbientLight(0xffffff, 1.0));
 
-        await yieldToNextFrame();
-        if (destroyed) return;
-
-        videoTexture = new VideoTexture(videoRef.current as HTMLVideoElement);
-        videoTexture.colorSpace = LinearSRGBColorSpace;
-        videoTexture.minFilter = LinearFilter;
-        videoTexture.magFilter = LinearFilter;
-        videoTexture.generateMipmaps = false; 
+        if (videoRef.current) {
+          videoTexture = new VideoTexture(videoRef.current);
+          videoTexture.colorSpace = LinearSRGBColorSpace;
+          videoTexture.minFilter = LinearFilter;
+          videoTexture.magFilter = LinearFilter;
+          videoTexture.generateMipmaps = false; 
+        }
 
         shaderMat = new ShaderMaterial({
           uniforms: {
-            map:               { value: bgTexture },
-            videoMap:          { value: videoTexture },
-            displacementMap:   { value: appInstance.liquidPlane.uniforms.displacementMap.value },
-            uvMapScale:        { value: new Vector2(1, 1) },
+            map: { value: bgTexture },
+            videoMap: { value: videoTexture },
+            displacementMap: { value: appInstance.liquidPlane.uniforms.displacementMap.value },
+            uvMapScale: { value: new Vector2(1, 1) },
             displacementScale: { value: 5.0 },
           },
           vertexShader,
@@ -165,126 +163,72 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
           appInstance.liquidPlane.attenuation = 0.9;
         }
 
-        if (appInstance.interaction) {
-          let lastDropTime = 0;
-          appInstance.interaction.onMove = () => {
-            const now = performance.now();
-            if (now - lastDropTime < 16) return; 
-            lastDropTime = now;
-            
-            appInstance.liquidPlane.addDrop(
-              appInstance.interaction.nPosition.x,
-              appInstance.interaction.nPosition.y,
-              0.015,
-              0.0015
-            );
-          };
-        }
-
         appInstance.setRain(false);
-        
-        await yieldToNextFrame();
-        if (destroyed) return;
 
-        renderer.compile(appInstance.three.scene, appInstance.three.camera);
-        
         const updateAspect = () => {
-          if (!appInstanceRef.current || !canvasRef.current || !bgTexture?.image) return;
-          const cw = canvasRef.current.clientWidth;
-          const ch = canvasRef.current.clientHeight;
+          if (!appInstanceRef.current || !canvasRef.current) return;
+          const cw = canvasRef.current.clientWidth || window.innerWidth;
+          const ch = canvasRef.current.clientHeight || window.innerHeight;
           const uniforms = appInstanceRef.current.liquidPlane.uniforms;
-          const cRatio = cw / ch;
-          const img = bgTexture.image as HTMLImageElement | ImageBitmap;
-          const iRatio = img.width && img.height ? img.width / img.height : 1;
           
-          if (cRatio < iRatio) uniforms.uvMapScale.value.set(cRatio / iRatio, 1.0);
-          else uniforms.uvMapScale.value.set(1.0, iRatio / cRatio);
+          if (bgTexture?.image) {
+            const cRatio = cw / ch;
+            const img = bgTexture.image as HTMLImageElement | ImageBitmap;
+            const iRatio = img.width && img.height ? img.width / img.height : 1;
+            
+            if (cRatio < iRatio) uniforms.uvMapScale.value.set(cRatio / iRatio, 1.0);
+            else uniforms.uvMapScale.value.set(1.0, iRatio / cRatio);
+          }
+
+          appInstanceRef.current.three.renderer.setSize(cw, ch);
         };
         
         updateAspect();
         window.addEventListener("resize", updateAspect);
-        
-        // Render 1 initial frame immediately so the texture is drawn to the canvas before video starts
-        renderer.render(appInstance.three.scene, appInstance.three.camera);
-        setEngineReady(true);
 
+        renderer.render(appInstance.three.scene, appInstance.three.camera);
+
+        if (videoRef.current) {
+          videoRef.current.playbackRate = 0.7;
+          videoRef.current.play().catch(() => {});
+        }
+
+        setEngineReady(true);
+        onReady?.();
       } catch (err) {
         console.error("WebGL Setup Error:", err);
       }
     };
 
-    const triggerSetup = () => {
-      if (setupInitiated) return;
-      setupInitiated = true;
-      
-      window.removeEventListener("mousemove", triggerSetup);
-      window.removeEventListener("touchstart", triggerSetup);
-      window.removeEventListener("scroll", triggerSetup);
-      clearTimeout(fallbackTimeout);
-
-      if ("requestIdleCallback" in window) {
-        (window as any).requestIdleCallback(() => setupEngine(), { timeout: 2000 });
-      } else {
-        setTimeout(() => setupEngine(), 300);
-      }
-    };
-
-    window.addEventListener("mousemove", triggerSetup, { once: true, passive: true });
-    window.addEventListener("touchstart", triggerSetup, { once: true, passive: true });
-    window.addEventListener("scroll", triggerSetup, { once: true, passive: true });
-    fallbackTimeout = setTimeout(triggerSetup, 1500);
+    animationFrameId = requestAnimationFrame(() => {
+      setupEngine();
+    });
 
     return () => {
       destroyed = true;
-      clearTimeout(fallbackTimeout);
-      window.removeEventListener("mousemove", triggerSetup);
-      window.removeEventListener("touchstart", triggerSetup);
-      window.removeEventListener("scroll", triggerSetup);
-      
+      cancelAnimationFrame(animationFrameId);
       if (bgTexture) bgTexture.dispose();
       if (videoTexture) videoTexture.dispose();
       if (shaderMat) shaderMat.dispose();
       if (appInstanceRef.current?.dispose) appInstanceRef.current.dispose();
+      appInstanceRef.current = null;
     };
-  }, [isMobileOrTablet, imageSrc, preloaderDone]);
+  }, [isHome, isMobileOrTablet, imageSrc]);
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsInViewport(entry.isIntersecting),
-      { rootMargin: "1000px" }
+  // On non-home pages, return only the image container
+  if (!isHome) {
+    return (
+      <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-black">
+        {imageSrc && (
+          <img
+            src={imageSrc}
+            alt="Background"
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          />
+        )}
+      </div>
     );
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!engineReady || !isInViewport || !appInstanceRef.current || !videoRef.current) return;
-
-    const video = videoRef.current;
-    video.playbackRate = 0.7;
-
-    let startVideoFn: () => void;
-
-    const handlePlaying = () => {
-      onReady?.();
-    };
-    video.addEventListener("playing", handlePlaying);
-
-    video.play().catch(() => {
-      startVideoFn = () => {
-        video.play().catch(() => {});
-        window.removeEventListener("click", startVideoFn);
-      };
-      window.addEventListener("click", startVideoFn);
-    });
-
-    return () => {
-      if (startVideoFn) window.removeEventListener("click", startVideoFn);
-      video.removeEventListener("playing", handlePlaying);
-      video.pause();
-    };
-  }, [engineReady, isInViewport, onReady]);
+  }
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-black">
@@ -295,13 +239,12 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
           loop
           muted
           playsInline
-          preload="none"
+          preload="auto"
           crossOrigin="anonymous"
           className="hidden"
         />
       )}
 
-      {/* Static Fallback Image - Always rendered beneath WebGL so content is visible instantly */}
       {imageSrc && (
         <img
           src={imageSrc}

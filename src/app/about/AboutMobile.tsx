@@ -143,7 +143,7 @@ export default function AboutMobile() {
           trigger: ".about-pin",
           start: "top top",
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
-          scrub: 1.2,
+          scrub: 0.2,
           pin: true,
           pinType: "fixed",
           anticipatePin: 1,

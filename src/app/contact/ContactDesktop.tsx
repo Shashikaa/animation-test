@@ -88,7 +88,6 @@ export default function ContactDesktop() {
         },
       });
 
-      // Smooth background image zoom-out
       introTl.to(
         ".contact-hero-bg",
         {
@@ -99,7 +98,6 @@ export default function ContactDesktop() {
         0
       );
 
-      // Hero text fade and slide in
       introTl.to(
         [".hero-title", ".hero-desc"],
         {

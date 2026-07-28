@@ -61,12 +61,28 @@ function executeDesktopSplitting(selector: string) {
 export default function HomeDesktop() {
   const scopeRef = useRef<HTMLDivElement>(null);
   const context = useSite();
-  const setPreloaderDone = context?.setPreloaderDone;
   const preloaderDone = context?.preloaderDone ?? false;
   
   const [introDone, setIntroDone] = useState(false);
+  const [webglReady, setWebglReady] = useState(false);
 
-  // Strict Scroll Lock Control until everything is completely ready
+  // Callback to trigger when WebGL context or heavy canvases finish setting up
+  const handleWebGLReady = () => {
+    setWebglReady(true);
+  };
+
+  // Fallback timer: ensure scroll unlocks even if WebGL load event is slow or drops
+  useEffect(() => {
+    if (!preloaderDone) return;
+
+    const timer = setTimeout(() => {
+      setWebglReady(true);
+    }, 2500); // 2.5s maximum wait for WebGL context creation
+
+    return () => clearTimeout(timer);
+  }, [preloaderDone]);
+
+  // Strict Scroll Lock Control until Preloader, Hero intro transition, AND WebGL are fully ready
   useEffect(() => {
     if (typeof window === "undefined") return;
     
@@ -74,7 +90,7 @@ export default function HomeDesktop() {
       window.history.scrollRestoration = "manual";
     }
 
-    const isFullyReady = preloaderDone && introDone;
+    const isFullyReady = preloaderDone && introDone && webglReady;
 
     if (!isFullyReady) {
       document.documentElement.style.overflow = "hidden";
@@ -92,18 +108,7 @@ export default function HomeDesktop() {
       document.documentElement.style.overflow = "";
       document.body.style.overflow = "";
     };
-  }, [preloaderDone, introDone]);
-
-  // Initial Preloader reset trigger
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.scrollTo(0, 0);
-
-    if (setPreloaderDone) {
-      document.body.classList.remove("preloading");
-      setPreloaderDone(true);
-    }
-  }, [setPreloaderDone]);
+  }, [preloaderDone, introDone, webglReady]);
 
   // Initial baseline styling
   useLayoutEffect(() => {
@@ -170,9 +175,9 @@ export default function HomeDesktop() {
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // Main Timeline & Smooth Scrub Controller
+  // Main Timeline & Smooth Scrub Controller (Waits for WebGL readiness)
   useEffect(() => {
-    if (!preloaderDone || !introDone) return;
+    if (!preloaderDone || !introDone || !webglReady) return;
 
     if (isTouchOnly()) {
       ScrollTrigger.normalizeScroll(true);
@@ -449,7 +454,6 @@ export default function HomeDesktop() {
           .set([".s9-native-title-wrapper-1", ".s9-native-title-wrapper-2"], { opacity: 0, visibility: "hidden" }, "sec9FlyText")
           .set(".s9-global-flight-container", { opacity: 1, visibility: "visible" }, "sec9FlyText")
 
-          // Original Section 9 text flight calculations restored
           .to(".s9-flight-wrapper", {
             x: () => {
               const target = document.querySelector(".s9-target-wrapper");
@@ -527,7 +531,7 @@ export default function HomeDesktop() {
       }
       ctx.revert();
     };
-  }, [preloaderDone, introDone]);
+  }, [preloaderDone, introDone, webglReady]);
 
   return (
     <div 
@@ -564,7 +568,7 @@ export default function HomeDesktop() {
         </div>
 
         <div className="hero absolute inset-0 h-full w-full structural-layer">
-          <Hero />
+          <Hero onReady={handleWebGLReady} />
         </div>
 
         <div className="footer absolute left-0 bottom-0 w-full structural-layer">

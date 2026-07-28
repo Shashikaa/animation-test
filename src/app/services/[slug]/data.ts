@@ -27,8 +27,8 @@ export interface FullServiceData {
 }
 
 export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
-  'Residential-pools-Construction': {
-    slug: 'Residential-pools-Construction',
+  'residential-pools-construction': {
+    slug: 'residential-pools-construction',
     hero: {
       title: 'Residential Pool Construction',
       subtitle: 'Tailored pools for relaxing, hosting, and elevated outdoor living.',
@@ -93,12 +93,13 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       ]
     }
   },
-  'Pool Equipment & Installation': {
+
+  'pool-equipment-and-installation': {
     slug: 'pool-equipment-and-installation',
     hero: {
       title: 'Pool Equipment & Installation',
       subtitle: 'Bespoke Private Staycations',
-      bgImageUrl: '/residential-hero.webp',
+      bgImageUrl: '/service-1-hero.webp',
       tabs: [
         {
           label: 'From Vision to Reality',
@@ -124,8 +125,8 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     sectionOne: {
       title: 'Bespoke Concrete Contours',
       paragraph: 'Every high-end residential build begins with premium custom concrete profiles styled perfectly to fit your land contours, ensuring architectural impact from every viewing angle.',
-      bgImageUrl: '/images/residential-details-bg.webp',
-      sideImageUrl: '/images/residential-details.webp',
+      bgImageUrl: '//single-service-8-bg.webp',
+      sideImageUrl: '/service-1-hero.webp',
       fourParagraphs: [
         'Vanishing edge structures carve sleek, unobstructed views directly into drop-offs.',
         'Bespoke concrete curves mold completely around modern high-end architectural footprints.',
@@ -135,19 +136,20 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     },
     sectionTwo: {
       title: 'Luxury Integrations Explained',
-      bgImageUrl: '/images/residential-features.webp',
+      bgImageUrl: '/images/single-service-25.webp',
       faqs: [
         { question: 'What options do I have for internal finishes?', answer: 'We offer specialized polished aggregate blends, premium quartz formulations, and fully tiled mosaic options.' },
         { question: 'How do vanishing edge parameters perform?', answer: 'They leverage lower catch basins paired with dedicated balance valves to handle subtle pool water overflow smoothly.' }
       ]
     }
   },
-  'Commercial Pool Construction': {
+
+  'commercial-pool-construction': {
     slug: 'commercial-pool-construction',
     hero: {
       title: 'Commercial Pool Construction',
       subtitle: 'Breathing New Life',
-      bgImageUrl: '/images/renovation-hero.webp',
+      bgImageUrl: '/service-1-hero.webp',
       tabs: [
         {
           label: 'From Vision to Reality',
@@ -173,8 +175,8 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     sectionOne: {
       title: 'Modern Structural Refit',
       paragraph: 'We completely revitalize aging frameworks, removing degraded masonry to pave the way for modern sub-surface layouts, updated waterline tiling, and highly efficient structural finishes.',
-      bgImageUrl: '/images/renovation-details-bg.webp',
-      sideImageUrl: '/images/renovation-details.webp',
+      bgImageUrl: '//single-service-8-bg.webp',
+      sideImageUrl: '/service-1-hero.webp',
       fourParagraphs: [
         'Complete removal of failing sub-layers restores structural integrity before replastering.',
         'Underground pressure scanning isolates and seals historical fluid leaks.',
@@ -184,7 +186,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     },
     sectionTwo: {
       title: 'Restoration Scope & FAQ',
-      bgImageUrl: '/images/renovation-features.webp',
+      bgImageUrl: '/images/single-service-25.webp',
       faqs: [
         { question: 'Can you fix cracked concrete pool shells?', answer: 'Yes, we apply high-tensile staples alongside epoxy injection loops to restore structural engineering load tolerances.' },
         { question: 'Is it possible to convert an older pool to salt chlorination?', answer: 'Absolutely. We seamlessly swap in inline electrolytic cells during the plumbing overhaul phase.' }

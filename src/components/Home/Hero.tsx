@@ -1,6 +1,30 @@
 "use client";
 
-export default function Hero() {
+import { useEffect } from "react";
+
+interface HeroProps {
+  onReady?: () => void;
+}
+
+export default function Hero({ onReady }: HeroProps) {
+  useEffect(() => {
+    // Preload the background image to ensure WebGL/Canvas/CSS context is fully painted
+    const img = new Image();
+    img.src = "/heroHome.webp";
+
+    if (img.complete) {
+      onReady?.();
+    } else {
+      img.onload = () => {
+        onReady?.();
+      };
+      img.onerror = () => {
+        // Fallback: unlock even if image fails to load
+        onReady?.();
+      };
+    }
+  }, [onReady]);
+
   return (
     <section className="hero relative w-full h-screen overflow-hidden bg-transparent">
 
