@@ -11,19 +11,12 @@ interface NavMenuProps {
 }
 
 const NAV_LINKS = [
-
   { label: "Home", href: "/", image: "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=1400&q=80" },
-
   { label: "About Us", href: "/about", image: "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1400&q=80" },
-
   { label: "Services", href: "/services", image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=80" },
-
   { label: "Projects", href: "/projects", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&q=80" },
-
   { label: "Contact Us", href: "/contact", image: "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=1400&q=80" },
-
 ]; 
-
 
 const SOCIAL_LINKS = [
   { label: "Instagram", href: "https://www.instagram.com/grandpools_aus/", src: "/ig.svg" },
@@ -199,6 +192,15 @@ const bottomVariants = {
 function MobileMenu({ open, onClose }: NavMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
+  const initialActiveIndex = useMemo(() => {
+    if (typeof window === "undefined") return 0;
+    const currentPath = window.location.pathname;
+    const idx = NAV_LINKS.findIndex(link => link.href === currentPath);
+    return idx !== -1 ? idx : 0;
+  }, []);
+
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handler);
@@ -253,21 +255,19 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
               initial="hidden"
               animate="visible"
               exit="hidden"
+              onMouseLeave={() => setHoveredIndex(null)}
               className="!flex !flex-col !items-start"
             >
-              {NAV_LINKS.map(({ label, href }) => (
+              {NAV_LINKS.map(({ label, href }, i) => (
                 <motion.div key={label} variants={linkVariants} className="!overflow-hidden">
-                  <a
+                  <NavLink
+                    label={label}
                     href={href}
-                    onClick={onClose}
-                    className="!inline-block !no-underline !leading-[3.0] md:!leading-[4.5] !cursor-pointer"
-                  >
-                    <span
-                      className="font-display !inline-block !select-none !font-normal !text-[24px] md:!text-[30px] !leading-none !text-[#F4EEDF] !uppercase !tracking-wider"
-                    >
-                      {label}
-                    </span>
-                  </a>
+                    isActive={hoveredIndex === i}
+                    onClose={onClose}
+                    onMouseEnter={() => setHoveredIndex(i)}
+                    isMobile
+                  />
                 </motion.div>
               ))}
             </motion.nav>
@@ -499,10 +499,10 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
 
 // ── NAV LINK ──
 function NavLink({
-  label, href, isActive, onClose, onMouseEnter,
+  label, href, isActive, onClose, onMouseEnter, isMobile = false,
 }: {
   label: string; href: string; isActive: boolean; onClose: () => void;
-  onMouseEnter: () => void;
+  onMouseEnter: () => void; isMobile?: boolean;
 }) {
   const isCurrentPage = typeof window !== "undefined" && window.location.pathname === href;
   const highlighted = isActive || isCurrentPage;
@@ -513,14 +513,17 @@ function NavLink({
       onClick={onClose}
       onMouseEnter={onMouseEnter}
       onFocus={onMouseEnter}
-      className="!inline-block !no-underline !leading-none !cursor-pointer"
+      className={
+        isMobile
+          ? "!inline-block !no-underline !leading-[3.0] md:!leading-[4.5] !cursor-pointer"
+          : "!inline-block !no-underline !leading-none !cursor-pointer"
+      }
     >
       <span
-        className="font-body !inline-block !select-none !font-normal !uppercase !not-italic !leading-none !transition-[color,letter-spacing] !duration-[250ms,350ms] !ease-in-out"
+        className="font-body !inline-block !select-none !font-normal !normal-case !not-italic !transition-[color,letter-spacing] !duration-[250ms,350ms] !ease-in-out"
         style={{
-          fontSize: "clamp(22px, 2vw, 28px)",
+          fontSize: isMobile ? undefined : "clamp(22px, 2vw, 28px)",
           color: highlighted ? "#F4EEDF" : "rgba(244, 238, 223, 0.6)",
-
         }}
       >
         {label}

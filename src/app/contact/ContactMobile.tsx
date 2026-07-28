@@ -12,7 +12,7 @@ import Footer from "@/src/components/Footer";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Standardized Metrics to align with AboutMobile feel
+// Standardized Metrics aligned with AboutMobile
 const PX_PER_MAIN_PANEL = 850; 
 const PAUSE_PX = 100;
 
@@ -96,7 +96,7 @@ export default function ContactMobile() {
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2;
 
-      // Contact Page: 4 Main transitions (Hero->CTA, CTA->Sec1, Sec1->FAQ, FAQ->Footer) + 3 Dead Scroll pauses
+      // 4 Panel transitions: Hero->CTA, CTA->Sec1, Sec1->FAQ, FAQ->Footer + 3 pause breaks
       const MAIN_PANELS_COUNT = 4;
       const PAUSES_COUNT = 3;
 
@@ -110,7 +110,7 @@ export default function ContactMobile() {
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: 1.2, // Kept to 1.2 across all pages
+          scrub: 0.5,
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -133,20 +133,18 @@ export default function ContactMobile() {
 
         .to({}, { duration: DEAD_SCROLL })
 
-.addLabel("footerStart", ">")
-// Fade out FAQ content rapidly right as the footer begins moving
-.to(".faq-content", { 
-  opacity: 0, 
-  y: -40, 
-  ease: "power3.in", // Sharper ease for a faster visual exit
-  duration: ACTION * 0.1 // Reduced from 0.4 to 0.25 so it vanishes immediately
-}, "footerStart")
-
-.to(".footer-scroll-wrapper", { 
-  y: "0vh", 
-  ease: "power2.out", 
-  duration: ACTION 
-}, "footerStart");
+        .addLabel("footerStart", ">")
+        .to(".faq-content", { 
+          opacity: 0, 
+          y: -40, 
+          ease: "power1.inOut", 
+          duration: ACTION * 0.4 
+        }, "footerStart")
+        .to(".footer-scroll-wrapper", { 
+          y: "0vh", 
+          ease: "power2.inOut", 
+          duration: ACTION 
+        }, "footerStart");
 
     }, scopeRef);
 

@@ -15,7 +15,7 @@ export default function PreloaderToggle() {
   useEffect(() => {
     setMounted(true);
     
-    if (pathname === "/terms" || pathname === "/privacy-policy") {
+    if (pathname === "/terms" || pathname === "/privacy-policy" || pathname === "/not-found") {
       setLoaderType("none");
       document.documentElement.classList.remove("show-brand-preloader", "show-fade-preloader", "preloading");
       document.body.classList.remove("preloading");

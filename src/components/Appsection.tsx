@@ -31,7 +31,7 @@ export default function Appsection() {
               className="text-[#F4EEDF] !font-[100] text-3xl md:text-5xl lg:text-6xl max-w-[320px] sm:max-w-none !mb-4"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              Your pool journey clearly tracked
+              Your Pool Journey Clearly Tracked
             </h2>
           </div>
 
@@ -43,7 +43,7 @@ export default function Appsection() {
             <img 
               src="/phone-mockup.webp" 
               alt="Pool Care Mobile App Mockup" 
-              className="w-full h-auto max-h-[50vh] md:max-h-[50vh] lg:max-h-[70vh] block object-contain !mb-12 !mt-12"
+              className="w-full h-auto max-h-[45vh] md:max-h-[50vh] lg:max-h-[70vh] block object-contain !mb-12 !mt-12"
             />
           </div>
         </div>

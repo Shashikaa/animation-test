@@ -16,7 +16,7 @@ type SubServicesMobileProps = {
   pageData: FullServiceData;
 };
 
-// Standardized Metrics to align exact scroll feel with AboutMobile
+// Standardized Metrics to align exact scroll feel with AboutMobile and ContactMobile
 const PX_PER_MAIN_PANEL = 850; 
 const PX_PER_SUB_STEP = 350;   
 const PAUSE_PX = 100;          
@@ -156,7 +156,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
       // Sub-steps for extra info slides beyond the first one
       const MAIN_PANELS_COUNT = 4;
       const SUB_STEPS_COUNT = Math.max(0, infoSlides.length - 1);
-      const PAUSES_COUNT = 4;
+      const PAUSES_COUNT = 4; // 1 pause after each main section transition
 
       const DYNAMIC_SCROLL_TRACK = 
         (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -183,7 +183,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
           pin: true,
           pinType: "fixed",
           pinSpacing: true,
-          scrub: 1.2, // Strictly set to 1.2
+          scrub: 0.5, // Standardized with About/Contact page scrub
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -216,6 +216,9 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
       scrollTl.call(() => {
         triggerInfoHook(0);
       }, [], 0.6);
+
+      // Dead scroll pause added here after Hero -> Info slide up
+      scrollTl.to({}, { duration: DEAD_SCROLL });
 
       // ── STEP B: SEQUENTIAL INNER INFO SLIDES ──
       if (infoSlides.length > 0) {
@@ -280,7 +283,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
           opacity: 0, 
           y: -40, 
           duration: ACTION * 0.4, 
-          ease: "power2.in",
+          ease: "power1.inOut",
           pointerEvents: "none" 
         }, 
         "footerStart"

@@ -12,23 +12,21 @@ export default function ProjectsHero({ hideText = false }: HeroProps) {
         style={{ clipPath: "inset(0px 0px 0px 0px)" }}
       >
         <section className="relative w-full h-full bg-[#111]">
-          {/* BACKGROUND IMAGE WITH BLACK OVERLAY */}
+          {/* BACKGROUND IMAGE WITH DARK OVERLAY */}
           <div
-            className="projects-hero-bg absolute left-0 right-0 bg-cover bg-center will-change-transform after:content-[''] after:absolute after:inset-0 after:bg-black/20"
+            className="projects-hero-bg absolute left-0 right-0 bg-cover bg-center will-change-transform after:content-[''] after:absolute after:inset-0 after:bg-black/50"
             style={{
               top: "-10%",
               bottom: "-10%",
               backgroundImage: "url('/parallax-image.webp')", 
               backfaceVisibility: "hidden",
-              // =========================================================================
-              // FIX: This inline style stops the flash. It forces the image to
-              // start scaled-in (1.6) so that the mobile intro timeline (which 
-              // goes from 1.6 to 1.3) can execute smoothly without a jump.
-              // =========================================================================
               transform: "scale(1.6) translateY(0%)", 
             }}
           />
-     
+
+          {/* Alternatively, if you prefer an explicit overlay div instead of CSS pseudo-elements: */}
+          {/* <div className="absolute inset-0 bg-black/50 z-0 pointer-events-none" /> */}
+
           {!hideText && (
             <>
               {/* Left-Aligned Initial Content Block */}
@@ -51,7 +49,7 @@ export default function ProjectsHero({ hideText = false }: HeroProps) {
                       transform: "translateY(30px)"
                     }}
                   >
-                    That Truly Speak for Themselves
+                    That truly speak for themselves.
                     <br />
                     Take a look at some of our completed projects across Melbourne
                   </p>
@@ -61,9 +59,7 @@ export default function ProjectsHero({ hideText = false }: HeroProps) {
               {/* Right-Aligned Dynamic Scroll Blocks */}
               <div className="scroll-text-container section-container absolute inset-0 z-20 h-full flex items-end justify-start pointer-events-none">
                 <div className="relative w-full max-w-[310px] md:max-w-[400px] lg:max-w-[440px] mb-12 md:mb-16 lg:mb-22 pr-6 md:pr-12 lg:pr-20 text-[#F4EEDF]">
-                  
                   <div className="relative w-full h-full min-h-[150px]">
-                    
                     <p className="scroll-para-1 invisible absolute top-0 left-0 w-full pointer-events-auto">
                       Our projects showcase the quality, craftsmanship, and attention to detail that define Grand Pools. From luxury backyard retreats to large-scale custom builds across Melbourne, every pool is designed to complement its surroundings while delivering lasting beauty, functionality, and value.
                     </p>
@@ -71,16 +67,13 @@ export default function ProjectsHero({ hideText = false }: HeroProps) {
                     <p className="scroll-para-2 invisible absolute top-0 left-0 w-full pointer-events-auto">
                       We work closely with each client to create tailored solutions that transform outdoor spaces into stunning environments for relaxation, entertaining, and everyday enjoyment.
                     </p>
-
                   </div>
-
                 </div>
               </div>
             </>
           )}
         </section>
       </div>
-
     </div>
   );
 }

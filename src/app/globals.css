@@ -80,19 +80,23 @@ html, body {
   
   scroll-behavior: auto !important; 
   min-height: 100%;
-  
-  scrollbar-width: none;
-  -ms-overflow-style: none;
 
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: none;
 }
 
-html::-webkit-scrollbar,
-body::-webkit-scrollbar { 
-  display: none !important; 
-  width: 0 !important; 
-  height: 0 !important; 
+/* ─── Hide scrollbar ONLY on desktop screens ─────────────────── */
+@media screen and (min-width: 1024px) {
+  html, body {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar { 
+    display: none !important; 
+    width: 0 !important; 
+    height: 0 !important; 
+  }
 }
 
 body {
@@ -309,3 +313,14 @@ p {
   }
 }
 
+
+/* ─── 404 Preloader Suppression ────────────────────────────── */
+body:has(#not-found-page) #brand-preloader-root,
+body:has(#not-found-page) #fade-preloader-root,
+html.page-404 #brand-preloader-root,
+html.page-404 #fade-preloader-root {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

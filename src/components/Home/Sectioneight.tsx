@@ -92,7 +92,7 @@ export default function SectionEight({ preloaderDone }: SectionEightProps) {
 
         <div className="!absolute !top-0 !left-0 !z-20 !flex !flex-col !items-start !gap-7 !pt-[12vh] !px-5">
           <h2 className="s8-heading !text-[#F4EEDF] !text-left font-display">
-            Water as Sanctuary.
+            Water as Sanctuary
           </h2>
           <p className="s8-para !text-[#F4EEDF] !text-left font-body max-w-[300px]">
             Designed to disappear into the landscape, not announce itself.
@@ -151,7 +151,7 @@ export default function SectionEight({ preloaderDone }: SectionEightProps) {
 
           <div className="absolute left-1/2 top-1/2 -translate-y-1/2 flex flex-col gap-5 text-left ">
             <h2 className="s8-heading text-[#F4EEDF] font-display whitespace-nowrap reveal-text">
-              Water as Sanctuary.
+              Water as Sanctuary
             </h2>
             <p className="s8-para text-[#F4EEDF] font-body leading-relaxed max-w-[330px] reveal-text">
               Designed to disappear into the landscape, not announce itself.

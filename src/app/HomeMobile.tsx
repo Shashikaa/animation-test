@@ -178,10 +178,11 @@ export default function HomeMobile() {
     const ctx = gsap.context(() => {
       gsap.ticker.lagSmoothing(0);
 
-      const ACTION = 1.8;
-      const DEAD_SCROLL = 0.4; 
+      const ACTION = 1.4;
+      const DEAD_SCROLL = 0.2; 
 
-      // Dynamic calculation: 8 main panel moves, 5 sub steps, 8 pause holds
+      // Dynamic calculation matching all other mobile modules:
+      // 8 main panel moves, 5 sub steps, 8 pause holds
       const MAIN_PANELS_COUNT = 8;
       const SUB_STEPS_COUNT = 5;
       const PAUSES_COUNT = 8;
@@ -197,13 +198,13 @@ export default function HomeMobile() {
           trigger: ".home-pin-master",
           start: "top top",
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
-          scrub: 1.2,
           pin: true,
           pinType: "fixed",
+          scrub: 0.5, // Standardized scrub setting
           anticipatePin: 1,
           preventOverlaps: true, 
           fastScrollEnd: true, 
-          invalidateOnRefresh: false, // Keeps current progress intact when header/menu re-renders
+          invalidateOnRefresh: false,
         },
       });
 
@@ -258,10 +259,10 @@ export default function HomeMobile() {
         
         .fromTo(".section-2", 
           { yPercent: 100 }, 
-          { yPercent: 0, duration: ACTION * 0.8, ease: "power2.inOut" }, 
+          { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, 
           "heroExit"
         )
-        .addLabel("textLanding", `heroExit+=${ACTION * 0.8}`);
+        .addLabel("textLanding", `heroExit+=${ACTION}`);
 
       // ── SECTION 2 INNER ANIMATIONS ──
       tl.addLabel("s2TextDismissal", "textLanding")
@@ -298,51 +299,51 @@ export default function HomeMobile() {
           ease: "power2.inOut"
         }, "s2MobileScrollStart+=" + (ACTION * 1.5))
 
-        .to({}, { duration: DEAD_SCROLL * 2 });
+        .to({}, { duration: DEAD_SCROLL });
 
       // ── SECTION 8 SLIDE UP ──
       tl.addLabel("sec8Start", ">")
         .set(".section-8", { visibility: "visible" }, "sec8Start")
-        .to(".section-8", { yPercent: 0, duration: ACTION }, "sec8Start")
-        .to(".s8-bg-img", { yPercent: 0, duration: ACTION }, "sec8Start")
-        .to(".s8-mob-bg", { scale: 1, duration: ACTION }, "sec8Start")
+        .to(".section-8", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec8Start")
+        .to(".s8-bg-img", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec8Start")
+        .to(".s8-mob-bg", { scale: 1, duration: ACTION, ease: "power2.inOut" }, "sec8Start")
 
         .to({}, { duration: DEAD_SCROLL });
 
       // ── SECTION 10 SLIDE UP ──
       tl.addLabel("sec10Start", ">")
         .set(".section-10", { visibility: "visible" }, "sec10Start")
-        .fromTo(".section-10", { yPercent: 100 }, { yPercent: 0, duration: ACTION }, "sec10Start")
-        .to(".section-8", { yPercent: -10, duration: ACTION }, "sec10Start")
+        .fromTo(".section-10", { yPercent: 100 }, { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec10Start")
+        .to(".section-8", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "sec10Start")
         
-        .to(".s10-title, .s10-title-sub, .s10-para-top", { y: "-50vh", duration: ACTION }, ">")
-        .fromTo(".s10-scrollable-container", { y: "0vh" }, { y: "-36vh", duration: ACTION }, "<")
+        .to(".s10-title, .s10-title-sub, .s10-para-top", { y: "-50vh", duration: ACTION, ease: "power2.inOut" }, ">")
+        .fromTo(".s10-scrollable-container", { y: "0vh" }, { y: "-36vh", duration: ACTION, ease: "power2.inOut" }, "<")
 
         .to({}, { duration: DEAD_SCROLL });
 
       // ── SECTION 7 SLIDE UP ──
       tl.addLabel("sec7Start", ">")
         .set(".section-7", { visibility: "visible" }, "sec7Start")
-        .fromTo(".section-7", { yPercent: 100 }, { yPercent: 0, duration: ACTION }, "sec7Start")
-        .to(".s7-bg-img", { yPercent: 0, duration: ACTION }, "sec7Start")
-        .to(".s7-mob-bg", { scale: 1, duration: ACTION }, "sec7Start")
+        .fromTo(".section-7", { yPercent: 100 }, { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec7Start")
+        .to(".s7-bg-img", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec7Start")
+        .to(".s7-mob-bg", { scale: 1, duration: ACTION, ease: "power2.inOut" }, "sec7Start")
 
         .to({}, { duration: DEAD_SCROLL });
 
       // ── APPSECTION SLIDE UP ──
       tl.addLabel("appSecStart", ">")
         .set(".section-appsec", { visibility: "visible" }, "appSecStart")
-        .fromTo(".section-appsec", { yPercent: 100 }, { yPercent: 0, duration: ACTION }, "appSecStart")
-        .to(".section-7", { yPercent: -10, duration: ACTION }, "appSecStart") 
+        .fromTo(".section-appsec", { yPercent: 100 }, { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "appSecStart")
+        .to(".section-7", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "appSecStart") 
 
         .to({}, { duration: DEAD_SCROLL }); 
 
       // ── SECTION 9 SLIDE UP ──
       tl.addLabel("sec9Start", ">")
         .set(".section-9", { visibility: "visible" }, "sec9Start")
-        .fromTo(".section-9", { yPercent: 100 }, { yPercent: 0, duration: ACTION }, "sec9Start")
-        .to(".section-appsec", { yPercent: -10, duration: ACTION }, "sec9Start")
-        .to(".s9-bg-img", { scale: 1, yPercent: 0, duration: ACTION }, "sec9Start")
+        .fromTo(".section-9", { yPercent: 100 }, { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec9Start")
+        .to(".section-appsec", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "sec9Start")
+        .to(".s9-bg-img", { scale: 1, yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec9Start")
         
         .to(".s9-title", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.15")
         .to(".s9-para", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.15");
@@ -350,18 +351,18 @@ export default function HomeMobile() {
       // ── CTA REVEAL ──
       tl.addLabel("ctaStart", ">")
         .set(".section-cta", { visibility: "visible" }, "ctaStart")
-        .to(".section-cta", { yPercent: 0, duration: ACTION }, "ctaStart") 
-        .to(".s9-bg-img", { yPercent: -10, duration: ACTION }, "ctaStart")
+        .to(".section-cta", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart") 
+        .to(".s9-bg-img", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "ctaStart")
 
         .to({}, { duration: DEAD_SCROLL });
 
       // ── FOOTER REVEAL ──
       tl.addLabel("footerStart", ">")
-        .to([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { opacity: 0, duration: ACTION * 0.3 }, "footerStart")
+        .to([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { opacity: 0, duration: ACTION * 0.4, ease: "power1.inOut" }, "footerStart")
         
         .set(".footer", { visibility: "visible" }, "footerStart+=0.1")
-        .to(".footer", { yPercent: 0, duration: ACTION }, "footerStart+=0.1") 
-        .to(".s9-bg-img", { yPercent: -20, duration: ACTION }, "footerStart+=0.1");
+        .to(".footer", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "footerStart+=0.1") 
+        .to(".s9-bg-img", { yPercent: -20, duration: ACTION, ease: "power2.inOut" }, "footerStart+=0.1");
 
       onScrollReady();
 

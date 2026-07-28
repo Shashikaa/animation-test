@@ -130,9 +130,11 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2;
 
-      const MAIN_PANELS_COUNT = 4;
+      // 5 Main Transitions (Hero Reveal, Sec1 Sheet, Image Expand, FAQ, CTA & Footer)
+      // 3 Sub-steps (Sequential paragraph roll) + 6 Pause breaks
+      const MAIN_PANELS_COUNT = 5;
       const SUB_STEPS_COUNT = 3;
-      const PAUSES_COUNT = 5;
+      const PAUSES_COUNT = 6;
 
       const DYNAMIC_SCROLL_TRACK = 
         (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -148,7 +150,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
           pin: true,
           pinType: "fixed",
           pinSpacing: true,
-          scrub: 1.2,
+          scrub: 0.5, // Standardized scrub setting
           invalidateOnRefresh: false,
           fastScrollEnd: true,
           preventOverlaps: true
@@ -203,7 +205,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         .to([".s10-para-top", ".s10-title"], {
           opacity: 0,
           y: -35,
-          duration: 0.6,
+          duration: ACTION * 0.4,
           ease: "power2.in"
         }, "phase2_expanded")
         
@@ -222,6 +224,8 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
           duration: ACTION, 
           ease: "power2.inOut"
         }, "phase2_expanded");
+
+      scrollTl.to({}, { duration: DEAD_SCROLL });
 
       // ── SEQUENTIAL PARAGRAPHS ROLL UP ──
       scrollTl.addLabel("text1")

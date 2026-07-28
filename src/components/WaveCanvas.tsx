@@ -23,16 +23,20 @@ type WaveCanvasProps = {
 
 const vertexShader = `
   varying vec2 vUv;
-  void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
+  void main() { 
+    vUv = uv; 
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); 
+  }
 `;
 
 const fragmentShader = `
-  uniform sampler2D map;             
+  uniform sampler2D map;            
   uniform sampler2D videoMap;        
   uniform sampler2D displacementMap; 
   uniform vec2 uvMapScale;
   uniform float displacementScale;
   varying vec2 vUv;
+
   void main() {
     vec4 disp = texture2D(displacementMap, vUv);
     vec3 normal = vec3(disp.b, disp.a, sqrt(max(0.0, 1.0 - dot(disp.ba, disp.ba))));
@@ -49,33 +53,6 @@ const fragmentShader = `
     gl_FragColor = vec4(finalColor, baseColor.a);
   }
 `;
-
-const loadTextureOffThread = async (url: string): Promise<THREE.Texture> => {
-  try {
-    const res = await fetch(url, { mode: "cors" });
-    const blob = await res.blob();
-    const bitmap = await createImageBitmap(blob, { 
-      premultiplyAlpha: 'none',
-      imageOrientation: 'flipY' 
-    });
-    const texture = new THREE.Texture(bitmap);
-    texture.colorSpace = LinearSRGBColorSpace;
-    texture.minFilter = LinearFilter;
-    texture.magFilter = LinearFilter;
-    texture.generateMipmaps = false;
-    texture.needsUpdate = true;
-    return texture;
-  } catch (e) {
-    const loader = new TextureLoader();
-    loader.setCrossOrigin("anonymous");
-    const tex = await loader.loadAsync(url);
-    tex.colorSpace = LinearSRGBColorSpace;
-    tex.minFilter = LinearFilter;
-    tex.magFilter = LinearFilter;
-    tex.generateMipmaps = false;
-    return tex;
-  }
-};
 
 export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: WaveCanvasProps) {
   const pathname = usePathname();
@@ -96,7 +73,6 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
   }, [isHome]);
 
   useEffect(() => {
-    // Return early on non-home pages or mobile/tablet viewports
     if (!isHome || isMobileOrTablet === null || isMobileOrTablet) return;
 
     let destroyed = false;
@@ -109,11 +85,20 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
       if (!canvasRef.current || appInstanceRef.current) return;
 
       try {
+        // High-performance async texture load without offscreen bitmap duplication
         if (imageSrc) {
-          bgTexture = await loadTextureOffThread(imageSrc);
+          const loader = new TextureLoader();
+          loader.setCrossOrigin("anonymous");
+          bgTexture = await loader.loadAsync(imageSrc);
+          bgTexture.colorSpace = LinearSRGBColorSpace;
+          bgTexture.minFilter = LinearFilter;
+          bgTexture.magFilter = LinearFilter;
+          bgTexture.generateMipmaps = false;
         }
+
         if (destroyed) return;
 
+        // Bypasses heavy PMREM environment generation
         const originalFromScene = THREE.PMREMGenerator.prototype.fromScene;
         THREE.PMREMGenerator.prototype.fromScene = function () { return { texture: null } as any; };
         
@@ -121,7 +106,8 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
         appInstanceRef.current = appInstance;
         THREE.PMREMGenerator.prototype.fromScene = originalFromScene;
 
-        appInstance.three.maxPixelRatio = Math.min(window.devicePixelRatio, 1.25);
+        // Cap pixel ratio strictly to avoid rendering bottlenecks on 4K/Retina displays
+        appInstance.three.maxPixelRatio = Math.min(window.devicePixelRatio, 1.15);
         
         const initialWidth = canvasRef.current.clientWidth || window.innerWidth;
         const initialHeight = canvasRef.current.clientHeight || window.innerHeight;
@@ -155,7 +141,10 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
           blending: THREE.NoBlending,
         });
 
-        appInstance.liquidPlane.material.dispose();
+        if (appInstance.liquidPlane.material) {
+          appInstance.liquidPlane.material.dispose();
+        }
+        
         appInstance.liquidPlane.material = shaderMat;
         appInstance.liquidPlane.uniforms = shaderMat.uniforms;
         
@@ -173,7 +162,7 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
           
           if (bgTexture?.image) {
             const cRatio = cw / ch;
-            const img = bgTexture.image as HTMLImageElement | ImageBitmap;
+            const img = bgTexture.image as HTMLImageElement;
             const iRatio = img.width && img.height ? img.width / img.height : 1;
             
             if (cRatio < iRatio) uniforms.uvMapScale.value.set(cRatio / iRatio, 1.0);
@@ -184,7 +173,7 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
         };
         
         updateAspect();
-        window.addEventListener("resize", updateAspect);
+        window.addEventListener("resize", updateAspect, { passive: true });
 
         renderer.render(appInstance.three.scene, appInstance.three.camera);
 
@@ -215,7 +204,6 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
     };
   }, [isHome, isMobileOrTablet, imageSrc]);
 
-  // On non-home pages, return only the image container
   if (!isHome) {
     return (
       <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-black">
@@ -260,7 +248,7 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
           className={`absolute inset-0 w-full h-full block transition-opacity duration-500 ease-out ${
             engineReady ? "opacity-100" : "opacity-0"
           }`}
-          style={{ zIndex: 1 }}
+          style={{ zIndex: 1, willChange: "transform" }}
         />
       )}
     </div>

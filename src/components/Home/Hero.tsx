@@ -8,9 +8,9 @@ interface HeroProps {
 
 export default function Hero({ onReady }: HeroProps) {
   useEffect(() => {
-    // Preload the background image to ensure WebGL/Canvas/CSS context is fully painted
+    // Preload the background image to ensure context is fully painted
     const img = new Image();
-    img.src = "/heroHome.webp";
+    img.src = "/hero-home.webp";
 
     if (img.complete) {
       onReady?.();
@@ -46,13 +46,16 @@ from concept to completion.`}
 
       {/* Targetable Background wrapper layer — sits at z-20 */}
       <div
-        className="hero-bg-wrapper absolute inset-0 w-full h-full z-20"
+        className="hero-bg-wrapper absolute inset-0 w-full h-full z-20 overflow-hidden"
         style={{ clipPath: "inset(0% 0% 0% 0%)" }}
       >
         <div
-          className="hero-bg absolute inset-0 bg-cover bg-center bg-[url('/heroHome.webp')]"
+          className="hero-bg absolute inset-0 bg-cover bg-center bg-[url('/hero-home.webp')]"
           style={{ transform: "scale(1)", transformOrigin: "center center" }}
         />
+        
+        {/* Black Overlay on top of the background image */}
+        <div className="hero-overlay absolute inset-0 bg-black/30 pointer-events-none z-[21]" />
       </div>
 
       {/* Main Content Layer */}
@@ -112,8 +115,8 @@ outdoor space, adding value and elegance.`}
         </div>
       </div>
 
-      {/* Scroll Indicator */}
-      <div className="hero-scroll-indicator absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 pointer-events-none transition-opacity duration-[400ms]">
+      {/* Scroll Indicator — hidden on mobile & tablet, visible on desktop (lg:flex) */}
+      <div className="hero-scroll-indicator absolute bottom-8 left-1/2 -translate-x-1/2 z-30 hidden lg:flex flex-col items-center gap-2 pointer-events-none transition-opacity duration-[400ms]">
         <span className="text-[#F4EEDF] text-[10px] font-light tracking-[0.2em] uppercase [text-shadow:0_1px_6px_rgba(0,0,0,0.8)]">
           Scroll
         </span>

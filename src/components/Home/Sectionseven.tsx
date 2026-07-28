@@ -47,7 +47,7 @@ export default function SectionSeven() {
           className="text-[#F4EEDF] font-[100] s7-title reveal-text"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Meet The Experts
+          Meet the Experts
         </h2>
 
         <div

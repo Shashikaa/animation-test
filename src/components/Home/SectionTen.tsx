@@ -46,7 +46,7 @@ export default function SectionTen() {
         className="s10-title-sub absolute font-body text-[#FFFFFF] pointer-events-none !mt-3 reveal-text"
         style={{ zIndex: 10 }} 
       >
-        Designed For You
+        Designed for You
       </p>
 
       <p

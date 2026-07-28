@@ -47,43 +47,41 @@ export default function FadePreloader({
         transition: `opacity ${EXIT_DURATION_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`,
       }}
     >
-      {/* Background Gradient */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: "linear-gradient(135deg, #162D24 0%, #094146 100%)",
-        }}
-      />
-
-      {/* SVG Static Glow Orb */}
+      {/* Updated SVG Background */}
       <svg
-        className="absolute"
-        width="900"
-        height="900"
-        viewBox="0 0 900 900"
+        className="h-full w-full object-cover"
+        width="1920"
+        height="1080"
+        viewBox="0 0 1920 1080"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        style={{
-          top: "-300px",
-          right: "-150px",
-          opacity: 0.9,
-        }}
+        preserveAspectRatio="xMidYMid slice"
       >
-        <g filter="url(#blur-glow)">
-          <circle cx="450" cy="450" r="230" fill="#7C8C2D" />
-        </g>
+        <rect width="1920" height="1080" fill="url(#paint0_linear_6224_4460)" />
+        <rect width="1920" height="1080" fill="url(#paint1_linear_6224_4460)" />
         <defs>
-          <filter
-            id="blur-glow"
-            x="0"
-            y="0"
-            width="900"
-            height="900"
-            filterUnits="userSpaceOnUse"
-            colorInterpolationFilters="sRGB"
+          <linearGradient
+            id="paint0_linear_6224_4460"
+            x1="0"
+            y1="0"
+            x2="1899.94"
+            y2="1059.79"
+            gradientUnits="userSpaceOnUse"
           >
-            <feGaussianBlur stdDeviation="110" result="effect1_foregroundBlur" />
-          </filter>
+            <stop stopColor="#162D24" />
+            <stop offset="1" stopColor="#094146" />
+          </linearGradient>
+          <linearGradient
+            id="paint1_linear_6224_4460"
+            x1="0"
+            y1="0"
+            x2="1899.94"
+            y2="1059.79"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor="#162D24" />
+            <stop offset="1" stopColor="#094146" />
+          </linearGradient>
         </defs>
       </svg>
     </div>

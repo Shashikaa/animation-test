@@ -119,9 +119,10 @@ export default function AboutMobile() {
       const ACTION = 1.4; 
       const DEAD_SCROLL = 0.2; 
 
+      // 7 Main transitions: Hero->Sec1, Sec1->Sec2, Sec2->Sec3, Sec3->Sec4, Sec4->Sec5, Sec5->CTA, CTA->Footer
       const MAIN_PANELS_COUNT = 7;
-      const SUB_STEPS_COUNT = 2;
-      const PAUSES_COUNT = 5;
+      const SUB_STEPS_COUNT = 2; // Sec5 card triggers
+      const PAUSES_COUNT = 6;    // 1 pause after every step prior to next transition
 
       const DYNAMIC_SCROLL_TRACK = 
         (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -143,7 +144,7 @@ export default function AboutMobile() {
           trigger: ".about-pin",
           start: "top top",
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
-          scrub: 0.2,
+          scrub: 0.5,
           pin: true,
           pinType: "fixed",
           anticipatePin: 1,
@@ -216,6 +217,7 @@ export default function AboutMobile() {
       tl.addLabel("sec5_card3", "sec5_card2+=0.6")
         .call(() => triggerSec5Hook(2), [], "sec5_card3");
 
+      // Dead scroll pause added here so CTA doesn't rush in immediately after card 3
       tl.to({}, { duration: DEAD_SCROLL }); 
 
       // ── Step 6: CTA Reveal Track ──

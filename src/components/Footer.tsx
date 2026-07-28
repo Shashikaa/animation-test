@@ -122,10 +122,11 @@ export default function Footer() {
             <nav style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
               {[
                 { item: "Home", href: "/" },
+                { item: "About Us", href: "/about" },
                 { item: "Services", href: "/services" },
                 { item: "Projects", href: "/projects" },
-                { item: "Contact", href: "/contact" },
-                { item: "About", href: "/about" }
+                { item: "Contact Us", href: "/contact" },
+                
               ].map(({ item, href }) => (
                 <a
                   key={item}
@@ -148,7 +149,7 @@ export default function Footer() {
             {/* Col 2 — Service Capabilities list */}
             <nav className="flex flex-col !items-end lg:!items-start gap-3">
               {[
-                { item: "Residential pools Construction", href: "/services/residential-pools-construction" },
+                { item: "Residential Pools Construction", href: "/services/residential-pools-construction" },
                 
                 { item: "Pool Equipment & Installation", href: "/services/pool-equipment-and-installation" },
                 { item: "Commercial Pool Construction", href: "/services/commercial-pool-construction" },

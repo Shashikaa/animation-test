@@ -12,7 +12,7 @@ import Footer from "@/src/components/Footer";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Standardized metrics matching AboutMobile & ContactMobile
+// Standardized metrics matching AboutMobile, ContactMobile & SingleProjectPageMobile
 const PX_PER_MAIN_PANEL = 850; 
 const PX_PER_SUB_STEP = 350;   
 const PAUSE_PX = 100;          
@@ -141,11 +141,11 @@ export default function ProjectsMobile() {
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2;
 
-      // Projects Page: 4 Main Panel Moves (Hero->Sec1, Sec1->Sec2, Sec2->CTA, CTA->Footer)
-      // 2 Sub-steps (Paragraph 1 & 2 swaps) + 4 Pause windows
-      const MAIN_PANELS_COUNT = 4;
+      // Projects Page: 5 Main Transitions (Hero Text, Hero->Sec1, Sec1->Sec2, Sec2->CTA, CTA->Footer)
+      // 2 Sub-steps (Paragraph 1 & 2 swaps) + 5 Pause breaks
+      const MAIN_PANELS_COUNT = 5;
       const SUB_STEPS_COUNT = 2;
-      const PAUSES_COUNT = 4;
+      const PAUSES_COUNT = 5;
 
       const DYNAMIC_SCROLL_TRACK = 
         (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -160,7 +160,7 @@ export default function ProjectsMobile() {
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: 1.2,
+          scrub: 0.5, // Standardized scrub setting
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -168,25 +168,25 @@ export default function ProjectsMobile() {
         }
       });
 
-      // ── STEP A: FAST HERO TEXT SWAPPING ──
+      // ── STEP A: HERO TEXT SWAPPING ──
       scrollTl.set([".scroll-para-1 .custom-line-inner", ".scroll-para-2 .custom-line-inner"], { opacity: 0, yPercent: 100 }, 0);
 
-      // 1. Hero text vanishes fast on initial touch scroll
-      scrollTl.to(".hero-text-wrap", { opacity: 0, y: -30, ease: "power2.in", duration: 0.5 }, 0);
-      scrollTl.set(".hero-text-wrap", { visibility: "hidden" }, 0.5);
+      // 1. Hero text vanishes fast on initial scroll
+      scrollTl.to(".hero-text-wrap", { opacity: 0, y: -30, ease: "power2.in", duration: ACTION * 0.5 }, 0);
+      scrollTl.set(".hero-text-wrap", { visibility: "hidden" }, ACTION * 0.5);
       
       // 2. Paragraph 1 Entrance
-      scrollTl.set(".scroll-para-1", { visibility: "visible" }, 0.5);
+      scrollTl.set(".scroll-para-1", { visibility: "visible" }, ACTION * 0.5);
       scrollTl.to(".scroll-para-1 .custom-line-inner", { 
         opacity: 1, 
         yPercent: 0, 
         stagger: 0.05, 
-        duration: 0.8, 
+        duration: ACTION * 0.8, 
         ease: "power2.out" 
-      }, 0.5);
+      }, ACTION * 0.5);
 
       // Paragraph 1 Exit
-      scrollTl.to(".scroll-para-1 .custom-line-inner", { opacity: 0, y: -30, ease: "power1.in", duration: 0.6 }, "+=0.4");
+      scrollTl.to(".scroll-para-1 .custom-line-inner", { opacity: 0, y: -30, ease: "power1.in", duration: ACTION * 0.5 }, "+=0.2");
       scrollTl.set(".scroll-para-1", { visibility: "hidden" });
       
       // 3. Paragraph 2 Entrance
@@ -195,12 +195,12 @@ export default function ProjectsMobile() {
         opacity: 1, 
         yPercent: 0, 
         stagger: 0.05, 
-        duration: 0.8, 
+        duration: ACTION * 0.8, 
         ease: "power2.out" 
       }, ">");
       
       // Paragraph 2 Exit
-      scrollTl.to(".scroll-para-2 .custom-line-inner", { opacity: 0, y: -40, ease: "power1.in", duration: 0.6 }, "+=0.4");
+      scrollTl.to(".scroll-para-2 .custom-line-inner", { opacity: 0, y: -40, ease: "power1.in", duration: ACTION * 0.5 }, "+=0.2");
       scrollTl.set(".scroll-para-2", { visibility: "hidden" });
 
       // Background subtle translation during text sequence
@@ -210,6 +210,8 @@ export default function ProjectsMobile() {
         { yPercent: -18, ease: "none", duration: scrollTl.duration() }, 
         0
       );
+
+      scrollTl.to({}, { duration: DEAD_SCROLL });
 
       // ── STEP B: SECTION ONE TALL SCROLL OVER HERO ──
       const getSectionOneScrollDistance = () => {
@@ -222,7 +224,7 @@ export default function ProjectsMobile() {
         y: () => `-${getSectionOneScrollDistance()}`,
         duration: ACTION * 1.5, 
         ease: "power2.inOut"
-      }, "+=0.1");
+      }, ">");
 
       scrollTl.to(".parallax-img-asset", {
         yPercent: 20,

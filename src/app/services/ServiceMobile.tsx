@@ -144,11 +144,11 @@ export default function ServicesMobile() {
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2;
 
-      // Services Page: 6 Main Panel Moves
-      // 3 Slide track steps inside Sec 2 + 4 Pause windows
+      // Services Page: 6 Main Panel Moves (Compress Hero, Sec1 Reveal, Sec2 Reveal, AppSec Reveal, CTA Reveal, Footer Reveal)
+      // 3 Slide track steps inside Sec 2 + 6 Pause breaks
       const MAIN_PANELS_COUNT = 6;
       const SUB_STEPS_COUNT = 3; 
-      const PAUSES_COUNT = 4;
+      const PAUSES_COUNT = 6;
 
       const DYNAMIC_SCROLL_TRACK = 
         (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -172,7 +172,7 @@ export default function ServicesMobile() {
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: 1.2,
+          scrub: 0.5, // Standardized scrub setting matching all pages
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
