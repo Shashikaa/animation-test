@@ -15,35 +15,45 @@ gsap.registerPlugin(ScrollTrigger);
 
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
-// Dedicated Desktop Scroll Metrics
-const PX_PER_MAIN_PANEL = 1250;
-const PX_PER_SUB_STEP = 550;
-const PAUSE_PX = 150;
+// Standardized Desktop Metrics (Matched to Home Setup)
+const PX_PER_MAIN_PANEL = 1000;
+const PX_PER_SUB_STEP = 600;
+const PAUSE_PX = 350;
 
 export default function ContactDesktop() {
   const { setPreloaderDone, preloaderDone } = useSite();
   const [introDone, setIntroDone] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
 
+  // Setup initial scroll state and preloader signals
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.history.scrollRestoration) {
       window.history.scrollRestoration = "manual";
     }
-    window.scrollTo(0, 0);
+
+    const isFullyReady = preloaderDone && introDone;
+
+    if (!isFullyReady) {
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+      window.scrollTo(0, 0);
+    } else {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+      requestAnimationFrame(() => {
+        ScrollTrigger.refresh();
+      });
+    }
 
     document.body.classList.remove("preloading");
     setPreloaderDone(true);
-  }, [setPreloaderDone]);
 
-  // Lock body overflow strictly during hero intro sequence
-  useEffect(() => {
-    const locked = !introDone;
-    document.body.style.overflow = locked ? "hidden" : "";
     return () => {
+      document.documentElement.style.overflow = "";
       document.body.style.overflow = "";
     };
-  }, [introDone]);
+  }, [setPreloaderDone, preloaderDone, introDone]);
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -81,10 +91,6 @@ export default function ContactDesktop() {
       const introTl = gsap.timeline({
         onComplete: () => {
           setIntroDone(true);
-          requestAnimationFrame(() => {
-            window.dispatchEvent(new Event("resize"));
-            setTimeout(() => ScrollTrigger.refresh(), 50);
-          });
         },
       });
 
@@ -116,7 +122,7 @@ export default function ContactDesktop() {
 
   // Master Scroll Timeline
   useEffect(() => {
-    if (!introDone) return;
+    if (!introDone || !preloaderDone) return;
 
     if (isTouchOnly()) {
       ScrollTrigger.normalizeScroll(true);
@@ -125,7 +131,7 @@ export default function ContactDesktop() {
     let vvCleanup: (() => void) | null = null;
 
     const ctx = gsap.context(() => {
-      gsap.ticker.lagSmoothing(0);
+      gsap.ticker.lagSmoothing(500, 33);
 
       const performanceTargets = [
         ".contact-hero-master",
@@ -148,6 +154,13 @@ export default function ContactDesktop() {
 
       useTextReveal(scopeRef, ".faq-scroll-wrapper .reveal-text");
 
+      gsap.set(".faq-scroll-wrapper .reveal-text", { visibility: "visible", opacity: 1 });
+      gsap.set([
+        ".faq-scroll-wrapper .gs-line-inner",
+        ".faq-scroll-wrapper .custom-line-inner",
+        ".faq-scroll-wrapper .reveal-text > *"
+      ], { y: 45, opacity: 0 });
+
       const buildTimeline = () => {
         ScrollTrigger.refresh();
 
@@ -157,6 +170,13 @@ export default function ContactDesktop() {
           vv.addEventListener("resize", onVVResize);
           vvCleanup = () => vv.removeEventListener("resize", onVVResize);
         }
+
+        const revealedElements = new Set<string>();
+
+        // Uniform Duration Metrics (Matched to Home Setup)
+        const PANEL_ACTION = 2.0;
+        const SUB_ACTION = 1.8;
+        const PAUSE_ACTION = 0.4;
 
         const MAIN_PANELS_COUNT = 5;
         const SUB_STEPS_COUNT = 2;
@@ -184,79 +204,67 @@ export default function ContactDesktop() {
             anticipatePin: 1,
             preventOverlaps: true,
             invalidateOnRefresh: true,
-            snap: {
-              directional: false,
-              snapTo: (value, self) => {
-                const totalDur = tl.totalDuration();
-                if (!totalDur) return value;
-
-                const labelTimes = Array.from(
-                  new Set(
-                    Object.keys(tl.labels).map((name) =>
-                      Number((tl.labels[name] / totalDur).toFixed(5))
-                    )
-                  )
-                ).sort((a, b) => a - b);
-
-                if (labelTimes.length < 2) return value;
-
-                const curProgress = self ? self.progress : value;
-                const isScrollingDown = value >= curProgress;
-
-                for (let i = 0; i < labelTimes.length - 1; i++) {
-                  const start = labelTimes[i];
-                  const end = labelTimes[i + 1];
-
-                  if (curProgress >= start - 0.0001 && curProgress <= end + 0.0001) {
-                    const gap = end - start;
-                    if (gap <= 0.00001) continue;
-
-                    const localProgress = (curProgress - start) / gap;
-
-                    if (isScrollingDown) {
-                      return localProgress >= 0.35 ? end : start;
-                    } else {
-                      return localProgress <= 0.50 ? start : end;
-                    }
-                  }
-                }
-
-                return value;
-              },
-              duration: { min: 0.4, max: 0.8 },
-              delay: 0.05,
-              ease: "power3.inOut",
-            },
           },
         });
+
+        // Original Text Reveal logic preserved exact offsets (-0.65) and duration (0.8)
+        const addPlayOnceTextReveal = (labelName: string, timeOffset: number, selector: string) => {
+          const absoluteTime = tl.labels[labelName] + timeOffset;
+
+          tl.call(() => {
+            const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+            if (isForward && !revealedElements.has(selector)) {
+              revealedElements.add(selector);
+
+              gsap.to(selector, {
+                y: 0,
+                opacity: 1,
+                stagger: 0.05,
+                duration: 0.8,
+                ease: "power2.out",
+                overwrite: "auto",
+              });
+            }
+          }, [], absoluteTime);
+        };
 
         tl.addLabel("start", 0);
 
         // ── PHASE 1: Hero transition to CTA ──
-        tl.to(".contact-hero-bg", { y: -100, duration: 1.0 })
-          .to(".cta-scroll-wrapper", { yPercent: -100, ease: "power2.inOut", duration: 1.0 }, "<")
+        tl.to(".contact-hero-bg", { y: -100, duration: PANEL_ACTION, ease: "power2.inOut" })
+          .to(".cta-scroll-wrapper", { yPercent: -100, ease: "power2.inOut", duration: PANEL_ACTION }, "<")
           .addLabel("heroOut");
 
+        tl.to({}, { duration: PAUSE_ACTION });
+
         // ── PHASE 2: Section One slides in ──
-        tl.set(".section-one-scroll-wrapper", { visibility: "visible" })
-          .to(".section-one-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: 1.0 })
-          .addLabel("sec1Start");
+        tl.addLabel("sec1Start", ">")
+          .set(".section-one-scroll-wrapper", { visibility: "visible" }, "sec1Start")
+          .to(".section-one-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: PANEL_ACTION }, "sec1Start");
+
+        tl.to({}, { duration: PAUSE_ACTION });
 
         // ── PHASE 3: Section One Cards scroll track ──
-        tl.to(".contact-one-bg", { yPercent: -35, duration: 1.0 })
-          .to(".contact-right-scroll-track", { y: -scrollDistance, ease: "power1.inOut", duration: 1.0 }, "<")
-          .addLabel("sec1Scroll");
+        tl.addLabel("sec1Scroll", ">")
+          .to(".contact-one-bg", { yPercent: -35, duration: SUB_ACTION, ease: "power2.inOut" }, "sec1Scroll")
+          .to(".contact-right-scroll-track", { y: -scrollDistance, ease: "power2.inOut", duration: SUB_ACTION }, "<");
+
+        tl.to({}, { duration: PAUSE_ACTION });
 
         // ── PHASE 4: FAQ Section glides in ──
-        tl.set(".faq-scroll-wrapper", { visibility: "visible" })
-          .to(".faq-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: 1.0 })
-          .addLabel("faqStart");
+        tl.addLabel("faqStart", ">")
+          .set(".faq-scroll-wrapper", { visibility: "visible" }, "faqStart")
+          .to(".faq-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: PANEL_ACTION }, "faqStart");
+
+        addPlayOnceTextReveal("faqStart", -0.65, ".faq-scroll-wrapper .gs-line-inner, .faq-scroll-wrapper .custom-line-inner, .faq-scroll-wrapper .reveal-text > *");
+
+        tl.to({}, { duration: PAUSE_ACTION });
 
         // ── PHASE 5: Footer slide up ──
-        tl.set(".footer-scroll-wrapper", { visibility: "visible" })
-          .to(".faq-content", { opacity: 0, y: -30, duration: 0.7, ease: "power1.out" })
-          .to(".footer-scroll-wrapper", { y: "0vh", ease: "power2.out", duration: 1.0 }, "<")
-          .addLabel("footerStart");
+        tl.addLabel("footerStart", ">")
+          .set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
+          .to(".faq-content", { opacity: 0, y: -30, duration: PANEL_ACTION * 0.4, ease: "power1.out" }, "footerStart")
+          .to(".footer-scroll-wrapper", { y: "0vh", ease: "power2.out", duration: PANEL_ACTION }, "footerStart");
       };
 
       requestAnimationFrame(buildTimeline);
@@ -272,7 +280,7 @@ export default function ContactDesktop() {
       }
       ctx.revert();
     };
-  }, [introDone]);
+  }, [introDone, preloaderDone]);
 
   return (
     <div ref={scopeRef}>

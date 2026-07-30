@@ -109,37 +109,10 @@ export default function SubServiceHero({ data, hideText = false }: HeroProps) {
                   </p>
                 </div>
                 
-                {/* Contact Us Button */}
-                <a
-                  href="/contact"
-                  style={{
-                    position: "relative",
-                    display: "inline-block",
-                    width: "fit-content",
-                    paddingBottom: 4,
-                    fontSize: 14,
-                    fontWeight: 500,
-                    textTransform: "uppercase",
-                    color: "#F4EEDF",
-                    textDecoration: "none",
-                    flexShrink: 0,
-                  }}
-                  className="hero-btn group transition-opacity duration-200 hover:opacity-70 font-body lg:ml-10"
-                >
-                  CONTACT US
-                  <span
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      height: 1,
-                      background: "#F4EEDF",
-                      transition: "transform 0.2s ease",
-                    }}
-                    className="group-hover:-translate-y-[2px]"
-                  />
-                </a>
+{/* Contact Us Button */}
+<a href="/contact" className="btn-underline hero-btn lg:ml-10">
+  CONTACT US
+</a>
 
               </div>
             </div>

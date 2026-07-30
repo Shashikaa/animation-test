@@ -56,8 +56,7 @@ export default function SectionTen() {
         }}
       >
         At Grand Pools, we create exceptional pools built
-        for lasting enjoyment. Combining quality
-        craftsmanship, durability, and innovation, we
+        for lasting enjoyment. Combining quality craftsmanship, durability, and innovation, we
         deliver beautiful, functional spaces.
       </p>
 
@@ -88,7 +87,7 @@ export default function SectionTen() {
           .s10-para-top {
             bottom: clamp(180px, 25vh, 240px);
             right: clamp(40px, 6vw, 80px);
-            max-width: 380px;
+            max-width: 430px;
             text-align: left;
           }
           .s10-content-wrap {

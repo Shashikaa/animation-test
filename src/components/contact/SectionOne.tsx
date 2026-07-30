@@ -40,7 +40,7 @@ export default function SectionOne() {
             className="contact-one-title text-[#F4EEDF] !font-[100]"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Get In Touch
+            Get in Touch
           </h2>
           <p className="contact-one-subtitle text-[#F4EEDF]">
             With Our Team

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import FAQAccordion from "../FAQAccordion"; // Adjust path if needed
 
 const FAQ_ITEMS = [
   {
@@ -26,9 +26,6 @@ const FAQ_ITEMS = [
 ];
 
 export default function FAQSection() {
-  // Explicitly type-safed union state to resolve the assignment parameter bug
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-
   return (
     <div className="w-full h-full relative overflow-hidden !bg-black flex items-stretch justify-center">
       
@@ -51,9 +48,8 @@ export default function FAQSection() {
         }}
       />
       
-      {/* Main Container */}
-     {/* Main Container — ADD 'faq-content' CLASS HERE */}
-<div className="faq-content section-container relative z-20 w-full h-full flex flex-col lg:flex-row justify-center lg:justify-between gap-16 md:gap-8">
+      {/* Main Container — ADD 'faq-content' CLASS HERE */}
+      <div className="faq-content section-container relative z-20 w-full h-full flex flex-col lg:flex-row justify-center lg:justify-between gap-16 md:gap-8">
         
         {/* LEFT SIDE — Title offset upwards matching Figma view */}
         <div className="flex flex-col select-none justify-start pt-12 md:!pt-24 lg:!pt-32">
@@ -67,51 +63,7 @@ export default function FAQSection() {
 
         {/* RIGHT SIDE — Centered Vertically */}
         <div className="w-full md:max-w-full lg:max-w-[650px] flex flex-col justify-start lg:justify-center lg:self-center py-2 md:py-6">
-          {FAQ_ITEMS.map((item, index) => {
-            const isOpen = openIndex === index;
-            return (
-              <div
-                key={index}
-                className="w-full !border-b !border-[#F4EEDF] "
-              >
-                <button
-                  onClick={() => setOpenIndex(isOpen ? null : index)}
-                  className="w-full !py-6 flex items-center justify-between text-left group focus:outline-none !cursor-pointer"
-                >
-                  {/* Question Text */}
-                  <span className="!text-[#F4EEDF] font-body !font-[400] !text-[16px]  transition-opacity duration-fast group-hover:opacity-80">
-                    {item.question}
-                  </span>
-                  
-                  {/* Chevron Icon */}
-                  <span className={`!text-[#F4EEDF] transition-transform duration-base ml-4 transform ${isOpen ? "rotate-180" : "rotate-0"}`}>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.2"
-                      stroke="currentColor"
-                      className="w-4 h-4"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                    </svg>
-                  </span>
-                </button>
-
-                {/* Body Details Context */}
-                <div
-                  className={`overflow-hidden transition-all duration-base ease-out ${
-                    isOpen ? "max-h-[160px] !pb-6" : "max-h-0"
-                  }`}
-                >
-                  {/* Answer Text matching base theme solid tint */}
-                  <p className="!text-[#F4EEDF] font-body  !text-[14px] md:!text-[16px] !leading-relaxed">
-                    {item.answer}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+          <FAQAccordion items={FAQ_ITEMS} />
         </div>
 
       </div>

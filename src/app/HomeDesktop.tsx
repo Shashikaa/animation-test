@@ -25,9 +25,9 @@ gsap.registerPlugin(ScrollTrigger);
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
 // Standardized Desktop Metrics for Uniform Scroll Feel
-const PX_PER_MAIN_PANEL = 1200;
-const PX_PER_SUB_STEP = 600;  
-const PAUSE_PX = 150;         
+const PX_PER_MAIN_PANEL = 1000;
+const PX_PER_SUB_STEP = 600; // Increased to grant smooth, unhurried pacing to sub-animations
+const PAUSE_PX = 350; // Increased pause distance for readable text stops
 
 function executeDesktopSplitting(selector: string) {
   const element = document.querySelector(selector) as HTMLElement;
@@ -222,14 +222,16 @@ export default function HomeDesktop() {
 
         const revealedElements = new Set<string>();
 
-        // ── UNIFORM TIME METRICS ──
+        // ── UNIFORM DURATION METRICS ──
+        // Standardized PANEL_ACTION for all slide-ups and major state transitions
         const PANEL_ACTION = 2.0; 
-        const SUB_ACTION = 1.0;
-        const PAUSE_ACTION = 0.3;
+        const SUB_ACTION = 1.8;   // Expanded from 1.0 -> 1.8 so inner transitions feel relaxed
+        const HOLD_ACTION = 1.0;  // Pause window for text reading
+        const PAUSE_ACTION = 0.4;
 
         const MAIN_PANELS_COUNT = 8;
-        const SUB_STEPS_COUNT = 6;
-        const PAUSES_COUNT = 7;
+        const SUB_STEPS_COUNT = 12; // Adjusted to match expanded internal steps across Section 2 & 9
+        const PAUSES_COUNT = 9;
 
         const DYNAMIC_SCROLL_TRACK = 
           (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -281,24 +283,28 @@ export default function HomeDesktop() {
         // ── 1. HERO PHASE 1 ──
         tl.addLabel("heroPhase1", 0)
           .set([".hero-right-text .custom-line-inner", ".hero-secondary-para .custom-line-inner"], { opacity: 0, yPercent: 100 }, "heroPhase1")
-          .to(".hero-bg", { scale: 1.15, duration: SUB_ACTION, ease: "sine.inOut" }, "heroPhase1")
-          .to([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 0, y: -20, duration: SUB_ACTION * 0.5, ease: "power1.out" }, "heroPhase1")
-          .set([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { visibility: "hidden" }, `heroPhase1+=${SUB_ACTION * 0.5}`)
-          .set(".hero-right-text", { visibility: "visible" }, `heroPhase1+=${SUB_ACTION * 0.5}`)
-          .to(".hero-right-text .custom-line-inner", { opacity: 1, yPercent: 0, stagger: 0.04, duration: SUB_ACTION * 0.5, ease: "power2.out" }, `heroPhase1+=${SUB_ACTION * 0.5}`);
+          .to(".hero-bg", { scale: 1.15, duration: PANEL_ACTION, ease: "sine.inOut" }, "heroPhase1")
+          .to([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 0, y: -20, duration: PANEL_ACTION * 0.5, ease: "power1.out" }, "heroPhase1")
+          .set([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { visibility: "hidden" }, `heroPhase1+=${PANEL_ACTION * 0.5}`)
+          .set(".hero-right-text", { visibility: "visible" }, `heroPhase1+=${PANEL_ACTION * 0.5}`)
+          .to(".hero-right-text .custom-line-inner", { opacity: 1, yPercent: 0, stagger: 0.04, duration: PANEL_ACTION * 0.5, ease: "power2.out" }, `heroPhase1+=${PANEL_ACTION * 0.5}`);
+
+        tl.to({}, { duration: HOLD_ACTION });
 
         // ── HERO PHASE 2 ──
-        tl.addLabel("heroPhase2", `heroPhase1+=${SUB_ACTION}`)
-          .to(".hero-right-text .custom-line-inner", { opacity: 0, y: -20, duration: SUB_ACTION * 0.4, ease: "power1.in" }, "heroPhase2")
-          .set(".hero-right-text", { visibility: "hidden" }, `heroPhase2+=${SUB_ACTION * 0.4}`)
-          .to(".hero-bg", { scale: 1.3, duration: SUB_ACTION, ease: "sine.inOut" }, "heroPhase2")
-          .set(".hero-secondary-para", { visibility: "visible" }, `heroPhase2+=${SUB_ACTION * 0.4}`)
-          .to(".hero-secondary-para .custom-line-inner", { opacity: 1, yPercent: 0, stagger: 0.04, duration: SUB_ACTION * 0.5, ease: "power2.out" }, `heroPhase2+=${SUB_ACTION * 0.4}`);
+        tl.addLabel("heroPhase2", ">")
+          .to(".hero-right-text .custom-line-inner", { opacity: 0, y: -20, duration: PANEL_ACTION * 0.4, ease: "power1.in" }, "heroPhase2")
+          .set(".hero-right-text", { visibility: "hidden" }, `heroPhase2+=${PANEL_ACTION * 0.4}`)
+          .to(".hero-bg", { scale: 1.3, duration: PANEL_ACTION, ease: "sine.inOut" }, "heroPhase2")
+          .set(".hero-secondary-para", { visibility: "visible" }, `heroPhase2+=${PANEL_ACTION * 0.4}`)
+          .to(".hero-secondary-para .custom-line-inner", { opacity: 1, yPercent: 0, stagger: 0.04, duration: PANEL_ACTION * 0.5, ease: "power2.out" }, `heroPhase2+=${PANEL_ACTION * 0.4}`);
+
+        tl.to({}, { duration: HOLD_ACTION });
 
         // ── 2. HERO TO SECTION 2 REVEAL ──
-        tl.addLabel("sec2Arrived", `heroPhase2+=${SUB_ACTION}`)
-          .to(".hero-secondary-para .custom-line-inner", { opacity: 0, y: -60, duration: SUB_ACTION * 0.5, ease: "power1.in" }, "sec2Arrived")
-          .set(".hero-secondary-para", { visibility: "hidden" }, `sec2Arrived+=${SUB_ACTION * 0.5}`)
+        tl.addLabel("sec2Arrived", ">")
+          .to(".hero-secondary-para .custom-line-inner", { opacity: 0, y: -60, duration: PANEL_ACTION * 0.5, ease: "power1.in" }, "sec2Arrived")
+          .set(".hero-secondary-para", { visibility: "hidden" }, `sec2Arrived+=${PANEL_ACTION * 0.5}`)
           .set(".hero", { display: "block", zIndex: 90, opacity: 1 }, "sec2Arrived")
           .set(".hero-bg-wrapper", { visibility: "visible", opacity: 1 }, "sec2Arrived")
           .to(".hero-bg", { scale: 1.4, duration: PANEL_ACTION, ease: "power1.inOut" }, "sec2Arrived")
@@ -311,42 +317,42 @@ export default function HomeDesktop() {
 
         addPlayOnceTextReveal("sec2Arrived", 0.9, s2TextSelector);
 
-        // ── SECTION 2 INNER ANIMATIONS (STRICT STEP SEQUENCING) ──
+        // ── SECTION 2 INNER ANIMATIONS (UNIFORM PACING FIX) ──
         tl.addLabel("s2InnerAnimation", `sec2Arrived+=${PANEL_ACTION}`)
           .set(".hero", { display: "none" }, "s2InnerAnimation")
           
           // STEP 1: Fade out initial Section 2 title ("Premium Pool") completely
-          .to(s2TextSelector, { opacity: 0, y: -40, duration: SUB_ACTION * 0.5, ease: "power1.in" }, "s2InnerAnimation")
-          .to(".hero-secondary-para", { opacity: 0, duration: SUB_ACTION * 0.3, ease: "power1.out" }, "s2InnerAnimation")
+          .to(s2TextSelector, { opacity: 0, y: -40, duration: PANEL_ACTION * 0.5, ease: "power1.in" }, "s2InnerAnimation")
+          .to(".hero-secondary-para", { opacity: 0, duration: PANEL_ACTION * 0.3, ease: "power1.out" }, "s2InnerAnimation")
 
-          .addLabel("s2TitleFaded", `s2InnerAnimation+=${SUB_ACTION * 0.5}`)
+          .addLabel("s2TitleFaded", `s2InnerAnimation+=${PANEL_ACTION * 0.5}`)
 
-          // STEP 2: Start un-clipping the right image
+          // STEP 2: Un-clip first right image with PANEL_ACTION duration for smooth scroll feel
           .fromTo(".s2-right-img-frame", 
             { clipPath: "inset(100% 0% 0% 0%)" }, 
-            { clipPath: "inset(0% 0% 0% 0%)", duration: SUB_ACTION, ease: "power1.inOut" }, 
+            { clipPath: "inset(0% 0% 0% 0%)", duration: PANEL_ACTION, ease: "power1.inOut" }, 
             "s2TitleFaded"
           )
 
-          // STEP 3: Slide up the left text content AFTER the right image animation has started
+          // STEP 3: Slide up left text content evenly alongside image reveal
           .fromTo(".s2-scroll-content", 
             { yPercent: 100, opacity: 0 }, 
-            { yPercent: 0, opacity: 1, duration: SUB_ACTION * 0.8, ease: "power1.out" }, 
-            `s2TitleFaded+=${SUB_ACTION * 0.25}`
+            { yPercent: 0, opacity: 1, duration: PANEL_ACTION, ease: "power1.out" }, 
+            `s2TitleFaded+=${PANEL_ACTION * 0.2}`
           )
 
-          .addLabel("s2FirstPhaseDone", `s2TitleFaded+=${SUB_ACTION * 1.2}`)
+          .addLabel("s2FirstPhaseDone", `s2TitleFaded+=${PANEL_ACTION * 1.2}`)
 
-          // STEP 4: Reveal second right image underneath while scrolling left text up to lower paragraphs
-          .to(".s2-right-img-frame", { clipPath: "inset(0% 0% 100% 0%)", duration: SUB_ACTION, ease: "power1.inOut" }, "s2FirstPhaseDone")
+          // STEP 4: Reveal second right image while scrolling left text up
+          .to(".s2-right-img-frame", { clipPath: "inset(0% 0% 100% 0%)", duration: PANEL_ACTION, ease: "power1.inOut" }, "s2FirstPhaseDone")
           .fromTo(".s2-right-img-frame-under", 
             { clipPath: "inset(100% 0% 0% 0%)" }, 
-            { clipPath: "inset(0% 0% 0% 0%)", duration: SUB_ACTION, ease: "power1.inOut" }, 
+            { clipPath: "inset(0% 0% 0% 0%)", duration: PANEL_ACTION, ease: "power1.inOut" }, 
             "s2FirstPhaseDone"
           )
-          .to(".s2-scroll-content", { yPercent: -45, duration: SUB_ACTION, ease: "power1.inOut" }, "s2FirstPhaseDone")
+          .to(".s2-scroll-content", { yPercent: -45, duration: PANEL_ACTION, ease: "power1.inOut" }, "s2FirstPhaseDone")
 
-          .addLabel("s2ImageTwoRevealed", `s2FirstPhaseDone+=${SUB_ACTION}`);
+          .addLabel("s2ImageTwoRevealed", `s2FirstPhaseDone+=${PANEL_ACTION}`);
 
         tl.to({}, { duration: PAUSE_ACTION });
 
@@ -380,11 +386,11 @@ export default function HomeDesktop() {
 
         // Section 10 Paragraph Content Slide Up
         tl.addLabel("sec10TextHide", `sec10Start+=${PANEL_ACTION}`)
-          .to(s10TextSelector, { opacity: 0, y: -100, duration: SUB_ACTION * 0.5, ease: "power2.in" }, "sec10TextHide")
+          .to(s10TextSelector, { opacity: 0, y: -100, duration: PANEL_ACTION * 0.5, ease: "power2.in" }, "sec10TextHide")
 
-          .addLabel("sec10ContentReveal", `sec10TextHide+=${SUB_ACTION * 0.2}`)
-          .fromTo(".s10-content-wrap", { opacity: 1, y: "150vh" }, { opacity: 1, y: 0, duration: SUB_ACTION, ease: "power2.out" }, "sec10ContentReveal")
-          .to(".s10-bg-img", { scale: 1.6, yPercent: 0, duration: SUB_ACTION, ease: "none" }, "sec10ContentReveal");
+          .addLabel("sec10ContentReveal", `sec10TextHide+=${PANEL_ACTION * 0.3}`)
+          .fromTo(".s10-content-wrap", { opacity: 1, y: "150vh" }, { opacity: 1, y: 0, duration: PANEL_ACTION, ease: "power2.out" }, "sec10ContentReveal")
+          .to(".s10-bg-img", { scale: 1.6, yPercent: 0, duration: PANEL_ACTION, ease: "none" }, "sec10ContentReveal");
 
         tl.to({}, { duration: PAUSE_ACTION });
 
@@ -408,27 +414,32 @@ export default function HomeDesktop() {
           .set(".appsec-phone-wrapper", { yPercent: 40 }, "appSecStart")
 
           .fromTo(".section-appsec", { yPercent: 100 }, { yPercent: 0, duration: PANEL_ACTION, ease: "power2.inOut" }, "appSecStart")
-          .to(".appsec-phone-wrapper", { yPercent: 0, duration: PANEL_ACTION * 0.75, ease: "power2.out" }, `appSecStart+=${PANEL_ACTION * 0.1}`)
+          .to(".appsec-phone-wrapper", { yPercent: 0, duration: PANEL_ACTION * 0.8, ease: "power2.out" }, `appSecStart+=${PANEL_ACTION * 0.1}`)
           .set(".section-7", { display: "none" }, `appSecStart+=${PANEL_ACTION}`);
 
         addPlayOnceTextReveal("appSecStart", 0.9, appSecTextSelector);
 
         tl.to({}, { duration: PAUSE_ACTION });
 
-        // ── 7. SECTION 9 REVEAL ──
+        // ── 7. SECTION 9 REVEAL & FLY TEXT (UNIFORM PACING FIX) ──
         tl.addLabel("sec9Start", ">")
           .set(".section-9", { visibility: "visible", zIndex: 115 }, "sec9Start")
 
-          .to(".appsec-content", { opacity: 0, duration: PANEL_ACTION * 0.25, ease: "power1.out" }, "sec9Start")
+          .to(".appsec-content", { opacity: 0, duration: PANEL_ACTION * 0.4, ease: "power1.out" }, "sec9Start")
           .to(".appsec-bg", { scale: 1.0, yPercent: 12, duration: PANEL_ACTION, ease: "power2.inOut" }, "sec9Start")
 
+          // Slide in split-sides smoothly using full PANEL_ACTION duration
           .fromTo(".s9-left-side", { yPercent: 100 }, { yPercent: 0, duration: PANEL_ACTION, ease: "power2.inOut" }, "sec9Start")
           .fromTo(".s9-right-side", { xPercent: 0, yPercent: -100 }, { xPercent: 0, yPercent: 0, duration: PANEL_ACTION, ease: "power2.inOut" }, "sec9Start")
           .fromTo([".s9-bg-img-left", ".s9-bg-img-right"], { scale: 1.1 }, { scale: 1.0, duration: PANEL_ACTION, ease: "power2.out" }, "sec9Start")
 
           .set(".section-appsec", { display: "none" }, `sec9Start+=${PANEL_ACTION}`)
 
-          .addLabel("sec9FlyText", `sec9Start+=${PANEL_ACTION}`)
+          // Pause briefly after section slide-in before text flight starts
+          .to({}, { duration: PAUSE_ACTION })
+
+          // TITLE FLIGHT ANIMATION: Expanded to PANEL_ACTION so title flight isn't fast
+          .addLabel("sec9FlyText", ">")
           .set([".s9-native-title-wrapper-1", ".s9-native-title-wrapper-2"], { opacity: 0, visibility: "hidden" }, "sec9FlyText")
           .set(".s9-global-flight-container", { opacity: 1, visibility: "visible" }, "sec9FlyText")
 
@@ -459,10 +470,10 @@ export default function HomeDesktop() {
               gsap.set(current, { y: currentY });
               return targetCenter - currentCenter;
             },
-            duration: SUB_ACTION,
+            duration: PANEL_ACTION, // Matched to panel action speed
             ease: "power2.inOut"
           }, "sec9FlyText")
-          .fromTo(".s9-para-desktop", { y: 30, opacity: 0 }, { opacity: 1, y: 0, duration: SUB_ACTION * 0.5, ease: "power2.out" }, `sec9FlyText+=${SUB_ACTION * 0.5}`);
+          .fromTo(".s9-para-desktop", { y: 30, opacity: 0 }, { opacity: 1, y: 0, duration: PANEL_ACTION * 0.6, ease: "power2.out" }, `sec9FlyText+=${PANEL_ACTION * 0.4}`);
 
         tl.to({}, { duration: PAUSE_ACTION });
 

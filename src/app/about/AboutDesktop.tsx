@@ -18,10 +18,10 @@ gsap.registerPlugin(ScrollTrigger);
 
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
-// Dedicated Desktop Scroll Metrics
-const PX_PER_MAIN_PANEL = 1250;
-const PX_PER_SUB_STEP = 550;  
-const PAUSE_PX = 150;         
+// Standardized Desktop Metrics
+const PX_PER_MAIN_PANEL = 1000;
+const PX_PER_SUB_STEP = 600; 
+const PAUSE_PX = 350; 
 
 export default function AboutDesktop() {
   const { setPreloaderDone, preloaderDone } = useSite();
@@ -30,25 +30,35 @@ export default function AboutDesktop() {
   const scopeRef = useRef<HTMLDivElement>(null);
   const lastSec5Idx = useRef<number>(-1);
 
+  // Setup initial scroll state and preloader signals
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.history.scrollRestoration) {
       window.history.scrollRestoration = "manual";
     }
-    window.scrollTo(0, 0);
+
+    const isFullyReady = preloaderDone && introDone;
+
+    if (!isFullyReady) {
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+      window.scrollTo(0, 0);
+    } else {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+      requestAnimationFrame(() => {
+        ScrollTrigger.refresh();
+      });
+    }
 
     document.body.classList.remove("preloading");
     setPreloaderDone(true);
-  }, [setPreloaderDone]);
 
-  // Lock body overflow strictly during hero intro
-  useEffect(() => {
-    const locked = !introDone;
-    document.body.style.overflow = locked ? "hidden" : "";
     return () => {
+      document.documentElement.style.overflow = "";
       document.body.style.overflow = "";
     };
-  }, [introDone]);
+  }, [setPreloaderDone, preloaderDone, introDone]);
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -95,13 +105,12 @@ export default function AboutDesktop() {
     return () => ctx.revert();
   }, []);
 
-  // Hero Intro Sequence (Zoom Out: 1.4s, Text Fade: 1.0s)
+  // Hero Intro Sequence
   useEffect(() => {
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
         onComplete: () => {
           setIntroDone(true);
-          setTimeout(() => ScrollTrigger.refresh(), 50);
         }
       });
 
@@ -125,7 +134,7 @@ export default function AboutDesktop() {
 
   // Master Scroll Timeline
   useEffect(() => {
-    if (!introDone) return;
+    if (!introDone || !preloaderDone) return;
 
     if (isTouchOnly()) {
       ScrollTrigger.normalizeScroll(true);
@@ -134,6 +143,7 @@ export default function AboutDesktop() {
     let vvCleanup: (() => void) | null = null;
 
     const ctx = gsap.context(() => {
+      gsap.ticker.lagSmoothing(500, 33);
 
       const performanceTargets = [
         ".about-hero-panel-left", ".about-hero-panel-right", ".about-hero-bg",
@@ -183,9 +193,15 @@ export default function AboutDesktop() {
 
         const revealedElements = new Set<string>();
 
+        // Uniform Duration Metrics
+        const PANEL_ACTION = 2.0; 
+        const SUB_ACTION = 1.8;   
+        const PAUSE_ACTION = 0.5;
+
         const MAIN_PANELS_COUNT = 7;
         const SUB_STEPS_COUNT = 2;
-        const PAUSES_COUNT = 5;
+        // Expanded pause count to ensure sufficient scroll distance for deadscrolls
+        const PAUSES_COUNT = 10;
 
         const DYNAMIC_SCROLL_TRACK = 
           (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -198,56 +214,12 @@ export default function AboutDesktop() {
             trigger: ".about-pin",
             start: "top top",
             end: `+=${DYNAMIC_SCROLL_TRACK}`,
-            scrub: 1, // Tight scrub duration for high-precision track response
+            scrub: 1, 
             pin: true,
             pinSpacing: true,
             anticipatePin: 1,
             preventOverlaps: true,
             invalidateOnRefresh: true,
-            snap: {
-              directional: false,
-              snapTo: (value, self) => {
-                const totalDur = tl.totalDuration();
-                if (!totalDur) return value;
-
-                // Build strictly clean list of normalized label times
-                const labelTimes = Array.from(
-                  new Set(
-                    Object.keys(tl.labels).map(name =>
-                      Number((tl.labels[name] / totalDur).toFixed(5))
-                    )
-                  )
-                ).sort((a, b) => a - b);
-
-                if (labelTimes.length < 2) return value;
-
-                const curProgress = self ? self.progress : value;
-                const isScrollingDown = value >= curProgress;
-
-                for (let i = 0; i < labelTimes.length - 1; i++) {
-                  const start = labelTimes[i];
-                  const end = labelTimes[i + 1];
-
-                  if (curProgress >= start - 0.0001 && curProgress <= end + 0.0001) {
-                    const gap = end - start;
-                    if (gap <= 0.00001) continue;
-
-                    const localProgress = (curProgress - start) / gap;
-
-                    if (isScrollingDown) {
-                      return localProgress >= 0.35 ? end : start;
-                    } else {
-                      return localProgress <= 0.50 ? start : end;
-                    }
-                  }
-                }
-
-                return value;
-              },
-              duration: { min: 0.4, max: 0.8 },
-              delay: 0.05,
-              ease: "power3.inOut"
-            }
           },
         });
 
@@ -287,80 +259,95 @@ export default function AboutDesktop() {
         tl.set(".about-hero-panel-right", { clipPath: "inset(0% 0% 0% 50%)", WebkitClipPath: "inset(0% 0% 0% 50%)" }, 0);
 
         // ── SECTION 1 REVEAL ──
-        tl.to(".about-hero-panel-left", { clipPath: "inset(0% 50% 100% 0%)", WebkitClipPath: "inset(0% 50% 100% 0%)", duration: 1.0 })
-          .to(".about-hero-panel-right", { clipPath: "inset(100% 0% 0% 50%)", WebkitClipPath: "inset(100% 0% 0% 50%)", duration: 1.0 }, "<")
-          .fromTo(".about-hero-bg", { scale: 1.15 }, { scale: 1.0, duration: 1.0 }, "<")
+        tl.to(".about-hero-panel-left", { clipPath: "inset(0% 50% 100% 0%)", WebkitClipPath: "inset(0% 50% 100% 0%)", duration: PANEL_ACTION, ease: "power2.inOut" }, "start")
+          .to(".about-hero-panel-right", { clipPath: "inset(100% 0% 0% 50%)", WebkitClipPath: "inset(100% 0% 0% 50%)", duration: PANEL_ACTION, ease: "power2.inOut" }, "start")
+          .fromTo(".about-hero-bg", { scale: 1.15 }, { scale: 1.0, duration: PANEL_ACTION, ease: "power2.inOut" }, "start")
           .addLabel("sec1Start");
 
-        addPlayOnceTextReveal("sec1Start", -0.65, ".about-section-one .reveal-text .gs-line-inner, .about-section-one .reveal-text > *");
+        addPlayOnceTextReveal("sec1Start", -0.95, ".about-section-one .reveal-text .gs-line-inner, .about-section-one .reveal-text > *");
+
+        tl.to({}, { duration: PAUSE_ACTION });
 
         // ── SECTION 2 REVEAL ──
-        tl.set(".about-section-two", { visibility: "visible", yPercent: 100 })
-          .to(".about-section-two", { yPercent: 0, duration: 1.0 })
-          .fromTo(".s2-bg", { scale: 1.1 }, { scale: 1.0, duration: 1.0 }, "<")
-          .addLabel("sec2Start");
+        tl.addLabel("sec2Start", ">")
+          .set(".about-section-two", { visibility: "visible", yPercent: 100 }, "sec2Start")
+          .to(".about-section-two", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.inOut" }, "sec2Start")
+          .fromTo(".s2-bg", { scale: 1.1 }, { scale: 1.0, duration: PANEL_ACTION, ease: "power2.out" }, "sec2Start");
 
-        addPlayOnceTextReveal("sec2Start", -0.65, ".about-section-two .reveal-text .gs-line-inner, .about-section-two .reveal-text > *");
+        addPlayOnceTextReveal("sec2Start", 1, ".about-section-two .reveal-text .gs-line-inner, .about-section-two .reveal-text > *");
+
+        tl.to({}, { duration: PAUSE_ACTION });
 
         // ── SECTION 3 REVEAL ──
-        tl.set(".about-section-three", { visibility: "visible" })
+        tl.addLabel("sec3Start", ">")
+          .set(".about-section-three", { visibility: "visible" }, "sec3Start")
           .fromTo(".about-section-three", 
             { clipPath: "inset(100% 0% 0% 0%)", WebkitClipPath: "inset(100% 0% 0% 0%)" }, 
-            { clipPath: "inset(0% 0% 0% 0%)", WebkitClipPath: "inset(0% 0% 0% 0%)", duration: 1.0 }
+            { clipPath: "inset(0% 0% 0% 0%)", WebkitClipPath: "inset(0% 0% 0% 0%)", duration: PANEL_ACTION, ease: "power2.inOut" },
+            "sec3Start"
           )
-          .to(".s2-bg", { yPercent: -15, duration: 1.0 }, "<")
-          .fromTo(".s3-bg", { scale: 1.15 }, { scale: 1.0, duration: 1.0 }, "<")
-          .addLabel("sec3Start");
+          .to(".s2-bg", { yPercent: -15, duration: PANEL_ACTION, ease: "power2.inOut" }, "sec3Start")
+          .fromTo(".s3-bg", { scale: 1.15 }, { scale: 1.0, duration: PANEL_ACTION, ease: "power2.out" }, "sec3Start");
 
-        addPlayOnceTextReveal("sec3Start", -0.65, ".about-section-three .s3-reveal-bottom .gs-line-inner, .about-section-three .s3-reveal-bottom > *");
-        addPlayOnceTextReveal("sec3Start", -0.4, ".about-section-three .s3-reveal-top .gs-line-inner, .about-section-three .s3-reveal-top > *");
+        addPlayOnceTextReveal("sec3Start", 1, ".about-section-three .s3-reveal-bottom .gs-line-inner, .about-section-three .s3-reveal-bottom > *");
+        addPlayOnceTextReveal("sec3Start", 1, ".about-section-three .s3-reveal-top .gs-line-inner, .about-section-three .s3-reveal-top > *");
+
+        tl.to({}, { duration: PAUSE_ACTION });
 
         // ── SECTION 4 REVEAL ──
-        tl.set(".about-section-four", { visibility: "visible" })
-          .to(".about-section-four", { clipPath: "inset(0% 0% 0% 0%)", WebkitClipPath: "inset(0% 0% 0% 0%)", duration: 1.0 })
-          .to(".s4-glass-card", { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, "<+=0.2")
-          .addLabel("sec4Start");
+        tl.addLabel("sec4Start", ">")
+          .set(".about-section-four", { visibility: "visible" }, "sec4Start")
+          .to(".about-section-four", { clipPath: "inset(0% 0% 0% 0%)", WebkitClipPath: "inset(0% 0% 0% 0%)", duration: PANEL_ACTION, ease: "power2.inOut" }, "sec4Start")
+          .to(".s4-glass-card", { opacity: 1, y: 0, duration: PANEL_ACTION * 0.5, ease: "power2.out" }, `sec4Start+=${PANEL_ACTION * 0.2}`);
 
-        addPlayOnceTextReveal("sec4Start", -0.65, ".about-section-four .reveal-text .gs-line-inner, .about-section-four .reveal-text > *");
+        addPlayOnceTextReveal("sec4Start", 1, ".about-section-four .reveal-text .gs-line-inner, .about-section-four .reveal-text > *");
+
+        tl.to({}, { duration: PAUSE_ACTION });
 
         // ── SECTION 5 REVEAL (Card 1) ──
-        tl.set(".about-section-five", { visibility: "visible" })
-          .to(".about-section-four .s4-img-bg", { scale: 1.03, yPercent: -10, duration: 1.0 })
+        tl.addLabel("sec5_card1", ">")
+          .set(".about-section-five", { visibility: "visible" }, "sec5_card1")
+          .to(".about-section-four .s4-img-bg", { scale: 1.03, yPercent: -10, duration: PANEL_ACTION, ease: "power2.inOut" }, "sec5_card1")
           .fromTo(".about-section-five", { yPercent: 100 }, { 
             yPercent: 0, 
-            duration: 1.0,
+            duration: PANEL_ACTION,
+            ease: "power2.inOut",
             onStart: () => setIsSectionFiveActive(true),
             onReverseComplete: () => {
               setIsSectionFiveActive(false);
               triggerSec5Hook(0);
             }
-          }, "<")
-          .fromTo(".s5-bg", { yPercent: 0, scale: 1.2 }, { yPercent: 0, scale: 1.15, duration: 1.0 }, "<")
-          .addLabel("sec5_card1")
+          }, "sec5_card1")
+          .fromTo(".s5-bg", { yPercent: 0, scale: 1.2 }, { yPercent: 0, scale: 1.15, duration: PANEL_ACTION, ease: "power2.out" }, "sec5_card1")
           .call(() => triggerSec5Hook(0));
 
         // ── SECTION 5 CARD 2 ──
-        tl.to(".s5-bg", { yPercent: -10, duration: 1.0 })
-          .addLabel("sec5_card2")
+        // Added explicit offset `>+=1.2` so user must scroll past Card 1 before Card 2 initiates
+        tl.addLabel("sec5_card2", `>+=${PAUSE_ACTION * 2}`)
+          .to(".s5-bg", { yPercent: -10, duration: SUB_ACTION, ease: "power2.inOut" }, "sec5_card2")
           .call(() => triggerSec5Hook(1));
 
         // ── SECTION 5 CARD 3 ──
-        tl.to(".s5-bg", { yPercent: -20, duration: 1.0 })
-          .addLabel("sec5_card3")
+        // Added explicit offset `>+=1.2` so user must scroll past Card 2 before Card 3 initiates
+        tl.addLabel("sec5_card3", `>+=${PAUSE_ACTION * 2}`)
+          .to(".s5-bg", { yPercent: -20, duration: SUB_ACTION, ease: "power2.inOut" }, "sec5_card3")
           .call(() => triggerSec5Hook(2));
 
         // ── CTA REVEAL TRACK ──
-        tl.set(".about-section-cta", { visibility: "visible" })
-          .to(".about-section-cta", { yPercent: 0, duration: 1.0 })
-          .to(".about-section-five", { scale: 1.0, duration: 1.0 }, "<")
-          .addLabel("ctaStart");
+        // Notice `>+=${PAUSE_ACTION * 3.5}`: Card 3 is held completely static on screen through a substantial deadscroll buffer before CTA starts sliding up!
+        tl.addLabel("ctaStart", `>+=${PAUSE_ACTION * 3.5}`)
+          .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
+          .to(".about-section-cta", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.out" }, "ctaStart")
+          .to(".about-section-five", { scale: 1.0, duration: PANEL_ACTION }, "ctaStart");
+
+        tl.to({}, { duration: PAUSE_ACTION });
 
         // ── FOOTER REVEAL TRACK ──
-        tl.set(".about-footer-wrap", { visibility: "visible" })
-          .to(".about-footer-wrap", { yPercent: 0, duration: 1.0 })
-          .to(".about-section-five", { scale: 1.05, duration: 1.0 }, "<")
-          .to(".about-section-cta .cta-inner-desktop", { opacity: 0, duration: 0.7, ease: "power1.out" }, "<")
-          .addLabel("footerStart");
+        tl.addLabel("footerStart", ">")
+          .set(".about-footer-wrap", { visibility: "visible" }, "footerStart")
+          .to(".about-footer-wrap", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.out" }, "footerStart")
+          .to(".about-section-five", { scale: 1.05, duration: PANEL_ACTION }, "footerStart")
+          .to(".about-section-cta .cta-inner-desktop", { opacity: 0, duration: PANEL_ACTION * 0.4, ease: "power1.out" }, "footerStart");
       };
 
       requestAnimationFrame(buildTimeline);
@@ -385,7 +372,7 @@ export default function AboutDesktop() {
       }
       ctx.revert();
     };
-  }, [introDone]);
+  }, [introDone, preloaderDone]);
 
   return (
     <div ref={scopeRef}>

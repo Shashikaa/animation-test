@@ -121,6 +121,8 @@ export default function HomeMobile() {
       gsap.set(".hero-gradient-bg", { opacity: 1, visibility: "visible" });
       
       gsap.set([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 1, y: 0 });
+      gsap.set(".hero-progress-wrapper", { opacity: 1, visibility: "visible" });
+      gsap.set(".hero-progress-bar-fill", { scaleY: 0, transformOrigin: "top center", force3D: true });
       
       gsap.set([".hero-right-text", ".hero-secondary-para"], { opacity: 0, visibility: "hidden" });
       gsap.set([".hero-right-text .custom-line-inner", ".hero-secondary-para .custom-line-inner"], { 
@@ -200,7 +202,7 @@ export default function HomeMobile() {
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: 0.5, // Standardized scrub setting
+          scrub: 0.5,
           anticipatePin: 1,
           preventOverlaps: true, 
           fastScrollEnd: true, 
@@ -210,6 +212,12 @@ export default function HomeMobile() {
 
       // ── HERO SEQUENCE ──
       tl.addLabel("heroStart", 0)
+        // Dynamically scale progress bar line synchronously
+        .fromTo(".hero-progress-bar-fill",
+          { scaleY: 0 },
+          { scaleY: 1, duration: ACTION * 1.9, ease: "none" },
+          "heroStart"
+        )
         .fromTo(".hero-bg", 
           { scale: 1.0 },
           { scale: 1.25, duration: ACTION * 2.0, ease: "power1.out" },
@@ -231,7 +239,10 @@ export default function HomeMobile() {
           ease: "power2.out"
         }, `heroStart+=${ACTION * 0.15}`)
 
-        .addLabel("heroRightHide", `heroStart+=${ACTION * 0.7}`)
+        // DEAD SCROLL BUFFER
+        .to({}, { duration: DEAD_SCROLL })
+
+        .addLabel("heroRightHide", `heroStart+=${ACTION * 0.7 + DEAD_SCROLL}`)
         .to(".hero-right-text .custom-line-inner", {
           opacity: 0,
           y: -15,
@@ -239,6 +250,21 @@ export default function HomeMobile() {
           ease: "power1.in"
         }, "heroRightHide")
         .set(".hero-right-text", { visibility: "hidden" })
+
+        // Change step counter to 02 as text transitions
+        .to(".hero-step-num", {
+          opacity: 0,
+          duration: ACTION * 0.1,
+          onComplete: () => {
+            const el = document.querySelector(".hero-step-num");
+            if (el) el.textContent = "02";
+          },
+          onReverseComplete: () => {
+            const el = document.querySelector(".hero-step-num");
+            if (el) el.textContent = "01";
+          }
+        }, "heroRightHide")
+        .to(".hero-step-num", { opacity: 1, duration: ACTION * 0.1 })
 
         .set(".hero-secondary-para", { visibility: "visible", opacity: 1 }, `heroRightHide+=${ACTION * 0.1}`)
         .to(".hero-secondary-para .custom-line-inner", {
@@ -249,7 +275,10 @@ export default function HomeMobile() {
           ease: "power2.out"
         }, `heroRightHide+=${ACTION * 0.1}`)
 
-        .addLabel("heroExit", `heroRightHide+=${ACTION * 0.6}`)
+        // DEAD SCROLL BUFFER
+        .to({}, { duration: DEAD_SCROLL })
+
+        .addLabel("heroExit", `heroRightHide+=${ACTION * 0.6 + DEAD_SCROLL}`)
         .to(".hero-secondary-para .custom-line-inner", {
           opacity: 0,
           y: -30,
@@ -257,6 +286,13 @@ export default function HomeMobile() {
           ease: "power1.in"
         }, "heroExit")
         
+        // Hide entire progress indicator wrapper on exit
+        .to(".hero-progress-wrapper", {
+          opacity: 0,
+          duration: ACTION * 0.4,
+          ease: "power1.inOut"
+        }, "heroExit")
+
         .fromTo(".section-2", 
           { yPercent: 100 }, 
           { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, 

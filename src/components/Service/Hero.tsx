@@ -73,34 +73,11 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
         <div className="hero-btn absolute z-50 pointer-events-auto block left-6 bottom-12 md:left-12 lg:left-auto lg:bottom-24 lg:right-20 transform-gpu">
           <a
             href="/contact"
-            style={{
-              position: "relative",
-              display: "inline-block",
-              width: "fit-content",
-              paddingBottom: 4,
-              fontSize: 14,
-              fontWeight: 500,
-              textTransform: "uppercase",
-              color: "#F4EEDF",
-              textDecoration: "none",
-              flexShrink: 0,
-              cursor: "pointer",
-            }}
-            className="group transition-opacity duration-200 hover:opacity-70 font-body"
+
+            className="group btn-underline font-body"
           >
             CONTACT US
-            <span
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: 1,
-                background: "#F4EEDF",
-                transition: "transform 0.2s ease",
-              }}
-              className="group-hover:-translate-y-[2px]"
-            />
+
           </a>
         </div>
       )}

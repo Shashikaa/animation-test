@@ -58,6 +58,33 @@ from concept to completion.`}
         <div className="hero-overlay absolute inset-0 bg-black/30 pointer-events-none z-[21]" />
       </div>
 
+      {/* Modern Studio-Style Vertical Progress Bar (Mobile) */}
+      <div className="hero-progress-wrapper absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 z-[100] flex items-center gap-3 pointer-events-none lg:hidden">
+        
+
+
+        {/* Minimalist Line Track */}
+        <div className="relative flex flex-col items-center">
+          {/* Top Marker */}
+          <div className="w-1.5 h-1.5 rounded-full bg-[#F4EEDF] shadow-[0_0_12px_#F4EEDF]" />
+
+          {/* Vertical Track Line with High Contrast Backing */}
+          <div className="relative w-[2px] h-36 sm:h-44 bg-black/80 my-1 rounded-full overflow-hidden shadow-[0_0_8px_rgba(0,0,0,0.9)]">
+            {/* Dark background buffer */}
+            <div className="absolute inset-0 bg-white/20" />
+            
+            {/* Animated Golden Fill */}
+            <div 
+              className="hero-progress-bar-fill relative w-full h-full bg-[#F4EEDF] origin-top scale-y-0 shadow-[0_0_10px_#F4EEDF]"
+            />
+          </div>
+
+          {/* Bottom Dot */}
+          <div className="w-1 h-1 rounded-full bg-[#F4EEDF]/40" />
+        </div>
+
+      </div>
+
       {/* Main Content Layer */}
       <div className="section-container relative h-full w-full flex flex-col justify-end items-start lg:flex-row lg:items-end lg:justify-between !pb-[100px] md:!pb-[140px] lg:!pb-30 gap-8 z-30">
 
@@ -84,33 +111,11 @@ outdoor space, adding value and elegance.`}
 
           <a
             href="/projects"
-            style={{
-              position: "relative",
-              display: "inline-block",
-              width: "fit-content",
-              paddingBottom: 4,
-              fontSize: 14,
-              fontWeight: 500,
-              textTransform: "uppercase",
-              color: "#F4EEDF",
-              textDecoration: "none",
-              flexShrink: 0,
-            }}
-            className="hero-contact-btn group transition-opacity duration-200 hover:opacity-70 font-body ml-0 lg:ml-10"
+
+            className="hero-contact-btn group btn-underline  font-body ml-0 lg:ml-10"
           >
             See Our Projects
-            <span
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: 1,
-                background: "#F4EEDF",
-                transition: "transform 0.2s ease",
-              }}
-              className="group-hover:-translate-y-[2px]"
-            />
+
           </a>
         </div>
       </div>

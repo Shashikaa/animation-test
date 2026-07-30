@@ -54,6 +54,7 @@ function SharedLogoMarkup({ onClose }: { onClose?: () => void }) {
       href="/"
       onClick={onClose}
       id="header-logo-inner"
+      className="active:opacity-80 active:scale-95 transition-all duration-150"
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -89,9 +90,9 @@ function CloseButton({ onClick, className }: { onClick: () => void; className?: 
     <button
       onClick={onClick}
       aria-label="Close menu"
-      className={`!flex !items-center !justify-center !p-1.5 !bg-transparent !border-none !cursor-pointer !opacity-85 hover:!opacity-100 hover:!rotate-90 !transition-[opacity,transform] !duration-200 !ease-in-out ${className ?? ""}`}
+      className={`!flex !items-center !justify-center !p-1.5 !mt-2 !bg-transparent !border-none !cursor-pointer !opacity-85 hover:!opacity-100 hover:!rotate-90 active:!scale-90 active:!opacity-100 !transition-[opacity,transform] !duration-200 !ease-in-out ${className ?? ""}`}
     >
-      <img src="/closebtn.svg" alt="Close" className="!w-8 !h-8 !block !object-contain" />
+      <img src="/closebtn.svg" alt="Close" className="!w-6 !h-6 md:!w-7 md:!h-7 !block !object-contain" />
     </button>
   );
 }
@@ -192,13 +193,6 @@ const bottomVariants = {
 function MobileMenu({ open, onClose }: NavMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const initialActiveIndex = useMemo(() => {
-    if (typeof window === "undefined") return 0;
-    const currentPath = window.location.pathname;
-    const idx = NAV_LINKS.findIndex(link => link.href === currentPath);
-    return idx !== -1 ? idx : 0;
-  }, []);
-
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   useEffect(() => {
@@ -279,13 +273,13 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="!px-6 md:!px-10 !pb-[68px]"
+            className="!px-6 md:!px-10 !pb-[220px]"
           >
             <div className="font-body !mb-6">
-              <p className="!m-0 !mb-3 !text-sm">
+              <p className="!m-0 !mb-3 !text-[20px]">
                 <a
                   href="tel:0422630394"
-                  className="!no-underline hover:!opacity-70 !transition-opacity !duration-200"
+                  className="!no-underline hover:!opacity-70 active:!opacity-50 active:!scale-95 !transition-all !duration-200 !inline-block"
                   style={{ color: "#F4EEDF" }}
                 >
                   0422 630 394
@@ -301,9 +295,9 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="!flex !opacity-100 hover:!opacity-70 !transition-opacity !duration-200"
+                  className="!flex !opacity-100 hover:!opacity-70 active:!opacity-50 active:!scale-95 !transition-all !duration-200"
                 >
-                  <img src={src} alt={label} className="!block !w-5 !h-5 !object-contain" />
+                  <img src={src} alt={label} className="!block !w-8 !h-8 !object-contain" />
                 </a>
               ))}
             </div>
@@ -401,16 +395,15 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
           {/* Top-Right Absolute Close Button for Desktop/Tablet */}
           <CloseButton 
             onClick={onClose} 
-            className="!absolute !top-8 !right-8 lg:!right-12 !z-[30]" 
+            className="!absolute !top-4 !right-8 lg:!right-14 !z-[30]" 
           />
 
           {/* ── LEFT PANEL ── */}
-          <div className="!relative !flex !flex-col !justify-between !pt-8 !pb-12 !px-12 lg:!px-16 !w-full !h-full !z-10">
-            {/* Header section with Logo */}
-            <div className="!flex !items-center !justify-between !h-12 !w-full">
-              <SharedLogoMarkup onClose={onClose} />
-            </div>
-
+<div className="!relative !flex !flex-col !justify-between !pb-12 !px-5 md:!px-[30px] lg:!px-[55px] !w-full !h-full !z-10">
+  {/* Header section with Logo — Matched exactly to header heights (56px / 66px / 72px) */}
+  <div className="!flex !items-center !justify-between !h-[56px] md:!h-[66px] lg:!h-[72px] !w-full">
+    <SharedLogoMarkup onClose={onClose} />
+  </div>
             <div className="!my-auto !py-8">
               <motion.nav
                 variants={linkContainerVariants}
@@ -442,10 +435,10 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
               exit="hidden"
             >
               <div className="font-body !mb-6" style={{ color: LOGO_COLOR }}>
-                <p className="!m-0 !text-base !font-medium">
+                <p className="!m-0 !text-[18px] !font-medium">
                   <a
                     href="tel:0422630394"
-                    className="!no-underline hover:!opacity-70 !transition-opacity !duration-200"
+                    className="!no-underline hover:!opacity-70 active:!opacity-50 !transition-opacity !duration-200"
                     style={{ color: LOGO_COLOR }}
                   >
                     0422 630 394
@@ -460,9 +453,9 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={label}
-                    className="!flex !opacity-100 hover:!opacity-70 !transition-opacity !duration-200"
+                    className="!flex !opacity-100 hover:!opacity-70 active:!opacity-50 !transition-opacity !duration-200"
                   >
-                    <img src={src} alt={label} className="!block !w-5 !h-5 !object-contain" />
+                    <img src={src} alt={label} className="!block !w-7 !h-7 !object-contain" />
                   </a>
                 ))}
               </div>
@@ -505,7 +498,8 @@ function NavLink({
   onMouseEnter: () => void; isMobile?: boolean;
 }) {
   const isCurrentPage = typeof window !== "undefined" && window.location.pathname === href;
-  const highlighted = isActive || isCurrentPage;
+  const [isTouched, setIsTouched] = useState(false);
+  const highlighted = isActive || isCurrentPage || isTouched;
 
   return (
     <a
@@ -513,16 +507,22 @@ function NavLink({
       onClick={onClose}
       onMouseEnter={onMouseEnter}
       onFocus={onMouseEnter}
+      onTouchStart={() => {
+        setIsTouched(true);
+        onMouseEnter();
+      }}
+      onTouchEnd={() => setIsTouched(false)}
+      onTouchCancel={() => setIsTouched(false)}
       className={
         isMobile
-          ? "!inline-block !no-underline !leading-[3.0] md:!leading-[4.5] !cursor-pointer"
+          ? "!inline-block !no-underline !leading-[2.0] md:!leading-[2.5] !cursor-pointer active:!scale-[0.98] active:!opacity-90 !transition-transform !duration-150"
           : "!inline-block !no-underline !leading-none !cursor-pointer"
       }
     >
       <span
         className="font-body !inline-block !select-none !font-normal !normal-case !not-italic !transition-[color,letter-spacing] !duration-[250ms,350ms] !ease-in-out"
         style={{
-          fontSize: isMobile ? undefined : "clamp(22px, 2vw, 28px)",
+          fontSize: isMobile ? "24px" : "clamp(22px, 2vw, 28px)",
           color: highlighted ? "#F4EEDF" : "rgba(244, 238, 223, 0.6)",
         }}
       >

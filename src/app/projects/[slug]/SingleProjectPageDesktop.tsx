@@ -15,44 +15,54 @@ gsap.registerPlugin(ScrollTrigger);
 
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
-// Controlled Desktop Scroll Metrics
-const PX_PER_MAIN_PANEL = 1150;
-const PX_PER_SUB_STEP = 450;
-const PAUSE_PX = 100;
+// Standardized Desktop Metrics (Matched to Home Setup)
+const PX_PER_MAIN_PANEL = 1000;
+const PX_PER_SUB_STEP = 600;
+const PAUSE_PX = 350;
 
 type SubServicesDesktopProps = {
   pageData: FullServiceData;
 };
 
 export default function SingleProjectPageDesktop({ pageData }: SubServicesDesktopProps) {
-  const { setPreloaderDone } = useSite();
+  const { setPreloaderDone, preloaderDone } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
   
   const [introDone, setIntroDone] = useState(false);
   const [isProjectInfoActive, setIsProjectInfoActive] = useState(false);
   const lastInfoIdx = useRef<number>(-1);
 
-  // 1. Scroll restoration & initialization
+  // Setup initial scroll state and preloader signals
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.history.scrollRestoration) {
       window.history.scrollRestoration = "manual";
     }
-    window.scrollTo(0, 0);
+
+    const isFullyReady = preloaderDone && introDone;
+
+    if (!isFullyReady) {
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+      window.scrollTo(0, 0);
+    } else {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+      requestAnimationFrame(() => {
+        ScrollTrigger.refresh();
+      });
+    }
+
     document.body.classList.remove("preloading");
     setPreloaderDone(true);
-  }, [setPreloaderDone]);
 
-  // 2. Lock body scroll during intro sequence
-  useEffect(() => {
-    const locked = !introDone;
-    document.body.style.overflow = locked ? "hidden" : "";
     return () => {
+      document.documentElement.style.overflow = "";
       document.body.style.overflow = "";
     };
-  }, [introDone]);
+  }, [setPreloaderDone, preloaderDone, introDone]);
 
-  // 3. Offscreen layout setup
+  // Offscreen layout setup
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       ScrollTrigger.config({
@@ -92,13 +102,12 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     return () => ctx.revert();
   }, []);
 
-  // 4. Play Intro Cinematic Animation
+  // Hero Intro Cinematic Sequence
   useEffect(() => {
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
         onComplete: () => {
           setIntroDone(true);
-          setTimeout(() => ScrollTrigger.refresh(), 50);
         }
       });
 
@@ -119,9 +128,9 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     return () => ctx.revert();
   }, []);
 
-  // 5. Master Single ScrollTrigger Timeline
+  // Master Single ScrollTrigger Timeline
   useEffect(() => {
-    if (!introDone) return;
+    if (!introDone || !preloaderDone) return;
 
     if (isTouchOnly()) {
       ScrollTrigger.normalizeScroll(true);
@@ -130,7 +139,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     let vvCleanup: (() => void) | null = null;
 
     const ctx = gsap.context(() => {
-      gsap.ticker.lagSmoothing(0);
+      gsap.ticker.lagSmoothing(500, 33);
 
       const performanceTargets = [
         ".project-hero-master", ".hero-image-layer", ".hero-image-inner",
@@ -170,6 +179,11 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
 
         gsap.set(".appsec-phone-wrapper", { y: 40, opacity: 0 });
 
+        // Standardized Duration Metrics (Matched to Home Setup)
+        const PANEL_ACTION = 2.0;
+        const SUB_ACTION = 1.8;
+        const PAUSE_ACTION = 0.4;
+
         const innerSlideSteps = Math.max(infoSlides.length - 1, 0);
         const MAIN_PANELS_COUNT = 4; 
         const PAUSES_COUNT = 3;
@@ -191,71 +205,28 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
             anticipatePin: 1,
             preventOverlaps: true,
             invalidateOnRefresh: true,
-            snap: {
-              directional: false,
-              snapTo: (value, self) => {
-                const totalDur = scrollTl.totalDuration();
-                if (!totalDur) return value;
-
-                const labelTimes = Array.from(
-                  new Set(
-                    Object.keys(scrollTl.labels).map(name =>
-                      Number((scrollTl.labels[name] / totalDur).toFixed(5))
-                    )
-                  )
-                ).sort((a, b) => a - b);
-
-                if (labelTimes.length < 2) return value;
-
-                const curProgress = self ? self.progress : value;
-                const isScrollingDown = value >= curProgress;
-
-                for (let i = 0; i < labelTimes.length - 1; i++) {
-                  const start = labelTimes[i];
-                  const end = labelTimes[i + 1];
-
-                  if (curProgress >= start - 0.0001 && curProgress <= end + 0.0001) {
-                    const gap = end - start;
-                    if (gap <= 0.00001) continue;
-
-                    const localProgress = (curProgress - start) / gap;
-
-                    if (isScrollingDown) {
-                      return localProgress >= 0.35 ? end : start;
-                    } else {
-                      return localProgress <= 0.50 ? start : end;
-                    }
-                  }
-                }
-
-                return value;
-              },
-              duration: { min: 0.4, max: 0.8 },
-              delay: 0.05,
-              ease: "power3.inOut"
-            }
           }
         });
 
         // ── HERO TRANSITION & INFO PANEL SLIDE UP ──
         scrollTl.addLabel("start", 0);
 
-        scrollTl.set(".project-info-wrap", { visibility: "visible" }, 0)
+        scrollTl.set(".project-info-wrap", { visibility: "visible" }, "start")
                 .to(".project-info-wrap", { 
                   yPercent: 0, 
-                  duration: 1.5,
-                  ease: "power2.out",
+                  duration: PANEL_ACTION,
+                  ease: "power2.inOut",
                   onStart: () => setIsProjectInfoActive(true),
                   onReverseComplete: () => {
                     setIsProjectInfoActive(false);
                     triggerInfoHook(0);
                   }
-                }, 0);
+                }, "start");
 
-        scrollTl.to(".hero-text-wrap", { autoAlpha: 0, y: -60, duration: 1.2 }, 0);
+        scrollTl.to(".hero-text-wrap", { autoAlpha: 0, y: -60, duration: PANEL_ACTION * 0.75 }, "start");
 
-        scrollTl.addLabel("info_slide_0", 1.5);
-        scrollTl.call(() => triggerInfoHook(0), [], 1.5);
+        scrollTl.addLabel("info_slide_0", PANEL_ACTION);
+        scrollTl.call(() => triggerInfoHook(0), [], PANEL_ACTION);
 
         // ── SYNCHRONIZED INNER SLIDES & REVERSE HOOKS ──
         if (infoSlides.length > 0) {
@@ -277,17 +248,17 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
             // Synchronized image clip-path reveal & scale animation
             scrollTl.to(currentImgLayer, {
               clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-              duration: 1.5,
+              duration: SUB_ACTION,
               ease: "power2.inOut"
             })
             .fromTo(innerImage, 
               { scale: 1.25 },
-              { scale: 1.0, duration: 1.5, ease: "power2.out" },
+              { scale: 1.0, duration: SUB_ACTION, ease: "power2.out" },
               "<"
             )
             .addLabel(slideLabel);
 
-            // Backward transition trigger (runs when scrubbing back past this label)
+            // Backward transition trigger
             scrollTl.call(() => {
               const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
               if (!isForward) {
@@ -298,31 +269,36 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
         }
 
         scrollTl.addLabel("infoSlidesEnd");
+        scrollTl.to({}, { duration: PAUSE_ACTION });
 
         // ── APP SECTION SLIDE UP OVER INFO WRAP ──
-        scrollTl.addLabel("appSectionStart");
+        scrollTl.addLabel("appSectionStart", ">");
 
         scrollTl.set(".project-app-wrap", { visibility: "visible" }, "appSectionStart")
-                .to(".project-app-wrap", { yPercent: 0, duration: 1.5, ease: "power2.inOut" }, "appSectionStart");
+                .to(".project-app-wrap", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.inOut" }, "appSectionStart");
 
         scrollTl.to(
           ".appsec-phone-wrapper",
-          { y: 0, opacity: 1, duration: 1.2, ease: "power2.out" },
-          "appSectionStart+=0.3"
+          { y: 0, opacity: 1, duration: PANEL_ACTION * 0.8, ease: "power2.out" },
+          `appSectionStart+=${PANEL_ACTION * 0.1}`
         );
 
+        scrollTl.to({}, { duration: PAUSE_ACTION });
+
         // ── FAQ SECTION SLIDES UP ──
-        scrollTl.addLabel("faqStart", "appSectionStart+=1.5");
+        scrollTl.addLabel("faqStart", ">");
         scrollTl.set(".faq-scroll-wrapper", { visibility: "visible" }, "faqStart")
-                .to(".faq-scroll-wrapper", { yPercent: 0, ease: "power2.inOut", duration: 1.5 }, "faqStart");
+                .to(".faq-scroll-wrapper", { yPercent: 0, ease: "power2.inOut", duration: PANEL_ACTION }, "faqStart");
+
+        scrollTl.to({}, { duration: PAUSE_ACTION });
 
         // ── COMBINED FAQ FADE & FOOTER SLIDE ──
-        scrollTl.addLabel("footerStart", "faqStart+=1.5");
+        scrollTl.addLabel("footerStart", ">");
         
-        scrollTl.to(".faq-content", { opacity: 0, y: -30, ease: "power2.in", duration: 0.8 }, "footerStart");
+        scrollTl.to(".faq-content", { opacity: 0, y: -30, ease: "power1.out", duration: PANEL_ACTION * 0.4 }, "footerStart");
         
         scrollTl.set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
-                .to(".footer-scroll-wrapper", { yPercent: 0, ease: "power2.out", duration: 1.5 }, "footerStart");
+                .to(".footer-scroll-wrapper", { yPercent: 0, ease: "power2.out", duration: PANEL_ACTION }, "footerStart");
 
         scrollTl.addLabel("end");
       };
@@ -338,7 +314,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
       }
       ctx.revert();
     };
-  }, [introDone, pageData.images, pageData.slides, pageData.title]);
+  }, [introDone, preloaderDone, pageData.images, pageData.slides, pageData.title]);
 
   return (
     <div 

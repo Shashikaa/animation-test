@@ -186,7 +186,7 @@ export default function SectionTwo() {
           Since 2021, Grand Pools has been creating custom swimming pools with a focus on refined design, quality craftsmanship, and a smooth building experience.
         </p>
         <p className="text-[#F4EEDF] font-body text-base leading-relaxed !text-left max-w-[230px] !self-end !mt-[80px]">
-          Tailor-Made Designs — Custom pools shaped around your space, style, and lifestyle
+            <span className="!font-bold ">Tailor-Made Designs</span> <br /> Custom pools shaped around your space, style, and lifestyle.
         </p>
         <div className="w-full aspect-[4/3] max-w-[340px] overflow-hidden !mt-[40px]">
           <img
@@ -196,11 +196,11 @@ export default function SectionTwo() {
           />
         </div>
         <p className="text-[#F4EEDF] font-body text-sm leading-relaxed !text-left max-w-[290px] !mt-[60px]">
-          Expert Craftsmanship <br />
+          <span className="!font-bold ">Expert Craftsmanship</span> <br />
           Built with precision using high-quality materials and techniques.
         </p>
         <p className="text-[#F4EEDF] font-body text-sm leading-relaxed !text-left max-w-[230px] !self-end !mt-[40px]">
-          Seamless Process<br />
+           <span className="!font-bold ">Seamless Process</span><br />
           From consultation to completion, we make it easy stress-free.
         </p>
       </div>
@@ -220,7 +220,7 @@ export default function SectionTwo() {
           </p>
 
           <div className="s2-mob-row2 flex flex-col gap-1 text-left max-w-[300px] self-start !mt-[500px]">
-            <p className="text-[#F4EEDF] text-xl md:text-2xl font-light">
+            <p className="text-[#F4EEDF] text-xl md:text-2xl !font-bold">
               Tailor-Made Designs
             </p>
             <p className="text-[#F4EEDF] font-body text-xs md:text-sm leading-relaxed">
@@ -229,7 +229,7 @@ export default function SectionTwo() {
           </div>
 
           <div className="s2-mob-row3 flex flex-col gap-1 text-left max-w-[300px] self-start !mt-[500px]">
-            <p className="text-[#F4EEDF] text-xl md:text-2xl font-light">
+            <p className="text-[#F4EEDF] text-xl md:text-2xl !font-bold">
               Expert Craftsmanship
             </p>
             <p className="text-[#F4EEDF] font-body text-xs md:text-sm leading-relaxed">
@@ -238,7 +238,7 @@ export default function SectionTwo() {
           </div>
 
           <div className="s2-mob-row4 flex flex-col gap-1 max-w-[300px] text-left self-start !mt-[500px]">
-            <p className="text-[#F4EEDF] text-xl md:text-2xl font-light">
+            <p className="text-[#F4EEDF] text-xl md:text-2xl !font-bold">
               Seamless Process
             </p>
             <p className="text-[#F4EEDF] font-body text-xs md:text-sm leading-relaxed">

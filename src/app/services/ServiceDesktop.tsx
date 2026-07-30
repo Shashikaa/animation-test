@@ -16,10 +16,10 @@ gsap.registerPlugin(ScrollTrigger);
 
 const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
-// Dedicated Desktop Scroll Metrics
-const PX_PER_MAIN_PANEL = 1250;
-const PX_PER_SUB_STEP = 550;
-const PAUSE_PX = 150;
+// Standardized Desktop Metrics (Matching Home & About standards)
+const PX_PER_MAIN_PANEL = 1000;
+const PX_PER_SUB_STEP = 600;
+const PAUSE_PX = 350;
 
 export default function ServicesDesktop() {
   const { setPreloaderDone, preloaderDone } = useSite();
@@ -30,27 +30,37 @@ export default function ServicesDesktop() {
   
   const lastSec2Idx = useRef<number>(-1);
 
-  // 1. Scroll restoration & initialization
+  // 1. Setup initial scroll state and preloader signals
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.history.scrollRestoration) {
       window.history.scrollRestoration = "manual";
     }
-    window.scrollTo(0, 0);
+
+    const isFullyReady = preloaderDone && introDone;
+
+    if (!isFullyReady) {
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+      window.scrollTo(0, 0);
+    } else {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+      requestAnimationFrame(() => {
+        ScrollTrigger.refresh();
+      });
+    }
+
     document.body.classList.remove("preloading");
     setPreloaderDone(true);
-  }, [setPreloaderDone]);
 
-  // 2. Lock body scroll during intro sequence
-  useEffect(() => {
-    const locked = !introDone;
-    document.body.style.overflow = locked ? "hidden" : "";
     return () => {
+      document.documentElement.style.overflow = "";
       document.body.style.overflow = "";
     };
-  }, [introDone]);
+  }, [setPreloaderDone, preloaderDone, introDone]);
 
-  // 3. Offscreen layout setup (Keeps CTA layout bounds intact for WebGL)
+  // 2. Offscreen layout setup & initial component positions
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       ScrollTrigger.config({
@@ -72,20 +82,19 @@ export default function ServicesDesktop() {
 
       gsap.set(".services-appsec-wrap", { visibility: "hidden", yPercent: 100, force3D: true });
 
-      // FIX: Standardize offscreen position without using display: none so WebGL context initializes cleanly
       gsap.set(".services-section-cta", { yPercent: 100, visibility: "hidden", zIndex: 120, force3D: true });
       gsap.set(".services-footer-wrap", { yPercent: 100, visibility: "hidden", zIndex: 125, force3D: true });
     }, scopeRef);
+
     return () => ctx.revert();
   }, []);
 
-  // 4. Play Intro Cinematic Animation
+  // 3. Play Intro Cinematic Animation
   useEffect(() => {
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
         onComplete: () => {
           setIntroDone(true);
-          setTimeout(() => ScrollTrigger.refresh(), 50);
         }
       });
 
@@ -107,9 +116,9 @@ export default function ServicesDesktop() {
     return () => ctx.revert();
   }, []);
 
-  // 5. Master Single ScrollTrigger Timeline
+  // 4. Master Single ScrollTrigger Timeline
   useEffect(() => {
-    if (!introDone) return;
+    if (!introDone || !preloaderDone) return;
 
     if (isTouchOnly()) {
       ScrollTrigger.normalizeScroll(true);
@@ -118,7 +127,7 @@ export default function ServicesDesktop() {
     let vvCleanup: (() => void) | null = null;
 
     const ctx = gsap.context(() => {
-      gsap.ticker.lagSmoothing(0);
+      gsap.ticker.lagSmoothing(500, 33);
 
       const performanceTargets = [
         ".services-hero-master", ".service-hero-bg", ".services-hero-top-layer",
@@ -174,9 +183,14 @@ export default function ServicesDesktop() {
 
         const revealedElements = new Set<string>();
 
+        // Standardized Uniform Metrics
+        const PANEL_ACTION = 2.0;
+        const SUB_ACTION = 1.8;
+        const PAUSE_ACTION = 0.5;
+
         const MAIN_PANELS_COUNT = 6;
         const SUB_STEPS_COUNT = 2;
-        const PAUSES_COUNT = 4;
+        const PAUSES_COUNT = 6;
 
         const DYNAMIC_SCROLL_TRACK = 
           (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -195,49 +209,6 @@ export default function ServicesDesktop() {
             anticipatePin: 1,
             preventOverlaps: true,
             invalidateOnRefresh: true,
-            snap: {
-              directional: false,
-              snapTo: (value, self) => {
-                const totalDur = tl.totalDuration();
-                if (!totalDur) return value;
-
-                const labelTimes = Array.from(
-                  new Set(
-                    Object.keys(tl.labels).map(name =>
-                      Number((tl.labels[name] / totalDur).toFixed(5))
-                    )
-                  )
-                ).sort((a, b) => a - b);
-
-                if (labelTimes.length < 2) return value;
-
-                const curProgress = self ? self.progress : value;
-                const isScrollingDown = value >= curProgress;
-
-                for (let i = 0; i < labelTimes.length - 1; i++) {
-                  const start = labelTimes[i];
-                  const end = labelTimes[i + 1];
-
-                  if (curProgress >= start - 0.0001 && curProgress <= end + 0.0001) {
-                    const gap = end - start;
-                    if (gap <= 0.00001) continue;
-
-                    const localProgress = (curProgress - start) / gap;
-
-                    if (isScrollingDown) {
-                      return localProgress >= 0.35 ? end : start;
-                    } else {
-                      return localProgress <= 0.50 ? start : end;
-                    }
-                  }
-                }
-
-                return value;
-              },
-              duration: { min: 0.4, max: 0.8 },
-              delay: 0.05,
-              ease: "power3.inOut"
-            }
           }
         });
 
@@ -266,93 +237,101 @@ export default function ServicesDesktop() {
         tl.set(".hero-btn", { pointerEvents: "auto", zIndex: 50 }, 0);
         tl.set(".hero-text-wrap", { transformOrigin: "left bottom" }, 0);
 
-        tl.to(".hero-text-wrap", { y: 60, scale: 0.75, duration: 1.0 }, 0)
-          .to(".services-hero-top-layer", { width: "60%", duration: 1.0 }, 0)
-          .to(".hero-btn", { opacity: 0, duration: 0.4, ease: "power2.out", pointerEvents: "none" }, 0);
+        tl.to(".hero-text-wrap", { y: 60, scale: 0.75, duration: PANEL_ACTION }, 0)
+          .to(".services-hero-top-layer", { width: "60%", duration: PANEL_ACTION }, 0)
+          .to(".hero-btn", { opacity: 0, duration: PANEL_ACTION * 0.4, ease: "power2.out", pointerEvents: "none" }, 0);
 
         // ── SECTION 1 SHEET REVEAL ──
         tl.addLabel("sec1Start")
-          .to(".section-one-wrap", { clipPath: "inset(0% 0% 0% 0%)", WebkitClipPath: "inset(0% 0% 0% 0%)", duration: 1.0 }, "sec1Start")
-          .to(".service-hero-bg", { xPercent: -8, scale: 1.6, duration: 1.0 }, "<")
-          .to(".s1-glass-card", { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, "sec1Start+=0.2");
+          .to(".section-one-wrap", { clipPath: "inset(0% 0% 0% 0%)", WebkitClipPath: "inset(0% 0% 0% 0%)", duration: PANEL_ACTION, ease: "power2.inOut" }, "sec1Start")
+          .to(".service-hero-bg", { xPercent: -8, scale: 1.6, duration: PANEL_ACTION, ease: "power2.inOut" }, "<")
+          .to(".s1-glass-card", { opacity: 1, x: 0, duration: PANEL_ACTION * 0.5, ease: "power2.out" }, `sec1Start+=${PANEL_ACTION * 0.2}`);
 
         addPlayOnceTextReveal("sec1Start", 0.35, ".section-one-wrap .reveal-text .gs-line-inner, .section-one-wrap .reveal-text > *");
 
+        tl.to({}, { duration: PAUSE_ACTION });
+
         // ── SECTION TWO TRANSITION ──
-        tl.addLabel("sec2Start")
-          .set(".services-section-two-wrap", { visibility: "visible" })
-          .to(".s1-glass-card", { opacity: 0, y: -50, duration: 0.5 }, "sec2Start")
+        tl.addLabel("sec2Start", ">")
+          .set(".services-section-two-wrap", { visibility: "visible" }, "sec2Start")
+          .to(".s1-glass-card", { opacity: 0, y: -50, duration: PANEL_ACTION * 0.5 }, "sec2Start")
           .to(".s2-left-panel", { 
               yPercent: 0, 
-              duration: 1.0,
+              duration: PANEL_ACTION,
+              ease: "power2.inOut",
               onReverseComplete: () => {
                 setIsSectionTwoActive(false);
                 gsap.set(".services-section-two-wrap", { visibility: "hidden" });
                 triggerSec2Hook(0);
               }
           }, "sec2Start")
-          .to(".s2-right-panel", { yPercent: 0, duration: 1.0 }, "sec2Start")
+          .to(".s2-right-panel", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.inOut" }, "sec2Start")
           
           .to(".s2-inner-fade-target", { 
             opacity: 1, 
-            duration: 0.5, 
+            duration: PANEL_ACTION * 0.5, 
             ease: "power2.out",
             onStart: () => setIsSectionTwoActive(true),
             onReverseComplete: () => setIsSectionTwoActive(false)
-          }, "sec2Start+=1.0");
+          }, `sec2Start+=${PANEL_ACTION * 0.8}`);
 
         addPlayOnceTextReveal("sec2Start", 1.0, ".services-section-two-wrap .reveal-text .gs-line-inner, .services-section-two-wrap .reveal-text > *");
 
-        // ── SECTION 2 PANEL INTERNAL SLIDES (WITH REVERSE SYNC HOOKS) ──
-        tl.addLabel("sec2_card1", "sec2Start+=1.5");
+        // ── SECTION 2 PANEL INTERNAL SLIDES ──
+        tl.addLabel("sec2_card1", `sec2Start+=${PANEL_ACTION * 1.2}`);
         tl.call(() => {
           triggerSec2Hook(0);
         }, [], "sec2_card1");
 
-        tl.addLabel("sec2_card2", "sec2_card1+=1.0");
+        tl.addLabel("sec2_card2", `sec2_card1+=${SUB_ACTION}`);
         tl.call(() => {
           const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
           triggerSec2Hook(isForward ? 1 : 0);
         }, [], "sec2_card2");
 
-        tl.addLabel("sec2_card3", "sec2_card2+=1.0");
+        tl.addLabel("sec2_card3", `sec2_card2+=${SUB_ACTION}`);
         tl.call(() => {
           const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
           triggerSec2Hook(isForward ? 2 : 1);
         }, [], "sec2_card3");
 
+        tl.to({}, { duration: PAUSE_ACTION });
+
         // ── APP SECTION SLIDE OVER ──
-        tl.addLabel("appsecStart", "sec2_card3+=0.8");
-        tl.set(".services-appsec-wrap", { visibility: "visible" })
-          .to(".s2-inner-fade-target", { opacity: 1, duration: 0.5 }, "appsecStart")
+        tl.addLabel("appsecStart", ">")
+          .set(".services-appsec-wrap", { visibility: "visible" }, "appsecStart")
+          .to(".s2-inner-fade-target", { opacity: 1, duration: PANEL_ACTION * 0.5 }, "appsecStart")
           .to(".services-appsec-wrap", { 
             yPercent: 0, 
-            duration: 1.0,
-            ease: "power1.inOut",
+            duration: PANEL_ACTION,
+            ease: "power2.inOut",
             onStart: () => triggerSec2Hook(2),
             onReverseComplete: () => triggerSec2Hook(2)
           }, "appsecStart");
 
         addPlayOnceTextReveal("appsecStart", 0.35, ".services-appsec-wrap .reveal-text .gs-line-inner, .services-appsec-wrap .reveal-text > *");
 
+        tl.to({}, { duration: PAUSE_ACTION });
+
         // ── CTA REVEAL TRACK ──
-        tl.addLabel("ctaStart")
+        tl.addLabel("ctaStart", ">")
           .set(".services-section-cta", { 
             visibility: "visible",
             onStart: () => {
-              // Force WebGL Canvas to re-calculate viewport dimensions on reveal
               window.dispatchEvent(new Event("resize"));
             }
-          })
-          .to(".services-section-cta", { yPercent: 0, duration: 1.0, ease: "power2.out" }, "ctaStart")
-          .to(".services-appsec-wrap", { scale: 1.0, duration: 1.0 }, "<");
+          }, "ctaStart")
+          .to(".services-section-cta", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.out" }, "ctaStart")
+          .to(".services-appsec-wrap", { scale: 1.0, duration: PANEL_ACTION }, "<");
+
+        tl.to({}, { duration: PAUSE_ACTION });
 
         // ── FOOTER REVEAL TRACK ──
-        tl.addLabel("footerStart")
-          .set(".services-footer-wrap", { visibility: "visible" })
-          .to(".services-footer-wrap", { yPercent: 0, duration: 1.0, ease: "power2.out" }, "footerStart")
-          .to(".services-appsec-wrap", { scale: 1.05, duration: 1.0 }, "<")
-          .to(".services-section-cta .cta-inner-desktop", { opacity: 0, duration: 0.7, ease: "power1.out" }, "<");
+        tl.addLabel("footerStart", ">")
+          .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
+          .to(".services-footer-wrap", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.out" }, "footerStart")
+          .to(".services-appsec-wrap", { scale: 1.05, duration: PANEL_ACTION }, "<")
+          .to(".services-section-cta .cta-inner-desktop", { opacity: 0, duration: PANEL_ACTION * 0.4, ease: "power1.out" }, "<");
         
         tl.addLabel("end");
       };
@@ -378,7 +357,7 @@ export default function ServicesDesktop() {
       }
       ctx.revert();
     };
-  }, [introDone]);
+  }, [introDone, preloaderDone]);
 
   return (
     <div ref={scopeRef}>

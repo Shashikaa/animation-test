@@ -56,6 +56,7 @@ export default function CtaForm({
     const errors: string[] = [];
     const badFields: string[] = [];
 
+    // --- Validation Checks (All fields required) ---
     if (!fullName) {
       errors.push("Full Name is required.");
       badFields.push(getName("fullName"));
@@ -66,14 +67,29 @@ export default function CtaForm({
       badFields.push(getName("email"));
     }
 
-    if (phone && !AU_PHONE_REGEX.test(phone.replace(/\s+/g, ""))) {
+    if (!phone || !AU_PHONE_REGEX.test(phone.replace(/\s+/g, ""))) {
       errors.push("Please enter a valid Australian phone number (e.g. 0412 345 678).");
       badFields.push(getName("phone"));
     }
 
-    if (postCode && !AU_POSTCODE_REGEX.test(postCode)) {
+    if (!postCode || !AU_POSTCODE_REGEX.test(postCode)) {
       errors.push("Please enter a valid 4-digit Australian Postcode.");
       badFields.push(getName("postCode"));
+    }
+
+    if (!budgetType) {
+      errors.push("Please select a Budget Type.");
+      badFields.push(getName("budgetType"));
+    }
+
+    if (!budgetRange) {
+      errors.push("Please select a Budget Range.");
+      badFields.push(getName("budgetRange"));
+    }
+
+    if (!contractMethod) {
+      errors.push("Please select a Contract Method.");
+      badFields.push(getName("contractMethod"));
     }
 
     if (errors.length > 0) {
@@ -195,6 +211,7 @@ export default function CtaForm({
             options={["Residential", "Commercial", "Mixed Use"]}
             name={getName("budgetType")}
             isMobile={isMobile}
+            hasError={invalidFields.includes(getName("budgetType"))}
           />
           <CtaSelect
             key={`br_${resetKey}`}
@@ -202,6 +219,7 @@ export default function CtaForm({
             options={["$10k – $30k", "$30k – $75k", "$75k – $150k", "$150k+"]}
             name={getName("budgetRange")}
             isMobile={isMobile}
+            hasError={invalidFields.includes(getName("budgetRange"))}
           />
         </div>
 
@@ -223,6 +241,7 @@ export default function CtaForm({
             ]}
             name={getName("contractMethod")}
             isMobile={isMobile}
+            hasError={invalidFields.includes(getName("contractMethod"))}
           />
           <div className="hidden md:block" />
         </div>
@@ -283,36 +302,9 @@ function SubmitButton({ loading }: { loading: boolean }) {
     <button
       type="submit"
       disabled={loading}
-      style={{
-        position: "relative",
-        display: "inline-block",
-        width: "fit-content",
-        fontSize: 14,
-        fontWeight: 500,
-        textTransform: "uppercase",
-        color: "#F4EEDF",
-        background: "transparent",
-        border: "none",
-        cursor: loading ? "not-allowed" : "pointer",
-        fontFamily: "inherit",
-        padding: "0 0 8px 0",
-        opacity: loading ? 0.6 : 1,
-      }}
-      className="group transition-opacity duration-200 hover:opacity-70"
+      className="btn-underline cursor-pointer font-body !pb-2"
     >
       {loading ? "Submitting..." : "Submit Now"}
-      <span
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: 1,
-          background: "#F4EEDF",
-          transition: "transform 0.2s ease",
-        }}
-        className="group-hover:-translate-y-[2px]"
-      />
     </button>
   );
 }
@@ -390,11 +382,13 @@ function CtaSelect({
   options,
   name,
   isMobile = false,
+  hasError = false,
 }: {
   placeholder: string;
   options: string[];
   name?: string;
   isMobile?: boolean;
+  hasError?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState("");
@@ -426,6 +420,12 @@ function CtaSelect({
   const placeholderColor = isMobile ? "#F4EEDF" : "rgba(244, 238, 223, 0.4)";
   const arrowOpacity = isMobile ? 0.9 : isOpen ? 0.9 : 0.5;
 
+  const defaultBorder = hasError
+    ? "1px solid #feb2b2"
+    : isOpen
+    ? "1px solid rgba(244,238,223,0.75)"
+    : `1px solid rgba(244, 238, 223, ${borderOpacity})`;
+
   return (
     <div ref={dropdownRef} style={{ position: "relative", width: "100%" }}>
       <input type="hidden" name={name} value={selectedValue} />
@@ -434,14 +434,13 @@ function CtaSelect({
         role="combobox"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
+        aria-invalid={hasError}
         tabIndex={0}
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={handleKeyDown}
         style={{
           background: "transparent",
-          borderBottom: isOpen
-            ? "1px solid rgba(244,238,223,0.75)"
-            : `1px solid rgba(244, 238, 223, ${borderOpacity})`,
+          borderBottom: defaultBorder,
           fontSize: 14,
           padding: "10px 10px 10px 0",
           width: "100%",
