@@ -301,19 +301,49 @@ p {
   }
 }
 
-/* ─── Desktop Reveal States ──────────────────────────────────── */
+/* ─── Modern Text Reveal System ─────────────────────────────── */
+
+/* 1. Base Container & Perspective Rules */
+.reveal-text {
+  perspective: 1000px;
+  backface-visibility: hidden;
+}
+
 @media screen and (min-width: 1024px) {
   .reveal-text {
     opacity: 0;
     visibility: hidden;
   }
-
-  .reveal-text .gs-line-inner {
-    display: inline-block;
-  }
 }
 
+/* 2. Line Masking (Prevents descenders like 'g', 'y', 'p' from getting cut off) */
+.gs-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.15em;
+  margin-bottom: -0.15em;
+  perspective: 800px;
+}
 
+/* 3. Hardware-Accelerated 3D Transform Layer */
+.gs-line-inner {
+  display: block !important; /* Overrides inline-block to preserve 3D perspective transforms */
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* 4. Word-Level Wrapping & Layout Stability */
+.gs-word-wrapper {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+}
+
+.gs-word {
+  display: inline-block;
+  will-change: transform;
+}
 /* ─── 404 Preloader Suppression ────────────────────────────── */
 body:has(#not-found-page) #brand-preloader-root,
 body:has(#not-found-page) #fade-preloader-root,

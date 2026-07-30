@@ -4,19 +4,22 @@ import gsap from "gsap";
 import { RefObject } from "react";
 
 export interface TextRevealOptions {
-  yOffset?: number;
-  stagger?: number;
-  ease?: string;
-  duration?: number;
-  tl?: gsap.core.Timeline;
+  yPercent?: number;      // Distance to start from (percentage)
+  stagger?: number;       // Stagger delay between lines
+  ease?: string;          // Easing curve
+  duration?: number;      // Animation duration
+  rotation?: number;      // Subtle tilt/skew during entrance
+  tl?: gsap.core.Timeline;// Timeline to append to
   position?: gsap.Position;
   static?: boolean;
   immediate?: boolean;
   scrollTrigger?: gsap.DOMTarget | ScrollTrigger.Vars;
 }
 
+/**
+ * Splits text into wrapped lines without breaking flow or causing layout shifts.
+ */
 function splitIntoLines(el: HTMLElement): HTMLElement[] {
-  // ── GUARD CLAUSE: If already split, do not re-split ──
   if (el.dataset.originalHtml !== undefined) {
     return Array.from(el.querySelectorAll<HTMLElement>(".gs-line-inner"));
   }
@@ -24,34 +27,40 @@ function splitIntoLines(el: HTMLElement): HTMLElement[] {
   el.dataset.originalHtml = el.innerHTML;
   el.style.transform = "none";
 
-  el.innerHTML = el.innerHTML.replace(/(\S+)/g, '<span class="gs-word">$1</span>');
-  const words = Array.from(el.querySelectorAll<HTMLElement>(".gs-word"));
+  // Wrap words cleanly using standard DOM text nodes
+  const textContent = el.textContent || "";
+  const words = textContent.trim().split(/\s+/);
+  
+  el.innerHTML = words
+    .map((word) => `<span class="gs-word-wrapper inline-block overflow-hidden vertical-top"><span class="gs-word inline-block">${word}</span></span>`)
+    .join(" ");
 
+  const wordNodes = Array.from(el.querySelectorAll<HTMLElement>(".gs-word"));
   const lineMap = new Map<number, HTMLElement[]>();
-  words.forEach((w) => {
-    const top = Math.round(w.getBoundingClientRect().top);
+
+  // Efficient line detection via Range API (prevents expensive reflows)
+  wordNodes.forEach((word) => {
+    const range = document.createRange();
+    range.selectNode(word);
+    const rect = range.getBoundingClientRect();
+    const top = Math.round(rect.top);
+
     if (!lineMap.has(top)) lineMap.set(top, []);
-    lineMap.get(top)!.push(w);
+    lineMap.get(top)!.push(word);
   });
 
-  const lines = Array.from(lineMap.values());
   el.innerHTML = "";
-
   const lineInners: HTMLElement[] = [];
 
-  lines.forEach((group) => {
+  lineMap.forEach((group) => {
     const lineOuter = document.createElement("span");
-    lineOuter.className = "gs-line";
-    lineOuter.style.cssText =
-      "display:block; overflow:hidden; padding-bottom:0.25em; margin-bottom:-0.25em;";
+    lineOuter.className = "gs-line block overflow-hidden py-[0.1em] -my-[0.1em]";
 
     const lineInner = document.createElement("span");
-    lineInner.className = "gs-line-inner";
-    lineInner.style.cssText =
-      "display:block; will-change:transform,opacity; padding-bottom:0.25em;";
+    lineInner.className = "gs-line-inner block will-change-transform";
 
-    group.forEach((w, i) => {
-      lineInner.appendChild(w);
+    group.forEach((word, i) => {
+      lineInner.appendChild(word);
       if (i < group.length - 1) {
         lineInner.appendChild(document.createTextNode(" "));
       }
@@ -85,10 +94,11 @@ export function useTextReveal(
   options: TextRevealOptions = {}
 ) {
   const {
-    yOffset   = 30,
-    stagger   = 0.04,
-    ease      = "power2.out",
-    duration = 0.35,
+    yPercent = 110,
+    stagger = 0.06,
+    ease = "power4.out",
+    duration = 1.1,
+    rotation = 3,
     tl,
     position = ">",
     static: isStatic = false,
@@ -115,42 +125,50 @@ export function useTextReveal(
 
     el.style.visibility = "hidden";
     const lineInners = splitIntoLines(el);
-    
-    // Safety check: Only apply initialization defaults if we aren't mid-timeline scrub
+
+    // Initial transforms for modern masked entrance
+    const initialProps = {
+      yPercent: yPercent,
+      rotateX: -15,
+      rotateZ: rotation,
+      scaleY: 1.25,
+      transformOrigin: "0% 100%",
+      opacity: 0,
+      force3D: true,
+    };
+
+    const targetProps = {
+      yPercent: 0,
+      rotateX: 0,
+      rotateZ: 0,
+      scaleY: 1,
+      opacity: 1,
+      stagger: stagger,
+      duration: duration,
+      ease: ease,
+    };
+
     if (!tl) {
-      gsap.set(lineInners, { y: yOffset, opacity: 0 });
+      gsap.set(lineInners, initialProps);
     }
 
     if (tl) {
       tl.set(el, { visibility: "visible" }, position)
-        .to(lineInners, {
-          y: 0,
-          opacity: 1,
-          stagger,
-          duration,
-          ease
-        }, position);
+        .set(lineInners, initialProps, position)
+        .to(lineInners, targetProps, position);
     } else if (immediate) {
       gsap.to(lineInners, {
-        y: 0,
-        opacity: 1,
-        duration,
-        ease,
-        stagger,
+        ...targetProps,
         onStart: () => { el.style.visibility = "visible"; }
       });
     } else {
       gsap.to(lineInners, {
-        y: 0, 
-        opacity: 1, 
-        duration, 
-        ease, 
-        stagger,
+        ...targetProps,
         onStart: () => { el.style.visibility = "visible"; },
         scrollTrigger: scrollTrigger || {
           trigger: el,
-          start: "top 85%",
-          once: true, 
+          start: "top 88%",
+          once: true,
         },
       });
     }

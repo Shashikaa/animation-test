@@ -26,8 +26,8 @@ const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
 // Standardized Desktop Metrics for Uniform Scroll Feel
 const PX_PER_MAIN_PANEL = 1000;
-const PX_PER_SUB_STEP = 600; // Increased to grant smooth, unhurried pacing to sub-animations
-const PAUSE_PX = 350; // Increased pause distance for readable text stops
+const PX_PER_SUB_STEP = 600; 
+const PAUSE_PX = 350; 
 
 function executeDesktopSplitting(selector: string) {
   const element = document.querySelector(selector) as HTMLElement;
@@ -65,7 +65,7 @@ export default function HomeDesktop() {
   
   const [introDone, setIntroDone] = useState(false);
 
-  // Strict Scroll Lock Control — unlocked as soon as preloader and hero intro transition are done
+  // Strict Scroll Lock Control
   useEffect(() => {
     if (typeof window === "undefined") return;
     
@@ -222,15 +222,13 @@ export default function HomeDesktop() {
 
         const revealedElements = new Set<string>();
 
-        // ── UNIFORM DURATION METRICS ──
-        // Standardized PANEL_ACTION for all slide-ups and major state transitions
+        // UNIFORM DURATION METRICS
         const PANEL_ACTION = 2.0; 
-        const SUB_ACTION = 1.8;   // Expanded from 1.0 -> 1.8 so inner transitions feel relaxed
-        const HOLD_ACTION = 1.0;  // Pause window for text reading
+        const HOLD_ACTION = 1.0;  
         const PAUSE_ACTION = 0.4;
 
         const MAIN_PANELS_COUNT = 8;
-        const SUB_STEPS_COUNT = 12; // Adjusted to match expanded internal steps across Section 2 & 9
+        const SUB_STEPS_COUNT = 12; 
         const PAUSES_COUNT = 9;
 
         const DYNAMIC_SCROLL_TRACK = 
@@ -253,13 +251,12 @@ export default function HomeDesktop() {
           }
         });
 
+        // Plays once when crossing the timeline threshold forward — strictly locks played state!
         const addPlayOnceTextReveal = (labelName: string, timeOffset: number, selector: string) => {
           const absoluteTime = tl.labels[labelName] + timeOffset;
 
           tl.call(() => {
-            const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
-
-            if (isForward && !revealedElements.has(selector)) {
+            if (!revealedElements.has(selector)) {
               revealedElements.add(selector);
 
               gsap.to(selector, {
@@ -267,8 +264,7 @@ export default function HomeDesktop() {
                 opacity: 1,
                 stagger: 0.04,
                 duration: 0.7,
-                ease: "power2.out",
-                overwrite: "auto"
+                ease: "power2.out"
               });
             }
           }, [], absoluteTime);
@@ -308,7 +304,6 @@ export default function HomeDesktop() {
           .set(".hero", { display: "block", zIndex: 90, opacity: 1 }, "sec2Arrived")
           .set(".hero-bg-wrapper", { visibility: "visible", opacity: 1 }, "sec2Arrived")
           .to(".hero-bg", { scale: 1.4, duration: PANEL_ACTION, ease: "power1.inOut" }, "sec2Arrived")
-
           .fromTo(".section-2",
             { yPercent: 100, zIndex: 95, display: "block" },
             { yPercent: 0, duration: PANEL_ACTION, ease: "power1.inOut" },
@@ -317,24 +312,18 @@ export default function HomeDesktop() {
 
         addPlayOnceTextReveal("sec2Arrived", 0.9, s2TextSelector);
 
-        // ── SECTION 2 INNER ANIMATIONS (UNIFORM PACING FIX) ──
+        // ── SECTION 2 INNER ANIMATIONS ──
         tl.addLabel("s2InnerAnimation", `sec2Arrived+=${PANEL_ACTION}`)
           .set(".hero", { display: "none" }, "s2InnerAnimation")
-          
-          // STEP 1: Fade out initial Section 2 title ("Premium Pool") completely
           .to(s2TextSelector, { opacity: 0, y: -40, duration: PANEL_ACTION * 0.5, ease: "power1.in" }, "s2InnerAnimation")
           .to(".hero-secondary-para", { opacity: 0, duration: PANEL_ACTION * 0.3, ease: "power1.out" }, "s2InnerAnimation")
 
           .addLabel("s2TitleFaded", `s2InnerAnimation+=${PANEL_ACTION * 0.5}`)
-
-          // STEP 2: Un-clip first right image with PANEL_ACTION duration for smooth scroll feel
           .fromTo(".s2-right-img-frame", 
             { clipPath: "inset(100% 0% 0% 0%)" }, 
             { clipPath: "inset(0% 0% 0% 0%)", duration: PANEL_ACTION, ease: "power1.inOut" }, 
             "s2TitleFaded"
           )
-
-          // STEP 3: Slide up left text content evenly alongside image reveal
           .fromTo(".s2-scroll-content", 
             { yPercent: 100, opacity: 0 }, 
             { yPercent: 0, opacity: 1, duration: PANEL_ACTION, ease: "power1.out" }, 
@@ -342,8 +331,6 @@ export default function HomeDesktop() {
           )
 
           .addLabel("s2FirstPhaseDone", `s2TitleFaded+=${PANEL_ACTION * 1.2}`)
-
-          // STEP 4: Reveal second right image while scrolling left text up
           .to(".s2-right-img-frame", { clipPath: "inset(0% 0% 100% 0%)", duration: PANEL_ACTION, ease: "power1.inOut" }, "s2FirstPhaseDone")
           .fromTo(".s2-right-img-frame-under", 
             { clipPath: "inset(100% 0% 0% 0%)" }, 
@@ -372,13 +359,11 @@ export default function HomeDesktop() {
           .set(".section-10", { zIndex: 100, display: "block" }, "sec10Start")
           .fromTo(".section-10", { yPercent: 100 }, { yPercent: 0, duration: PANEL_ACTION, ease: "power2.inOut" }, "sec10Start")
           .fromTo(".s10-static-bg", { yPercent: 0 }, { yPercent: 0, duration: PANEL_ACTION, ease: "power2.out" }, "sec10Start")
-          
           .fromTo(".s10-bg-img", 
             { yPercent: 0, scale: 1.5 }, 
             { yPercent: 0, scale: 1.5, duration: PANEL_ACTION, ease: "power2.out" }, 
             "sec10Start"
           )
-          
           .set(".section-8", { display: "none" }, `sec10Start+=${PANEL_ACTION}`)
           .set(".s10-content-wrap", { opacity: 1, yPercent: 0, y: "100vh" }, "sec10Start");
 
@@ -421,24 +406,21 @@ export default function HomeDesktop() {
 
         tl.to({}, { duration: PAUSE_ACTION });
 
-        // ── 7. SECTION 9 REVEAL & FLY TEXT (UNIFORM PACING FIX) ──
+        // ── 7. SECTION 9 REVEAL & FLY TEXT ──
         tl.addLabel("sec9Start", ">")
           .set(".section-9", { visibility: "visible", zIndex: 115 }, "sec9Start")
 
           .to(".appsec-content", { opacity: 0, duration: PANEL_ACTION * 0.4, ease: "power1.out" }, "sec9Start")
           .to(".appsec-bg", { scale: 1.0, yPercent: 12, duration: PANEL_ACTION, ease: "power2.inOut" }, "sec9Start")
 
-          // Slide in split-sides smoothly using full PANEL_ACTION duration
           .fromTo(".s9-left-side", { yPercent: 100 }, { yPercent: 0, duration: PANEL_ACTION, ease: "power2.inOut" }, "sec9Start")
           .fromTo(".s9-right-side", { xPercent: 0, yPercent: -100 }, { xPercent: 0, yPercent: 0, duration: PANEL_ACTION, ease: "power2.inOut" }, "sec9Start")
           .fromTo([".s9-bg-img-left", ".s9-bg-img-right"], { scale: 1.1 }, { scale: 1.0, duration: PANEL_ACTION, ease: "power2.out" }, "sec9Start")
 
           .set(".section-appsec", { display: "none" }, `sec9Start+=${PANEL_ACTION}`)
 
-          // Pause briefly after section slide-in before text flight starts
           .to({}, { duration: PAUSE_ACTION })
 
-          // TITLE FLIGHT ANIMATION: Expanded to PANEL_ACTION so title flight isn't fast
           .addLabel("sec9FlyText", ">")
           .set([".s9-native-title-wrapper-1", ".s9-native-title-wrapper-2"], { opacity: 0, visibility: "hidden" }, "sec9FlyText")
           .set(".s9-global-flight-container", { opacity: 1, visibility: "visible" }, "sec9FlyText")
@@ -470,7 +452,7 @@ export default function HomeDesktop() {
               gsap.set(current, { y: currentY });
               return targetCenter - currentCenter;
             },
-            duration: PANEL_ACTION, // Matched to panel action speed
+            duration: PANEL_ACTION,
             ease: "power2.inOut"
           }, "sec9FlyText")
           .fromTo(".s9-para-desktop", { y: 30, opacity: 0 }, { opacity: 1, y: 0, duration: PANEL_ACTION * 0.6, ease: "power2.out" }, `sec9FlyText+=${PANEL_ACTION * 0.4}`);
