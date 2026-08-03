@@ -62,7 +62,7 @@ export default function FAQSection() {
         </div>
 
         {/* RIGHT SIDE — Centered Vertically */}
-        <div className="w-full md:max-w-full lg:max-w-[650px] flex flex-col justify-start lg:justify-center lg:self-center py-2 md:py-6">
+        <div className="w-full md:max-w-full lg:!max-w-[650px] flex flex-col justify-start lg:justify-center lg:self-center py-2 md:py-6">
           <FAQAccordion items={FAQ_ITEMS} />
         </div>
 

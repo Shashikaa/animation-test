@@ -142,10 +142,10 @@ export default function ProjectsMobile() {
       const DEAD_SCROLL = 0.2;
 
       // Projects Page: 5 Main Transitions (Hero Text, Hero->Sec1, Sec1->Sec2, Sec2->CTA, CTA->Footer)
-      // 2 Sub-steps (Paragraph 1 & 2 swaps) + 5 Pause breaks
+      // 2 Sub-steps (Paragraph 1 & 2 swaps) + 6 Pause breaks
       const MAIN_PANELS_COUNT = 5;
       const SUB_STEPS_COUNT = 2;
-      const PAUSES_COUNT = 5;
+      const PAUSES_COUNT = 6;
 
       const DYNAMIC_SCROLL_TRACK = 
         (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -245,28 +245,47 @@ export default function ProjectsMobile() {
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP D: SECTION TWO -> CTA ──
+      // ── STEP D: SECTION TWO -> CTA (SAME AS HOMEMOBILE) ──
       scrollTl.addLabel("ctaStart", ">")
         .set(".projects-section-cta", { visibility: "visible" }, "ctaStart")
-        .to(".projects-section-cta", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart")
+        .fromTo(
+          ".projects-section-cta",
+          { yPercent: 100 },
+          { yPercent: 0, duration: ACTION, ease: "power2.inOut" },
+          "ctaStart"
+        )
         .to(".section-two-wrapper", { y: "-10vh", duration: ACTION, ease: "power2.inOut" }, "ctaStart");
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
+      // ── STEP D.5: CTA INNER CONTENT FADE OUT FIRST (MATCHING HOMEMOBILE) ──
+      scrollTl.addLabel("ctaFadeOut", ">")
+        .to(
+          [".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"],
+          { 
+            opacity: 0, 
+            y: -30, 
+            duration: ACTION * 0.5, 
+            ease: "power2.in" 
+          }, 
+          "ctaFadeOut"
+        )
+        .to({}, { duration: DEAD_SCROLL });
+
       // ── STEP E: CTA -> FOOTER ──
       scrollTl.addLabel("footerStart", ">")
-        .to([".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"], { 
-          opacity: 0, 
-          duration: ACTION * 0.4, 
-          ease: "power1.inOut" 
-        }, "footerStart")
-        .set(".section-two-wrapper", { visibility: "hidden" }, `footerStart+=${ACTION * 0.4}`)
+        .set(".section-two-wrapper", { visibility: "hidden" }, "footerStart")
         .set(".projects-footer-wrap", { visibility: "visible" }, "footerStart")
-        .to(".projects-footer-wrap", { 
-          yPercent: 0, 
-          duration: ACTION, 
-          ease: "power2.inOut" 
-        }, "footerStart");
+        .fromTo(
+          ".projects-footer-wrap",
+          { yPercent: 100 },
+          { 
+            yPercent: 0, 
+            duration: ACTION, 
+            ease: "power2.inOut" 
+          },
+          "footerStart"
+        );
 
     }, scopeRef);
 
@@ -310,7 +329,7 @@ export default function ProjectsMobile() {
 
         {/* Layer 4: Section CTA Block */}
         <div 
-          className="projects-section-cta gpu-accelerated absolute inset-0 w-full h-full bg-white z-[150]" 
+          className="projects-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100vh] z-[150]" 
           style={{ 
             pointerEvents: "auto", 
             visibility: "hidden"

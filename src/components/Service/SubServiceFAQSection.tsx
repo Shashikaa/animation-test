@@ -40,7 +40,7 @@ export default function SubServiceFAQSection({ data }: FAQSectionProps) {
         </div>
 
         {/* RIGHT SIDE */}
-        <div className="w-full md:max-w-full lg:max-w-[590px] flex flex-col justify-start lg:justify-center lg:self-center py-2 md:py-6">
+        <div className="w-full md:max-w-full lg:!max-w-[590px] flex flex-col justify-start lg:justify-center lg:self-center py-2 md:py-6">
           <FAQAccordion items={faqItems} />
         </div>
 

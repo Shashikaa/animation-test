@@ -34,7 +34,7 @@ export default function SectionThree({ preloaderDone }: SectionThreeProps) {
 
       {/* ── Content Layer ── */}
       <div className="section-container relative z-[2] h-full flex flex-col justify-between pb-10 md:pb-14 lg:pb-16">
-        <div className="flex flex-col !mt-44">
+        <div className="flex flex-col md:!mt-24">
           <h2 className="s3-reveal-top reveal-text font-display text-[#F4EEDF] leading-[1.2] !font-[100]">
             Built on Trust <br />
           </h2>
@@ -44,7 +44,7 @@ export default function SectionThree({ preloaderDone }: SectionThreeProps) {
         </div>
 
         <div className="flex justify-end">
-          <p className="s3-reveal-bottom reveal-text font-body text-[#F4EEDF] text-right lg:text-left max-w-[250px] md:max-w-[280px] lg:max-w-[280px] !mb-33 md:!mb-80 lg:!mb-0">
+          <p className="s3-reveal-bottom reveal-text font-body text-[#F4EEDF] text-right lg:text-left max-w-[250px] md:max-w-[280px] lg:max-w-[280px] !mb-23 md:!mb-40 lg:!mb-0">
             At Grand Pools, we create premium pools with expert craftsmanship, innovative design, and personalised service, delivering seamless experiences and exceptional results.
           </p>
         </div>

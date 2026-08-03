@@ -89,6 +89,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
       // CTA and Footer tracking sets
       gsap.set(".services-section-cta", { yPercent: 100, visibility: "hidden", zIndex: 95, force3D: true });
       gsap.set(".services-footer-wrap", { yPercent: 100, visibility: "hidden", zIndex: 96, force3D: true });
+      gsap.set([".cta-inner-desktop", ".cta-inner-mobile"], { opacity: 1, force3D: true });
     }, scopeRef);
     return () => ctx.revert();
   }, []);
@@ -164,7 +165,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
 
         const MAIN_PANELS_COUNT = 6;
         const SUB_STEPS_COUNT = 3;
-        const PAUSES_COUNT = 4;
+        const PAUSES_COUNT = 5;
 
         const DYNAMIC_SCROLL_TRACK = 
           (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -279,12 +280,21 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
 
         tl.to({}, { duration: PAUSE_ACTION });
 
+        // ── CTA INNER CONTENT FADE OUT FIRST (MATCHING HOME) ──
+        tl.addLabel("ctaFadeOut", ">")
+          .to(".services-section-cta .cta-inner-desktop", { 
+            opacity: 0, 
+            y: -40, 
+            duration: PANEL_ACTION * 0.5, 
+            ease: "power2.in" 
+          }, "ctaFadeOut")
+          .to({}, { duration: PAUSE_ACTION });
+
         // ── FOOTER REVEAL TRACK ──
         tl.addLabel("footerStart", ">")
           .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
           .to(".services-footer-wrap", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.out" }, "footerStart")
-          .to(".services-faq-wrap", { scale: 0.92, duration: PANEL_ACTION }, "footerStart")
-          .to(".services-section-cta .cta-inner-desktop", { opacity: 0, duration: PANEL_ACTION * 0.4, ease: "power1.out" }, "footerStart");
+          .to(".services-faq-wrap", { scale: 0.92, duration: PANEL_ACTION }, "footerStart");
       };
 
       requestAnimationFrame(buildTimeline);

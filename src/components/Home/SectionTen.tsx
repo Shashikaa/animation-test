@@ -123,8 +123,8 @@ export default function SectionTen() {
         }
         
         @media (max-width: 767px) {
-          .s10-title { top: clamp(200px, 15vh, 160px); left: 20px; }
-          .s10-title-sub { top: clamp(256px, 24vh, 220px); left: 20px; }
+          .s10-title { top: clamp(120px, 10vh, 120px); left: 20px; }
+          .s10-title-sub { top: clamp(166px, 14vh, 120px); left: 20px; }
           .s10-para-top { bottom: 180px; left: 40px; right: 20px; text-align: right; }
           
           .s10-scrollable-container {

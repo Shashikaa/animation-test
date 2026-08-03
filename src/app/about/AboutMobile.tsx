@@ -251,28 +251,45 @@ export default function AboutMobile() {
       // ── Section 5 Inner Cards Track Allocation ──
       tl.to({}, { duration: SEC5_CARDS_HOLD });
 
-      // ── Step 6: CTA Reveal Track ──
+// ── Step 6: CTA Reveal Track ──
       tl.addLabel("ctaStart", ">")
         .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
-        .to(".about-section-cta", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart") 
-        .to(".about-section-five", { yPercent: -2, duration: ACTION, ease: "power2.inOut" }, "ctaStart");
+        .fromTo(
+          ".about-section-cta",
+          { yPercent: 100 },
+          { yPercent: 0, duration: ACTION, ease: "power2.inOut" },
+          "ctaStart"
+        )
+        .to(".about-section-five", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart");
 
       tl.to({}, { duration: DEAD_SCROLL });
 
+      // ── Step 6.5: CTA Content Fade Out First (MATCHING HOME MOBILE) ──
+      tl.addLabel("ctaFadeOut", ">")
+        .to(
+          [".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"],
+          {
+            opacity: 0,
+            y: -30,
+            duration: ACTION * 0.5,
+            ease: "power2.in",
+          },
+          "ctaFadeOut"
+        )
+
+        // Brief pause so the CTA inner content is completely gone before footer slides up
+        .to({}, { duration: DEAD_SCROLL });
+
       // ── Step 7: Footer Reveal Track ──
       tl.addLabel("footerStart", ">")
-        .to([".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"], { 
-          opacity: 0, 
-          duration: ACTION * 0.4, 
-          ease: "power1.inOut" 
-        }, "footerStart")
-        .set(".about-section-five", { visibility: "hidden" }, `footerStart+=${ACTION * 0.4}`)
         .set(".about-footer-wrap", { visibility: "visible" }, "footerStart")
-        .fromTo(".about-footer-wrap", 
+        .fromTo(
+          ".about-footer-wrap",
           { yPercent: 100 },
-          { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, 
+          { yPercent: 0, duration: ACTION, ease: "power2.inOut" },
           "footerStart"
-        );
+        )
+        .to(".about-section-five", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "footerStart");
 
     }, scopeRef);
 
@@ -323,10 +340,15 @@ export default function AboutMobile() {
           <SectionFive isActive={isSectionFiveActive} />
         </div>
 
-        <div className="about-section-cta gpu-accelerated absolute inset-0 w-full h-full z-[150]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        {/* Layer 6: Section CTA Container (Configured identically to Home/Projects setup) */}
+        <div 
+          className="about-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100vh] z-[150]" 
+          style={{ pointerEvents: "auto", visibility: "hidden" }}
+        >
           <SectionCTA />
         </div>
 
+        {/* Layer 7: Footer */}
         <div className="about-footer-wrap gpu-accelerated absolute left-0 bottom-0 w-full z-[151]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <Footer />
         </div>

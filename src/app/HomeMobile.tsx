@@ -374,21 +374,56 @@ export default function HomeMobile() {
         .to(".s9-title", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.15")
         .to(".s9-para", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.15");
 
-      // ── CTA REVEAL ──
+      // ── CTA REVEAL (MATCHES APPSECTION SLIDE UP LOGIC) ──
       tl.addLabel("ctaStart", ">")
         .set(".section-cta", { visibility: "visible" }, "ctaStart")
-        .to(".section-cta", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart") 
+        .fromTo(
+          ".section-cta",
+          { yPercent: 100 },
+          { yPercent: 0, duration: ACTION, ease: "power2.inOut" },
+          "ctaStart"
+        )
         .to(".s9-bg-img", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "ctaStart")
 
         .to({}, { duration: DEAD_SCROLL });
 
-      // ── FOOTER REVEAL ──
-      tl.addLabel("footerStart", ">")
-        .to([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { opacity: 0, duration: ACTION * 0.4, ease: "power1.inOut" }, "footerStart")
-        
-        .set(".footer", { visibility: "visible" }, "footerStart+=0.1")
-        .to(".footer", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "footerStart+=0.1") 
-        .to(".s9-bg-img", { yPercent: -20, duration: ACTION, ease: "power2.inOut" }, "footerStart+=0.1");
+// ── CTA CONTENT FADE OUT FIRST ──
+tl.addLabel("ctaFadeOut", ">")
+  .to(
+    [".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"],
+    {
+      opacity: 0,
+      y: -30,
+      duration: ACTION * 0.5,
+      ease: "power2.in",
+    },
+    "ctaFadeOut"
+  )
+
+  // Brief pause so the CTA content is completely gone before the footer arrives
+  .to({}, { duration: DEAD_SCROLL })
+
+// ── FOOTER SLIDE UP ──
+tl.addLabel("footerStart", ">")
+  .set(".footer", { visibility: "visible" }, "footerStart")
+  .to(
+    ".footer",
+    {
+      yPercent: 0,
+      duration: ACTION,
+      ease: "power2.inOut",
+    },
+    "footerStart"
+  )
+  .to(
+    ".s9-bg-img",
+    {
+      yPercent: -20,
+      duration: ACTION,
+      ease: "power2.inOut",
+    },
+    "footerStart"
+  );
 
       onScrollReady();
 
@@ -435,7 +470,7 @@ export default function HomeMobile() {
         </div>
 
         {/* Layer 6: App Section */}
-        <div className="section-appsec gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[125vh] min-h-[120vh] bg-black" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        <div className="section-appsec gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100vh] bg-black" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <Appsection />
         </div>
 
@@ -444,8 +479,8 @@ export default function HomeMobile() {
           <SectionNine />
         </div>
 
-        {/* Layer 8: CTA Section */}
-        <div className="section-cta gpu-accelerated absolute inset-0 h-full w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        {/* Layer 8: CTA Section (Configured identically to Appsection) */}
+        <div className="section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100vh]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionCTA />
         </div>
 

@@ -2,7 +2,7 @@
 
 export default function Appsection() {
   return (
-    <section className="relative w-full h-full min-h-screen overflow-hidden flex items-center justify-center !py-20 md:!py-20 lg:py-0">
+    <section className="relative w-full h-full min-h-screen overflow-hidden flex items-center justify-center  lg:py-0">
       
       {/* ── Background Image ── */}
       <div 
@@ -38,11 +38,11 @@ Pool Care + keeps you informed and involved from start to finish. Live updates, 
 
         {/* Device Mockup */}
         <div className="appsec-phone-wrapper w-full lg:w-1/2 flex justify-center items-center">
-          <div className="w-[300px] md:w-[330px] lg:w-[85%] max-w-[380px]">
+          <div className="w-[360px] md:w-[360px] lg:w-[85%] max-w-[380px]">
             <img 
               src="/phone-mockup.webp" 
               alt="Pool Care Mobile App Mockup" 
-              className="w-full h-auto max-h-[45vh] md:max-h-[66vh] lg:max-h-[70vh] block object-contain !mb-12 !mt-12"
+              className="w-full h-auto max-h-[55vh] md:max-h-[50vh] lg:!max-h-[60vh] block object-contain !mb-12 !mt-12"
             />
           </div>
         </div>

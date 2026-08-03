@@ -145,10 +145,10 @@ export default function ServicesMobile() {
       const DEAD_SCROLL = 0.2;
 
       // Services Page: 6 Main Panel Moves (Compress Hero, Sec1 Reveal, Sec2 Reveal, AppSec Reveal, CTA Reveal, Footer Reveal)
-      // 3 Slide track steps inside Sec 2 + 6 Pause breaks
+      // 3 Slide track steps inside Sec 2 + 7 Pause breaks
       const MAIN_PANELS_COUNT = 6;
       const SUB_STEPS_COUNT = 3; 
-      const PAUSES_COUNT = 6;
+      const PAUSES_COUNT = 7;
 
       const DYNAMIC_SCROLL_TRACK = 
         (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -256,22 +256,36 @@ export default function ServicesMobile() {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP F: APP SECTION -> CTA ──
+      // ── STEP F: APP SECTION -> CTA (MATCHES HOMEMOBILE SETUP) ──
       tl.addLabel("ctaStart")
         .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
-        .to(".services-section-cta", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart")
+        .fromTo(
+          ".services-section-cta",
+          { yPercent: 100 },
+          { yPercent: 0, duration: ACTION, ease: "power2.inOut" },
+          "ctaStart"
+        )
         .to(".services-appsec-wrap", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "ctaStart");
 
       tl.to({}, { duration: DEAD_SCROLL });
 
+      // ── STEP F.5: CTA INNER CONTENT FADE OUT FIRST (MATCHING HOMEMOBILE) ──
+      tl.addLabel("ctaFadeOut", ">")
+        .to(
+          [".services-section-cta .cta-inner-mobile", ".services-section-cta .cta-inner-desktop"],
+          { 
+            opacity: 0, 
+            y: -30, 
+            duration: ACTION * 0.5, 
+            ease: "power2.in" 
+          }, 
+          "ctaFadeOut"
+        )
+        .to({}, { duration: DEAD_SCROLL });
+
       // ── STEP G: CTA -> FOOTER ──
       tl.addLabel("footerStart")
-        .to([".services-section-cta .cta-inner-mobile", ".services-section-cta .cta-inner-desktop"], { 
-          opacity: 0, 
-          duration: ACTION * 0.4, 
-          ease: "power1.inOut" 
-        }, "footerStart")
-        .set(".services-appsec-wrap", { visibility: "hidden" }, `footerStart+=${ACTION * 0.4}`)
+        .set(".services-appsec-wrap", { visibility: "hidden" }, "footerStart")
         .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
         .to(".services-footer-wrap", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "footerStart");
 
@@ -315,7 +329,7 @@ export default function ServicesMobile() {
 
         {/* Layer 4: App Section Slide Up Wrapper */}
         <div 
-          className="services-appsec-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[124vh] min-h-[120vh] overflow-x-hidden bg-black" 
+          className="services-appsec-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-screen overflow-x-hidden bg-black" 
           style={{ 
             zIndex: 35,
             pointerEvents: "auto",
@@ -327,7 +341,7 @@ export default function ServicesMobile() {
 
         {/* Layer 5: Section CTA Block */}
         <div 
-          className="services-section-cta gpu-accelerated absolute inset-0 w-full h-full bg-white z-[150]" 
+          className="services-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-screen z-[150]" 
           style={{ 
             pointerEvents: "auto", 
             visibility: "hidden"

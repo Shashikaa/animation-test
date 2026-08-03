@@ -111,6 +111,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
       gsap.set([".projects-section-cta", ".projects-footer-wrap"], { yPercent: 100, visibility: "hidden", force3D: true });
       gsap.set(".projects-section-cta", { zIndex: 95 });
       gsap.set(".projects-footer-wrap", { zIndex: 96 });
+      gsap.set([".cta-inner-desktop", ".cta-inner-mobile"], { opacity: 1, force3D: true });
     }, scopeRef);
     
     return () => ctx.revert();
@@ -186,7 +187,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
         const MAIN_PANELS_COUNT = 6;
         const SUB_STEPS_COUNT = 2;
-        const PAUSES_COUNT = 4;
+        const PAUSES_COUNT = 5;
 
         const DYNAMIC_SCROLL_TRACK = 
           (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -325,11 +326,20 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
         scrollTl.to({}, { duration: PAUSE_ACTION });
 
+        // ── STEP 4.5: CTA INNER CONTENT FADE OUT FIRST (MATCHING HOME) ──
+        scrollTl.addLabel("ctaFadeOut", ">")
+          .to(".projects-section-cta .cta-inner-desktop", { 
+            opacity: 0, 
+            y: -40, 
+            duration: PANEL_ACTION * 0.5, 
+            ease: "power2.in" 
+          }, "ctaFadeOut")
+          .to({}, { duration: PAUSE_ACTION });
+
         // ── STEP 5: FOOTER REVEAL TRACK ──
         scrollTl.addLabel("footerStart", ">")
           .set(".projects-footer-wrap", { visibility: "visible" }, "footerStart")
-          .to(".projects-footer-wrap", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.out" }, "footerStart")
-          .to(".projects-section-cta .cta-inner-desktop", { opacity: 0, duration: PANEL_ACTION * 0.4, ease: "power1.out" }, "footerStart");
+          .to(".projects-footer-wrap", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.out" }, "footerStart");
       };
 
       requestAnimationFrame(buildTimeline);

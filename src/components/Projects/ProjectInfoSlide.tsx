@@ -187,7 +187,7 @@ export default function ProjectInfoSlide({ slides, isActive = true }: ProjectInf
     >
       <div className="w-full min-h-full flex flex-col lg:grid lg:grid-cols-2">
         {/* Text Column */}
-        <div className="relative w-full h-auto min-h-[50vh] lg:h-full order-1 lg:order-2 bg-[#EFECE6] !p-6 md:!p-16 lg:!p-20 flex flex-col justify-center z-[60] text-[#131313]">
+        <div className="relative w-full h-auto min-h-[55vh] lg:h-full order-1 lg:order-2 bg-[#EFECE6] !p-6 md:!p-16 lg:!p-20 flex flex-col justify-center z-[60] text-[#131313]">
           <div className="relative w-full h-full flex flex-col justify-center  md:pt-20 md:pb-8">
             {slides.map((slide, index) => (
               <div
@@ -214,7 +214,7 @@ export default function ProjectInfoSlide({ slides, isActive = true }: ProjectInf
         </div>
 
         {/* Image Layer Column */}
-        <div className="relative w-full h-[50vh] lg:h-full order-2 lg:order-1 overflow-hidden bg-[#1e1e1e]">
+        <div className="relative w-full h-[45vh] lg:h-full order-2 lg:order-1 overflow-hidden bg-[#1e1e1e]">
           {slides.map((slide, index) => (
             <div
               key={`info-img-layer-${index}`}

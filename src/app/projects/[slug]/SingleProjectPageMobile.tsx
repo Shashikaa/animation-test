@@ -156,7 +156,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
       // Sub-steps for extra info slides beyond the first one
       const MAIN_PANELS_COUNT = 4;
       const SUB_STEPS_COUNT = Math.max(0, infoSlides.length - 1);
-      const PAUSES_COUNT = 4; // 1 pause after each main section transition
+      const PAUSES_COUNT = 5; // Extra pause for CTA content fade step
 
       const DYNAMIC_SCROLL_TRACK = 
         (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -183,7 +183,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
           pin: true,
           pinType: "fixed",
           pinSpacing: true,
-          scrub: 0.5, // Standardized with About/Contact page scrub
+          scrub: 0.5,
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -217,7 +217,6 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
         triggerInfoHook(0);
       }, [], 0.6);
 
-      // Dead scroll pause added here after Hero -> Info slide up
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
       // ── STEP B: SEQUENTIAL INNER INFO SLIDES ──
@@ -274,20 +273,19 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP E: SYNCHRONIZED FAQ FADE-OUT & FOOTER SLIDE-UP ──
-      scrollTl.addLabel("footerStart");
-
-      scrollTl.to(
-        ".faq-content", 
-        { 
+      // ── STEP D.5: FAQ CONTENT FADE OUT FIRST (MATCHING HOME & CONTACT MOBILE) ──
+      scrollTl.addLabel("ctaFadeOut", ">")
+        .to(".faq-content", { 
           opacity: 0, 
-          y: -40, 
-          duration: ACTION * 0.4, 
-          ease: "power1.inOut",
-          pointerEvents: "none" 
-        }, 
-        "footerStart"
-      );
+          y: -30, 
+          duration: ACTION * 0.5, 
+          ease: "power2.in",
+          pointerEvents: "none"
+        }, "ctaFadeOut")
+        .to({}, { duration: DEAD_SCROLL });
+
+      // ── STEP E: FOOTER SLIDE-UP ──
+      scrollTl.addLabel("footerStart", ">");
 
       scrollTl.set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
               .fromTo(
@@ -336,7 +334,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
         </div>
 
         <div 
-          className="project-app-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-[120vh] md:h-[100vh] structural-layer"
+          className="project-app-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100vh] structural-layer"
           style={{ 
             zIndex: 60, 
             visibility: "hidden", 

@@ -20,10 +20,10 @@ export default function SectionOne() {
         />
       </div>
 
-      <div className="section-container relative z-[2] h-full flex flex-col justify-between pb-10 md:pb-14 lg:pb-16">
+      <div className="section-container relative z-[2] h-full flex flex-col justify-between pb-10 md:pb-14 lg:pb-6">
         
         {/* TOP CONTENT */}
-        <div className="flex flex-col !mt-34 w-[450px]">
+        <div className="flex flex-col md:!mt-24 w-[450px]">
           <h2 className="s1-reveal-top font-display text-[#F4EEDF] leading-[1.2] !font-[100] reveal-text w-sm lg:w-lg">
             Tailored Pool Solutions
           </h2>
@@ -34,7 +34,7 @@ export default function SectionOne() {
 
         {/* BOTTOM RIGHT CONTENT */}
         <div className="flex justify-end">
-          <p className="s1-reveal-bottom reveal-text font-body text-[#F4EEDF] text-right max-w-[220px] md:max-w-[280px] lg:max-w-[280px] !mb-33 md:!mb-80 lg:!mb-20">
+          <p className="s1-reveal-bottom reveal-text font-body text-[#F4EEDF] text-right max-w-[220px] md:max-w-[280px] lg:max-w-[280px] !mb-33 md:!mb-80 lg:!mt-30">
             From renovations to new builds, we deliver high-quality pools with expert craftsmanship and precision.
           </p>
         </div>

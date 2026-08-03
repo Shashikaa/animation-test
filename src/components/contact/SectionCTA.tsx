@@ -16,13 +16,13 @@ export default function SectionCTA({
 }: SectionCTAProps) {
   return (
     <section
-      className="section-cta !min-h-screen relative w-full h-screen overflow-hidden"
+      className="about-section-cta section-cta min-h-screen lg:h-full w-full relative"
       style={{
         background: "linear-gradient(135deg, #19211c 0%, #094146 100%)",
       }}
     >
       {/* Background Layer */}
-      <div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full">
+      <div className="absolute inset-0 z-[1] pointer-events-none w-full h-full">
         <div className="hidden lg:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
           <LazyWaveCanvas imageSrc={imageSrcDesktop} preloaderDone={preloaderDone} />
         </div>
@@ -37,35 +37,95 @@ export default function SectionCTA({
       </div>
 
       {/* Desktop Layout */}
-      <div className="hidden lg:flex section-container cta-inner-desktop relative z-10 items-center justify-between gap-[44px] h-full max-w-[1440px] px-[48px]">
-        <div className="flex-none max-w-[620px] flex flex-col gap-6">
-          <div className="flex flex-col gap-1">
-            <h2 className="font-display text-[#F4EEDF] font-[100] m-0">
+      <div
+        className="hidden lg:flex section-container cta-inner-desktop"
+        style={{
+          position: "relative",
+          zIndex: 10,
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 44,
+          minHeight: "100vh",
+          maxWidth: 1440,
+          padding: "40px 48px",
+          margin: "0 auto",
+        }}
+      >
+        <div
+          style={{
+            flex: "0 0 auto",
+            maxWidth: 620,
+            display: "flex",
+            flexDirection: "column",
+            gap: 24,
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <h2
+              className="font-display"
+              style={{ color: "#F4EEDF", fontWeight: 100, margin: 0 }}
+            >
               Ready to Build Your Dream
             </h2>
           </div>
-          <p className="font-body text-[#F4EEDF] text-[16px] leading-[1.2] m-0 max-w-[400px]">
+          <p
+            className="font-body"
+            style={{
+              color: "#F4EEDF",
+              fontSize: 16,
+              lineHeight: 1.2,
+              margin: 0,
+              maxWidth: 400,
+            }}
+          >
             Let&apos;s bring your vision to life with a custom-designed pool
             crafted for your space and lifestyle. Reach out to get started today.
           </p>
         </div>
 
-        <div className="flex-1 max-w-[560px]">
+        <div style={{ flex: "1 1 auto", maxWidth: 560 }}>
           <CtaForm isMobile={false} />
         </div>
       </div>
 
-      {/* Mobile Layout */}
-      <div className="flex lg:hidden section-container cta-inner-mobile relative z-10 flex-col justify-center h-full px-[20px]">
-        <h2 className="font-display text-[#F4EEDF] m-0 !mb-5 !max-w-[300px] md:!max-w-[430px]">
+      {/* Mobile Layout - Dynamic Auto-Expanding Height */}
+      <div
+        className="flex lg:hidden cta-inner-mobile min-h-screen h-auto !pt-12 !pb-16"
+        style={{
+          position: "relative",
+          zIndex: 10,
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "flex-start",
+          paddingLeft: "20px",
+          paddingRight: "20px",
+          margin: 0,
+        }}
+      >
+        <h2
+          className="font-display !max-w-[300px] md:!max-w-[430px]"
+          style={{
+            color: "#F4EEDF",
+            margin: 0,
+            marginBottom: 28,
+          }}
+        >
           Ready to Build Your Dream
         </h2>
-        <p className="font-body text-[#F4EEDF] m-0 !mb-4 max-w-[500px]">
+
+        <p
+          className="font-body max-w-[500px]"
+          style={{
+            color: "#F4EEDF",
+            margin: 0,
+            marginBottom: 28,
+          }}
+        >
           Let&apos;s bring your vision to life with a custom-designed pool
           crafted for your space and lifestyle. Reach out to get started today.
         </p>
 
-            <CtaForm isMobile={true} nameSuffix="mobile" />
+        <CtaForm isMobile={true} nameSuffix="mobile" />
       </div>
     </section>
   );

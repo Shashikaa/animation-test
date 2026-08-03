@@ -1,7 +1,7 @@
 "use client";
 
 import LazyWaveCanvas from "./LazyWaveCanvas";
-import CtaForm from "./CtaForm"; // Ensure matching import path
+import CtaForm from "./CtaForm";
 
 type SectionCTAProps = {
   preloaderDone?: boolean;
@@ -10,16 +10,10 @@ type SectionCTAProps = {
 export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
   return (
     <section
-      className="about-section-cta section-cta !min-h-screen"
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100vh",
-        overflow: "hidden",
-      }}
+      className="about-section-cta section-cta min-h-screen lg:h-full w-full relative"
     >
       {/* Background Canvas & Fallback Image */}
-      <div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full">
+      <div className="absolute inset-0 z-[1] pointer-events-none w-full h-full">
         <div className="hidden lg:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
           <LazyWaveCanvas imageSrc="/CTA.webp" preloaderDone={preloaderDone} />
         </div>
@@ -42,9 +36,10 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
           alignItems: "center",
           justifyContent: "space-between",
           gap: 44,
-          height: "100%",
+          minHeight: "100vh",
           maxWidth: 1440,
-          padding: "0 48px",
+          padding: "40px 48px",
+          margin: "0 auto",
         }}
       >
         <div
@@ -84,18 +79,19 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
         </div>
       </div>
 
-      {/* Mobile Layout */}
+{/* Mobile Layout - Centered Layout */}
       <div
-        className="flex lg:hidden cta-inner-mobile"
+        className="flex lg:hidden cta-inner-mobile min-h-screen h-auto !pt-12 !pb-16"
         style={{
           position: "relative",
           zIndex: 10,
           flexDirection: "column",
-          justifyContent: "center",
-          height: "100%",
-          padding: "0 20px",
+          justifyContent: "center", // Fixed invalid 'flex-center' property
+          alignItems: "flex-start",     // Centers title, paragraph, and form horizontally
+     
+          paddingLeft: "20px",
+          paddingRight: "20px",
           margin: 0,
-          gap: 0,
         }}
       >
         <h2
@@ -103,7 +99,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
           style={{
             color: "#F4EEDF",
             margin: 0,
-            marginBottom: 20,
+            marginBottom: 28,
           }}
         >
           Ready to Build Your Dream
@@ -114,7 +110,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
           style={{
             color: "#F4EEDF",
             margin: 0,
-            marginBottom: 24,
+            marginBottom: 28,
           }}
         >
           Let&apos;s bring your vision to life with a custom-designed pool

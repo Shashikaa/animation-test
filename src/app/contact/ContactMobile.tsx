@@ -63,12 +63,12 @@ export default function ContactMobile() {
       gsap.set(".contact-hero-bg", { scale: 1.3, yPercent: 0, force3D: true });
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30, force3D: true });
       
-      gsap.set(".cta-scroll-wrapper", { y: "100vh", force3D: true });
-      gsap.set(".section-one-scroll-wrapper", { y: "100vh", force3D: true });
-      gsap.set(".faq-scroll-wrapper", { y: "100vh", force3D: true });
-      gsap.set(".footer-scroll-wrapper", { y: "100vh", force3D: true });
+      gsap.set(".cta-scroll-wrapper", { yPercent: 100, force3D: true });
+      gsap.set(".section-one-scroll-wrapper", { yPercent: 100, y: 0, force3D: true });
+      gsap.set(".faq-scroll-wrapper", { yPercent: 100, force3D: true });
+      gsap.set(".footer-scroll-wrapper", { yPercent: 100, force3D: true });
       
-      gsap.set(".faq-content", { opacity: 1, force3D: true });
+      gsap.set([".faq-content", ".cta-inner-mobile", ".cta-inner-desktop"], { opacity: 1, force3D: true });
     }, scopeRef);
 
     return () => ctx.revert();
@@ -96,9 +96,9 @@ export default function ContactMobile() {
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2;
 
-      // 4 Panel transitions: Hero->CTA, CTA->Sec1, Sec1->FAQ, FAQ->Footer + 3 pause breaks
+      // 4 Panel transitions: Hero->CTA, CTA->Sec1, Sec1->FAQ, FAQ->Footer + 4 pause breaks
       const MAIN_PANELS_COUNT = 4;
-      const PAUSES_COUNT = 3;
+      const PAUSES_COUNT = 4;
 
       const DYNAMIC_SCROLL_TRACK = (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + (PAUSES_COUNT * PAUSE_PX);
 
@@ -119,32 +119,75 @@ export default function ContactMobile() {
       });
 
       tl
+        // 1. HERO EXIT & CTA ENTRANCE (MATCHES ABOUTMOBILE SLIDE UP LOGIC)
         .to(".contact-hero-bg", { yPercent: -15, ease: "none", duration: ACTION }, 0)
         .to(".hero-text-wrap", { opacity: 0, y: -40, ease: "power1.in", duration: ACTION * 0.75 }, 0)
-        .to(".cta-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: ACTION }, 0)
+        .fromTo(
+          ".cta-scroll-wrapper", 
+          { yPercent: 100 }, 
+          { yPercent: 0, ease: "power2.inOut", duration: ACTION }, 
+          0
+        )
 
         .to({}, { duration: DEAD_SCROLL })
 
-        .to(".section-one-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: ACTION }, ">")
+        // 2. SECTION ONE FULL SLIDE UP
+        .fromTo(
+          ".section-one-scroll-wrapper", 
+          { yPercent: 100, y: 0 },
+          { 
+            yPercent: 0, 
+            y: () => {
+              const secOneEl = document.querySelector(".section-one-scroll-wrapper") as HTMLElement;
+              if (!secOneEl) return 0;
+              const diff = secOneEl.scrollHeight - window.innerHeight;
+              return diff > 0 ? -diff : 0;
+            },
+            ease: "power2.inOut", 
+            duration: ACTION * 1.2 
+          }, 
+          ">"
+        )
 
         .to({}, { duration: DEAD_SCROLL })
 
-        .to(".faq-scroll-wrapper", { y: "0vh", ease: "power2.inOut", duration: ACTION }, ">")
+        // 3. FAQ SECTION ENTRANCE
+        .fromTo(
+          ".faq-scroll-wrapper", 
+          { yPercent: 100 },
+          { yPercent: 0, ease: "power2.inOut", duration: ACTION }, 
+          ">"
+        )
 
         .to({}, { duration: DEAD_SCROLL })
 
+        // 3.5. FAQ / CTA CONTENT FADE OUT FIRST (MATCHING HOME MOBILE)
+        .addLabel("ctaFadeOut", ">")
+        .to(
+          [".faq-content", ".cta-scroll-wrapper .cta-inner-mobile", ".cta-scroll-wrapper .cta-inner-desktop"],
+          {
+            opacity: 0,
+            y: -30,
+            duration: ACTION * 0.5,
+            ease: "power2.in",
+          },
+          "ctaFadeOut"
+        )
+
+        .to({}, { duration: DEAD_SCROLL })
+
+        // 4. FOOTER REVEAL
         .addLabel("footerStart", ">")
-        .to(".faq-content", { 
-          opacity: 0, 
-          y: -40, 
-          ease: "power1.inOut", 
-          duration: ACTION * 0.4 
-        }, "footerStart")
-        .to(".footer-scroll-wrapper", { 
-          y: "0vh", 
-          ease: "power2.inOut", 
-          duration: ACTION 
-        }, "footerStart");
+        .fromTo(
+          ".footer-scroll-wrapper", 
+          { yPercent: 100 },
+          { 
+            yPercent: 0, 
+            ease: "power2.inOut", 
+            duration: ACTION 
+          }, 
+          "footerStart"
+        );
 
     }, scopeRef);
 
@@ -155,22 +198,27 @@ export default function ContactMobile() {
     <div ref={scopeRef} className="min-h-screen w-full bg-zinc-950 text-white overflow-hidden">
       <div className="contact-pin-master pin-all-contact relative w-full overflow-hidden">
         
+        {/* Layer 1: Hero Section */}
         <div className="gpu-accelerated absolute inset-0 w-full h-full z-10">
           <ContactHero />
         </div>
 
-        <div className="cta-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full z-20">
+        {/* Layer 2: CTA Section */}
+        <div className="cta-scroll-wrapper gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100vh] z-20">
           <SectionCTA />
         </div>
 
-        <div className="section-one-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full z-30">
+        {/* Layer 3: Section One */}
+        <div className="section-one-scroll-wrapper gpu-accelerated absolute inset-x-0 top-0 w-full h-auto min-h-screen z-30">
           <SectionOne />
         </div>
 
+        {/* Layer 4: FAQ Section */}
         <div className="faq-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full z-40">
           <FAQSection />
         </div>
 
+        {/* Layer 5: Footer Wrapper Frame */}
         <div className="footer-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full z-50 flex flex-col justify-end pointer-events-none">
           <div className="w-full pointer-events-auto">
             <Footer />

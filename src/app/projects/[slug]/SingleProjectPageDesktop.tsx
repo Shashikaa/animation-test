@@ -186,7 +186,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
 
         const innerSlideSteps = Math.max(infoSlides.length - 1, 0);
         const MAIN_PANELS_COUNT = 4; 
-        const PAUSES_COUNT = 3;
+        const PAUSES_COUNT = 4;
 
         const DYNAMIC_SCROLL_TRACK =
           (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) +
@@ -292,11 +292,18 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
 
         scrollTl.to({}, { duration: PAUSE_ACTION });
 
-        // ── COMBINED FAQ FADE & FOOTER SLIDE ──
+        // ── FAQ CONTENT FADE OUT FIRST (MATCHING HOME & CONTACT) ──
+        scrollTl.addLabel("ctaFadeOut", ">")
+          .to(".faq-content", { 
+            opacity: 0, 
+            y: -40, 
+            duration: PANEL_ACTION * 0.5, 
+            ease: "power2.in" 
+          }, "ctaFadeOut")
+          .to({}, { duration: PAUSE_ACTION });
+
+        // ── FOOTER SLIDE UP ──
         scrollTl.addLabel("footerStart", ">");
-        
-        scrollTl.to(".faq-content", { opacity: 0, y: -30, ease: "power1.out", duration: PANEL_ACTION * 0.4 }, "footerStart");
-        
         scrollTl.set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
                 .to(".footer-scroll-wrapper", { yPercent: 0, ease: "power2.out", duration: PANEL_ACTION }, "footerStart");
 

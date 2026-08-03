@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-// Uses environment variable with your live WordPress staging URL as fallback
+// Uses environment variable with live WordPress URL fallback
 const WP_BASE_URL =
   process.env.NEXT_PUBLIC_WP_URL || "https://grandpools.live.tactik.com.au";
 const WP_API_URL = `${WP_BASE_URL}/wp-json/custom/v1/submit-cta`;
@@ -26,7 +26,7 @@ export default function CtaForm({
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  
+
   // Object storing individual error messages for each field key
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -53,7 +53,7 @@ export default function CtaForm({
     const budgetType = formData.get(getName("budgetType"))?.toString().trim() || "";
     const budgetRange = formData.get(getName("budgetRange"))?.toString().trim() || "";
     const contractMethod = formData.get(getName("contractMethod"))?.toString().trim() || "";
-    
+
     // Honeypot field check
     const honeypot = formData.get(getName("website_hp"))?.toString().trim() || "";
 
@@ -133,7 +133,7 @@ export default function CtaForm({
         setSuccessMessage("Thank you! Your submission has been received.");
         formElement.reset();
         setResetKey((prev) => prev + 1);
-        
+
         router.push("/thank-you");
       } else {
         setGlobalError(result.message || "Failed to submit form. Please try again.");
@@ -146,7 +146,7 @@ export default function CtaForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full" noValidate>
+    <form onSubmit={handleSubmit} className="w-full h-auto" noValidate>
       {/* Honeypot Field */}
       <div style={{ display: "none" }} aria-hidden="true">
         <input
@@ -160,7 +160,7 @@ export default function CtaForm({
       <div
         className={
           isMobile
-            ? "flex flex-col gap-4 w-full max-w-[500px] md:max-w-[100%] !mt-8 md:!mt-34 mx-auto"
+            ? "flex flex-col gap-4 w-full max-w-[500px] md:max-w-[100%] mt-4 md:!mt-34 mx-auto pb-6"
             : "flex flex-col gap-4 max-w-[560px] w-full"
         }
       >
@@ -233,13 +233,13 @@ export default function CtaForm({
         </div>
 
         <div
-          style={{ marginTop: isMobile ? 32 : 18 }}
+          style={{ marginTop: isMobile ? 24 : 18 }}
           className={isMobile ? "self-center md:!self-start" : undefined}
         >
           <SubmitButton loading={loading} />
         </div>
 
-        {/* Global Error Banner for API/Network Errors */}
+        {/* Global Error Banner */}
         {globalError && (
           <div
             role="alert"
@@ -259,7 +259,7 @@ export default function CtaForm({
           </div>
         )}
 
-        {/* Success Message Banner */}
+        {/* Success Banner */}
         {successMessage && (
           <div
             role="status"
@@ -392,6 +392,7 @@ function CtaSelect({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState("");
+  const [openUpward, setOpenUpward] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -407,10 +408,29 @@ function CtaSelect({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleToggle = (e: React.SyntheticEvent) => {
+    e.preventDefault();
+
+    if (!isOpen && dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const dropdownMaxHeight = 180; // height of dropdown menu list
+      const spaceBelow = viewportHeight - rect.bottom;
+
+      // If space below is less than dropdown height, open upward
+      if (spaceBelow < dropdownMaxHeight && rect.top > dropdownMaxHeight) {
+        setOpenUpward(true);
+      } else {
+        setOpenUpward(false);
+      }
+    }
+
+    setIsOpen((prev) => !prev);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      setIsOpen((prev) => !prev);
+      handleToggle(e);
     } else if (e.key === "Escape") {
       setIsOpen(false);
     }
@@ -430,7 +450,7 @@ function CtaSelect({
     <div
       ref={dropdownRef}
       className="flex flex-col"
-      style={{ position: "relative", width: "100%" }}
+      style={{ position: "relative", width: "100%", zIndex: isOpen ? 9999 : 1 }}
     >
       <input type="hidden" name={name} value={selectedValue} />
 
@@ -440,10 +460,7 @@ function CtaSelect({
         aria-haspopup="listbox"
         aria-invalid={!!error}
         tabIndex={0}
-        onClick={(e) => {
-          e.preventDefault();
-          setIsOpen(!isOpen);
-        }}
+        onClick={handleToggle}
         onKeyDown={handleKeyDown}
         style={{
           background: "transparent",
@@ -453,7 +470,7 @@ function CtaSelect({
           width: "100%",
           fontFamily: "inherit",
           cursor: "pointer",
-          letterSpacing: "0.02em",
+          
           color: selectedValue ? "#F4EEDF" : placeholderColor,
           display: "flex",
           justifyContent: "space-between",
@@ -490,19 +507,24 @@ function CtaSelect({
       {isOpen && (
         <div
           role="listbox"
+          // Stop propagation to prevent GSAP ScrollTrigger timeline advances while scrolling the dropdown
+          onTouchMove={(e) => e.stopPropagation()}
+          onWheel={(e) => e.stopPropagation()}
           style={{
             position: "absolute",
-            top: "100%",
+            top: openUpward ? "auto" : "100%",
+            bottom: openUpward ? "100%" : "auto",
             left: 0,
             right: 0,
-            marginTop: "6px",
+            marginTop: openUpward ? "0px" : "6px",
+            marginBottom: openUpward ? "6px" : "0px",
             background: "linear-gradient(135deg, #162D24 0%, #094146 100%)",
-            boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
-            zIndex: 100,
-            overflow: "hidden",
-            maxHeight: "220px",
+            boxShadow: "0 12px 40px rgba(0,0,0,0.8)",
+            zIndex: 9999,
+            maxHeight: "180px",
             overflowY: "auto",
             WebkitOverflowScrolling: "touch",
+            overscrollBehavior: "contain",
           }}
         >
           {options.map((option) => (

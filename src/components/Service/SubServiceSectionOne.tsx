@@ -40,10 +40,10 @@ export default function SubServiceSectionOne({ data }: SubServiceSectionOneProps
       </div>
 
       {/* ── Foreground Layout Grid ── */}
-      <div className="s10-content-initial section-container relative z-10 w-full h-full flex flex-col justify-between max-lg:justify-start max-lg:gap-4 !pt-[100px] lg:!pt-[18vh] pb-[10vh]">
+      <div className="s10-content-initial section-container relative z-10 w-full h-full flex flex-col justify-between max-lg:justify-start max-lg:gap-4 !pt-[100px] md:!pt-[18vh] lg:!pt-[18vh] pb-[10vh]">
         
         {/* ── TOP: Description Paragraph ── */}
-        <div className="w-full s10-top-text-row max-lg:order-2 max-lg:mt-2 !mt-[100px] lg:!mt-[0]">
+        <div className="w-full s10-top-text-row max-lg:order-2 max-lg:mt-2 !mt-[30px] lg:!mt-[0]">
           <p className="s10-para-top font-body text-[#F4EEDF] pointer-events-none text-sm lg:text-base max-w-[420px]">
             {data.paragraph}
           </p>

@@ -112,7 +112,7 @@ export default function SectionTwo() {
 
       {/* CONTENT BLOCK OVERLAY (FIRST FRAME TEXT) */}
       <div className="section-container absolute inset-0 z-10 h-full flex flex-col justify-end pointer-events-none">
-        <div className="s2-body flex flex-col items-end text-right gap-2 lg:gap-3 p-4 md:p-8">
+        <div className="s2-body flex flex-col items-end text-right gap-2 lg:gap-3 p-4 md:p-8 !mb-6">
           <p className="reveal-text text-[#F4EEDF] font-body text-sm md:text-base leading-relaxed text-right w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px]">
             From renovations to new builds, we design and construct pools that combine style, functionality, and durability.
           </p>

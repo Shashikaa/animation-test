@@ -506,15 +506,33 @@ export default function HomeDesktop() {
 
         tl.to({}, { duration: PAUSE_ACTION });
 
-        // ── 9. FOOTER REVEAL ──
-        tl.addLabel("footerStart", ">")
-          .set(".footer", { display: "block", zIndex: 125 })
-          .to(".footer", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.out" }, "footerStart")
-          .to(".section-9", { scale: 1.05, duration: PANEL_ACTION }, "footerStart")
-          .to(".section-cta .cta-inner-desktop", { opacity: 0, duration: PANEL_ACTION * 0.4, ease: "power1.out" }, "footerStart")
+// ── 8.5 FADE OUT CTA CONTENT ──
+tl.addLabel("ctaFadeOut", ">")
+  .to(".section-cta .cta-inner-desktop", { 
+    opacity: 0, 
+    y: -40, 
+    duration: PANEL_ACTION * 0.5, 
+    ease: "power2.in" 
+  }, "ctaFadeOut")
+  
+  // Brief pause so it's fully gone before footer arrives
+  .to({}, { duration: PAUSE_ACTION })
 
-          .addLabel("timelineEnd", `footerStart+=${PANEL_ACTION}`)
-          .to({}, { duration: PAUSE_ACTION }, "timelineEnd");
+// ── 9. FOOTER REVEAL ──
+tl.addLabel("footerStart", ">")
+  .set(".footer", { display: "block", zIndex: 125 })
+  .to(".footer", { 
+    yPercent: 0, 
+    duration: PANEL_ACTION, 
+    ease: "power2.out" 
+  }, "footerStart")
+  .to(".section-9", { 
+    scale: 1.05, 
+    duration: PANEL_ACTION 
+  }, "footerStart")
+
+  .addLabel("timelineEnd", `footerStart+=${PANEL_ACTION}`)
+  .to({}, { duration: PAUSE_ACTION }, "timelineEnd");
       };
 
       requestAnimationFrame(buildTimeline);

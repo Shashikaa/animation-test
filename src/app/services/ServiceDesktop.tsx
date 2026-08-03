@@ -84,6 +84,7 @@ export default function ServicesDesktop() {
 
       gsap.set(".services-section-cta", { yPercent: 100, visibility: "hidden", zIndex: 120, force3D: true });
       gsap.set(".services-footer-wrap", { yPercent: 100, visibility: "hidden", zIndex: 125, force3D: true });
+      gsap.set([".cta-inner-desktop", ".cta-inner-mobile"], { opacity: 1, force3D: true });
     }, scopeRef);
 
     return () => ctx.revert();
@@ -190,7 +191,7 @@ export default function ServicesDesktop() {
 
         const MAIN_PANELS_COUNT = 6;
         const SUB_STEPS_COUNT = 2;
-        const PAUSES_COUNT = 6;
+        const PAUSES_COUNT = 7;
 
         const DYNAMIC_SCROLL_TRACK = 
           (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -326,12 +327,21 @@ export default function ServicesDesktop() {
 
         tl.to({}, { duration: PAUSE_ACTION });
 
+        // ── CTA INNER CONTENT FADE OUT FIRST (MATCHING HOME) ──
+        tl.addLabel("ctaFadeOut", ">")
+          .to(".services-section-cta .cta-inner-desktop", { 
+            opacity: 0, 
+            y: -40, 
+            duration: PANEL_ACTION * 0.5, 
+            ease: "power2.in" 
+          }, "ctaFadeOut")
+          .to({}, { duration: PAUSE_ACTION });
+
         // ── FOOTER REVEAL TRACK ──
         tl.addLabel("footerStart", ">")
           .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
           .to(".services-footer-wrap", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.out" }, "footerStart")
-          .to(".services-appsec-wrap", { scale: 1.05, duration: PANEL_ACTION }, "<")
-          .to(".services-section-cta .cta-inner-desktop", { opacity: 0, duration: PANEL_ACTION * 0.4, ease: "power1.out" }, "<");
+          .to(".services-appsec-wrap", { scale: 1.05, duration: PANEL_ACTION }, "<");
         
         tl.addLabel("end");
       };

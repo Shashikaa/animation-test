@@ -131,10 +131,10 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
       const DEAD_SCROLL = 0.2;
 
       // 5 Main Transitions (Hero Reveal, Sec1 Sheet, Image Expand, FAQ, CTA & Footer)
-      // 3 Sub-steps (Sequential paragraph roll) + 6 Pause breaks
+      // 3 Sub-steps (Sequential paragraph roll) + 7 Pause breaks
       const MAIN_PANELS_COUNT = 5;
       const SUB_STEPS_COUNT = 3;
-      const PAUSES_COUNT = 6;
+      const PAUSES_COUNT = 7;
 
       const DYNAMIC_SCROLL_TRACK = 
         (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -257,20 +257,29 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── FOOTER REVEAL TRACK ──
-      scrollTl.addLabel("footerStart", ">")
+      // ── CTA INNER CONTENT FADE OUT FIRST (MATCHING HOMEMOBILE) ──
+      scrollTl.addLabel("ctaFadeOut", ">")
         .to(".faq-content", {
           opacity: 0,
           y: -40,
           duration: ACTION * 0.4,
           ease: "power2.in",
           pointerEvents: "none"
-        }, "footerStart")
-        .to([".services-section-cta .cta-inner-desktop", ".services-section-cta .cta-inner-mobile"], { 
-          opacity: 0, 
-          duration: ACTION * 0.4, 
-          ease: "power1.inOut" 
-        }, "footerStart")
+        }, "ctaFadeOut")
+        .to(
+          [".services-section-cta .cta-inner-mobile", ".services-section-cta .cta-inner-desktop"],
+          { 
+            opacity: 0, 
+            y: -30, 
+            duration: ACTION * 0.5, 
+            ease: "power2.in" 
+          }, 
+          "ctaFadeOut"
+        )
+        .to({}, { duration: DEAD_SCROLL });
+
+      // ── FOOTER REVEAL TRACK ──
+      scrollTl.addLabel("footerStart", ">")
         .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
         .to(".services-footer-wrap", { 
           yPercent: 0, 

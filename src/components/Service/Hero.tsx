@@ -10,11 +10,11 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
     <div className="relative w-full h-full bg-[#12322D]">
       
       {/* UNDERNEATH LAYER: Exact Figma Positioning */}
-      <div className="absolute inset-y-0 right-0 w-full lg:w-[47.5%] z-0 text-[#F4EEDF]">
+      <div className="absolute inset-y-0 right-0 w-full lg:w-[57.5%] z-0 text-[#F4EEDF]">
         <div className="relative w-full h-full p-6 md:p-12 lg:p-16">
           
           {/* Paragraph 1: High/Center-Left Position */}
-          <div className="absolute bottom-[260px] md:bottom-[280px] lg:top-[35%] left-6 md:left-12 lg:left-54 max-w-[290px] md:max-w-[310px]">
+          <div className="absolute bottom-[260px] md:bottom-[280px] lg:top-[35%] left-6 md:left-12 lg:!left-87 max-w-[290px] md:max-w-[310px]">
             <p className="text-[14px] md:text-[16px] leading-relaxed font-light">
               From stunning pool renovations to high-end commercial builds, 
               we deliver tailored solutions with precision and care.
@@ -70,7 +70,7 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
 
       {/* BUTTON LAYER: Exact position maintained, fades out when scroll starts */}
       {!hideText && (
-        <div className="hero-btn absolute z-50 pointer-events-auto block left-6 bottom-12 md:left-12 lg:left-auto lg:bottom-24 lg:right-20 transform-gpu">
+        <div className="hero-btn absolute z-50 pointer-events-auto block left-6 bottom-12 md:left-9  lg:bottom-24 lg:!left-18 transform-gpu">
           <a
             href="/contact"
 

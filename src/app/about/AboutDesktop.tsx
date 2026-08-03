@@ -346,7 +346,7 @@ export default function AboutDesktop() {
         // ── SECTION 5 INNER CARDS TRACK ALLOCATION ──
         tl.to({}, { duration: SUB_ACTION * 2 });
 
-        // ── CTA REVEAL TRACK ──
+// ── 8. CTA REVEAL TRACK ──
         tl.addLabel("ctaStart", ">")
           .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
           .to(".about-section-cta", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.out" }, "ctaStart")
@@ -354,12 +354,33 @@ export default function AboutDesktop() {
 
         tl.to({}, { duration: PAUSE_ACTION });
 
-        // ── FOOTER REVEAL TRACK ──
+        // ── 8.5. CTA CONTENT FADE OUT FIRST (MATCHING HOME) ──
+        tl.addLabel("ctaFadeOut", ">")
+          .to(".about-section-cta .cta-inner-desktop", { 
+            opacity: 0, 
+            y: -40, 
+            duration: PANEL_ACTION * 0.5, 
+            ease: "power2.in" 
+          }, "ctaFadeOut")
+          
+          // Pause so content is completely clear before footer enters
+          .to({}, { duration: PAUSE_ACTION });
+
+        // ── 9. FOOTER REVEAL TRACK ──
         tl.addLabel("footerStart", ">")
           .set(".about-footer-wrap", { visibility: "visible" }, "footerStart")
-          .to(".about-footer-wrap", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.out" }, "footerStart")
-          .to(".about-section-five", { scale: 1.05, duration: PANEL_ACTION }, "footerStart")
-          .to(".about-section-cta .cta-inner-desktop", { opacity: 0, duration: PANEL_ACTION * 0.4, ease: "power1.out" }, "footerStart");
+          .to(".about-footer-wrap", { 
+            yPercent: 0, 
+            duration: PANEL_ACTION, 
+            ease: "power2.out" 
+          }, "footerStart")
+          .to(".about-section-five", { 
+            scale: 1.05, 
+            duration: PANEL_ACTION 
+          }, "footerStart")
+
+          .addLabel("timelineEnd", `footerStart+=${PANEL_ACTION}`)
+          .to({}, { duration: PAUSE_ACTION }, "timelineEnd");
       };
 
       requestAnimationFrame(buildTimeline);

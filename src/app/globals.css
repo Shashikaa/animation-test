@@ -245,7 +245,7 @@ body.preloading header {
 @media (max-width: 1025px) {
   .section-container {
     padding-inline: 30px;
-    padding-block:  65px;
+    padding-block:  75px;
   }
 }
 

@@ -180,7 +180,7 @@ export default function ContactDesktop() {
 
         const MAIN_PANELS_COUNT = 5;
         const SUB_STEPS_COUNT = 2;
-        const PAUSES_COUNT = 3;
+        const PAUSES_COUNT = 4;
 
         const DYNAMIC_SCROLL_TRACK =
           MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL +
@@ -260,10 +260,23 @@ export default function ContactDesktop() {
 
         tl.to({}, { duration: PAUSE_ACTION });
 
+        // ── PHASE 4.5: FAQ / CTA Content Fade Out First (MATCHING HOME) ──
+        tl.addLabel("ctaFadeOut", ">")
+          .to(
+            [".faq-content", ".cta-scroll-wrapper .cta-inner-desktop", ".cta-scroll-wrapper .cta-inner-mobile"],
+            {
+              opacity: 0,
+              y: -40,
+              duration: PANEL_ACTION * 0.5,
+              ease: "power2.in",
+            },
+            "ctaFadeOut"
+          )
+          .to({}, { duration: PAUSE_ACTION });
+
         // ── PHASE 5: Footer slide up ──
         tl.addLabel("footerStart", ">")
           .set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
-          .to(".faq-content", { opacity: 0, y: -30, duration: PANEL_ACTION * 0.4, ease: "power1.out" }, "footerStart")
           .to(".footer-scroll-wrapper", { y: "0vh", ease: "power2.out", duration: PANEL_ACTION }, "footerStart");
       };
 
