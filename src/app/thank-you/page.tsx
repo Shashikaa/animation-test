@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import Footer from "../components/Footer"; // Adjust path if needed
+import Footer from "../../components/Footer"; // Adjust path if needed
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -27,23 +27,23 @@ const itemVariants = {
   },
 };
 
-export default function NotFound() {
+export default function ThankYou() {
   useEffect(() => {
-    // Instantly purge preloading classes and unlock body scrolling
+    // Purge preloading classes and unlock body scrolling
     document.documentElement.classList.remove("preloading", "show-fade-preloader", "show-brand-preloader");
     document.body.classList.remove("preloading");
-    document.documentElement.classList.add("page-404");
+    document.documentElement.classList.add("page-thank-you");
   }, []);
 
   return (
     <div
-      id="not-found-page"
+      id="thank-you-page"
       className="site-root w-full overflow-x-hidden"
       style={{
         background: "linear-gradient(155deg, #0e2724 0%, #08373b 100%)",
       }}
     >
-      {/* SECTION 1: Full Screen 404 Hero */}
+      {/* SECTION 1: Full Screen Hero */}
       <section className="relative flex h-screen min-h-[650px] w-full flex-col items-center justify-center text-center !px-8">
         <motion.div
           variants={containerVariants}
@@ -51,44 +51,30 @@ export default function NotFound() {
           animate="visible"
           className="flex flex-col items-center justify-center text-center max-w-xl mx-auto w-full"
         >
-          {/* SVG Graphic (4 - UFO - 4) */}
+          {/* SVG Graphic (Checkmark Circle) */}
           <motion.div variants={itemVariants} className="mb-6 flex justify-center w-full">
             <svg
-              width="320"
-              height="230"
-              viewBox="0 0 220 130"
+              width="120"
+              height="120"
+              viewBox="0 0 120 120"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className="w-48 sm:w-56 h-auto mx-auto"
+              className="w-28 sm:w-32 h-auto mx-auto"
             >
-              {/* Left 4 */}
-              <path
-                d="M35 95V25L10 65H50"
+              <circle
+                cx="60"
+                cy="60"
+                r="54"
                 stroke="#F4EEDF"
-                strokeWidth="10"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                strokeWidth="6"
                 opacity="0.9"
               />
-              {/* Center UFO */}
-              <g transform="translate(70, 10)">
-                {/* Light Beam */}
-                <polygon points="40,35 12,105 68,105" fill="rgba(244, 238, 223, 0.15)" />
-                {/* Light Pool Base */}
-                <ellipse cx="40" cy="105" rx="28" ry="7" fill="rgba(244, 238, 223, 0.3)" />
-                {/* Glass Dome */}
-                <path d="M26 35 C26 18, 54 18, 54 35 Z" fill="#F4EEDF" opacity="0.95" />
-                {/* Saucer Ring */}
-                <ellipse cx="40" cy="38" rx="36" ry="9" fill="#08373b" stroke="#F4EEDF" strokeWidth="3.5" />
-              </g>
-              {/* Right 4 */}
               <path
-                d="M185 95V25L160 65H200"
+                d="M38 60L52 74L82 44"
                 stroke="#F4EEDF"
-                strokeWidth="10"
+                strokeWidth="7"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                opacity="0.9"
               />
             </svg>
           </motion.div>
@@ -99,7 +85,7 @@ export default function NotFound() {
             className="font-display text-4xl sm:text-5xl md:text-6xl font-light tracking-tight !mb-8 w-full text-center"
             style={{ color: "#F4EEDF" }}
           >
-            Page Not Found
+            Thank You!
           </motion.h1>
 
           {/* Description Text */}
@@ -108,15 +94,14 @@ export default function NotFound() {
             className="font-body text-sm sm:text-base font-normal leading-relaxed max-w-md !mb-8 mx-auto text-center"
             style={{ color: "rgba(244, 238, 223, 0.75)" }}
           >
-            The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+            Your submission has been received successfully. Our team will review your project details and get back to you shortly.
           </motion.p>
 
-          {/* Previous Style Underlined Button */}
+          {/* Underlined Button */}
           <motion.div variants={itemVariants} className="flex justify-center w-full">
             <Link
               href="/"
-
-              className="hero-contact-btn group btn-underline font-body"
+              className="hero-contact-btn group btn-underline   font-body"
             >
               Back to Home
 
@@ -125,7 +110,7 @@ export default function NotFound() {
         </motion.div>
       </section>
 
-      {/* SECTION 2: Footer Section with Gap */}
+      {/* SECTION 2: Footer Section */}
       <section className="relative w-full mt-20 md:mt-32">
         <Footer />
       </section>

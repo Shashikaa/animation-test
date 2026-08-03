@@ -19,12 +19,10 @@ const Appsection = dynamic(() => import("../components/Appsection"), { ssr: fals
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Standardized Metrics matching About, Contact, Services, SubServices & Projects
 const PX_PER_MAIN_PANEL = 850; 
 const PX_PER_SUB_STEP = 350;   
 const PAUSE_PX = 100;          
 
-// Inline splitting utility
 function executeInlineSplitting(selector: string) {
   const element = document.querySelector(selector) as HTMLElement;
   if (!element || element.dataset.splitComplete === "true") return;
@@ -43,7 +41,7 @@ function executeInlineSplitting(selector: string) {
     const inner = document.createElement("span");
     inner.className = "custom-line-inner";
     inner.style.display = "block";
-    inner.style.opacity = "0";
+    inner.style.opacity = "1";
     inner.textContent = lineText;
 
     wrapper.appendChild(inner);
@@ -61,7 +59,6 @@ export default function HomeMobile() {
   const [introDone, setIntroDone] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
 
-  // Configure manual scroll restoration ONCE on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
     if ("scrollRestoration" in window.history) {
@@ -69,7 +66,6 @@ export default function HomeMobile() {
     }
   }, []);
 
-  // Lock scrolling cleanly ONLY during initial preloader execution
   useEffect(() => {
     const locked = !preloaderDone;
     document.body.style.overflow = locked ? "hidden" : "";
@@ -78,7 +74,6 @@ export default function HomeMobile() {
     };
   }, [preloaderDone]);
 
-  // Refresh ScrollTrigger only on screen width changes (ignoring mobile address bar height toggles)
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -96,7 +91,6 @@ export default function HomeMobile() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Synchronous Layout Initialization
   useLayoutEffect(() => {
     if (!preloaderDone) return;
 
@@ -106,6 +100,7 @@ export default function HomeMobile() {
         autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
       });
 
+      executeInlineSplitting(".hero-title");
       executeInlineSplitting(".hero-right-text");
       executeInlineSplitting(".hero-secondary-para");
 
@@ -120,25 +115,28 @@ export default function HomeMobile() {
       gsap.set(".hero-bg-wrapper", { opacity: 1, visibility: "visible", clipPath: "none" });
       gsap.set(".hero-gradient-bg", { opacity: 1, visibility: "visible" });
       
-      gsap.set([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 1, y: 0 });
+      gsap.set([".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 1, y: 0 });
       gsap.set(".hero-progress-wrapper", { opacity: 1, visibility: "visible" });
       gsap.set(".hero-progress-bar-fill", { scaleY: 0, transformOrigin: "top center", force3D: true });
       
-      gsap.set([".hero-right-text", ".hero-secondary-para"], { opacity: 0, visibility: "hidden" });
-      gsap.set([".hero-right-text .custom-line-inner", ".hero-secondary-para .custom-line-inner"], { 
-        opacity: 0, 
-        yPercent: 100 
-      });
-      
-      gsap.set(".hero-secondary-text-wrap", { height: "auto" });
+      // Frame 1 Initial State (Top Left)
+      gsap.set(".hero-left-initial", { visibility: "visible", opacity: 1 });
+      gsap.set(".hero-title .custom-line-inner", { opacity: 1, yPercent: 0 });
+
+      // Frame 2 Initial State (Center)
+      gsap.set(".hero-right-text-wrap", { opacity: 0, visibility: "hidden" });
+      gsap.set(".hero-right-text .custom-line-inner", { opacity: 0, yPercent: 100 });
+
+      // Frame 3 Initial State (Bottom Left)
+      gsap.set(".hero-secondary-text-wrap", { opacity: 0, visibility: "hidden" });
+      gsap.set(".hero-secondary-para .custom-line-inner", { opacity: 0, yPercent: 100 });
 
       gsap.set(".section-2", { display: "block", clipPath: "none", zIndex: 95, yPercent: 100, opacity: 1, visibility: "visible", force3D: true });
       gsap.set(".s2-mob-scroll-wrapper", { opacity: 0, yPercent: 100, y: 0 }); 
       gsap.set([".s2-title-main", ".s2-title-sub", ".s2-body"], { opacity: 1, y: 0, visibility: "visible" });
       
       gsap.set([".s2-mob-clip-bg-1", ".s2-mob-clip-bg-2", ".s2-mob-clip-bg-3"], { 
-        scaleX: 0,
-        transformOrigin: "left center",
+        opacity: 0,
         force3D: true
       });
 
@@ -173,7 +171,6 @@ export default function HomeMobile() {
     return () => ctx.revert();
   }, [preloaderDone]);
 
-  // Master Timeline Driver
   useEffect(() => {
     if (!preloaderDone || !introDone) return;
 
@@ -183,8 +180,6 @@ export default function HomeMobile() {
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2; 
 
-      // Dynamic calculation matching all other mobile modules:
-      // 8 main panel moves, 5 sub steps, 8 pause holds
       const MAIN_PANELS_COUNT = 8;
       const SUB_STEPS_COUNT = 5;
       const PAUSES_COUNT = 8;
@@ -210,86 +205,81 @@ export default function HomeMobile() {
         },
       });
 
-      // ── HERO SEQUENCE ──
+      // ── HERO TIMELINE SEQUENCE ──
       tl.addLabel("heroStart", 0)
-        // Dynamically scale progress bar line synchronously
         .fromTo(".hero-progress-bar-fill",
           { scaleY: 0 },
-          { scaleY: 1, duration: ACTION * 1.9, ease: "none" },
+          { scaleY: 0.33, duration: ACTION, ease: "none" },
           "heroStart"
         )
         .fromTo(".hero-bg", 
           { scale: 1.0 },
-          { scale: 1.25, duration: ACTION * 2.0, ease: "power1.out" },
+          { scale: 1.15, duration: ACTION * 2.0, ease: "power1.out" },
           "heroStart"
         )
-        .to([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], {
+
+        // 1. FRAME 1 -> FRAME 2: Top-left text fades out line-by-line
+        .to(".hero-title .custom-line-inner", {
           opacity: 0,
           y: -20,
-          duration: ACTION * 0.3,
-          ease: "power1.inOut"
+          stagger: 0.03,
+          duration: ACTION * 0.4,
+          ease: "power2.in"
         }, "heroStart")
+        .set(".hero-left-initial", { visibility: "hidden" })
 
-        .set(".hero-right-text", { visibility: "visible", opacity: 1 }, `heroStart+=${ACTION * 0.15}`)
+        // Center text (Frame 2) fades in line-by-line
+        .set(".hero-right-text-wrap", { visibility: "visible", opacity: 1 }, "heroStart+=0.1")
         .to(".hero-right-text .custom-line-inner", {
           opacity: 1,
           yPercent: 0,
           stagger: 0.04,
           duration: ACTION * 0.4,
           ease: "power2.out"
-        }, `heroStart+=${ACTION * 0.15}`)
+        }, "heroStart+=0.1")
 
-        // DEAD SCROLL BUFFER
         .to({}, { duration: DEAD_SCROLL })
 
-        .addLabel("heroRightHide", `heroStart+=${ACTION * 0.7 + DEAD_SCROLL}`)
+        // 2. FRAME 2 -> FRAME 3: Center text fades out
+        .addLabel("heroStep2", `heroStart+=${ACTION * 0.6 + DEAD_SCROLL}`)
+        .to(".hero-progress-bar-fill", { scaleY: 0.66, duration: ACTION * 0.5, ease: "none" }, "heroStep2")
+
         .to(".hero-right-text .custom-line-inner", {
           opacity: 0,
-          y: -15,
-          duration: ACTION * 0.25,
+          y: -20,
+          stagger: 0.03,
+          duration: ACTION * 0.3,
           ease: "power1.in"
-        }, "heroRightHide")
-        .set(".hero-right-text", { visibility: "hidden" })
+        }, "heroStep2")
+        .set(".hero-right-text-wrap", { visibility: "hidden" })
 
-        // Change step counter to 02 as text transitions
-        .to(".hero-step-num", {
-          opacity: 0,
-          duration: ACTION * 0.1,
-          onComplete: () => {
-            const el = document.querySelector(".hero-step-num");
-            if (el) el.textContent = "02";
-          },
-          onReverseComplete: () => {
-            const el = document.querySelector(".hero-step-num");
-            if (el) el.textContent = "01";
-          }
-        }, "heroRightHide")
-        .to(".hero-step-num", { opacity: 1, duration: ACTION * 0.1 })
-
-        .set(".hero-secondary-para", { visibility: "visible", opacity: 1 }, `heroRightHide+=${ACTION * 0.1}`)
+        // Bottom-left text (Frame 3) fades in line-by-line
+        .set(".hero-secondary-text-wrap", { visibility: "visible", opacity: 1 }, "heroStep2+=0.1")
         .to(".hero-secondary-para .custom-line-inner", {
           opacity: 1,
           yPercent: 0,
           stagger: 0.04,
           duration: ACTION * 0.4,
           ease: "power2.out"
-        }, `heroRightHide+=${ACTION * 0.1}`)
+        }, "heroStep2+=0.1")
 
-        // DEAD SCROLL BUFFER
         .to({}, { duration: DEAD_SCROLL })
 
-        .addLabel("heroExit", `heroRightHide+=${ACTION * 0.6 + DEAD_SCROLL}`)
+        // 3. FRAME 3 -> SECTION 2: Bottom-left text fades out & SectionTwo slides up
+        .addLabel("heroExit", `heroStep2+=${ACTION * 0.6 + DEAD_SCROLL}`)
+        .to(".hero-progress-bar-fill", { scaleY: 1, duration: ACTION * 0.5, ease: "none" }, "heroExit")
+
         .to(".hero-secondary-para .custom-line-inner", {
           opacity: 0,
-          y: -30,
+          y: -20,
+          stagger: 0.03,
           duration: ACTION * 0.3,
           ease: "power1.in"
         }, "heroExit")
-        
-        // Hide entire progress indicator wrapper on exit
-        .to(".hero-progress-wrapper", {
+
+        .to([".hero-contact-btn", ".hero-scroll-indicator", ".hero-progress-wrapper"], {
           opacity: 0,
-          duration: ACTION * 0.4,
+          duration: ACTION * 0.3,
           ease: "power1.inOut"
         }, "heroExit")
 
@@ -318,19 +308,19 @@ export default function HomeMobile() {
         )
 
         .to(".s2-mob-clip-bg-1", {
-          scaleX: 1,
+          opacity: 1,
           duration: ACTION * 0.7,
           ease: "power2.inOut"
         }, "s2MobileScrollStart+=" + (ACTION * 0.3))
 
         .to(".s2-mob-clip-bg-2", {
-          scaleX: 1,
+          opacity: 1,
           duration: ACTION * 0.7,
           ease: "power2.inOut"
         }, "s2MobileScrollStart+=" + (ACTION * 0.9))
 
         .to(".s2-mob-clip-bg-3", {
-          scaleX: 1,
+          opacity: 1,
           duration: ACTION * 0.7,
           ease: "power2.inOut"
         }, "s2MobileScrollStart+=" + (ACTION * 1.5))

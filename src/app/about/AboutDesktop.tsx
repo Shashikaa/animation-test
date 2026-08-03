@@ -200,13 +200,21 @@ export default function AboutDesktop() {
 
         const MAIN_PANELS_COUNT = 7;
         const SUB_STEPS_COUNT = 2;
-        // Expanded pause count to ensure sufficient scroll distance for deadscrolls
         const PAUSES_COUNT = 10;
 
         const DYNAMIC_SCROLL_TRACK = 
           (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
           (SUB_STEPS_COUNT * PX_PER_SUB_STEP) + 
           (PAUSES_COUNT * PAUSE_PX);
+
+        const triggerSec5Hook = (nextIdx: number) => {
+          if (nextIdx !== lastSec5Idx.current) {
+            lastSec5Idx.current = nextIdx;
+            if ((window as any)._sec5GoTo) {
+              (window as any)._sec5GoTo(nextIdx);
+            }
+          }
+        };
 
         const tl = gsap.timeline({
           defaults: { ease: "none" },
@@ -220,6 +228,28 @@ export default function AboutDesktop() {
             anticipatePin: 1,
             preventOverlaps: true,
             invalidateOnRefresh: true,
+            onUpdate: () => {
+              const sec5Time = tl.labels["sec5FullyRevealed"];
+              const ctaTime = tl.labels["ctaStart"];
+
+              if (sec5Time !== undefined && ctaTime !== undefined) {
+                const currentTime = tl.time();
+
+                if (currentTime >= sec5Time && currentTime < ctaTime) {
+                  const sec5Progress = (currentTime - sec5Time) / (ctaTime - sec5Time);
+
+                  if (sec5Progress < 0.33) {
+                    triggerSec5Hook(0);
+                  } else if (sec5Progress < 0.66) {
+                    triggerSec5Hook(1);
+                  } else {
+                    triggerSec5Hook(2);
+                  }
+                } else if (currentTime < sec5Time) {
+                  triggerSec5Hook(0);
+                }
+              }
+            },
           },
         });
 
@@ -241,15 +271,6 @@ export default function AboutDesktop() {
               });
             }
           }, [], absoluteTime);
-        };
-
-        const triggerSec5Hook = (nextIdx: number) => {
-          if (nextIdx !== lastSec5Idx.current) {
-            lastSec5Idx.current = nextIdx;
-            if ((window as any)._sec5GoTo) {
-              (window as any)._sec5GoTo(nextIdx);
-            }
-          }
         };
 
         // Time 0: Initial Hero rest label
@@ -304,10 +325,10 @@ export default function AboutDesktop() {
 
         tl.to({}, { duration: PAUSE_ACTION });
 
-        // ── SECTION 5 REVEAL (Card 1) ──
-        tl.addLabel("sec5_card1", ">")
-          .set(".about-section-five", { visibility: "visible" }, "sec5_card1")
-          .to(".about-section-four .s4-img-bg", { scale: 1.03, yPercent: -10, duration: PANEL_ACTION, ease: "power2.inOut" }, "sec5_card1")
+        // ── SECTION 5 REVEAL ──
+        tl.addLabel("sec5Start", ">")
+          .set(".about-section-five", { visibility: "visible" }, "sec5Start")
+          .to(".about-section-four .s4-img-bg", { scale: 1.03, yPercent: -10, duration: PANEL_ACTION, ease: "power2.inOut" }, "sec5Start")
           .fromTo(".about-section-five", { yPercent: 100 }, { 
             yPercent: 0, 
             duration: PANEL_ACTION,
@@ -317,25 +338,16 @@ export default function AboutDesktop() {
               setIsSectionFiveActive(false);
               triggerSec5Hook(0);
             }
-          }, "sec5_card1")
-          .fromTo(".s5-bg", { yPercent: 0, scale: 1.2 }, { yPercent: 0, scale: 1.15, duration: PANEL_ACTION, ease: "power2.out" }, "sec5_card1")
-          .call(() => triggerSec5Hook(0));
+          }, "sec5Start")
+          .fromTo(".s5-bg", { yPercent: 0, scale: 1.2 }, { yPercent: -20, scale: 1.15, duration: PANEL_ACTION + (SUB_ACTION * 2), ease: "none" }, "sec5Start");
 
-        // ── SECTION 5 CARD 2 ──
-        // Added explicit offset `>+=1.2` so user must scroll past Card 1 before Card 2 initiates
-        tl.addLabel("sec5_card2", `>+=${PAUSE_ACTION * 2}`)
-          .to(".s5-bg", { yPercent: -10, duration: SUB_ACTION, ease: "power2.inOut" }, "sec5_card2")
-          .call(() => triggerSec5Hook(1));
+        tl.addLabel("sec5FullyRevealed", `sec5Start+=${PANEL_ACTION}`);
 
-        // ── SECTION 5 CARD 3 ──
-        // Added explicit offset `>+=1.2` so user must scroll past Card 2 before Card 3 initiates
-        tl.addLabel("sec5_card3", `>+=${PAUSE_ACTION * 2}`)
-          .to(".s5-bg", { yPercent: -20, duration: SUB_ACTION, ease: "power2.inOut" }, "sec5_card3")
-          .call(() => triggerSec5Hook(2));
+        // ── SECTION 5 INNER CARDS TRACK ALLOCATION ──
+        tl.to({}, { duration: SUB_ACTION * 2 });
 
         // ── CTA REVEAL TRACK ──
-        // Notice `>+=${PAUSE_ACTION * 3.5}`: Card 3 is held completely static on screen through a substantial deadscroll buffer before CTA starts sliding up!
-        tl.addLabel("ctaStart", `>+=${PAUSE_ACTION * 3.5}`)
+        tl.addLabel("ctaStart", ">")
           .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
           .to(".about-section-cta", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.out" }, "ctaStart")
           .to(".about-section-five", { scale: 1.0, duration: PANEL_ACTION }, "ctaStart");

@@ -62,12 +62,12 @@ export default function SectionTwo() {
         />
       </div>
 
-      {/* MOBILE BACKGROUND LAYER 2 */}
+      {/* MOBILE BACKGROUND LAYER 2 - Opacity Transition to prevent image squishing */}
       <div
-        className="s2-mob-clip-bg-1 lg:hidden absolute inset-0 z-[1] overflow-hidden pointer-events-none origin-left"
+        className="s2-mob-clip-bg-1 lg:hidden absolute inset-0 z-[1] overflow-hidden pointer-events-none"
         style={{
-          transform: "scaleX(0) translate3d(0,0,0)",
-          willChange: "transform",
+          opacity: 0,
+          willChange: "opacity, transform",
         }}
       >
         <img
@@ -75,15 +75,15 @@ export default function SectionTwo() {
           alt="Background layer 2"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black opacity-50"></div>
+        <div className="absolute inset-0 bg-black/50"></div>
       </div>
 
       {/* MOBILE BACKGROUND LAYER 3 */}
       <div
-        className="s2-mob-clip-bg-2 lg:hidden absolute inset-0 z-[2] overflow-hidden pointer-events-none origin-left"
+        className="s2-mob-clip-bg-2 lg:hidden absolute inset-0 z-[2] overflow-hidden pointer-events-none"
         style={{
-          transform: "scaleX(0) translate3d(0,0,0)",
-          willChange: "transform",
+          opacity: 0,
+          willChange: "opacity, transform",
         }}
       >
         <img
@@ -91,15 +91,15 @@ export default function SectionTwo() {
           alt="Background layer 3"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black opacity-50"></div>
+        <div className="absolute inset-0 bg-black/50"></div>
       </div>
 
       {/* MOBILE BACKGROUND LAYER 4 */}
       <div
-        className="s2-mob-clip-bg-3 lg:hidden absolute inset-0 z-[3] overflow-hidden pointer-events-none origin-left"
+        className="s2-mob-clip-bg-3 lg:hidden absolute inset-0 z-[3] overflow-hidden pointer-events-none"
         style={{
-          transform: "scaleX(0) translate3d(0,0,0)",
-          willChange: "transform",
+          opacity: 0,
+          willChange: "opacity, transform",
         }}
       >
         <img
@@ -107,7 +107,7 @@ export default function SectionTwo() {
           alt="Background layer 4"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black opacity-50"></div>
+        <div className="absolute inset-0 bg-black/50"></div>
       </div>
 
       {/* CONTENT BLOCK OVERLAY (FIRST FRAME TEXT) */}
@@ -186,7 +186,7 @@ export default function SectionTwo() {
           Since 2021, Grand Pools has been creating custom swimming pools with a focus on refined design, quality craftsmanship, and a smooth building experience.
         </p>
         <p className="text-[#F4EEDF] font-body text-base leading-relaxed !text-left max-w-[230px] !self-end !mt-[80px]">
-            <span className="!font-bold ">Tailor-Made Designs</span> <br /> Custom pools shaped around your space, style, and lifestyle.
+          <span className="!font-bold ">Tailor-Made Designs</span> <br /> Custom pools shaped around your space, style, and lifestyle.
         </p>
         <div className="w-full aspect-[4/3] max-w-[340px] overflow-hidden !mt-[40px]">
           <img
@@ -200,8 +200,8 @@ export default function SectionTwo() {
           Built with precision using high-quality materials and techniques.
         </p>
         <p className="text-[#F4EEDF] font-body text-sm leading-relaxed !text-left max-w-[230px] !self-end !mt-[40px]">
-           <span className="!font-bold ">Seamless Process</span><br />
-          From consultation to completion, we make it easy stress-free.
+          <span className="!font-bold ">Seamless Process</span><br />
+          From consultation to completion, we make it easy & stress-free.
         </p>
       </div>
 
@@ -242,7 +242,7 @@ export default function SectionTwo() {
               Seamless Process
             </p>
             <p className="text-[#F4EEDF] font-body text-xs md:text-sm leading-relaxed">
-              From consultation to completion, we make your journey easy and stress-free.
+              From consultation to completion, we make it easy & stress-free.
             </p>
           </div>
         </div>

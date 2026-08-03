@@ -41,7 +41,7 @@ function executeDesktopSplitting(selector: string) {
     const wrapper = document.createElement("span");
     wrapper.className = "custom-line-wrap";
     wrapper.style.display = "block";
-    wrapper.style.overflow = "hidden";
+    wrapper.style.overflow = "visible";
     wrapper.style.position = "relative";
 
     const inner = document.createElement("span");
@@ -94,6 +94,7 @@ export default function HomeDesktop() {
   }, [preloaderDone, introDone]);
 
   useLayoutEffect(() => {
+    executeDesktopSplitting(".hero-title");
     executeDesktopSplitting(".hero-right-text");
     executeDesktopSplitting(".hero-secondary-para");
 
@@ -111,9 +112,17 @@ export default function HomeDesktop() {
       gsap.set(".hero-bg-wrapper", { opacity: 1, visibility: "visible" });
       gsap.set(".hero-gradient-bg", { opacity: 1, visibility: "visible" });
 
-      gsap.set([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 1, y: 0, visibility: "visible" });
-      gsap.set([".hero-right-text", ".hero-secondary-para"], { opacity: 1, visibility: "hidden" });
-      gsap.set(".hero-secondary-text-wrap", { height: "auto" });
+      gsap.set([".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 1, y: 0, visibility: "visible" });
+      
+      // Hero text initial states
+      gsap.set(".hero-left-initial", { y: 0, opacity: 1 });
+      gsap.set(".hero-title", { opacity: 1, visibility: "visible" });
+      gsap.set(".hero-title .custom-line-inner", { opacity: 1, yPercent: 0 });
+
+      gsap.set(".hero-right-text", { opacity: 0, visibility: "hidden" });
+      gsap.set(".hero-right-text .custom-line-inner", { opacity: 0, yPercent: 100 });
+
+      gsap.set(".hero-secondary-text-wrap", { y: 0, opacity: 0, visibility: "hidden" });
 
       gsap.set(".hero-bg", { 
         scale: 1.0, 
@@ -186,6 +195,7 @@ export default function HomeDesktop() {
       });
 
       const buildTimeline = () => {
+        executeDesktopSplitting(".hero-title");
         executeDesktopSplitting(".hero-right-text");
         executeDesktopSplitting(".hero-secondary-para");
 
@@ -251,7 +261,6 @@ export default function HomeDesktop() {
           }
         });
 
-        // Plays once when crossing the timeline threshold forward — strictly locks played state!
         const addPlayOnceTextReveal = (labelName: string, timeOffset: number, selector: string) => {
           const absoluteTime = tl.labels[labelName] + timeOffset;
 
@@ -276,31 +285,62 @@ export default function HomeDesktop() {
         const s7TextSelector = ".section-7 .gs-line-inner, .section-7 .custom-line-inner, .section-7 .reveal-text > *";
         const appSecTextSelector = ".section-appsec .gs-line-inner, .section-appsec .custom-line-inner, .section-appsec .reveal-text > *";
 
-        // ── 1. HERO PHASE 1 ──
+        // ── 1. HERO PHASE 1 (Scroll Start) ──
         tl.addLabel("heroPhase1", 0)
-          .set([".hero-right-text .custom-line-inner", ".hero-secondary-para .custom-line-inner"], { opacity: 0, yPercent: 100 }, "heroPhase1")
           .to(".hero-bg", { scale: 1.15, duration: PANEL_ACTION, ease: "sine.inOut" }, "heroPhase1")
-          .to([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 0, y: -20, duration: PANEL_ACTION * 0.5, ease: "power1.out" }, "heroPhase1")
-          .set([".hero-title", ".hero-contact-btn", ".hero-scroll-indicator"], { visibility: "hidden" }, `heroPhase1+=${PANEL_ACTION * 0.5}`)
-          .set(".hero-right-text", { visibility: "visible" }, `heroPhase1+=${PANEL_ACTION * 0.5}`)
-          .to(".hero-right-text .custom-line-inner", { opacity: 1, yPercent: 0, stagger: 0.04, duration: PANEL_ACTION * 0.5, ease: "power2.out" }, `heroPhase1+=${PANEL_ACTION * 0.5}`);
+
+          // Initial Left Title slides UP completely off screen (no line clipping)
+          .to(".hero-left-initial", {
+            y: "-100vh",
+            duration: PANEL_ACTION * 0.5,
+            ease: "power2.in"
+          }, "heroPhase1")
+
+          // Meantime: Right paragraph reveals above the button
+          .set(".hero-right-text", { visibility: "visible", opacity: 1 }, "heroPhase1+=0.05")
+          .to(".hero-right-text .custom-line-inner", {
+            opacity: 1,
+            yPercent: 0,
+            stagger: 0.04,
+            duration: PANEL_ACTION * 0.5,
+            ease: "power2.out"
+          }, "heroPhase1+=0.05");
 
         tl.to({}, { duration: HOLD_ACTION });
 
-        // ── HERO PHASE 2 ──
+        // ── HERO PHASE 2 (Further Scroll) ──
         tl.addLabel("heroPhase2", ">")
+          // Right text hides
           .to(".hero-right-text .custom-line-inner", { opacity: 0, y: -20, duration: PANEL_ACTION * 0.4, ease: "power1.in" }, "heroPhase2")
           .set(".hero-right-text", { visibility: "hidden" }, `heroPhase2+=${PANEL_ACTION * 0.4}`)
+          
           .to(".hero-bg", { scale: 1.3, duration: PANEL_ACTION, ease: "sine.inOut" }, "heroPhase2")
-          .set(".hero-secondary-para", { visibility: "visible" }, `heroPhase2+=${PANEL_ACTION * 0.4}`)
-          .to(".hero-secondary-para .custom-line-inner", { opacity: 1, yPercent: 0, stagger: 0.04, duration: PANEL_ACTION * 0.5, ease: "power2.out" }, `heroPhase2+=${PANEL_ACTION * 0.4}`);
+          
+          // 2nd Left Para slides UP from screen bottom to MIDDLE of viewport (-50vh)
+          .set(".hero-secondary-text-wrap", { visibility: "visible", opacity: 1 }, "heroPhase2")
+          .to(".hero-secondary-text-wrap", {
+            y: "-50vh",
+            duration: PANEL_ACTION * 0.6,
+            ease: "power2.out"
+          }, "heroPhase2");
 
         tl.to({}, { duration: HOLD_ACTION });
 
         // ── 2. HERO TO SECTION 2 REVEAL ──
+        // Once 2nd left text reaches middle, further scroll slides it UP out of top while SectionTwo slides up
         tl.addLabel("sec2Arrived", ">")
-          .to(".hero-secondary-para .custom-line-inner", { opacity: 0, y: -60, duration: PANEL_ACTION * 0.5, ease: "power1.in" }, "sec2Arrived")
-          .set(".hero-secondary-para", { visibility: "hidden" }, `sec2Arrived+=${PANEL_ACTION * 0.5}`)
+          .to(".hero-secondary-text-wrap", {
+            y: "-110vh",
+            duration: PANEL_ACTION * 0.5,
+            ease: "power2.in"
+          }, "sec2Arrived")
+
+          .to([".hero-contact-btn", ".hero-scroll-indicator"], {
+            opacity: 0,
+            duration: PANEL_ACTION * 0.3,
+            ease: "power1.inOut"
+          }, "sec2Arrived")
+
           .set(".hero", { display: "block", zIndex: 90, opacity: 1 }, "sec2Arrived")
           .set(".hero-bg-wrapper", { visibility: "visible", opacity: 1 }, "sec2Arrived")
           .to(".hero-bg", { scale: 1.4, duration: PANEL_ACTION, ease: "power1.inOut" }, "sec2Arrived")
@@ -316,7 +356,6 @@ export default function HomeDesktop() {
         tl.addLabel("s2InnerAnimation", `sec2Arrived+=${PANEL_ACTION}`)
           .set(".hero", { display: "none" }, "s2InnerAnimation")
           .to(s2TextSelector, { opacity: 0, y: -40, duration: PANEL_ACTION * 0.5, ease: "power1.in" }, "s2InnerAnimation")
-          .to(".hero-secondary-para", { opacity: 0, duration: PANEL_ACTION * 0.3, ease: "power1.out" }, "s2InnerAnimation")
 
           .addLabel("s2TitleFaded", `s2InnerAnimation+=${PANEL_ACTION * 0.5}`)
           .fromTo(".s2-right-img-frame", 
@@ -327,7 +366,7 @@ export default function HomeDesktop() {
           .fromTo(".s2-scroll-content", 
             { yPercent: 100, opacity: 0 }, 
             { yPercent: 0, opacity: 1, duration: PANEL_ACTION, ease: "power1.out" }, 
-            `s2TitleFaded+=${PANEL_ACTION * 0.2}`
+            `s2TitleFaded+=${PANEL_ACTION * 0.9}`
           )
 
           .addLabel("s2FirstPhaseDone", `s2TitleFaded+=${PANEL_ACTION * 1.2}`)

@@ -10,7 +10,7 @@ export default function Appsection() {
       />
 
       {/* ── Main Content Container ── */}
-      <div className="appsec-content section-container relative z-10 w-full flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 lg:gap-20">
+      <div className="appsec-content section-container relative z-10 w-full flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 md:gap-15 lg:gap-20">
         
         {/* Left Column (Desktop Layout Swapped) */}
         <div className="w-full lg:w-1/2 flex flex-col justify-between items-start text-left lg:h-[450px]">
@@ -18,8 +18,7 @@ export default function Appsection() {
           {/* Paragraph Moved to Top for Desktop */}
           <div className="hidden lg:flex flex-col items-center w-full gap-6">
             <p className="font-body text-[#F4EEDF] text-sm md:text-base max-w-[360px] self-start">
-              Pool Care+ keeps you informed and involved from start to finish. Track progress, receive live updates, and follow each stage of your pool project — all in one place.
-            </p>
+Pool Care + keeps you informed and involved from start to finish. Live updates, progress tracking and everything you need, all in one place.            </p>
           </div>
 
           {/* Subtitle & Title Moved to Bottom for Desktop */}
@@ -43,7 +42,7 @@ export default function Appsection() {
             <img 
               src="/phone-mockup.webp" 
               alt="Pool Care Mobile App Mockup" 
-              className="w-full h-auto max-h-[45vh] md:max-h-[50vh] lg:max-h-[70vh] block object-contain !mb-12 !mt-12"
+              className="w-full h-auto max-h-[45vh] md:max-h-[66vh] lg:max-h-[70vh] block object-contain !mb-12 !mt-12"
             />
           </div>
         </div>
@@ -54,14 +53,13 @@ export default function Appsection() {
             Pool Care +
           </span>
 
-          <p className="font-body text-[#F4EEDF] text-sm md:text-base leading-relaxed text-left !mb-12">
-            Pool Care+ keeps you informed and involved from start to finish. Track progress, receive live updates, and follow each stage of your pool project — all in one place.
-          </p>
+          <p className="font-body text-[#F4EEDF] text-sm md:text-base leading-relaxed self-start text-left !mb-12  max-w-[360px]">
+Pool Care + keeps you informed and involved from start to finish. Live updates, progress tracking and everything you need, all in one place.          </p>
 
           <a
             href="#"
 
-            className="group btn-underline font-body mt-2"
+            className="group btn-underline font-body mt-2 md:!mt-12"
           >
             DOWNLOAD
 

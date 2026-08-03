@@ -55,9 +55,8 @@ export default function SectionTen() {
           zIndex: 10,
         }}
       >
-        At Grand Pools, we create exceptional pools built
-        for lasting enjoyment. Combining quality craftsmanship, durability, and innovation, we
-        deliver beautiful, functional spaces.
+        We turn ambitious architectural visions into enduring aquatic retreats, 
+        tailored specifically to how you live.
       </p>
 
       {/* ── MOBILE & TABLET SCROLLABLE STRUCTURAL CONTAINER ── */}

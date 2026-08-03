@@ -24,7 +24,6 @@ export default function SectionOne() {
           {/* Mapped clean to your new single ScrollTrigger.onUpdate engine */}
           <p 
             className="text-[#F4EEDF] reveal-text"
-   
           >
             At Grand Pools, we design and build pools that bring families together,
             blending craftsmanship, innovation, and lasting quality.

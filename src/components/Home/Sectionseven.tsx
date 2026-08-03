@@ -99,16 +99,16 @@ export default function SectionSeven() {
       <div className="lg:!hidden !flex !absolute !inset-0 !flex-col !justify-between !py-[72px] !m-0 !max-w-none !w-full z-10">
 
         {/* Title + card — left-aligned */}
-        <div className="!flex !flex-col !items-left !gap-4 !pl-14">
+        <div className="!flex !flex-col !items-left !gap-4 !pl-6">
           <h2
             className="!text-[#F4EEDF] !font-[100] !text-left !m-0 !mt-12"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Meet The Expert
+            Meet the Expert
           </h2>
 
           <div
-            className="!w-[76%] !max-w-[340px] !flex !flex-col !mt-2 "
+            className="!w-[340px] !max-w-[340px] !flex !flex-col !mt-2 "
           >
             <p className="!text-[#F4EEDF] !text-[14px] !font-normal !m-0">Lachlan Deleeuw</p>
             <p className="!text-[#F4EEDF] !text-[14px] !mt-2.5 !mb-0">Founder – Grand Pools</p>
@@ -121,10 +121,10 @@ export default function SectionSeven() {
         </div>
 
         {/* Partners — bottom */}
-        <div className="!flex !flex-col !items-end !gap-3 !px-6">
+        <div className="!flex !flex-col !items-end !gap-3 !px-6 ">
           <p className="!text-[#F4EBE4] !text-[16px] !m-0">Our Partners</p>
           <div
-            className="!overflow-hidden !w-full"
+            className="!overflow-hidden !w-[350px]"
             style={{
               maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
               WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",

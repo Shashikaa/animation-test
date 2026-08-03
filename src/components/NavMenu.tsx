@@ -243,7 +243,7 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
             <CloseButton onClick={onClose} />
           </div>
 
-          <div className="!flex-1 !flex !flex-col !px-6 md:!px-10 !pt-[80px]">
+          <div className="!flex-1 !flex !flex-col !px-6 md:!px-10 !pt-[80px] !pb-[120px]">
             <motion.nav
               variants={linkContainerVariants}
               initial="hidden"
@@ -273,7 +273,7 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="!px-6 md:!px-10 !pb-[220px]"
+            className="!px-6 md:!px-10 !pb-[160px]"
           >
             <div className="font-body !mb-6">
               <p className="!m-0 !mb-3 !text-[20px]">

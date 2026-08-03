@@ -100,27 +100,6 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
     });
   }
 
-  // Animates the active text lines out of view
-  function animateTextOut(index: number, callback?: () => void) {
-    if (!containerRef.current) return;
-    const targets = containerRef.current.querySelectorAll(
-      `.s5-text-group-${index + 1} .gs-line-inner`
-    );
-    if (targets.length === 0) {
-      if (callback) callback();
-      return;
-    }
-    gsap.killTweensOf(Array.from(targets));
-    gsap.to(Array.from(targets), {
-      y: -20,
-      opacity: 0,
-      duration: 0.35,
-      ease: "power2.in",
-      stagger: 0.02,
-      onComplete: callback,
-    });
-  }
-
   const goTo = useCallback((next: number) => {
     const prev = currentRef.current;
     if (next === prev || !containerRef.current) return;
@@ -128,17 +107,17 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
     currentRef.current = next;
     setCurrent(next);
 
-    animateTextOut(prev, () => {
-      slides.forEach((_, i) => {
-        const el = containerRef.current?.querySelector(`.s5-text-group-${i + 1}`) as HTMLElement;
-        if (el) {
-          el.style.opacity = i === next ? "1" : "0";
-          el.style.pointerEvents = i === next ? "auto" : "none";
-          el.style.visibility = i === next ? "visible" : "hidden";
-        }
-      });
-      animateTextIn(next);
+    // Synchronously update card states to prevent stale/delayed updates during scrub-back
+    slides.forEach((_, i) => {
+      const el = containerRef.current?.querySelector(`.s5-text-group-${i + 1}`) as HTMLElement;
+      if (el) {
+        el.style.opacity = i === next ? "1" : "0";
+        el.style.pointerEvents = i === next ? "auto" : "none";
+        el.style.visibility = i === next ? "visible" : "hidden";
+      }
     });
+
+    animateTextIn(next);
   }, []);
 
   // Initialize line splits on mount

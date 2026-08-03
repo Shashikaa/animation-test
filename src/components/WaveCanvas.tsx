@@ -47,7 +47,7 @@ const fragmentShader = `
     vec4 baseColor = texture2D(map, newUv);
     vec4 videoColor = texture2D(videoMap, newUv);
     float videoLuminance = dot(videoColor.rgb, vec3(0.299, 0.587, 0.114));
-    float causticsStrength = 0.08; 
+    float causticsStrength = 0.14; 
     vec3 finalColor = baseColor.rgb + (videoColor.rgb * videoLuminance * causticsStrength);
     
     gl_FragColor = vec4(finalColor, baseColor.a);

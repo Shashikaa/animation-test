@@ -17,8 +17,8 @@ gsap.registerPlugin(ScrollTrigger);
 
 // Touch scroll parameters
 const PX_PER_MAIN_PANEL = 850;
-const PX_PER_SUB_STEP = 350;  
-const PAUSE_PX = 100;         
+const PX_PER_SUB_STEP = 450;  // Slightly increased for iPad scrub accuracy
+const PAUSE_PX = 150; 
 
 export default function AboutMobile() {
   const { setPreloaderDone } = useSite(); 
@@ -56,14 +56,18 @@ export default function AboutMobile() {
     };
 
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+    };
   }, []);
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ 
         ignoreMobileResize: true,
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
+        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange,resize" 
       });
 
       gsap.set(".about-hero-bg", { scale: 1.3, force3D: true });
@@ -118,11 +122,11 @@ export default function AboutMobile() {
     const ctx = gsap.context(() => {
       const ACTION = 1.4; 
       const DEAD_SCROLL = 0.2; 
+      const SEC5_CARDS_HOLD = 1.8; // Extended scroll duration for card 1->2->3 transitions
 
-      // 7 Main transitions: Hero->Sec1, Sec1->Sec2, Sec2->Sec3, Sec3->Sec4, Sec4->Sec5, Sec5->CTA, CTA->Footer
       const MAIN_PANELS_COUNT = 7;
-      const SUB_STEPS_COUNT = 2; // Sec5 card triggers
-      const PAUSES_COUNT = 6;    // 1 pause after every step prior to next transition
+      const SUB_STEPS_COUNT = 3; 
+      const PAUSES_COUNT = 7;    
 
       const DYNAMIC_SCROLL_TRACK = 
         (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -146,11 +150,45 @@ export default function AboutMobile() {
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           scrub: 0.5,
           pin: true,
-          pinType: "fixed",
+          pinType: ScrollTrigger.isTouch ? "fixed" : "transform",
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
-          invalidateOnRefresh: false,
+          invalidateOnRefresh: true,
+          onUpdate: (self) => {
+            const sec5Time = tl.labels["sec5FullyRevealed"];
+            const ctaTime = tl.labels["ctaStart"];
+
+            if (typeof sec5Time === "number" && typeof ctaTime === "number") {
+              const currentTime = tl.time();
+
+              if (currentTime >= sec5Time && currentTime < ctaTime) {
+                const sec5Progress = (currentTime - sec5Time) / (ctaTime - sec5Time);
+
+                if (sec5Progress < 0.33) {
+                  triggerSec5Hook(0);
+                } else if (sec5Progress < 0.66) {
+                  triggerSec5Hook(1);
+                } else {
+                  triggerSec5Hook(2);
+                }
+              } else if (currentTime < sec5Time) {
+                triggerSec5Hook(0);
+              }
+            } else {
+              // Fallback for initial touch mount frame before labels populate
+              const totalDuration = tl.duration();
+              if (totalDuration > 0) {
+                const progress = self.progress;
+                if (progress > 0.55 && progress < 0.75) {
+                  const localProg = (progress - 0.55) / 0.20;
+                  if (localProg < 0.33) triggerSec5Hook(0);
+                  else if (localProg < 0.66) triggerSec5Hook(1);
+                  else triggerSec5Hook(2);
+                }
+              }
+            }
+          },
         },
       });
 
@@ -204,21 +242,14 @@ export default function AboutMobile() {
 
       tl.fromTo(".about-section-five .s5-bg", 
         { yPercent: 5, scale: 1.25 }, 
-        { yPercent: -25, scale: 1.25, ease: "none", duration: ACTION * 2.0 }, 
+        { yPercent: -25, scale: 1.25, ease: "none", duration: ACTION + SEC5_CARDS_HOLD }, 
         "sec5Start"
       );
 
       tl.addLabel("sec5FullyRevealed", `sec5Start+=${ACTION}`);
 
-      // ── Section 5 Inner Cards ──
-      tl.addLabel("sec5_card2", "sec5FullyRevealed+=0.2")
-        .call(() => triggerSec5Hook(1), [], "sec5_card2");
-
-      tl.addLabel("sec5_card3", "sec5_card2+=0.6")
-        .call(() => triggerSec5Hook(2), [], "sec5_card3");
-
-      // Dead scroll pause added here so CTA doesn't rush in immediately after card 3
-      tl.to({}, { duration: DEAD_SCROLL }); 
+      // ── Section 5 Inner Cards Track Allocation ──
+      tl.to({}, { duration: SEC5_CARDS_HOLD });
 
       // ── Step 6: CTA Reveal Track ──
       tl.addLabel("ctaStart", ">")

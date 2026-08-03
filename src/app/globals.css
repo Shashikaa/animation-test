@@ -5,6 +5,7 @@
   --font-display:   var(--font-display), Georgia, serif;
   --font-cormorant: var(--font-cormorant), Georgia, serif;
   --font-body:      var(--font-body), sans-serif;
+  --breakpoint-lg: 1025px;
 }
 
 /* ─── Design Tokens ──────────────────────────────────────────── */
@@ -309,7 +310,7 @@ p {
   backface-visibility: hidden;
 }
 
-@media screen and (min-width: 1024px) {
+@media screen and (min-width: 1025px) {
   .reveal-text {
     opacity: 0;
     visibility: hidden;

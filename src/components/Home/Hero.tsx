@@ -8,43 +8,27 @@ interface HeroProps {
 
 export default function Hero({ onReady }: HeroProps) {
   useEffect(() => {
-    // Preload the background image to ensure context is fully painted
+    // Preload background image to ensure context is fully painted
     const img = new Image();
     img.src = "/hero-home.webp";
 
     if (img.complete) {
       onReady?.();
     } else {
-      img.onload = () => {
-        onReady?.();
-      };
-      img.onerror = () => {
-        // Fallback: unlock even if image fails to load
-        onReady?.();
-      };
+      img.onload = () => onReady?.();
+      img.onerror = () => onReady?.();
     }
   }, [onReady]);
 
   return (
     <section className="hero relative w-full h-screen overflow-hidden bg-transparent">
-
-      {/* Gradient layer — sits underneath everything at the absolute bottom */}
+      {/* Gradient layer */}
       <div
         className="hero-gradient-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#10221C] to-[#0A4145] z-10"
         style={{ opacity: 1 }}
       />
 
-      {/* Secondary Text Wrapper (Left Text) */}
-      <div className="hero-secondary-text-wrap w-full max-w-[340px] absolute bottom-[140px] md:bottom-[180px] lg:bottom-40 left-6 sm:left-12 lg:left-24 z-30 overflow-hidden pt-4">
-        <p className="hero-secondary-para font-body text-[#F4EEDF] text-left text-sm sm:text-base leading-relaxed m-0 p-0">
-{`Expert craftsmanship and attention
-to detail bring your vision to life,
-delivering seamless pool solutions
-from concept to completion.`}
-        </p>
-      </div>
-
-      {/* Targetable Background wrapper layer — sits at z-20 */}
+      {/* Targetable Background wrapper layer */}
       <div
         className="hero-bg-wrapper absolute inset-0 w-full h-full z-20 overflow-hidden"
         style={{ clipPath: "inset(0% 0% 0% 0%)" }}
@@ -54,73 +38,64 @@ from concept to completion.`}
           style={{ transform: "scale(1)", transformOrigin: "center center" }}
         />
         
-        {/* Black Overlay on top of the background image */}
+        {/* Black Overlay */}
         <div className="hero-overlay absolute inset-0 bg-black/30 pointer-events-none z-[21]" />
       </div>
 
-      {/* Modern Studio-Style Vertical Progress Bar (Mobile) */}
+      {/* Modern Studio-Style Vertical Progress Bar (Mobile/Tablet) */}
       <div className="hero-progress-wrapper absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 z-[100] flex items-center gap-3 pointer-events-none lg:hidden">
-        
-
-
-        {/* Minimalist Line Track */}
         <div className="relative flex flex-col items-center">
-          {/* Top Marker */}
           <div className="w-1.5 h-1.5 rounded-full bg-[#F4EEDF] shadow-[0_0_12px_#F4EEDF]" />
-
-          {/* Vertical Track Line with High Contrast Backing */}
           <div className="relative w-[2px] h-36 sm:h-44 bg-black/80 my-1 rounded-full overflow-hidden shadow-[0_0_8px_rgba(0,0,0,0.9)]">
-            {/* Dark background buffer */}
             <div className="absolute inset-0 bg-white/20" />
-            
-            {/* Animated Golden Fill */}
-            <div 
-              className="hero-progress-bar-fill relative w-full h-full bg-[#F4EEDF] origin-top scale-y-0 shadow-[0_0_10px_#F4EEDF]"
-            />
+            <div className="hero-progress-bar-fill relative w-full h-full bg-[#F4EEDF] origin-top scale-y-0 shadow-[0_0_10px_#F4EEDF]" />
           </div>
-
-          {/* Bottom Dot */}
           <div className="w-1 h-1 rounded-full bg-[#F4EEDF]/40" />
         </div>
-
       </div>
 
-      {/* Main Content Layer */}
+      {/* Main Container Layer */}
       <div className="section-container relative h-full w-full flex flex-col justify-end items-start lg:flex-row lg:items-end lg:justify-between !pb-[100px] md:!pb-[140px] lg:!pb-30 gap-8 z-30">
 
-        {/* Left Side: Initial Title Block */}
-        <div className="max-w-xl lg:max-w-4xl flex flex-col justify-end overflow-visible relative">
-          <div className="block h-fit overflow-visible relative z-30 max-w-[260px]">
-            <p className="hero-title text-[#F4EEDF] text-left m-0 p-0 select-none leading-relaxed relative z-30 font-body">
+        {/* LEFT SIDE: Container for Initial Title & Frame 3 Secondary Paragraph */}
+        <div className="max-w-xl lg:max-w-4xl flex flex-col justify-end overflow-visible relative min-h-[120px] w-full lg:w-auto">
+          
+          {/* 1. FRAME 1: Top-Left Paragraph (Below Header on Mobile) */}
+          <div className="hero-left-initial max-lg:fixed max-lg:top-[15vh] max-lg:left-6 max-lg:right-6 block h-fit overflow-visible relative z-30 max-w-[280px] sm:max-w-[280px] lg:max-w-[280px]">
+            <p className="hero-title font-body text-[#F4EEDF] text-left text-base sm:text-lg lg:text-xl leading-relaxed m-0 p-0 select-none">
               Premium pools with refined wellness infrastructure, designed for private outdoor living.
             </p>
           </div>
+
+          {/* 3. FRAME 3: Bottom-Left Paragraph (Above Lower Pool Deck on Mobile) */}
+          <div className="hero-secondary-text-wrap max-lg:fixed max-lg:bottom-[22vh] max-lg:left-6 max-lg:right-6 absolute bottom-12 left-0 lg:fixed lg:top-[100vh] lg:bottom-auto lg:left-24 w-full max-w-[300px] sm:max-w-[340px] z-30 overflow-visible pointer-events-none">
+            <p className="hero-secondary-para font-body text-[#F4EEDF] text-left text-sm sm:text-base leading-relaxed m-0 p-0">
+{`Expert craftsmanship and attention to detail bring your vision to life, delivering seamless pool solutions from concept to completion.`}
+            </p>
+          </div>
         </div>
 
-        {/* Right Side */}
-        <div className="mt-4 lg:mt-0 lg:!pb-6 z-30 relative flex-shrink-0 flex flex-col items-start lg:items-end justify-end gap-4 min-h-[0px] w-full lg:w-auto">
+        {/* RIGHT SIDE: Frame 2 Paragraph & Button */}
+        <div className="mt-4 lg:mt-0 lg:!pb-6 z-30 relative flex-shrink-0 flex flex-col items-start lg:items-end justify-end gap-22 min-h-[0px] w-full lg:w-auto">
           
-          <div className="hero-right-text-wrap absolute bottom-12 left-0 lg:relative lg:bottom-0 w-full max-w-[340px] md:max-w-[390px] lg:max-w-[400px] overflow-hidden text-left lg:text-right">
+          {/* 2. FRAME 2: Center Paragraph (Over the Pool Area on Mobile) */}
+          <div className="hero-right-text-wrap max-lg:fixed max-lg:top-1/2 max-lg:-translate-y-1/2 max-lg:left-6 max-lg:right-6 relative w-full max-w-[340px] md:max-w-[390px] lg:max-w-[400px] overflow-hidden text-left lg:text-right">
             <p className="hero-right-text font-body text-[#F4EEDF] text-left lg:text-right text-sm sm:text-base leading-relaxed m-0 p-0">
-{`At Grand Pools, we create custom swimming 
-pools that blend style, function, and quality.
- Every pool is designed to complement your
-outdoor space, adding value and elegance.`}
+{`At Grand Pools, we create custom swimming pools that blend style, function, and quality. Every pool is designed to complement your outdoor space, adding value and elegance to your home or business.`}
             </p>
           </div>
 
+          {/* Action Button */}
           <a
             href="/projects"
-
-            className="hero-contact-btn group btn-underline  font-body ml-0 lg:ml-10"
+            className="hero-contact-btn group btn-underline font-body ml-0 lg:ml-10"
           >
             See Our Projects
-
           </a>
         </div>
       </div>
 
-      {/* Scroll Indicator — hidden on mobile & tablet, visible on desktop (lg:flex) */}
+      {/* Scroll Indicator (Desktop Only) */}
       <div className="hero-scroll-indicator absolute bottom-8 left-1/2 -translate-x-1/2 z-30 hidden lg:flex flex-col items-center gap-2 pointer-events-none transition-opacity duration-[400ms]">
         <span className="text-[#F4EEDF] text-[10px] font-light tracking-[0.2em] uppercase [text-shadow:0_1px_6px_rgba(0,0,0,0.8)]">
           Scroll

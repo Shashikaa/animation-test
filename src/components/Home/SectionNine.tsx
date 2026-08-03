@@ -65,7 +65,7 @@ export default function SectionNine() {
 
       {/* ── INTERACTION LAYER: DESKTOP FLIGHT LANDING TARGETS ── */}
       <div className="absolute inset-0 z-20 hidden lg:block pointer-events-none">
-        <div className="absolute bottom-24 right-24 flex flex-col items-end justify-end h-full max-w-[500px]">
+        <div className="absolute bottom-24 right-14 flex flex-col items-end justify-end h-full max-w-[500px]">
           
           {/* TARGET WRAPPER */}
           <div className="s9-target-wrapper relative w-full text-right opacity-0 select-none pointer-events-none">
@@ -90,7 +90,7 @@ export default function SectionNine() {
 
       {/* ── MOBILE & TABLET OVERLAY LAYER ── */}
       {/* Positioned at top-right for mobile and tablets */}
-      <div className="absolute top-32 right-6 md:right-10 z-40 flex flex-col items-end lg:hidden max-w-[320px] md:max-w-[400px] pointer-events-none">
+      <div className="absolute top-32 right-6 md:right-10 z-40 flex flex-col items-end lg:hidden max-w-[320px] md:max-w-[450px] pointer-events-none">
         <h2 className="s9-title text-[#F4EEDF] font-display text-3xl md:text-4xl text-right w-full !mb-5">
           Ready to Dive In?
         </h2>

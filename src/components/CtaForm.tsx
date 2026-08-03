@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 // Uses environment variable with your live WordPress staging URL as fallback
 const WP_BASE_URL =
@@ -21,10 +22,13 @@ export default function CtaForm({
   isMobile = false,
   nameSuffix = "",
 }: CtaFormProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [invalidFields, setInvalidFields] = useState<string[]>([]);
+  
+  // Object storing individual error messages for each field key
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // State key to reset custom select dropdowns on submit
   const [resetKey, setResetKey] = useState(0);
@@ -37,7 +41,7 @@ export default function CtaForm({
     setLoading(true);
     setGlobalError(null);
     setSuccessMessage(null);
-    setInvalidFields([]);
+    setFieldErrors({});
 
     const formElement = e.currentTarget;
     const formData = new FormData(formElement);
@@ -53,48 +57,52 @@ export default function CtaForm({
     // Honeypot field check
     const honeypot = formData.get(getName("website_hp"))?.toString().trim() || "";
 
-    const errors: string[] = [];
-    const badFields: string[] = [];
+    const errors: Record<string, string> = {};
 
-    // --- Validation Checks (All fields required) ---
+    // --- 1. Full Name ---
     if (!fullName) {
-      errors.push("Full Name is required.");
-      badFields.push(getName("fullName"));
+      errors[getName("fullName")] = "Full name is required";
     }
 
-    if (!email || !EMAIL_REGEX.test(email)) {
-      errors.push("Please enter a valid email address.");
-      badFields.push(getName("email"));
+    // --- 2. Email ---
+    if (!email) {
+      errors[getName("email")] = "Email is required";
+    } else if (!EMAIL_REGEX.test(email)) {
+      errors[getName("email")] = "Please enter a valid email address";
     }
 
-    if (!phone || !AU_PHONE_REGEX.test(phone.replace(/\s+/g, ""))) {
-      errors.push("Please enter a valid Australian phone number (e.g. 0412 345 678).");
-      badFields.push(getName("phone"));
+    // --- 3. Phone ---
+    if (!phone) {
+      errors[getName("phone")] = "Phone number is required";
+    } else if (!AU_PHONE_REGEX.test(phone.replace(/\s+/g, ""))) {
+      errors[getName("phone")] = "Please enter a valid Australian phone number";
     }
 
-    if (!postCode || !AU_POSTCODE_REGEX.test(postCode)) {
-      errors.push("Please enter a valid 4-digit Australian Postcode.");
-      badFields.push(getName("postCode"));
+    // --- 4. Postcode ---
+    if (!postCode) {
+      errors[getName("postCode")] = "Post Code is required";
+    } else if (!AU_POSTCODE_REGEX.test(postCode)) {
+      errors[getName("postCode")] = "Please enter a valid 4-digit Post Code";
     }
 
+    // --- 5. Budget Type ---
     if (!budgetType) {
-      errors.push("Please select a Budget Type.");
-      badFields.push(getName("budgetType"));
+      errors[getName("budgetType")] = "Budget type is required";
     }
 
+    // --- 6. Budget Range ---
     if (!budgetRange) {
-      errors.push("Please select a Budget Range.");
-      badFields.push(getName("budgetRange"));
+      errors[getName("budgetRange")] = "Budget range is required";
     }
 
+    // --- 7. Contract Method ---
     if (!contractMethod) {
-      errors.push("Please select a Contract Method.");
-      badFields.push(getName("contractMethod"));
+      errors[getName("contractMethod")] = "Contract method is required";
     }
 
-    if (errors.length > 0) {
-      setGlobalError(errors[0]);
-      setInvalidFields(badFields);
+    // Stop submission if validation errors exist
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       setLoading(false);
       return;
     }
@@ -107,7 +115,7 @@ export default function CtaForm({
       budgetType,
       budgetRange,
       contractMethod,
-      website_hp: honeypot, // Passed for backend anti-spam check
+      website_hp: honeypot,
     };
 
     try {
@@ -125,6 +133,8 @@ export default function CtaForm({
         setSuccessMessage("Thank you! Your submission has been received.");
         formElement.reset();
         setResetKey((prev) => prev + 1);
+        
+        router.push("/thank-you");
       } else {
         setGlobalError(result.message || "Failed to submit form. Please try again.");
       }
@@ -137,7 +147,7 @@ export default function CtaForm({
 
   return (
     <form onSubmit={handleSubmit} className="w-full" noValidate>
-      {/* Honeypot Field (Invisible to human users, traps spam bots) */}
+      {/* Honeypot Field */}
       <div style={{ display: "none" }} aria-hidden="true">
         <input
           type="text"
@@ -150,68 +160,50 @@ export default function CtaForm({
       <div
         className={
           isMobile
-            ? "flex flex-col md:grid md:grid-cols-2 gap-2 md:gap-x-[72px] md:gap-y-4 w-full max-w-[500px] md:max-w-[100%] !mt-8 md:!mt-34 mx-auto"
+            ? "flex flex-col gap-4 w-full max-w-[500px] md:max-w-[100%] !mt-8 md:!mt-34 mx-auto"
             : "flex flex-col gap-4 max-w-[560px] w-full"
         }
       >
-        <div
-          className={
-            isMobile
-              ? "contents md:grid md:grid-cols-2 md:gap-x-[72px]"
-              : "grid grid-cols-2 gap-[72px]"
-          }
-        >
+        <div className="grid grid-cols-1 md:grid md:grid-cols-2 md:gap-x-[72px] gap-y-4">
           <CtaInput
             placeholder="Full Name *"
             name={getName("fullName")}
             isMobile={isMobile}
-            hasError={invalidFields.includes(getName("fullName"))}
+            error={fieldErrors[getName("fullName")]}
           />
           <CtaInput
             placeholder="Email *"
             type="email"
             name={getName("email")}
             isMobile={isMobile}
-            hasError={invalidFields.includes(getName("email"))}
+            error={fieldErrors[getName("email")]}
           />
         </div>
 
-        <div
-          className={
-            isMobile
-              ? "contents md:grid md:grid-cols-2 md:gap-x-[72px]"
-              : "grid grid-cols-2 gap-[72px]"
-          }
-        >
+        <div className="grid grid-cols-1 md:grid md:grid-cols-2 md:gap-x-[72px] gap-y-4">
           <CtaInput
-            placeholder="Phone No *"
+            placeholder="Phone Number *"
             type="tel"
             name={getName("phone")}
             isMobile={isMobile}
-            hasError={invalidFields.includes(getName("phone"))}
+            error={fieldErrors[getName("phone")]}
           />
           <CtaInput
             placeholder="Post Code *"
             name={getName("postCode")}
             isMobile={isMobile}
-            hasError={invalidFields.includes(getName("postCode"))}
+            error={fieldErrors[getName("postCode")]}
           />
         </div>
 
-        <div
-          className={
-            isMobile
-              ? "contents md:grid md:grid-cols-2 md:gap-x-[72px]"
-              : "grid grid-cols-2 gap-[72px]"
-          }
-        >
+        <div className="grid grid-cols-1 md:grid md:grid-cols-2 md:gap-x-[72px] gap-y-4">
           <CtaSelect
             key={`bt_${resetKey}`}
             placeholder="Budget Type *"
             options={["Residential", "Commercial", "Mixed Use"]}
             name={getName("budgetType")}
             isMobile={isMobile}
-            hasError={invalidFields.includes(getName("budgetType"))}
+            error={fieldErrors[getName("budgetType")]}
           />
           <CtaSelect
             key={`br_${resetKey}`}
@@ -219,17 +211,11 @@ export default function CtaForm({
             options={["$10k – $30k", "$30k – $75k", "$75k – $150k", "$150k+"]}
             name={getName("budgetRange")}
             isMobile={isMobile}
-            hasError={invalidFields.includes(getName("budgetRange"))}
+            error={fieldErrors[getName("budgetRange")]}
           />
         </div>
 
-        <div
-          className={
-            isMobile
-              ? "contents md:grid md:grid-cols-2 md:gap-x-[72px]"
-              : "grid grid-cols-2 gap-[72px]"
-          }
-        >
+        <div className="grid grid-cols-1 md:grid md:grid-cols-2 md:gap-x-[72px] gap-y-4">
           <CtaSelect
             key={`cm_${resetKey}`}
             placeholder="Preferred Contract Method *"
@@ -241,19 +227,19 @@ export default function CtaForm({
             ]}
             name={getName("contractMethod")}
             isMobile={isMobile}
-            hasError={invalidFields.includes(getName("contractMethod"))}
+            error={fieldErrors[getName("contractMethod")]}
           />
           <div className="hidden md:block" />
         </div>
 
         <div
-          style={{ marginTop: isMobile ? 44 : 18 }}
+          style={{ marginTop: isMobile ? 32 : 18 }}
           className={isMobile ? "self-center md:!self-start" : undefined}
         >
           <SubmitButton loading={loading} />
         </div>
 
-        {/* Global Error Banner */}
+        {/* Global Error Banner for API/Network Errors */}
         {globalError && (
           <div
             role="alert"
@@ -264,7 +250,7 @@ export default function CtaForm({
               background: "rgba(254, 178, 178, 0.15)",
               border: "1px solid #feb2b2",
               color: "#feb2b2",
-              fontSize: 13,
+              fontSize: 14,
               fontFamily: "inherit",
               lineHeight: "1.4",
             }}
@@ -314,21 +300,21 @@ function CtaInput({
   type = "text",
   name,
   isMobile = false,
-  hasError = false,
+  error,
 }: {
   placeholder: string;
   type?: string;
   name?: string;
   isMobile?: boolean;
-  hasError?: boolean;
+  error?: string;
 }) {
   const borderOpacity = isMobile ? "1" : "0.35";
   const defaultBorder = `1px solid ${
-    hasError ? "#feb2b2" : `rgba(244, 238, 223, ${borderOpacity})`
+    error ? "#feb2b2" : `rgba(244, 238, 223, ${borderOpacity})`
   }`;
 
   return (
-    <>
+    <div className="w-full flex flex-col">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -347,14 +333,14 @@ function CtaInput({
         type={type}
         name={name}
         placeholder={placeholder}
-        aria-invalid={hasError}
+        aria-invalid={!!error}
         className={isMobile ? "cta-input-field-mobile" : "cta-input-field"}
         style={{
           background: "transparent",
           border: "none",
           borderBottom: defaultBorder,
           color: "#F4EEDF",
-          fontSize: 14,
+          fontSize: isMobile ? 16 : 14,
           padding: "10px 10px 10px 0",
           outline: "none",
           width: "100%",
@@ -362,18 +348,32 @@ function CtaInput({
           letterSpacing: "0.02em",
           transition: "border-color 0.25s",
         }}
-        onFocus={(e) =>
-          ((e.target as HTMLInputElement).style.borderColor = hasError
+        onFocus={(e) => {
+          e.target.focus({ preventScroll: true });
+          (e.target as HTMLInputElement).style.borderColor = error
             ? "#feb2b2"
-            : "rgba(244,238,223,0.75)")
-        }
+            : "rgba(244,238,223,0.75)";
+        }}
         onBlur={(e) =>
-          ((e.target as HTMLInputElement).style.borderColor = hasError
+          ((e.target as HTMLInputElement).style.borderColor = error
             ? "#feb2b2"
             : `rgba(244, 238, 223, ${borderOpacity})`)
         }
       />
-    </>
+      {error && (
+        <span
+          style={{
+            color: "#feb2b2",
+            fontSize: "12px",
+            marginTop: "6px",
+            lineHeight: "1.2",
+            fontFamily: "inherit",
+          }}
+        >
+          {error}
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -382,13 +382,13 @@ function CtaSelect({
   options,
   name,
   isMobile = false,
-  hasError = false,
+  error,
 }: {
   placeholder: string;
   options: string[];
   name?: string;
   isMobile?: boolean;
-  hasError?: boolean;
+  error?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState("");
@@ -420,28 +420,35 @@ function CtaSelect({
   const placeholderColor = isMobile ? "#F4EEDF" : "rgba(244, 238, 223, 0.4)";
   const arrowOpacity = isMobile ? 0.9 : isOpen ? 0.9 : 0.5;
 
-  const defaultBorder = hasError
+  const defaultBorder = error
     ? "1px solid #feb2b2"
     : isOpen
     ? "1px solid rgba(244,238,223,0.75)"
     : `1px solid rgba(244, 238, 223, ${borderOpacity})`;
 
   return (
-    <div ref={dropdownRef} style={{ position: "relative", width: "100%" }}>
+    <div
+      ref={dropdownRef}
+      className="flex flex-col"
+      style={{ position: "relative", width: "100%" }}
+    >
       <input type="hidden" name={name} value={selectedValue} />
 
       <div
         role="combobox"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        aria-invalid={hasError}
+        aria-invalid={!!error}
         tabIndex={0}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={(e) => {
+          e.preventDefault();
+          setIsOpen(!isOpen);
+        }}
         onKeyDown={handleKeyDown}
         style={{
           background: "transparent",
           borderBottom: defaultBorder,
-          fontSize: 14,
+          fontSize: isMobile ? 16 : 14,
           padding: "10px 10px 10px 0",
           width: "100%",
           fontFamily: "inherit",
@@ -495,6 +502,7 @@ function CtaSelect({
             overflow: "hidden",
             maxHeight: "220px",
             overflowY: "auto",
+            WebkitOverflowScrolling: "touch",
           }}
         >
           {options.map((option) => (
@@ -502,7 +510,8 @@ function CtaSelect({
               key={option}
               role="option"
               aria-selected={selectedValue === option}
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
                 setSelectedValue(option);
                 setIsOpen(false);
               }}
@@ -531,6 +540,20 @@ function CtaSelect({
             </div>
           ))}
         </div>
+      )}
+
+      {error && (
+        <span
+          style={{
+            color: "#feb2b2",
+            fontSize: "12px",
+            marginTop: "6px",
+            lineHeight: "1.2",
+            fontFamily: "inherit",
+          }}
+        >
+          {error}
+        </span>
       )}
     </div>
   );
