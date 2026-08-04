@@ -27,7 +27,10 @@ export default function SectionFour() {
           transform: "scale(1.15)" // Starts oversized to cushion the zoom out
         }}
       />
-
+{/* ── Black Overlay ── */}
+      <div 
+        className="absolute inset-0 bg-black/20 pointer-events-none z-[1]" 
+      />
       <div className="section-container relative z-[1] h-full flex items-start lg:items-end !pb-26 md:!pb-32 lg:!pb-50 !pt-42 md:!pt-32 lg:!pt-32">
         <div
           className=" w-full max-w-[250px] md:max-w-[340px] lg:max-w-[360px] h-auto md:h-[148px] lg:h-[164px] flex flex-col justify-center gap-4 will-change-transform"

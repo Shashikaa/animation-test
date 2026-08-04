@@ -516,7 +516,7 @@ function NavLink({
       className={
         isMobile
           ? "!inline-block !no-underline !leading-[2.0] md:!leading-[2.5] !cursor-pointer active:!scale-[0.98] active:!opacity-90 !transition-transform !duration-150"
-          : "!inline-block !no-underline !leading-none !cursor-pointer"
+          : "!inline-block !no-underline !leading-[1.2] !cursor-pointer"
       }
     >
       <span

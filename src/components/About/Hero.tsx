@@ -82,7 +82,7 @@ export default function Hero({ isMobile = false }: HeroProps) {
               fontFamily: "var(--font-display)",
             }}
           >
-            Designing Pool,
+            Designing Pools
           </h1>
           <p className="hero-desc text-[#F4EEDF] ">
             Creating Experiences

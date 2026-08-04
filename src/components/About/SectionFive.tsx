@@ -5,13 +5,13 @@ import gsap from "gsap";
 
 const slides = [
   {
-    stat: "25+ years",
+    stat: "25+ ",
     label: "Industry Experience",
     desc: "Decades of knowledge in pool design and construction.",
   },
   {
     stat: "100+",
-    label: "Pools Built",
+    label: "Completed Projects",
     desc: "Completed Projects. Stunning pools crafted for homes and businesses.",
   },
   {
@@ -166,7 +166,9 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
       <div className="relative w-full h-[65svh] lg:h-full lg:min-h-screen overflow-hidden bg-[#19211C]">
         {/* Main image container */}
         <div className="s5-bg absolute -top-[20%] left-0 w-full h-[140%] bg-cover bg-center will-change-transform bg-[url('/projects.webp')]" />
-        
+              <div 
+        className="absolute inset-0 bg-black/20 pointer-events-none z-[1]" 
+      />
         <div className="absolute z-10 bottom-[30px] md:bottom-[60px] left-[24px] md:left-[65px] flex flex-col !gap-2 md:!gap-4 overflow-hidden">
           <h2
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl !font-[100] text-[#F4EEDF]"

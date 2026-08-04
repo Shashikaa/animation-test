@@ -6,12 +6,15 @@ export default function SectionTwo() {
 
       {/* ── Full bleed background image ── */}
       <div
-        className="s2-bg absolute inset-0 bg-cover bg-center will-change-transform bg-[url('/sectiontwo-about-mobile.webp')] lg:bg-[url('/sectiontwo-about.webp')]"
+        className="s2-bg absolute inset-0 bg-cover bg-center will-change-transform bg-[url('/pool-house.webp')] lg:bg-[url('/pool-house.webp')]"
       />
-
+{/* ── Black Overlay ── */}
+      <div 
+        className="absolute inset-0 bg-black/50 pointer-events-none " 
+      />
       {/* ── Left bottom layout wrapper (Card container styling removed) ── */}
       <div
-        className="absolute z-10 bottom-16 left-[20px] md:left-[30px] lg:left-[85px] flex flex-col gap-6 w-[80vw] max-w-[400px] lg:w-full lg:max-w-[490px]"
+        className="absolute z-10 bottom-16 left-[20px] md:left-[30px] lg:!left-[80px] flex flex-col gap-6 w-[80vw] max-w-[400px] lg:w-full lg:max-w-[490px]"
       >
         <div className="flex flex-col gap-3">
           <h2

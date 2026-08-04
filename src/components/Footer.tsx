@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link"; // Imported Next.js Link component
+import Link from "next/link";
+import { usePathname } from "next/navigation"; // Hook to detect current route
 import { useSite } from "../app/context/SiteContext"; // adjust path if needed
 
 const SOCIAL_LINKS = [
@@ -9,6 +10,15 @@ const SOCIAL_LINKS = [
 
 export default function Footer() {
   const { smootherRef } = useSite();
+  const pathname = usePathname();
+
+  // Force full reload if user clicks logo while on home page
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (pathname === "/") {
+      e.preventDefault();
+      window.location.href = "/";
+    }
+  };
 
   return (
     <footer
@@ -25,8 +35,8 @@ export default function Footer() {
           .responsive-row-2 {
             flex-direction: column !important;
             align-items: center !important;
-            gap: 24px !important; /* Reduced from 48px to pull the social icon closer to the links */
-            margin-bottom: 24px !important; /* Reduced from 48px to pull the divider line closer to the social icon */
+            gap: 24px !important;
+            margin-bottom: 24px !important;
           }
           .responsive-links-container {
             width: 100% !important;
@@ -37,7 +47,7 @@ export default function Footer() {
             width: 100% !important;
             align-items: center !important;
             margin-left: 0 !important;
-            gap: 0px !important; /* Clears excess inner layout gap on mobile */
+            gap: 0px !important;
           }
           .desktop-only-contacts {
             display: none !important;
@@ -84,9 +94,21 @@ export default function Footer() {
             justifyContent: "flex-start",
             overflow: "hidden",
             marginBottom: 30,
+            position: "relative",
+            zIndex: 20,
           }}
         >
-          <Link href="/" style={{ display: "block", width: "100%", maxWidth: "380px" }}>
+          <Link 
+            href="/" 
+            onClick={handleLogoClick}
+            style={{ 
+              display: "block", 
+              width: "100%", 
+              maxWidth: "380px",
+              position: "relative",
+              zIndex: 20,
+            }}
+          >
             <img
               src="/Footer.svg"
               alt="Grand Pools"
@@ -95,6 +117,7 @@ export default function Footer() {
                 height: "auto",
                 display: "block",
                 cursor: "pointer",
+                pointerEvents: "auto",
               }}
             />
           </Link>
@@ -126,7 +149,6 @@ export default function Footer() {
                 { item: "Services", href: "/services" },
                 { item: "Projects", href: "/projects" },
                 { item: "Contact Us", href: "/contact" },
-                
               ].map(({ item, href }) => (
                 <a
                   key={item}
@@ -150,7 +172,6 @@ export default function Footer() {
             <nav className="flex flex-col !items-end lg:!items-start gap-3">
               {[
                 { item: "Residential Pools Construction", href: "/services/residential-pools-construction" },
-                
                 { item: "Pool Equipment & Installation", href: "/services/pool-equipment-and-installation" },
                 { item: "Commercial Pool Construction", href: "/services/commercial-pool-construction" },
               ].map(({ item, href }) => (
@@ -269,16 +290,16 @@ export default function Footer() {
               }}
             >
               Design &amp; Development by{" "}
-<a
-  href="https://tactik.com.au/"
-  target="_blank"
-  rel="noopener noreferrer"
-  style={{ color: "#F4EBE4", textDecoration: "none", fontWeight: 500, opacity: 1, transition: "opacity 0.2s ease" }}
-  onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
-  onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
->
-  Tactik
-</a>
+              <a
+                href="https://tactik.com.au/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#F4EBE4", textDecoration: "none", fontWeight: 500, opacity: 1, transition: "opacity 0.2s ease" }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
+              >
+                Tactik
+              </a>
             </span>
 
             {/* Mobile copy block placement container */}
