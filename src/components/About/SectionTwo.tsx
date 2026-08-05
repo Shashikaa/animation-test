@@ -18,7 +18,7 @@ export default function SectionTwo() {
       >
         <div className="flex flex-col gap-3">
           <h2
-            className=" !font-[100] text-[#FFFFFF] !leading-[0.9] reveal-text"
+            className=" !font-[100] text-[#FFFFFF] !leading-[1.2] reveal-text"
             style={{ fontFamily: "var(--font-display)" }}
           >
             A Passion for Pools

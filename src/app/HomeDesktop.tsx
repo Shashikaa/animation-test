@@ -285,70 +285,70 @@ export default function HomeDesktop() {
         const s7TextSelector = ".section-7 .gs-line-inner, .section-7 .custom-line-inner, .section-7 .reveal-text > *";
         const appSecTextSelector = ".section-appsec .gs-line-inner, .section-appsec .custom-line-inner, .section-appsec .reveal-text > *";
 
-        // ── 1. HERO PHASE 1 (Scroll Start) ──
-        tl.addLabel("heroPhase1", 0)
-          .to(".hero-bg", { scale: 1.15, duration: PANEL_ACTION, ease: "sine.inOut" }, "heroPhase1")
+// ── 1. HERO PHASE 1 (Scroll Start) ──
+tl.addLabel("heroPhase1", 0)
+  .to(".hero-bg", { scale: 1.15, duration: PANEL_ACTION, ease: "sine.inOut" }, "heroPhase1")
 
-          // Initial Left Title slides UP completely off screen (no line clipping)
-          .to(".hero-left-initial", {
-            y: "-100vh",
-            duration: PANEL_ACTION * 0.5,
-            ease: "power2.in"
-          }, "heroPhase1")
+  // SMOOTHER: Initial Left Title slides UP smoothly across the scroll span
+  .to(".hero-left-initial", {
+    y: "-100vh",
+    duration: PANEL_ACTION, // Increased duration for a smoother, slower scroll response
+    ease: "none"            // Linear scrub matches the user's scroll speed naturally
+  }, "heroPhase1")
 
-          // Meantime: Right paragraph reveals above the button
-          .set(".hero-right-text", { visibility: "visible", opacity: 1 }, "heroPhase1+=0.05")
-          .to(".hero-right-text .custom-line-inner", {
-            opacity: 1,
-            yPercent: 0,
-            stagger: 0.04,
-            duration: PANEL_ACTION * 0.5,
-            ease: "power2.out"
-          }, "heroPhase1+=0.05");
+  // Meantime: Right paragraph reveals above the button
+  .set(".hero-right-text", { visibility: "visible", opacity: 1 }, "heroPhase1+=0.05")
+  .to(".hero-right-text .custom-line-inner", {
+    opacity: 1,
+    yPercent: 0,
+    stagger: 0.04,
+    duration: PANEL_ACTION * 0.7,
+    ease: "power1.out"
+  }, "heroPhase1+=0.05");
 
-        tl.to({}, { duration: HOLD_ACTION });
+tl.to({}, { duration: HOLD_ACTION });
 
-        // ── HERO PHASE 2 (Further Scroll) ──
-        tl.addLabel("heroPhase2", ">")
-          // Right text hides
-          .to(".hero-right-text .custom-line-inner", { opacity: 0, y: -20, duration: PANEL_ACTION * 0.4, ease: "power1.in" }, "heroPhase2")
-          .set(".hero-right-text", { visibility: "hidden" }, `heroPhase2+=${PANEL_ACTION * 0.4}`)
-          
-          .to(".hero-bg", { scale: 1.3, duration: PANEL_ACTION, ease: "sine.inOut" }, "heroPhase2")
-          
-          // 2nd Left Para slides UP from screen bottom to MIDDLE of viewport (-50vh)
-          .set(".hero-secondary-text-wrap", { visibility: "visible", opacity: 1 }, "heroPhase2")
-          .to(".hero-secondary-text-wrap", {
-            y: "-50vh",
-            duration: PANEL_ACTION * 0.6,
-            ease: "power2.out"
-          }, "heroPhase2");
+// ── HERO PHASE 2 (Further Scroll) ──
+tl.addLabel("heroPhase2", ">")
+  // Right text hides
+  .to(".hero-right-text .custom-line-inner", { opacity: 0, y: -20, duration: PANEL_ACTION * 0.4, ease: "power1.in" }, "heroPhase2")
+  .set(".hero-right-text", { visibility: "hidden" }, `heroPhase2+=${PANEL_ACTION * 0.4}`)
+  
+  .to(".hero-bg", { scale: 1.3, duration: PANEL_ACTION, ease: "sine.inOut" }, "heroPhase2")
+  
+  // SMOOTHER: 2nd Left Para slides UP smoothly from bottom to middle (-50vh)
+  .set(".hero-secondary-text-wrap", { visibility: "visible", opacity: 1 }, "heroPhase2")
+  .to(".hero-secondary-text-wrap", {
+    y: "-50vh",
+    duration: PANEL_ACTION, // Extended duration to match background movement pace
+    ease: "sine.out"         // Smooth deceleration into middle viewport
+  }, "heroPhase2");
 
-        tl.to({}, { duration: HOLD_ACTION });
+tl.to({}, { duration: HOLD_ACTION });
 
-        // ── 2. HERO TO SECTION 2 REVEAL ──
-        // Once 2nd left text reaches middle, further scroll slides it UP out of top while SectionTwo slides up
-        tl.addLabel("sec2Arrived", ">")
-          .to(".hero-secondary-text-wrap", {
-            y: "-110vh",
-            duration: PANEL_ACTION * 0.5,
-            ease: "power2.in"
-          }, "sec2Arrived")
+// ── 2. HERO TO SECTION 2 REVEAL ──
+tl.addLabel("sec2Arrived", ">")
+  // SMOOTHER: 2nd left text continues sliding smoothly out off top
+  .to(".hero-secondary-text-wrap", {
+    y: "-110vh",
+    duration: PANEL_ACTION, // Matched full panel duration so it doesn't rush off screen
+    ease: "sine.in"
+  }, "sec2Arrived")
 
-          .to([".hero-contact-btn", ".hero-scroll-indicator"], {
-            opacity: 0,
-            duration: PANEL_ACTION * 0.3,
-            ease: "power1.inOut"
-          }, "sec2Arrived")
+  .to([".hero-contact-btn", ".hero-scroll-indicator"], {
+    opacity: 0,
+    duration: PANEL_ACTION * 0.5,
+    ease: "power1.inOut"
+  }, "sec2Arrived")
 
-          .set(".hero", { display: "block", zIndex: 90, opacity: 1 }, "sec2Arrived")
-          .set(".hero-bg-wrapper", { visibility: "visible", opacity: 1 }, "sec2Arrived")
-          .to(".hero-bg", { scale: 1.4, duration: PANEL_ACTION, ease: "power1.inOut" }, "sec2Arrived")
-          .fromTo(".section-2",
-            { yPercent: 100, zIndex: 95, display: "block" },
-            { yPercent: 0, duration: PANEL_ACTION, ease: "power1.inOut" },
-            "sec2Arrived"
-          );
+  .set(".hero", { display: "block", zIndex: 90, opacity: 1 }, "sec2Arrived")
+  .set(".hero-bg-wrapper", { visibility: "visible", opacity: 1 }, "sec2Arrived")
+  .to(".hero-bg", { scale: 1.4, duration: PANEL_ACTION, ease: "sine.inOut" }, "sec2Arrived")
+  .fromTo(".section-2",
+    { yPercent: 100, zIndex: 95, display: "block" },
+    { yPercent: 0, duration: PANEL_ACTION, ease: "sine.inOut" },
+    "sec2Arrived"
+  );
 
         addPlayOnceTextReveal("sec2Arrived", 0.9, s2TextSelector);
 

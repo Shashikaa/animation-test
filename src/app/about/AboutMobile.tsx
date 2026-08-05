@@ -17,7 +17,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 // Touch scroll parameters
 const PX_PER_MAIN_PANEL = 850;
-const PX_PER_SUB_STEP = 450;  // Slightly increased for iPad scrub accuracy
+const PX_PER_SUB_STEP = 450;
 const PAUSE_PX = 150; 
 
 export default function AboutMobile() {
@@ -67,30 +67,29 @@ export default function AboutMobile() {
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ 
         ignoreMobileResize: true,
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange,resize" 
+        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
       });
 
-      gsap.set(".about-hero-bg", { scale: 1.3, force3D: true });
-      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30, force3D: true });
+      gsap.set(".about-hero-bg", { scale: 1.3 });
+      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
 
-      gsap.set(".about-section-one", { yPercent: 100, force3D: true });
-      gsap.set(".about-section-two", { visibility: "hidden", yPercent: 100, force3D: true });
+      gsap.set(".about-section-one", { yPercent: 100 });
+      gsap.set(".about-section-two", { visibility: "hidden", yPercent: 100 });
       
       gsap.set(".about-section-three", { 
         visibility: "hidden", 
         clipPath: "inset(100% 0% 0% 0%)",
-        WebkitClipPath: "inset(100% 0% 0% 0%)",
-        force3D: true
+        WebkitClipPath: "inset(100% 0% 0% 0%)"
       });
 
-      gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0, force3D: true });
+      gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0 });
 
-      gsap.set(".about-section-five", { yPercent: 100, force3D: true });
-      gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0, force3D: true });
+      gsap.set(".about-section-five", { yPercent: 100 });
+      gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0 });
 
-      gsap.set(".about-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden", force3D: true });
+      gsap.set(".about-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
       gsap.set([".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
-      gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden", force3D: true });
+      gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden" });
     }, scopeRef);
 
     return () => ctx.revert();
@@ -122,7 +121,7 @@ export default function AboutMobile() {
     const ctx = gsap.context(() => {
       const ACTION = 1.4; 
       const DEAD_SCROLL = 0.2; 
-      const SEC5_CARDS_HOLD = 1.8; // Extended scroll duration for card 1->2->3 transitions
+      const SEC5_CARDS_HOLD = 1.2;
 
       const MAIN_PANELS_COUNT = 7;
       const SUB_STEPS_COUNT = 3; 
@@ -150,11 +149,10 @@ export default function AboutMobile() {
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           scrub: 0.5,
           pin: true,
-          pinType: ScrollTrigger.isTouch ? "fixed" : "transform",
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
-          invalidateOnRefresh: true,
+          invalidateOnRefresh: false,
           onUpdate: (self) => {
             const sec5Time = tl.labels["sec5FullyRevealed"];
             const ctaTime = tl.labels["ctaStart"];
@@ -176,7 +174,6 @@ export default function AboutMobile() {
                 triggerSec5Hook(0);
               }
             } else {
-              // Fallback for initial touch mount frame before labels populate
               const totalDuration = tl.duration();
               if (totalDuration > 0) {
                 const progress = self.progress;
@@ -251,7 +248,7 @@ export default function AboutMobile() {
       // ── Section 5 Inner Cards Track Allocation ──
       tl.to({}, { duration: SEC5_CARDS_HOLD });
 
-// ── Step 6: CTA Reveal Track ──
+      // ── Step 6: CTA Reveal Track ──
       tl.addLabel("ctaStart", ">")
         .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
         .fromTo(
@@ -264,7 +261,7 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // ── Step 6.5: CTA Content Fade Out First (MATCHING HOME MOBILE) ──
+      // ── Step 6.5: CTA Content Fade Out First ──
       tl.addLabel("ctaFadeOut", ">")
         .to(
           [".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"],
@@ -276,8 +273,6 @@ export default function AboutMobile() {
           },
           "ctaFadeOut"
         )
-
-        // Brief pause so the CTA inner content is completely gone before footer slides up
         .to({}, { duration: 0 });
 
       // ── Step 7: Footer Reveal Track ──
@@ -340,7 +335,7 @@ export default function AboutMobile() {
           <SectionFive isActive={isSectionFiveActive} />
         </div>
 
-        {/* Layer 6: Section CTA Container (Configured identically to Home/Projects setup) */}
+        {/* Layer 6: Section CTA Container */}
         <div 
           className="about-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100vh] z-[150]" 
           style={{ pointerEvents: "auto", visibility: "hidden" }}

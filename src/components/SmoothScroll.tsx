@@ -24,7 +24,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   const pathname = usePathname();
   const lenisRef = useRef<Lenis | null>(null);
 
-  // Set initial --vh CSS variable for precise iOS viewport calculation
+  // Set initial --vh CSS variable based on innerHeight once to prevent dynamic recalculations
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -34,6 +34,22 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     };
 
     setVh();
+
+    let windowWidth = window.innerWidth;
+    const handleResize = () => {
+      // Only recalculate on actual screen width change / orientation, not mobile URL bar hide/show
+      if (window.innerWidth !== windowWidth) {
+        windowWidth = window.innerWidth;
+        setVh();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+    };
   }, []);
 
   // Lock native mobile scroll until preloader is finished
@@ -71,10 +87,10 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       return;
     }
 
-// Ultrafast, buttery smooth Lenis setup with slightly faster scroll response
+    // Ultrafast, buttery smooth Lenis setup for desktop
     const lenis = new Lenis({
-      lerp: 0.14,              // Increased from 0.1 to 0.14 (higher = faster response to scroll)
-      wheelMultiplier: 1.4,    // Increased from 1.2 to 1.4 (travels slightly more distance per wheel tick)
+      lerp: 0.14,
+      wheelMultiplier: 1.4,
       touchMultiplier: 1.0,
       infinite: false,
       smoothWheel: true,
@@ -86,18 +102,16 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       smootherRef.current = lenis;
     }
 
-    // Direct ScrollTrigger update on Lenis scroll tick
     lenis.on("scroll", () => {
       ScrollTrigger.update();
     });
 
-    // High performance GSAP Ticker synchronization
     const tickerCallback = (time: number) => {
       lenis.raf(time * 1000);
     };
     
     gsap.ticker.add(tickerCallback);
-    gsap.ticker.lagSmoothing(100, 16); // High buffer prevents dropped frame stutters
+    gsap.ticker.lagSmoothing(100, 16);
 
     let thumbVisible = false;
 

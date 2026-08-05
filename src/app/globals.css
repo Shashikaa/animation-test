@@ -152,17 +152,16 @@ body.preloading header {
 .pin-all-services,
 .pin-all-subservices,
 .pin-all-single-project {
-  height: 100vh !important;
-  height: calc(var(--vh, 1vh) * 100) !important;
-  height: 100lvh !important;
+  height: 100% !important;
+  min-height: calc(var(--vh, 1vh) * 100) !important;
   width: 100%;
   position: relative;
   overflow: hidden;
 }
 
-/* Lock GSAP pin-spacer on iOS and Android */
+/* Lock GSAP pin-spacer on iOS and Android without flickering */
 .pin-spacer {
-  min-height: 100lvh !important;
+  min-height: calc(var(--vh, 1vh) * 100) !important;
   pointer-events: auto !important;
 }
 
@@ -171,10 +170,9 @@ body.preloading header {
   max-height: none !important;
 }
 
-/* ─── GPU Layer Acceleration ─────────────────────────────────── */
+/* ─── GPU Layer Acceleration (Optimized to prevent flickering) ── */
 .gpu-accelerated,
 .structural-layer {
-  will-change: transform, opacity;
   transform: translate3d(0, 0, 0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
@@ -345,6 +343,7 @@ p {
   display: inline-block;
   will-change: transform;
 }
+
 /* ─── 404 Preloader Suppression ────────────────────────────── */
 body:has(#not-found-page) #brand-preloader-root,
 body:has(#not-found-page) #fade-preloader-root,

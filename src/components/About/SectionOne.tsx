@@ -23,7 +23,7 @@ export default function SectionOne() {
       {/* ── Content ── */}
       <div className="section-container relative z-10 h-full flex items-start justify-start lg:!items-end !pb-24 !pt-32">
         <div
-          className="w-full max-w-[280px] md:max-w-[330px] lg:max-w-[370px] flex flex-col justify-center gap-4 will-change-transform !py-8 !p-6 md:!p-8 lg:!p-10"
+          className="w-full max-w-[280px] md:max-w-[330px] lg:max-w-[370px] flex flex-col justify-center gap-4 will-change-transform !py-8 md:!p-8 lg:!p-10"
         >
           {/* Mapped clean to your new single ScrollTrigger.onUpdate engine */}
           <p 
