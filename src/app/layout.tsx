@@ -47,7 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html 
       lang="en" 
       className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased preloading`}
-      style={{ background: "#0A2B1E" }}
+      style={{ background: "#ff0000" }}
     >
       <head>
         {/* 1. INSTANT FRAME 0 BLOCKING STYLES */}
@@ -55,8 +55,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{
             __html: `
               html, body {
-                background: #0A2B1E !important;
-                background-color: #0A2B1E !important;
+                background: #ff0044 !important;
+                background-color: #ff004c !important;
                 margin: 0 !important;
                 padding: 0 !important;
               }
