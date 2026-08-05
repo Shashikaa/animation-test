@@ -302,7 +302,7 @@ export default function ProjectsMobile() {
   return (
     <div 
       ref={scopeRef} 
-      className="w-full relative bg-[#19211C] min-h-screen overflow-hidden text-white"
+      className="w-full relative min-h-screen overflow-hidden text-white"
     >
       <div className="master-viewport pin-all-projects relative w-full overflow-hidden">
         

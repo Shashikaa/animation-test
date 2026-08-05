@@ -14,7 +14,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 // Standardized Metrics aligned with AboutMobile
 const PX_PER_MAIN_PANEL = 850; 
-const PAUSE_PX = 100;
+const PAUSE_PX = 150;
 
 export default function ContactMobile() {
   const { setPreloaderDone } = useSite();
@@ -23,11 +23,11 @@ export default function ContactMobile() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.history.scrollRestoration = "manual";
     window.scrollTo(0, 0);
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
+  // Lock scrolling during intro (Matching AboutMobile)
   useEffect(() => {
     const locked = !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
@@ -50,7 +50,11 @@ export default function ContactMobile() {
     };
 
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+    };
   }, []);
 
   useLayoutEffect(() => {
@@ -60,20 +64,21 @@ export default function ContactMobile() {
         autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
       });
 
-      gsap.set(".contact-hero-bg", { scale: 1.3, yPercent: 0, force3D: true });
-      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30, force3D: true });
+      gsap.set(".contact-hero-bg", { scale: 1.3 });
+      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
       
-      gsap.set(".cta-scroll-wrapper", { yPercent: 100, force3D: true });
-      gsap.set(".section-one-scroll-wrapper", { yPercent: 100, force3D: true });
-      gsap.set(".faq-scroll-wrapper", { yPercent: 100, force3D: true });
-      gsap.set(".footer-scroll-wrapper", { yPercent: 100, force3D: true });
+      gsap.set(".cta-scroll-wrapper", { yPercent: 100 });
+      gsap.set(".section-one-scroll-wrapper", { yPercent: 100 });
+      gsap.set(".faq-scroll-wrapper", { yPercent: 100 });
+      gsap.set(".footer-scroll-wrapper", { yPercent: 100 });
       
-      gsap.set([".faq-content", ".cta-inner-mobile", ".cta-inner-desktop"], { opacity: 1, force3D: true });
+      gsap.set([".faq-content", ".cta-inner-mobile", ".cta-inner-desktop"], { opacity: 1 });
     }, scopeRef);
 
     return () => ctx.revert();
   }, []);
 
+  // Hero Intro Sequence
   useEffect(() => {
     const ctx = gsap.context(() => {
       const masterTl = gsap.timeline({
@@ -89,6 +94,7 @@ export default function ContactMobile() {
     return () => ctx.revert();
   }, []);
 
+  // Master Section Transition Scroll Timeline
   useEffect(() => {
     if (!introDone) return;
 
@@ -108,7 +114,6 @@ export default function ContactMobile() {
           start: "top top",
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
-          pinType: "fixed",
           scrub: 0.5,
           anticipatePin: 1,
           preventOverlaps: true,
@@ -130,7 +135,7 @@ export default function ContactMobile() {
 
         .to({}, { duration: DEAD_SCROLL })
 
-        // 2. SECTION ONE SLIDE UP — Anchored at bottom-0, yPercent: 0 puts its bottom flush with VP bottom
+        // 2. SECTION ONE SLIDE UP — Anchored at bottom-0
         .fromTo(
           ".section-one-scroll-wrapper", 
           { yPercent: 100 },
@@ -188,8 +193,11 @@ export default function ContactMobile() {
   }, [introDone]);
 
   return (
-    <div ref={scopeRef} className="min-h-screen w-full bg-zinc-950 text-white overflow-hidden">
-      <div className="contact-pin-master pin-all-contact relative w-full overflow-hidden">
+    <div ref={scopeRef}>
+      <div 
+        className="contact-pin-master pin-all-contact relative w-full overflow-hidden"
+        style={{ visibility: "visible" }}
+      >
         
         {/* Layer 1: Hero Section */}
         <div className="gpu-accelerated absolute inset-0 w-full h-full z-10">
@@ -212,7 +220,7 @@ export default function ContactMobile() {
         </div>
 
         {/* Layer 5: Footer Wrapper Frame */}
-        <div className="footer-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full z-50 flex flex-col justify-end pointer-events-none">
+        <div className="footer-scroll-wrapper gpu-accelerated absolute left-0 bottom-0 w-full z-50 pointer-events-none">
           <div className="w-full pointer-events-auto">
             <Footer />
           </div>
