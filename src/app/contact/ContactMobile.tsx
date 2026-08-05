@@ -64,7 +64,7 @@ export default function ContactMobile() {
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30, force3D: true });
       
       gsap.set(".cta-scroll-wrapper", { yPercent: 100, force3D: true });
-      gsap.set(".section-one-scroll-wrapper", { yPercent: 100, y: 0, force3D: true });
+      gsap.set(".section-one-scroll-wrapper", { yPercent: 100, force3D: true });
       gsap.set(".faq-scroll-wrapper", { yPercent: 100, force3D: true });
       gsap.set(".footer-scroll-wrapper", { yPercent: 100, force3D: true });
       
@@ -96,7 +96,6 @@ export default function ContactMobile() {
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2;
 
-      // 4 Panel transitions: Hero->CTA, CTA->Sec1, Sec1->FAQ, FAQ->Footer + 4 pause breaks
       const MAIN_PANELS_COUNT = 4;
       const PAUSES_COUNT = 4;
 
@@ -119,7 +118,7 @@ export default function ContactMobile() {
       });
 
       tl
-        // 1. HERO EXIT & CTA ENTRANCE (MATCHES ABOUTMOBILE SLIDE UP LOGIC)
+        // 1. HERO EXIT & CTA ENTRANCE
         .to(".contact-hero-bg", { yPercent: -15, ease: "none", duration: ACTION }, 0)
         .to(".hero-text-wrap", { opacity: 0, y: -40, ease: "power1.in", duration: ACTION * 0.75 }, 0)
         .fromTo(
@@ -131,18 +130,12 @@ export default function ContactMobile() {
 
         .to({}, { duration: DEAD_SCROLL })
 
-        // 2. SECTION ONE FULL SLIDE UP
+        // 2. SECTION ONE SLIDE UP — Anchored at bottom-0, yPercent: 0 puts its bottom flush with VP bottom
         .fromTo(
           ".section-one-scroll-wrapper", 
-          { yPercent: 100, y: 0 },
+          { yPercent: 100 },
           { 
             yPercent: 0, 
-            y: () => {
-              const secOneEl = document.querySelector(".section-one-scroll-wrapper") as HTMLElement;
-              if (!secOneEl) return 0;
-              const diff = secOneEl.scrollHeight - window.innerHeight;
-              return diff > 0 ? -diff : 0;
-            },
             ease: "power2.inOut", 
             duration: ACTION * 1.2 
           }, 
@@ -161,7 +154,7 @@ export default function ContactMobile() {
 
         .to({}, { duration: DEAD_SCROLL })
 
-        // 3.5. FAQ / CTA CONTENT FADE OUT FIRST (MATCHING HOME MOBILE)
+        // 3.5. FAQ / CTA CONTENT FADE OUT
         .addLabel("ctaFadeOut", ">")
         .to(
           [".faq-content", ".cta-scroll-wrapper .cta-inner-mobile", ".cta-scroll-wrapper .cta-inner-desktop"],
@@ -208,8 +201,8 @@ export default function ContactMobile() {
           <SectionCTA />
         </div>
 
-        {/* Layer 3: Section One */}
-        <div className="section-one-scroll-wrapper gpu-accelerated absolute inset-x-0 top-0 w-full h-auto min-h-screen z-30">
+        {/* Layer 3: Section One (ANCHORED TO BOTTOM-0) */}
+        <div className="section-one-scroll-wrapper gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto z-30">
           <SectionOne />
         </div>
 

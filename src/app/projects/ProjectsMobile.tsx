@@ -91,7 +91,7 @@ export default function ProjectsMobile() {
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ 
-        ignoreMobileResize: true,
+        ignoreMobileResize: true, // Prevents software keyboard height toggles from executing scroll timeline updates
         autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
       });
 
@@ -141,8 +141,6 @@ export default function ProjectsMobile() {
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2;
 
-      // Projects Page: 5 Main Transitions (Hero Text, Hero->Sec1, Sec1->Sec2, Sec2->CTA, CTA->Footer)
-      // 2 Sub-steps (Paragraph 1 & 2 swaps) + 6 Pause breaks
       const MAIN_PANELS_COUNT = 5;
       const SUB_STEPS_COUNT = 2;
       const PAUSES_COUNT = 6;
@@ -160,7 +158,7 @@ export default function ProjectsMobile() {
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: 0.5, // Standardized scrub setting
+          scrub: 0.5,
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -245,7 +243,7 @@ export default function ProjectsMobile() {
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP D: SECTION TWO -> CTA (SAME AS HOMEMOBILE) ──
+      // ── STEP D: SECTION TWO -> CTA ──
       scrollTl.addLabel("ctaStart", ">")
         .set(".projects-section-cta", { visibility: "visible" }, "ctaStart")
         .fromTo(
@@ -258,7 +256,7 @@ export default function ProjectsMobile() {
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP D.5: CTA INNER CONTENT FADE OUT FIRST (MATCHING HOMEMOBILE) ──
+      // ── STEP D.5: CTA INNER CONTENT FADE OUT FIRST ──
       scrollTl.addLabel("ctaFadeOut", ">")
         .to(
           [".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"],

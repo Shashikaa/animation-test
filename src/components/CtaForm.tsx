@@ -2,6 +2,13 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+// Ensure ScrollTrigger is available in client environment
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 // Uses environment variable with live WordPress URL fallback
 const WP_BASE_URL =
@@ -59,48 +66,40 @@ export default function CtaForm({
 
     const errors: Record<string, string> = {};
 
-    // --- 1. Full Name ---
     if (!fullName) {
       errors[getName("fullName")] = "Full name is required";
     }
 
-    // --- 2. Email ---
     if (!email) {
       errors[getName("email")] = "Email is required";
     } else if (!EMAIL_REGEX.test(email)) {
       errors[getName("email")] = "Please enter a valid email address";
     }
 
-    // --- 3. Phone ---
     if (!phone) {
       errors[getName("phone")] = "Phone number is required";
     } else if (!AU_PHONE_REGEX.test(phone.replace(/\s+/g, ""))) {
       errors[getName("phone")] = "Please enter a valid Australian phone number";
     }
 
-    // --- 4. Postcode ---
     if (!postCode) {
       errors[getName("postCode")] = "Post Code is required";
     } else if (!AU_POSTCODE_REGEX.test(postCode)) {
       errors[getName("postCode")] = "Please enter a valid 4-digit Post Code";
     }
 
-    // --- 5. Budget Type ---
     if (!budgetType) {
       errors[getName("budgetType")] = "Budget type is required";
     }
 
-    // --- 6. Budget Range ---
     if (!budgetRange) {
       errors[getName("budgetRange")] = "Budget range is required";
     }
 
-    // --- 7. Contract Method ---
     if (!contractMethod) {
       errors[getName("contractMethod")] = "Contract method is required";
     }
 
-    // Stop submission if validation errors exist
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       setLoading(false);
@@ -340,6 +339,7 @@ function CtaInput({
           border: "none",
           borderBottom: defaultBorder,
           color: "#F4EEDF",
+          // 16px prevents iOS Safari from automatically zooming in and triggering vertical scroll jumps
           fontSize: isMobile ? 16 : 14,
           padding: "10px 10px 10px 0",
           outline: "none",
@@ -349,16 +349,28 @@ function CtaInput({
           transition: "border-color 0.25s",
         }}
         onFocus={(e) => {
+          // Prevent standard auto-scroll on focus
           e.target.focus({ preventScroll: true });
+
+          // Temporarily pause ScrollTrigger updates while editing to prevent accidental fade/slide transitions
+          if (typeof window !== "undefined" && window.gsap) {
+            ScrollTrigger.getAll().forEach((st) => st.disable(false));
+          }
+
           (e.target as HTMLInputElement).style.borderColor = error
             ? "#feb2b2"
             : "rgba(244,238,223,0.75)";
         }}
-        onBlur={(e) =>
-          ((e.target as HTMLInputElement).style.borderColor = error
+        onBlur={(e) => {
+          // Re-enable ScrollTrigger when user leaves input
+          if (typeof window !== "undefined" && window.gsap) {
+            ScrollTrigger.getAll().forEach((st) => st.enable(false));
+          }
+
+          (e.target as HTMLInputElement).style.borderColor = error
             ? "#feb2b2"
-            : `rgba(244, 238, 223, ${borderOpacity})`)
-        }
+            : `rgba(244, 238, 223, ${borderOpacity})`;
+        }}
       />
       {error && (
         <span
@@ -414,10 +426,9 @@ function CtaSelect({
     if (!isOpen && dropdownRef.current) {
       const rect = dropdownRef.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
-      const dropdownMaxHeight = 180; // height of dropdown menu list
+      const dropdownMaxHeight = 180;
       const spaceBelow = viewportHeight - rect.bottom;
 
-      // If space below is less than dropdown height, open upward
       if (spaceBelow < dropdownMaxHeight && rect.top > dropdownMaxHeight) {
         setOpenUpward(true);
       } else {
@@ -462,6 +473,16 @@ function CtaSelect({
         tabIndex={0}
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
+        onFocus={() => {
+          if (typeof window !== "undefined" && window.gsap) {
+            ScrollTrigger.getAll().forEach((st) => st.disable(false));
+          }
+        }}
+        onBlur={() => {
+          if (typeof window !== "undefined" && window.gsap) {
+            ScrollTrigger.getAll().forEach((st) => st.enable(false));
+          }
+        }}
         style={{
           background: "transparent",
           borderBottom: defaultBorder,
@@ -470,7 +491,6 @@ function CtaSelect({
           width: "100%",
           fontFamily: "inherit",
           cursor: "pointer",
-          
           color: selectedValue ? "#F4EEDF" : placeholderColor,
           display: "flex",
           justifyContent: "space-between",
@@ -507,7 +527,8 @@ function CtaSelect({
       {isOpen && (
         <div
           role="listbox"
-          // Stop propagation to prevent GSAP ScrollTrigger timeline advances while scrolling the dropdown
+          // Stop propagation of touch events to prevent GSAP timeline scroll jumps during dropdown navigation
+          onTouchStart={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
           onWheel={(e) => e.stopPropagation()}
           style={{
