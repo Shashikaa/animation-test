@@ -72,7 +72,7 @@
 
 html, body {
   background: linear-gradient(135deg, #162D24 0%, #094146 100%) !important;
-  background-color: #162D24 !important;
+  background-color: #e10000 !important;
   scrollbar-gutter: stable;
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
