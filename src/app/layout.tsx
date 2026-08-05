@@ -129,7 +129,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body 
         className="flex flex-col min-h-screen" 
-        style={{ background: "#0A2B1E" }}
+        style={{ background: "#ff2020" }}
         suppressHydrationWarning
       >
         <SiteProvider>
