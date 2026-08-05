@@ -16,7 +16,7 @@ export default function Hero({ isMobile = false }: HeroProps) {
   const bgImage = isMobile ? mobileImg : desktopImg;
 
   return (
-    <section ref={sectionRef} className="relative w-full h-screen overflow-hidden bg-[#111]">
+    <section ref={sectionRef} className="relative w-full h-full overflow-hidden bg-[#111]">
       
       {/* LEFT HALF OF IMAGE */}
       <div

@@ -6,7 +6,7 @@ interface HeroProps {
 
 export default function ProjectsHero({ hideText = false }: HeroProps) {
   return (
-    <div className="relative w-full h-screen bg-[#F4EEDF]">
+    <div className="relative w-full h-full bg-[#F4EEDF]">
       <div 
         className="projects-hero-top-layer absolute inset-0 w-full h-full overflow-hidden z-10 will-change-[clip-path]"
         style={{ clipPath: "inset(0px 0px 0px 0px)" }}

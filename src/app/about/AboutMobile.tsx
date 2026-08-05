@@ -15,7 +15,6 @@ import { useSite } from "@/src/app/context/SiteContext";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Touch scroll parameters
 const PX_PER_MAIN_PANEL = 850;
 const PX_PER_SUB_STEP = 450;
 const PAUSE_PX = 150; 
@@ -33,7 +32,6 @@ export default function AboutMobile() {
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
-  // Lock scrolling during intro
   useEffect(() => {
     const locked = !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
@@ -95,7 +93,6 @@ export default function AboutMobile() {
     return () => ctx.revert();
   }, []);
 
-  // Hero Intro Sequence
   useEffect(() => {
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
@@ -114,7 +111,6 @@ export default function AboutMobile() {
     return () => ctx.revert();
   }, []);
 
-  // Master Section Transition Scroll Timeline
   useEffect(() => {
     if (!introDone) return;
 
@@ -189,19 +185,16 @@ export default function AboutMobile() {
         },
       });
 
-      // ── Step 1: Section 1 ──
       tl.to(".about-section-one", { yPercent: 0, duration: ACTION, ease: "power2.inOut" })
         .to(".about-hero-bg", { scale: 1.0, yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "<");
 
       tl.to({}, { duration: DEAD_SCROLL }); 
 
-      // ── Step 2: Section 2 ──
       tl.set(".about-section-two", { visibility: "visible" })
         .to(".about-section-two", { yPercent: 0, duration: ACTION, ease: "power2.inOut" });
       
       tl.to({}, { duration: DEAD_SCROLL }); 
 
-      // ── Step 3: Section 3 ──
       tl.set(".about-section-three", { visibility: "visible" })
         .fromTo(
           ".about-section-three",
@@ -211,7 +204,6 @@ export default function AboutMobile() {
       
       tl.to({}, { duration: DEAD_SCROLL }); 
 
-      // ── Step 4: Section 4 ──
       tl.set(".about-section-four", { visibility: "visible" })
         .addLabel("sec3to4Transition")
         .to(".about-section-three", { yPercent: -100, duration: ACTION, ease: "power2.inOut" }, "sec3to4Transition")
@@ -223,7 +215,6 @@ export default function AboutMobile() {
       
       tl.to({}, { duration: DEAD_SCROLL }); 
 
-      // ── Step 5: Section 5 Reveal ──
       tl.addLabel("sec5Start")
         .set(".about-section-five", { visibility: "visible" }, "sec5Start")
         .to(".about-section-five", { 
@@ -245,10 +236,8 @@ export default function AboutMobile() {
 
       tl.addLabel("sec5FullyRevealed", `sec5Start+=${ACTION}`);
 
-      // ── Section 5 Inner Cards Track Allocation ──
       tl.to({}, { duration: SEC5_CARDS_HOLD });
 
-      // ── Step 6: CTA Reveal Track ──
       tl.addLabel("ctaStart", ">")
         .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
         .fromTo(
@@ -261,7 +250,6 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // ── Step 6.5: CTA Content Fade Out First ──
       tl.addLabel("ctaFadeOut", ">")
         .to(
           [".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"],
@@ -275,7 +263,6 @@ export default function AboutMobile() {
         )
         .to({}, { duration: 0 });
 
-      // ── Step 7: Footer Reveal Track ──
       tl.addLabel("footerStart", ">")
         .set(".about-footer-wrap", { visibility: "visible" }, "footerStart")
         .fromTo(
@@ -335,15 +322,13 @@ export default function AboutMobile() {
           <SectionFive isActive={isSectionFiveActive} />
         </div>
 
-        {/* Layer 6: Section CTA Container */}
         <div 
-          className="about-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100vh] z-[150]" 
+          className="about-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] z-[150]" 
           style={{ pointerEvents: "auto", visibility: "hidden" }}
         >
           <SectionCTA />
         </div>
 
-        {/* Layer 7: Footer */}
         <div className="about-footer-wrap gpu-accelerated absolute left-0 bottom-0 w-full z-[151]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <Footer />
         </div>
