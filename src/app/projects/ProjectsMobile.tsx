@@ -257,7 +257,8 @@ export default function ProjectsMobile() {
         )
         .to(".section-two-wrapper", { y: "-10vh", duration: ACTION, ease: "power2.inOut" }, "ctaStart");
 
-      scrollTl.to({}, { duration: DEAD_SCROLL });
+      // Dead scroll buffer room to keep the CTA steady before fade-out starts
+      scrollTl.to({}, { duration: DEAD_SCROLL * 2.5 });
 
       // ── STEP D.5: CTA INNER CONTENT FADE OUT FIRST ──
       scrollTl.addLabel("ctaFadeOut", ">")

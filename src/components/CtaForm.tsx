@@ -22,26 +22,51 @@ const AU_PHONE_REGEX = /^(?:\+?61|0)[23478](?:[ -]?\d){8}$/;
 const AU_POSTCODE_REGEX = /^(?:0[89]\d{2}|[1-9]\d{3})$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Scroll locking helpers to prevent keyboard resizes from moving GSAP pin
-const lockScrollForInput = () => {
-  if (typeof window === "undefined") return;
+// Scroll & Focus alignment helpers
+const handleInputFocusAlignment = () => {
+  if (typeof window === "undefined" || !window.gsap) return;
 
-  if (window.gsap && (window as any).ScrollTrigger) {
-    (window as any).ScrollTrigger.getAll().forEach((st: any) => st.disable(false));
+  const ST = (window as any).ScrollTrigger;
+  if (!ST) return;
+
+  const triggers = ST.getAll();
+  const masterST = triggers.find((st: any) => st.vars?.trigger === ".master-viewport");
+
+  if (masterST && masterST.animation) {
+    const tl = masterST.animation;
+    const ctaStartRatio = tl.labels["ctaStart"] !== undefined ? tl.labels["ctaStart"] / tl.duration() : null;
+
+    if (ctaStartRatio !== null) {
+      // Calculate exact scroll Y position for ctaStart label
+      const targetScrollY = masterST.start + (masterST.end - masterST.start) * ctaStartRatio;
+
+      // Smoothly snap scroll position back to the full CTA section
+      window.scrollTo({
+        top: targetScrollY,
+        behavior: "smooth"
+      });
+    }
   }
 
+  // Temporarily disable ScrollTrigger updates to lock the panel state while typing
+  triggers.forEach((st: any) => st.disable(false));
+
+  // Lock body scroll interactions on mobile
   document.body.style.overflow = "hidden";
   document.body.style.touchAction = "none";
 };
 
-const unlockScrollForInput = () => {
-  if (typeof window === "undefined") return;
+const handleInputBlurAlignment = () => {
+  if (typeof window === "undefined" || !window.gsap) return;
 
+  const ST = (window as any).ScrollTrigger;
+
+  // Re-enable body scroll and ScrollTrigger
   document.body.style.overflow = "";
   document.body.style.touchAction = "";
 
-  if (window.gsap && (window as any).ScrollTrigger) {
-    (window as any).ScrollTrigger.getAll().forEach((st: any) => st.enable(false));
+  if (ST) {
+    ST.getAll().forEach((st: any) => st.enable(false));
   }
 };
 
@@ -337,7 +362,7 @@ function CtaInput({
           border: "none",
           borderBottom: defaultBorder,
           color: "#F4EEDF",
-          fontSize: 16, // 16px stops iOS auto-zoom
+          fontSize: 16, // Enforces 16px to prevent iOS auto-zoom
           padding: "10px 10px 10px 0",
           outline: "none",
           width: "100%",
@@ -346,13 +371,13 @@ function CtaInput({
           transition: "border-color 0.25s",
         }}
         onFocus={(e) => {
-          lockScrollForInput();
+          handleInputFocusAlignment();
           (e.target as HTMLInputElement).style.borderColor = error
             ? "#feb2b2"
             : "rgba(244,238,223,0.75)";
         }}
         onBlur={(e) => {
-          unlockScrollForInput();
+          handleInputBlurAlignment();
           (e.target as HTMLInputElement).style.borderColor = error
             ? "#feb2b2"
             : `rgba(244, 238, 223, ${borderOpacity})`;
@@ -459,8 +484,8 @@ function CtaSelect({
         tabIndex={0}
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
-        onFocus={lockScrollForInput}
-        onBlur={unlockScrollForInput}
+        onFocus={handleInputFocusAlignment}
+        onBlur={handleInputBlurAlignment}
         style={{
           background: "transparent",
           borderBottom: defaultBorder,
