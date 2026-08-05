@@ -24,7 +24,6 @@ const cormorantGaramond = Cormorant_Garamond({
   display: "swap",
 });
 
-// Changed display to "block" to avoid FOIT/delayed flash
 const canelaText = localFont({
   src: [
     { path: "../../public/fonts/CanelaText-Thin-Trial.otf", weight: "100", style: "normal" },
@@ -47,18 +46,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html 
       lang="en" 
       className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased preloading`}
-      style={{ background: "#ff0000" }}
+      style={{ backgroundColor: "#162D24", minHeight: "100lvh" }}
     >
       <head>
-        {/* 1. INSTANT FRAME 0 BLOCKING STYLES */}
+        {/* 1. INSTANT FRAME 0 BLOCKING STYLES (BACKGROUND MATCHES SITE THEME PERFECTLY) */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
               html, body {
-                background: #ff0044 !important;
-                background-color: #ff004c !important;
+                background: #162D24 !important;
+                background-color: #162D24 !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                min-height: 100lvh !important;
               }
 
               /* Preload custom display font immediately */
@@ -67,12 +67,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 font-display: block;
               }
 
-              /* Strictly lock scroll & touch ONLY while preloading */
+              /* Strictly lock scroll while preloading without breaking touch events on Android */
               html.preloading,
               body.preloading {
                 overflow: hidden !important;
-                touch-action: none !important;
-                height: 100% !important;
+                min-height: 100lvh !important;
               }
 
               /* Hide underlying site content strictly while preloading */
@@ -128,8 +127,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preload" href="/fonts/Canela-Light-Trial.otf" as="font" type="font/otf" crossOrigin="anonymous" />
       </head>
       <body 
-        className="flex flex-col min-h-screen" 
-        style={{ background: "#ff2020" }}
+        className="flex flex-col min-h-[100lvh]" 
+        style={{ backgroundColor: "#162D24" }}
         suppressHydrationWarning
       >
         <SiteProvider>
@@ -137,7 +136,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <HeaderWrapper />
             <NavMenuWrapper />
 
-            <main className="site-root flex flex-col flex-1 w-full overflow-x-hidden">
+            <main className="site-root flex flex-col flex-1 w-full overflow-x-hidden min-h-[100lvh]">
               {children}
             </main>
           </SmoothScroll>
