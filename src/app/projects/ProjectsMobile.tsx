@@ -17,6 +17,14 @@ const PX_PER_MAIN_PANEL = 850;
 const PX_PER_SUB_STEP = 350;   
 const PAUSE_PX = 100;          
 
+// Configure GSAP to ignore height-only resizes caused by mobile keyboards opening/closing
+if (typeof window !== "undefined") {
+  ScrollTrigger.config({ 
+    ignoreMobileResize: true,
+    autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
+  });
+}
+
 // Line splitting utility
 function executeMobileSplitting(selector: string) {
   const elements = document.querySelectorAll(selector);
@@ -69,7 +77,7 @@ export default function ProjectsMobile() {
     };
   }, [introDone]);
 
-  // Refresh ScrollTrigger only on width/orientation change
+  // Refresh ScrollTrigger only on width/orientation change (ignore height updates from mobile keyboards)
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -90,11 +98,6 @@ export default function ProjectsMobile() {
   // 1. Establish precise starting positions cleanly
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      ScrollTrigger.config({ 
-        ignoreMobileResize: true, // Prevents software keyboard height toggles from executing scroll timeline updates
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
-      });
-
       gsap.set(".projects-hero-bg", { scale: 1.6, yPercent: 0, transformOrigin: "center center", force3D: true });
       gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30, force3D: true });
       
@@ -268,7 +271,7 @@ export default function ProjectsMobile() {
           }, 
           "ctaFadeOut"
         )
-        .to({}, { duration: DEAD_SCROLL });
+        .to({}, { duration: 0 });
 
       // ── STEP E: CTA -> FOOTER ──
       scrollTl.addLabel("footerStart", ">")

@@ -24,29 +24,19 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   const pathname = usePathname();
   const lenisRef = useRef<Lenis | null>(null);
 
+  // Set initial --vh CSS variable for precise iOS viewport calculation
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    let initialWidth = window.innerWidth;
-
-    const setSvh = () => {
-      const svh = window.innerHeight * 0.01;
-      document.documentElement.style.setProperty("--svh", `${svh}px`);
+    const setVh = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty("--vh", `${vh}px`);
     };
 
-    setSvh();
-
-    const handleResize = () => {
-      if (window.innerWidth !== initialWidth) {
-        initialWidth = window.innerWidth;
-        setSvh();
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    setVh();
   }, []);
 
+  // Lock native mobile scroll until preloader is finished
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -81,9 +71,10 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       return;
     }
 
+// Ultrafast, buttery smooth Lenis setup with slightly faster scroll response
     const lenis = new Lenis({
-      lerp: 0.14,
-      wheelMultiplier: 1.4,
+      lerp: 0.14,              // Increased from 0.1 to 0.14 (higher = faster response to scroll)
+      wheelMultiplier: 1.4,    // Increased from 1.2 to 1.4 (travels slightly more distance per wheel tick)
       touchMultiplier: 1.0,
       infinite: false,
       smoothWheel: true,
@@ -95,16 +86,18 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       smootherRef.current = lenis;
     }
 
+    // Direct ScrollTrigger update on Lenis scroll tick
     lenis.on("scroll", () => {
       ScrollTrigger.update();
     });
 
+    // High performance GSAP Ticker synchronization
     const tickerCallback = (time: number) => {
       lenis.raf(time * 1000);
     };
     
     gsap.ticker.add(tickerCallback);
-    gsap.ticker.lagSmoothing(100, 16);
+    gsap.ticker.lagSmoothing(100, 16); // High buffer prevents dropped frame stutters
 
     let thumbVisible = false;
 
@@ -182,7 +175,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
           top: 0,
           right: 0,
           width: "6px",
-          height: "100%",
+          height: "100lvh",
           zIndex: 99999,
           pointerEvents: "none",
         }}

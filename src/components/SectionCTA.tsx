@@ -9,9 +9,7 @@ type SectionCTAProps = {
 
 export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
   return (
-    <section
-      className="about-section-cta section-cta min-h-screen lg:h-full w-full relative"
-    >
+    <section className="about-section-cta section-cta min-h-screen lg:h-full w-full relative">
       {/* Background Canvas & Fallback Image */}
       <div className="absolute inset-0 z-[1] pointer-events-none w-full h-full">
         <div className="hidden lg:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
@@ -79,16 +77,22 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
         </div>
       </div>
 
-{/* Mobile Layout - Centered Layout */}
+      {/* Mobile Layout - Touch Event Propagation Blocked */}
       <div
         className="flex lg:hidden cta-inner-mobile min-h-screen h-auto !pt-12 !pb-16"
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => {
+          const isInput = (e.target as HTMLElement).tagName === "INPUT";
+          if (!isInput) {
+            e.stopPropagation();
+          }
+        }}
         style={{
           position: "relative",
           zIndex: 10,
           flexDirection: "column",
-          justifyContent: "center", // Fixed invalid 'flex-center' property
-          alignItems: "flex-start",     // Centers title, paragraph, and form horizontally
-     
+          justifyContent: "center",
+          alignItems: "flex-start",
           paddingLeft: "20px",
           paddingRight: "20px",
           margin: 0,

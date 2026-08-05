@@ -5,12 +5,10 @@ import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-// Ensure ScrollTrigger is available in client environment
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-// Uses environment variable with live WordPress URL fallback
 const WP_BASE_URL =
   process.env.NEXT_PUBLIC_WP_URL || "https://grandpools.live.tactik.com.au";
 const WP_API_URL = `${WP_BASE_URL}/wp-json/custom/v1/submit-cta`;
@@ -20,10 +18,32 @@ type CtaFormProps = {
   nameSuffix?: string;
 };
 
-// Australian Phone & Postcode Regex
 const AU_PHONE_REGEX = /^(?:\+?61|0)[23478](?:[ -]?\d){8}$/;
 const AU_POSTCODE_REGEX = /^(?:0[89]\d{2}|[1-9]\d{3})$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Scroll locking helpers to prevent keyboard resizes from moving GSAP pin
+const lockScrollForInput = () => {
+  if (typeof window === "undefined") return;
+
+  if (window.gsap && (window as any).ScrollTrigger) {
+    (window as any).ScrollTrigger.getAll().forEach((st: any) => st.disable(false));
+  }
+
+  document.body.style.overflow = "hidden";
+  document.body.style.touchAction = "none";
+};
+
+const unlockScrollForInput = () => {
+  if (typeof window === "undefined") return;
+
+  document.body.style.overflow = "";
+  document.body.style.touchAction = "";
+
+  if (window.gsap && (window as any).ScrollTrigger) {
+    (window as any).ScrollTrigger.getAll().forEach((st: any) => st.enable(false));
+  }
+};
 
 export default function CtaForm({
   isMobile = false,
@@ -33,11 +53,7 @@ export default function CtaForm({
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  // Object storing individual error messages for each field key
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
-  // State key to reset custom select dropdowns on submit
   const [resetKey, setResetKey] = useState(0);
 
   const getName = (baseName: string) =>
@@ -60,16 +76,11 @@ export default function CtaForm({
     const budgetType = formData.get(getName("budgetType"))?.toString().trim() || "";
     const budgetRange = formData.get(getName("budgetRange"))?.toString().trim() || "";
     const contractMethod = formData.get(getName("contractMethod"))?.toString().trim() || "";
-
-    // Honeypot field check
     const honeypot = formData.get(getName("website_hp"))?.toString().trim() || "";
 
     const errors: Record<string, string> = {};
 
-    if (!fullName) {
-      errors[getName("fullName")] = "Full name is required";
-    }
-
+    if (!fullName) errors[getName("fullName")] = "Full name is required";
     if (!email) {
       errors[getName("email")] = "Email is required";
     } else if (!EMAIL_REGEX.test(email)) {
@@ -88,17 +99,9 @@ export default function CtaForm({
       errors[getName("postCode")] = "Please enter a valid 4-digit Post Code";
     }
 
-    if (!budgetType) {
-      errors[getName("budgetType")] = "Budget type is required";
-    }
-
-    if (!budgetRange) {
-      errors[getName("budgetRange")] = "Budget range is required";
-    }
-
-    if (!contractMethod) {
-      errors[getName("contractMethod")] = "Contract method is required";
-    }
+    if (!budgetType) errors[getName("budgetType")] = "Budget type is required";
+    if (!budgetRange) errors[getName("budgetRange")] = "Budget range is required";
+    if (!contractMethod) errors[getName("contractMethod")] = "Contract method is required";
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -120,9 +123,7 @@ export default function CtaForm({
     try {
       const response = await fetch(WP_API_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
@@ -132,7 +133,6 @@ export default function CtaForm({
         setSuccessMessage("Thank you! Your submission has been received.");
         formElement.reset();
         setResetKey((prev) => prev + 1);
-
         router.push("/thank-you");
       } else {
         setGlobalError(result.message || "Failed to submit form. Please try again.");
@@ -238,7 +238,6 @@ export default function CtaForm({
           <SubmitButton loading={loading} />
         </div>
 
-        {/* Global Error Banner */}
         {globalError && (
           <div
             role="alert"
@@ -258,7 +257,6 @@ export default function CtaForm({
           </div>
         )}
 
-        {/* Success Banner */}
         {successMessage && (
           <div
             role="status"
@@ -339,8 +337,7 @@ function CtaInput({
           border: "none",
           borderBottom: defaultBorder,
           color: "#F4EEDF",
-          // 16px prevents iOS Safari from automatically zooming in and triggering vertical scroll jumps
-          fontSize: isMobile ? 16 : 14,
+          fontSize: 16, // 16px stops iOS auto-zoom
           padding: "10px 10px 10px 0",
           outline: "none",
           width: "100%",
@@ -349,24 +346,13 @@ function CtaInput({
           transition: "border-color 0.25s",
         }}
         onFocus={(e) => {
-          // Prevent standard auto-scroll on focus
-          e.target.focus({ preventScroll: true });
-
-          // Temporarily pause ScrollTrigger updates while editing to prevent accidental fade/slide transitions
-          if (typeof window !== "undefined" && window.gsap) {
-            ScrollTrigger.getAll().forEach((st) => st.disable(false));
-          }
-
+          lockScrollForInput();
           (e.target as HTMLInputElement).style.borderColor = error
             ? "#feb2b2"
             : "rgba(244,238,223,0.75)";
         }}
         onBlur={(e) => {
-          // Re-enable ScrollTrigger when user leaves input
-          if (typeof window !== "undefined" && window.gsap) {
-            ScrollTrigger.getAll().forEach((st) => st.enable(false));
-          }
-
+          unlockScrollForInput();
           (e.target as HTMLInputElement).style.borderColor = error
             ? "#feb2b2"
             : `rgba(244, 238, 223, ${borderOpacity})`;
@@ -473,16 +459,8 @@ function CtaSelect({
         tabIndex={0}
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
-        onFocus={() => {
-          if (typeof window !== "undefined" && window.gsap) {
-            ScrollTrigger.getAll().forEach((st) => st.disable(false));
-          }
-        }}
-        onBlur={() => {
-          if (typeof window !== "undefined" && window.gsap) {
-            ScrollTrigger.getAll().forEach((st) => st.enable(false));
-          }
-        }}
+        onFocus={lockScrollForInput}
+        onBlur={unlockScrollForInput}
         style={{
           background: "transparent",
           borderBottom: defaultBorder,
@@ -527,7 +505,6 @@ function CtaSelect({
       {isOpen && (
         <div
           role="listbox"
-          // Stop propagation of touch events to prevent GSAP timeline scroll jumps during dropdown navigation
           onTouchStart={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
           onWheel={(e) => e.stopPropagation()}
