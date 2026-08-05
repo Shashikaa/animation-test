@@ -71,7 +71,7 @@ export default function SubServiceHero({ data, hideText = false }: HeroProps) {
 
       {/* TOP LAYER: Set pointer-events-none here to prevent blocking native mobile scroll dragging */}
       <div 
-        className="services-hero-top-layer absolute inset-0 w-full h-[100dvh] overflow-hidden z-10 pointer-events-none will-change-[clip-path]"
+        className="services-hero-top-layer absolute inset-0 w-full h-screen overflow-hidden z-10 pointer-events-none will-change-[clip-path]"
         style={{ 
           clipPath: "inset(0% 0% 0% 0%)",
           WebkitClipPath: "inset(0% 0% 0% 0%)"
