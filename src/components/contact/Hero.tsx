@@ -6,7 +6,7 @@ interface HeroProps {
 
 export default function ContactHero({ hideText = false }: HeroProps) {
   return (
-    <div className="relative w-full h-full bg-[#F4EEDF]">
+    <div className="relative w-full h-screen bg-[#F4EEDF]">
       
 
 
