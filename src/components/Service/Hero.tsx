@@ -7,7 +7,7 @@ interface HeroProps {
 
 export default function ServicesHero({ hideText = false, isMobile = false }: HeroProps) {
   return (
-    <div className="relative w-full h-screen bg-[#12322D]">
+    <div className="relative w-full h-full bg-[#12322D]">
       
       {/* UNDERNEATH LAYER: Exact Figma Positioning */}
       <div className="absolute inset-y-0 right-0 w-full lg:w-[57.5%] z-0 text-[#F4EEDF]">

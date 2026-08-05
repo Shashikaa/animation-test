@@ -27,7 +27,7 @@ export default function ContactMobile() {
     setPreloaderDone(true);
   }, [setPreloaderDone]);
 
-  // Lock scrolling during intro (Matching AboutMobile)
+  // Lock scrolling during intro
   useEffect(() => {
     const locked = !introDone;
     document.body.style.overflow = locked ? "hidden" : "";
@@ -99,6 +99,11 @@ export default function ContactMobile() {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
+      const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isTouchDevice) {
+        ScrollTrigger.normalizeScroll(true);
+      }
+
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2;
 
@@ -205,7 +210,7 @@ export default function ContactMobile() {
         </div>
 
         {/* Layer 2: CTA Section */}
-        <div className="cta-scroll-wrapper gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100vh] z-20">
+        <div className="cta-scroll-wrapper gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] z-20">
           <SectionCTA />
         </div>
 

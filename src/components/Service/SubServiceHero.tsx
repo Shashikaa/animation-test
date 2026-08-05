@@ -25,7 +25,7 @@ export default function SubServiceHero({ data, hideText = false }: HeroProps) {
   const activeTab = data.tabs[activeTabIdx] || data.tabs[0];
 
   return (
-    <div className="relative w-full h-screen bg-[#0F2828]">
+    <div className="relative w-full h-full bg-[#0F2828]">
       
       {/* UNDERNEATH LAYER: Stationary multi-tab interaction stack */}
       <div className="absolute section-container inset-0 w-full h-full flex flex-col justify-between p-6 md:p-12 lg:p-16 z-0 text-[#F4EEDF] pointer-events-auto overflow-y-auto">
@@ -71,7 +71,7 @@ export default function SubServiceHero({ data, hideText = false }: HeroProps) {
 
       {/* TOP LAYER: Set pointer-events-none here to prevent blocking native mobile scroll dragging */}
       <div 
-        className="services-hero-top-layer absolute inset-0 w-full h-screen overflow-hidden z-10 pointer-events-none will-change-[clip-path]"
+        className="services-hero-top-layer absolute inset-0 w-full h-full overflow-hidden z-10 pointer-events-none will-change-[clip-path]"
         style={{ 
           clipPath: "inset(0% 0% 0% 0%)",
           WebkitClipPath: "inset(0% 0% 0% 0%)"

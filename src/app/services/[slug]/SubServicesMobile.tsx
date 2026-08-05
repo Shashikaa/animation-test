@@ -125,13 +125,14 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-      ScrollTrigger.normalizeScroll(false);
+      const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isTouchDevice) {
+        ScrollTrigger.normalizeScroll(true);
+      }
 
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2;
 
-      // 5 Main Transitions (Hero Reveal, Sec1 Sheet, Image Expand, FAQ, CTA & Footer)
-      // 3 Sub-steps (Sequential paragraph roll) + 7 Pause breaks
       const MAIN_PANELS_COUNT = 5;
       const SUB_STEPS_COUNT = 3;
       const PAUSES_COUNT = 7;
@@ -150,7 +151,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
           pin: true,
           pinType: "fixed",
           pinSpacing: true,
-          scrub: 0.5, // Standardized scrub setting
+          scrub: 0.5,
           invalidateOnRefresh: false,
           fastScrollEnd: true,
           preventOverlaps: true
@@ -159,7 +160,6 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
 
       // ── PHASE 1: FULL HERO REVEAL & CLIPPING FIX ──
       scrollTl.addLabel("phase1")
-        // Text clears quickly so it doesn't wrap/cramp while full clipping happens
         .to(".hero-text-wrap", {
           opacity: 0,
           y: -30,
@@ -167,7 +167,6 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
           ease: "power2.in"
         }, "phase1")
 
-        // 1. Force the clip layer to expand completely across tab/mobile viewports
         .to(".services-hero-top-layer", {
           width: "0%", 
           xPercent: -100,
@@ -175,14 +174,12 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
           ease: "power2.inOut",
         }, "phase1")
 
-        // 2. Synchronize full scale/alignment for the background
         .to(".service-hero-bg", {
           scale: 1.0,
           duration: ACTION,
           ease: "power2.inOut"
         }, "phase1");
 
-      // Hold pause after Hero completes BEFORE Section 1 starts
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
       // ── PHASE 2: REVEAL SECTION ONE SHEET ──
@@ -211,7 +208,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         
         .to(".s10-img-absolute-container", {
           width: "100vw",
-          height: "100vh",
+          height: "100dvh",
           right: "0px",
           bottom: "0px",
           borderRadius: "0px",
@@ -257,7 +254,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── CTA INNER CONTENT FADE OUT FIRST (MATCHING HOMEMOBILE) ──
+      // ── CTA INNER CONTENT FADE OUT FIRST ──
       scrollTl.addLabel("ctaFadeOut", ">")
         .to(".faq-content", {
           opacity: 0,
@@ -298,7 +295,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
   }, [introDone]);
 
   return (
-    <div ref={scopeRef} className="w-full relative min-h-screen bg-black text-white overflow-hidden">
+    <div ref={scopeRef} className="w-full relative min-h-[100dvh] bg-black text-white overflow-hidden">
       <div className="services-hero-master pin-all-subservices relative w-full overflow-hidden z-10">
         
         {/* Layer 1: Hero view base */}

@@ -132,7 +132,11 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
     const ctx = gsap.context(() => {
       gsap.ticker.lagSmoothing(0);
 
-      ScrollTrigger.normalizeScroll(false);
+      // Enable touch normalization on mobile to align viewport and address bar behavior
+      const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isTouchDevice) {
+        ScrollTrigger.normalizeScroll(true);
+      }
 
       const performanceTargets = [
         ".project-hero-master", ".hero-image-layer", ".hero-image-inner",
@@ -152,11 +156,9 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
       const DEAD_SCROLL = 0.2;
       const infoSlides = pageData.slides || [];
 
-      // 4 Main Panel Moves (Hero->Info, Info->App, App->FAQ, FAQ->Footer)
-      // Sub-steps for extra info slides beyond the first one
       const MAIN_PANELS_COUNT = 4;
       const SUB_STEPS_COUNT = Math.max(0, infoSlides.length - 1);
-      const PAUSES_COUNT = 5; // Extra pause for CTA content fade step
+      const PAUSES_COUNT = 5;
 
       const DYNAMIC_SCROLL_TRACK = 
         (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -273,7 +275,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP D.5: FAQ CONTENT FADE OUT FIRST (MATCHING HOME & CONTACT MOBILE) ──
+      // ── STEP D.5: FAQ CONTENT FADE OUT FIRST ──
       scrollTl.addLabel("ctaFadeOut", ">")
         .to(".faq-content", { 
           opacity: 0, 
@@ -307,7 +309,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
   return (
     <div 
       ref={scopeRef} 
-      className="w-full relative min-h-screen bg-black text-white overflow-hidden"
+      className="w-full relative min-h-[100dvh] bg-black text-white overflow-hidden"
     >
       <div className="master-viewport pin-all-single-project relative w-full overflow-hidden bg-black" style={{ visibility: "visible" }}>
         
@@ -334,7 +336,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
         </div>
 
         <div 
-          className="project-app-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100vh] structural-layer"
+          className="project-app-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] structural-layer"
           style={{ 
             zIndex: 60, 
             visibility: "hidden", 

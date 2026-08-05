@@ -21,7 +21,7 @@ export default function Hero({ onReady }: HeroProps) {
   }, [onReady]);
 
   return (
-    <section className="hero relative w-full h-screen overflow-hidden bg-transparent">
+    <section className="hero relative w-full h-full overflow-hidden bg-transparent">
       {/* Gradient layer */}
       <div
         className="hero-gradient-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#10221C] to-[#0A4145] z-10"

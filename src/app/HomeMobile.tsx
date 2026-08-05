@@ -119,15 +119,12 @@ export default function HomeMobile() {
       gsap.set(".hero-progress-wrapper", { opacity: 1, visibility: "visible" });
       gsap.set(".hero-progress-bar-fill", { scaleY: 0, transformOrigin: "top center", force3D: true });
       
-      // Frame 1 Initial State (Top Left)
       gsap.set(".hero-left-initial", { visibility: "visible", opacity: 1 });
       gsap.set(".hero-title .custom-line-inner", { opacity: 1, yPercent: 0 });
 
-      // Frame 2 Initial State (Center)
       gsap.set(".hero-right-text-wrap", { opacity: 0, visibility: "hidden" });
       gsap.set(".hero-right-text .custom-line-inner", { opacity: 0, yPercent: 100 });
 
-      // Frame 3 Initial State (Bottom Left)
       gsap.set(".hero-secondary-text-wrap", { opacity: 0, visibility: "hidden" });
       gsap.set(".hero-secondary-para .custom-line-inner", { opacity: 0, yPercent: 100 });
 
@@ -146,7 +143,7 @@ export default function HomeMobile() {
 
       gsap.set(".section-10", { visibility: "hidden", yPercent: 100, zIndex: 105, force3D: true });
       gsap.set(".s10-img-right-wrap", { clipPath: "inset(0% 0% 0% 0%)" });
-      gsap.set(".s10-scrollable-container", { y: "0vh" });
+      gsap.set(".s10-scrollable-container", { y: "0dvh" });
 
       gsap.set(".section-7", { visibility: "hidden", yPercent: 100, zIndex: 110, force3D: true });
       gsap.set(".s7-bg-img", { yPercent: 20, force3D: true });
@@ -175,7 +172,10 @@ export default function HomeMobile() {
     if (!preloaderDone || !introDone) return;
 
     const ctx = gsap.context(() => {
-      gsap.ticker.lagSmoothing(0);
+      const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isTouchDevice) {
+        ScrollTrigger.normalizeScroll(true);
+      }
 
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2; 
@@ -218,7 +218,6 @@ export default function HomeMobile() {
           "heroStart"
         )
 
-        // 1. FRAME 1 -> FRAME 2: Top-left text fades out line-by-line
         .to(".hero-title .custom-line-inner", {
           opacity: 0,
           y: -20,
@@ -228,7 +227,6 @@ export default function HomeMobile() {
         }, "heroStart")
         .set(".hero-left-initial", { visibility: "hidden" })
 
-        // Center text (Frame 2) fades in line-by-line
         .set(".hero-right-text-wrap", { visibility: "visible", opacity: 1 }, "heroStart+=0.1")
         .to(".hero-right-text .custom-line-inner", {
           opacity: 1,
@@ -240,7 +238,6 @@ export default function HomeMobile() {
 
         .to({}, { duration: DEAD_SCROLL })
 
-        // 2. FRAME 2 -> FRAME 3: Center text fades out
         .addLabel("heroStep2", `heroStart+=${ACTION * 0.6 + DEAD_SCROLL}`)
         .to(".hero-progress-bar-fill", { scaleY: 0.66, duration: ACTION * 0.5, ease: "none" }, "heroStep2")
 
@@ -253,7 +250,6 @@ export default function HomeMobile() {
         }, "heroStep2")
         .set(".hero-right-text-wrap", { visibility: "hidden" })
 
-        // Bottom-left text (Frame 3) fades in line-by-line
         .set(".hero-secondary-text-wrap", { visibility: "visible", opacity: 1 }, "heroStep2+=0.1")
         .to(".hero-secondary-para .custom-line-inner", {
           opacity: 1,
@@ -265,7 +261,6 @@ export default function HomeMobile() {
 
         .to({}, { duration: DEAD_SCROLL })
 
-        // 3. FRAME 3 -> SECTION 2: Bottom-left text fades out & SectionTwo slides up
         .addLabel("heroExit", `heroStep2+=${ACTION * 0.6 + DEAD_SCROLL}`)
         .to(".hero-progress-bar-fill", { scaleY: 1, duration: ACTION * 0.5, ease: "none" }, "heroExit")
 
@@ -342,8 +337,8 @@ export default function HomeMobile() {
         .fromTo(".section-10", { yPercent: 100 }, { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec10Start")
         .to(".section-8", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "sec10Start")
         
-        .to(".s10-title, .s10-title-sub, .s10-para-top", { y: "-50vh", duration: ACTION, ease: "power2.inOut" }, ">")
-        .fromTo(".s10-scrollable-container", { y: "0vh" }, { y: "-36vh", duration: ACTION, ease: "power2.inOut" }, "<")
+        .to(".s10-title, .s10-title-sub, .s10-para-top", { y: "-50dvh", duration: ACTION, ease: "power2.inOut" }, ">")
+        .fromTo(".s10-scrollable-container", { y: "0dvh" }, { y: "-36dvh", duration: ACTION, ease: "power2.inOut" }, "<")
 
         .to({}, { duration: DEAD_SCROLL });
 
@@ -374,7 +369,7 @@ export default function HomeMobile() {
         .to(".s9-title", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.15")
         .to(".s9-para", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.15");
 
-      // ── CTA REVEAL (MATCHES APPSECTION SLIDE UP LOGIC) ──
+      // ── CTA REVEAL ──
       tl.addLabel("ctaStart", ">")
         .set(".section-cta", { visibility: "visible" }, "ctaStart")
         .fromTo(
@@ -387,43 +382,41 @@ export default function HomeMobile() {
 
         .to({}, { duration: DEAD_SCROLL });
 
-// ── CTA CONTENT FADE OUT FIRST ──
-tl.addLabel("ctaFadeOut", ">")
-  .to(
-    [".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"],
-    {
-      opacity: 0,
-      y: -30,
-      duration: ACTION * 0.1,
-      ease: "power2.in",
-    },
-    "ctaFadeOut"
-  )
+      // ── CTA CONTENT FADE OUT FIRST ──
+      tl.addLabel("ctaFadeOut", ">")
+        .to(
+          [".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"],
+          {
+            opacity: 0,
+            y: -30,
+            duration: ACTION * 0.1,
+            ease: "power2.in",
+          },
+          "ctaFadeOut"
+        )
+        .to({}, { duration: 0 });
 
-  // Brief pause so the CTA content is completely gone before the footer arrives
-  .to({}, { duration: 0 })
-
-// ── FOOTER SLIDE UP ──
-tl.addLabel("footerStart", ">")
-  .set(".footer", { visibility: "visible" }, "footerStart")
-  .to(
-    ".footer",
-    {
-      yPercent: 0,
-      duration: ACTION,
-      ease: "power2.inOut",
-    },
-    "footerStart"
-  )
-  .to(
-    ".s9-bg-img",
-    {
-      yPercent: -20,
-      duration: ACTION,
-      ease: "power2.inOut",
-    },
-    "footerStart"
-  );
+      // ── FOOTER SLIDE UP ──
+      tl.addLabel("footerStart", ">")
+        .set(".footer", { visibility: "visible" }, "footerStart")
+        .to(
+          ".footer",
+          {
+            yPercent: 0,
+            duration: ACTION,
+            ease: "power2.inOut",
+          },
+          "footerStart"
+        )
+        .to(
+          ".s9-bg-img",
+          {
+            yPercent: -20,
+            duration: ACTION,
+            ease: "power2.inOut",
+          },
+          "footerStart"
+        );
 
       onScrollReady();
 
@@ -433,7 +426,7 @@ tl.addLabel("footerStart", ">")
   }, [preloaderDone, introDone]);
 
   return (
-    <div ref={scopeRef} className="min-h-screen w-full bg-black text-white overflow-hidden">
+    <div ref={scopeRef} className="min-h-[100dvh] w-full bg-black text-white overflow-hidden">
       <style jsx global>{`
         .hero-right-text:not([data-split-complete="true"]),
         .hero-secondary-para:not([data-split-complete="true"]) {
@@ -470,7 +463,7 @@ tl.addLabel("footerStart", ">")
         </div>
 
         {/* Layer 6: App Section */}
-        <div className="section-appsec gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100vh] bg-black" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        <div className="section-appsec gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] bg-black" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <Appsection />
         </div>
 
@@ -479,8 +472,8 @@ tl.addLabel("footerStart", ">")
           <SectionNine />
         </div>
 
-        {/* Layer 8: CTA Section (Configured identically to Appsection) */}
-        <div className="section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100vh]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        {/* Layer 8: CTA Section */}
+        <div className="section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <SectionCTA />
         </div>
 

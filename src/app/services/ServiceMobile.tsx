@@ -139,7 +139,10 @@ export default function ServicesMobile() {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-      ScrollTrigger.normalizeScroll(false);
+      const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isTouchDevice) {
+        ScrollTrigger.normalizeScroll(true);
+      }
 
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2;
@@ -159,7 +162,6 @@ export default function ServicesMobile() {
           if ((window as any)._sec2GoTo) {
             (window as any)._sec2GoTo(nextIdx);
           }
-          // Force visibility target synchronization on quick jumps
           gsap.set(".s2-inner-fade-target", { opacity: 1 });
         }
       };
@@ -233,15 +235,12 @@ export default function ServicesMobile() {
       // ── STEP D: DISCRETE STEPPER SLIDE TRACK (3 SLIDES) ──
       const stepDuration = ACTION * 0.5;
 
-      // Slide 1 Transition Point
       tl.call(() => triggerSec2Hook(0), [], ">")
         .to(".s2-inner-fade-target", { opacity: 1, duration: stepDuration });
 
-      // Slide 2 Transition Point
       tl.call(() => triggerSec2Hook(1), [], ">")
         .to(".s2-inner-fade-target", { opacity: 1, duration: stepDuration });
 
-      // Slide 3 Transition Point (Ensures text stays fully visible on fast scroll)
       tl.call(() => triggerSec2Hook(2), [], ">")
         .to(".s2-inner-fade-target", { opacity: 1, duration: stepDuration });
 
@@ -333,7 +332,7 @@ export default function ServicesMobile() {
 
         {/* Layer 4: App Section Slide Up Wrapper */}
         <div 
-          className="services-appsec-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-screen overflow-x-hidden bg-black" 
+          className="services-appsec-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] overflow-x-hidden bg-black" 
           style={{ 
             zIndex: 35,
             pointerEvents: "auto",
@@ -345,7 +344,7 @@ export default function ServicesMobile() {
 
         {/* Layer 5: Section CTA Block */}
         <div 
-          className="services-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-screen z-[150]" 
+          className="services-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] z-[150]" 
           style={{ 
             pointerEvents: "auto", 
             visibility: "hidden"
