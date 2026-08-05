@@ -300,7 +300,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
             duration: PANEL_ACTION * 0.5, 
             ease: "power2.in" 
           }, "ctaFadeOut")
-          .to({}, { duration: PAUSE_ACTION });
+          .to({}, { duration: 0 });
 
         // ── FOOTER SLIDE UP ──
         scrollTl.addLabel("footerStart", ">");

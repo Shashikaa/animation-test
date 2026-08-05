@@ -335,7 +335,7 @@ export default function ServicesDesktop() {
             duration: PANEL_ACTION * 0.5, 
             ease: "power2.in" 
           }, "ctaFadeOut")
-          .to({}, { duration: PAUSE_ACTION });
+          .to({}, { duration: 0 });
 
         // ── FOOTER REVEAL TRACK ──
         tl.addLabel("footerStart", ">")

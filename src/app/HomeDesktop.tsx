@@ -516,7 +516,7 @@ tl.addLabel("ctaFadeOut", ">")
   }, "ctaFadeOut")
   
   // Brief pause so it's fully gone before footer arrives
-  .to({}, { duration: PAUSE_ACTION })
+  .to({}, { duration: 0 })
 
 // ── 9. FOOTER REVEAL ──
 tl.addLabel("footerStart", ">")

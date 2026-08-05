@@ -272,7 +272,7 @@ export default function ContactDesktop() {
             },
             "ctaFadeOut"
           )
-          .to({}, { duration: PAUSE_ACTION });
+          .to({}, { duration: 0 });
 
         // ── PHASE 5: Footer slide up ──
         tl.addLabel("footerStart", ">")

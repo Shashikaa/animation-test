@@ -364,7 +364,7 @@ export default function AboutDesktop() {
           }, "ctaFadeOut")
           
           // Pause so content is completely clear before footer enters
-          .to({}, { duration: PAUSE_ACTION });
+          .to({}, { duration: 0 });
 
         // ── 9. FOOTER REVEAL TRACK ──
         tl.addLabel("footerStart", ">")

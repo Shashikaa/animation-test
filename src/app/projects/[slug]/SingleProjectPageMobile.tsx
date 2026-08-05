@@ -278,7 +278,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
         .to(".faq-content", { 
           opacity: 0, 
           y: -30, 
-          duration: ACTION * 0.5, 
+          duration: ACTION * 0.1, 
           ease: "power2.in",
           pointerEvents: "none"
         }, "ctaFadeOut")

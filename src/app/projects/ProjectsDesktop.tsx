@@ -334,7 +334,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
             duration: PANEL_ACTION * 0.5, 
             ease: "power2.in" 
           }, "ctaFadeOut")
-          .to({}, { duration: PAUSE_ACTION });
+          .to({}, { duration: 0 });
 
         // ── STEP 5: FOOTER REVEAL TRACK ──
         scrollTl.addLabel("footerStart", ">")

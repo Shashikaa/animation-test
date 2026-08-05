@@ -394,7 +394,7 @@ tl.addLabel("ctaFadeOut", ">")
     {
       opacity: 0,
       y: -30,
-      duration: ACTION * 0.5,
+      duration: ACTION * 0.1,
       ease: "power2.in",
     },
     "ctaFadeOut"
