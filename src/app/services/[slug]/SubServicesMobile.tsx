@@ -276,7 +276,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
           }, 
           "ctaFadeOut"
         )
-        .to({}, { duration: DEAD_SCROLL });
+        .to({}, { duration: 0 });
 
       // ── FOOTER REVEAL TRACK ──
       scrollTl.addLabel("footerStart", ">")

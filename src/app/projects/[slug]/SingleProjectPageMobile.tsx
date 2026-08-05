@@ -282,7 +282,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
           ease: "power2.in",
           pointerEvents: "none"
         }, "ctaFadeOut")
-        .to({}, { duration: DEAD_SCROLL });
+        .to({}, { duration: 0 });
 
       // ── STEP E: FOOTER SLIDE-UP ──
       scrollTl.addLabel("footerStart", ">");

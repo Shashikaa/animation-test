@@ -12,12 +12,10 @@ import Footer from "@/src/components/Footer";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Standardized metrics matching AboutMobile, ContactMobile & SingleProjectPageMobile
 const PX_PER_MAIN_PANEL = 850; 
 const PX_PER_SUB_STEP = 350;   
 const PAUSE_PX = 100;          
 
-// Configure GSAP to ignore height-only resizes caused by mobile keyboards opening/closing
 if (typeof window !== "undefined") {
   ScrollTrigger.config({ 
     ignoreMobileResize: true,
@@ -25,7 +23,6 @@ if (typeof window !== "undefined") {
   });
 }
 
-// Line splitting utility
 function executeMobileSplitting(selector: string) {
   const elements = document.querySelectorAll(selector);
   elements.forEach((element) => {
@@ -62,14 +59,12 @@ export default function ProjectsMobile() {
   const [introDone, setIntroDone] = useState(false);
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
 
-  // Reset scroll position on refresh
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.history.scrollRestoration = "manual";
     window.scrollTo(0, 0);
   }, []);
 
-  // Handle body overflow logic during initial page loading
   useEffect(() => {
     document.body.style.overflow = introDone ? "" : "hidden";
     return () => {
@@ -77,13 +72,22 @@ export default function ProjectsMobile() {
     };
   }, [introDone]);
 
-  // Refresh ScrollTrigger only on width/orientation change (ignore height updates from mobile keyboards)
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     let lastWidth = window.innerWidth;
 
     const handleResize = () => {
+      const activeElement = document.activeElement;
+      const isInputFocused =
+        activeElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.tagName === "SELECT" ||
+          activeElement.getAttribute("role") === "combobox");
+
+      if (isInputFocused) return;
+
       const currentWidth = window.innerWidth;
       if (currentWidth !== lastWidth) {
         lastWidth = currentWidth;
@@ -95,7 +99,6 @@ export default function ProjectsMobile() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // 1. Establish precise starting positions cleanly
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       gsap.set(".projects-hero-bg", { scale: 1.6, yPercent: 0, transformOrigin: "center center", force3D: true });
@@ -108,14 +111,16 @@ export default function ProjectsMobile() {
       gsap.set(".parallax-img-asset", { yPercent: -20, force3D: true });
 
       gsap.set(".projects-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden", force3D: true });
-      gsap.set([".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
+      gsap.set(
+        [".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"], 
+        { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
+      );
       gsap.set(".projects-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden", force3D: true });
     }, scopeRef);
     
     return () => ctx.revert();
   }, []);
 
-  // 2. Play Intro Cinematic immediately
   useEffect(() => {
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({ 
@@ -133,7 +138,6 @@ export default function ProjectsMobile() {
     return () => ctx.revert();
   }, []);
 
-  // 3. Master Scroll Timeline & Layering Controller
   useEffect(() => {
     if (!introDone) return;
 
@@ -169,14 +173,11 @@ export default function ProjectsMobile() {
         }
       });
 
-      // ── STEP A: HERO TEXT SWAPPING ──
       scrollTl.set([".scroll-para-1 .custom-line-inner", ".scroll-para-2 .custom-line-inner"], { opacity: 0, yPercent: 100 }, 0);
 
-      // 1. Hero text vanishes fast on initial scroll
       scrollTl.to(".hero-text-wrap", { opacity: 0, y: -30, ease: "power2.in", duration: ACTION * 0.5 }, 0);
       scrollTl.set(".hero-text-wrap", { visibility: "hidden" }, ACTION * 0.5);
       
-      // 2. Paragraph 1 Entrance
       scrollTl.set(".scroll-para-1", { visibility: "visible" }, ACTION * 0.5);
       scrollTl.to(".scroll-para-1 .custom-line-inner", { 
         opacity: 1, 
@@ -186,11 +187,9 @@ export default function ProjectsMobile() {
         ease: "power2.out" 
       }, ACTION * 0.5);
 
-      // Paragraph 1 Exit
       scrollTl.to(".scroll-para-1 .custom-line-inner", { opacity: 0, y: -30, ease: "power1.in", duration: ACTION * 0.5 }, "+=0.2");
       scrollTl.set(".scroll-para-1", { visibility: "hidden" });
       
-      // 3. Paragraph 2 Entrance
       scrollTl.set(".scroll-para-2", { visibility: "visible" }, ">");
       scrollTl.to(".scroll-para-2 .custom-line-inner", { 
         opacity: 1, 
@@ -200,11 +199,9 @@ export default function ProjectsMobile() {
         ease: "power2.out" 
       }, ">");
       
-      // Paragraph 2 Exit
       scrollTl.to(".scroll-para-2 .custom-line-inner", { opacity: 0, y: -40, ease: "power1.in", duration: ACTION * 0.5 }, "+=0.2");
       scrollTl.set(".scroll-para-2", { visibility: "hidden" });
 
-      // Background subtle translation during text sequence
       scrollTl.fromTo(
         ".projects-hero-bg", 
         { yPercent: 0 }, 
@@ -214,7 +211,6 @@ export default function ProjectsMobile() {
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP B: SECTION ONE TALL SCROLL OVER HERO ──
       const getSectionOneScrollDistance = () => {
         if (!sectionOneRef.current) return "100vh";
         const elementHeight = sectionOneRef.current.offsetHeight;
@@ -235,7 +231,6 @@ export default function ProjectsMobile() {
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP C: SECTION TWO SLIDES UP OVER SECTION ONE ──
       scrollTl.to(".section-two-wrapper", {
         y: "0vh",
         duration: ACTION,
@@ -246,7 +241,6 @@ export default function ProjectsMobile() {
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP D: SECTION TWO -> CTA ──
       scrollTl.addLabel("ctaStart", ">")
         .set(".projects-section-cta", { visibility: "visible" }, "ctaStart")
         .fromTo(
@@ -257,10 +251,9 @@ export default function ProjectsMobile() {
         )
         .to(".section-two-wrapper", { y: "-10vh", duration: ACTION, ease: "power2.inOut" }, "ctaStart");
 
-      // Dead scroll buffer room to keep the CTA steady before fade-out starts
-      scrollTl.to({}, { duration: DEAD_SCROLL * 2.5 });
+      scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP D.5: CTA INNER CONTENT FADE OUT FIRST ──
+      // ── STEP D.5: CTA INNER CONTENT FADE OUT & DISABLE INTERACTION ──
       scrollTl.addLabel("ctaFadeOut", ">")
         .to(
           [".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"],
@@ -272,7 +265,13 @@ export default function ProjectsMobile() {
           }, 
           "ctaFadeOut"
         )
-        .to({}, { duration: 0 });
+        .set(
+          [".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"],
+          { 
+            pointerEvents: "none", 
+            visibility: "hidden" 
+          }
+        );
 
       // ── STEP E: CTA -> FOOTER ──
       scrollTl.addLabel("footerStart", ">")

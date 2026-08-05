@@ -278,7 +278,7 @@ export default function AboutMobile() {
         )
 
         // Brief pause so the CTA inner content is completely gone before footer slides up
-        .to({}, { duration: DEAD_SCROLL });
+        .to({}, { duration: 0 });
 
       // ── Step 7: Footer Reveal Track ──
       tl.addLabel("footerStart", ">")

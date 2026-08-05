@@ -401,7 +401,7 @@ tl.addLabel("ctaFadeOut", ">")
   )
 
   // Brief pause so the CTA content is completely gone before the footer arrives
-  .to({}, { duration: DEAD_SCROLL })
+  .to({}, { duration: 0 })
 
 // ── FOOTER SLIDE UP ──
 tl.addLabel("footerStart", ">")

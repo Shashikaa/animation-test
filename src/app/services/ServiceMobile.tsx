@@ -281,7 +281,7 @@ export default function ServicesMobile() {
           }, 
           "ctaFadeOut"
         )
-        .to({}, { duration: DEAD_SCROLL });
+        .to({}, { duration: 0 });
 
       // ── STEP G: CTA -> FOOTER ──
       tl.addLabel("footerStart")

@@ -167,7 +167,7 @@ export default function ContactMobile() {
           "ctaFadeOut"
         )
 
-        .to({}, { duration: DEAD_SCROLL })
+        .to({}, { duration: 0 })
 
         // 4. FOOTER REVEAL
         .addLabel("footerStart", ">")
