@@ -144,8 +144,6 @@ export default function ServicesMobile() {
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2;
 
-      // Services Page: 6 Main Panel Moves (Compress Hero, Sec1 Reveal, Sec2 Reveal, AppSec Reveal, CTA Reveal, Footer Reveal)
-      // 3 Slide track steps inside Sec 2 + 7 Pause breaks
       const MAIN_PANELS_COUNT = 6;
       const SUB_STEPS_COUNT = 3; 
       const PAUSES_COUNT = 7;
@@ -161,6 +159,8 @@ export default function ServicesMobile() {
           if ((window as any)._sec2GoTo) {
             (window as any)._sec2GoTo(nextIdx);
           }
+          // Force visibility target synchronization on quick jumps
+          gsap.set(".s2-inner-fade-target", { opacity: 1 });
         }
       };
 
@@ -172,7 +172,7 @@ export default function ServicesMobile() {
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: 0.5, // Standardized scrub setting matching all pages
+          scrub: 0.5,
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -230,16 +230,20 @@ export default function ServicesMobile() {
           ease: "power2.inOut"
         }, "<");
 
-      // ── STEP D: SLIDE TRACK STEPPER (3 SLIDES) ──
-      tl.to({}, { 
-        duration: ACTION * 1.5,
-        onUpdate: function() {
-          const p = this.progress();
-          if (p < 0.33) triggerSec2Hook(0);
-          else if (p < 0.66) triggerSec2Hook(1);
-          else triggerSec2Hook(2);
-        }
-      });
+      // ── STEP D: DISCRETE STEPPER SLIDE TRACK (3 SLIDES) ──
+      const stepDuration = ACTION * 0.5;
+
+      // Slide 1 Transition Point
+      tl.call(() => triggerSec2Hook(0), [], ">")
+        .to(".s2-inner-fade-target", { opacity: 1, duration: stepDuration });
+
+      // Slide 2 Transition Point
+      tl.call(() => triggerSec2Hook(1), [], ">")
+        .to(".s2-inner-fade-target", { opacity: 1, duration: stepDuration });
+
+      // Slide 3 Transition Point (Ensures text stays fully visible on fast scroll)
+      tl.call(() => triggerSec2Hook(2), [], ">")
+        .to(".s2-inner-fade-target", { opacity: 1, duration: stepDuration });
 
       tl.to({}, { duration: DEAD_SCROLL });
 
@@ -256,7 +260,7 @@ export default function ServicesMobile() {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP F: APP SECTION -> CTA (MATCHES HOMEMOBILE SETUP) ──
+      // ── STEP F: APP SECTION -> CTA ──
       tl.addLabel("ctaStart")
         .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
         .fromTo(
@@ -269,7 +273,7 @@ export default function ServicesMobile() {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP F.5: CTA INNER CONTENT FADE OUT FIRST (MATCHING HOMEMOBILE) ──
+      // ── STEP F.5: CTA INNER CONTENT FADE OUT FIRST ──
       tl.addLabel("ctaFadeOut", ">")
         .to(
           [".services-section-cta .cta-inner-mobile", ".services-section-cta .cta-inner-desktop"],

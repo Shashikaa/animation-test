@@ -21,8 +21,8 @@ const slides = [
   },
 ];
 
-const CLIP_DURATION = 0.6;
-const TEXT_DURATION = 0.55;
+const CLIP_DURATION = 0.5;
+const TEXT_DURATION = 0.45;
 
 type SectionTwoProps = {
   isActive: boolean;
@@ -75,51 +75,50 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
   const currentRef = useRef<number>(0);
   const [current, setCurrent] = useState(0);
 
-  function animateTextIn(index: number) {
+  // Directly resets and animates text in for a given slide
+  const animateTextIn = useCallback((index: number, immediate = false) => {
     if (!containerRef.current) return;
+
+    // First ensure container elements for target slide are visible
+    slides.forEach((_, i) => {
+      const groupEl = containerRef.current?.querySelector(`.s3-text-group-${i + 1}`) as HTMLElement;
+      if (groupEl) {
+        const isTarget = i === index;
+        groupEl.style.opacity = isTarget ? "1" : "0";
+        groupEl.style.pointerEvents = isTarget ? "auto" : "none";
+        groupEl.style.visibility = isTarget ? "visible" : "hidden";
+      }
+    });
+
     const targets = containerRef.current.querySelectorAll(
       `.s3-text-group-${index + 1} .gs-line-inner`
     );
-    targets.forEach((inner, idx) => {
-      gsap.killTweensOf(inner);
+
+    gsap.killTweensOf(targets);
+
+    if (immediate) {
+      gsap.set(targets, { y: 0, opacity: 1 });
+    } else {
       gsap.fromTo(
-        inner,
-        { y: 30, opacity: 0 },
+        targets,
+        { y: 25, opacity: 0 },
         {
           y: 0,
           opacity: 1,
           duration: TEXT_DURATION,
           ease: "power2.out",
-          delay: idx * 0.03,
+          stagger: 0.03,
+          overwrite: "auto",
         }
       );
-    });
-  }
-
-  function animateTextOut(index: number, callback?: () => void) {
-    if (!containerRef.current) return;
-    const targets = containerRef.current.querySelectorAll(
-      `.s3-text-group-${index + 1} .gs-line-inner`
-    );
-    if (targets.length === 0) {
-      if (callback) callback();
-      return;
     }
-    gsap.killTweensOf(Array.from(targets));
-    gsap.to(Array.from(targets), {
-      y: -20,
-      opacity: 0,
-      duration: 0.35,
-      ease: "power2.in",
-      stagger: 0.02,
-      onComplete: callback,
-    });
-  }
+  }, []);
 
   const goTo = useCallback((next: number, direction: "next" | "prev") => {
     const prev = currentRef.current;
     if (next === prev || !containerRef.current) return;
 
+    const isRapidJump = Math.abs(next - prev) > 1;
     currentRef.current = next;
     setCurrent(next);
 
@@ -129,51 +128,32 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
       const allBgs = containerRef.current!.querySelectorAll(`${panel} .s3-bg`);
       gsap.killTweensOf(allBgs);
 
-      const currentIncoming = containerRef.current!.querySelector(`${panel} .s3-bg-${next + 1}`);
-      const currentPrev = containerRef.current!.querySelector(`${panel} .s3-bg-${prev + 1}`);
+      // Handle Background layers synchronously if rapid jump
+      slides.forEach((_, i) => {
+        const bgEl = containerRef.current!.querySelector(`${panel} .s3-bg-${i + 1}`);
+        if (bgEl) {
+          if (i === next) {
+            gsap.set(bgEl, { zIndex: 2, clipPath: "inset(0% 0 0 0)" });
+          } else {
+            gsap.set(bgEl, { zIndex: 0, clipPath: "inset(100% 0 0 0)" });
+          }
+        }
+      });
+    });
 
-      if (currentIncoming && currentPrev) {
-        if (direction === "next") {
-          gsap.set(currentIncoming, { clipPath: "inset(100% 0 0 0)", zIndex: 2 });
-          gsap.set(currentPrev, { clipPath: "inset(0 0 0 0)", zIndex: 1 });
-
-          gsap.to(currentIncoming, {
-            clipPath: "inset(0% 0 0 0)",
-            duration: CLIP_DURATION,
-            ease: "power2.inOut",
-            onComplete: () => {
-              gsap.set(currentIncoming, { zIndex: 1 });
-              gsap.set(currentPrev, { zIndex: 0, clipPath: "inset(100% 0 0 0)" });
-            },
-          });
-        } else {
-          gsap.set(currentIncoming, { clipPath: "inset(0 0 0 0)", zIndex: 1 });
-          gsap.set(currentPrev, { clipPath: "inset(0 0 0 0)", zIndex: 2 });
-
-          gsap.to(currentPrev, {
-            clipPath: "inset(100% 0 0 0)",
-            duration: CLIP_DURATION,
-            ease: "power2.inOut",
-            onComplete: () => {
-              gsap.set(currentPrev, { zIndex: 0 });
-            },
-          });
+    // Animate text directly without relying on asynchronous complete callbacks
+    slides.forEach((_, i) => {
+      if (i !== next) {
+        const outTargets = containerRef.current?.querySelectorAll(`.s3-text-group-${i + 1} .gs-line-inner`);
+        if (outTargets) {
+          gsap.killTweensOf(outTargets);
+          gsap.set(outTargets, { y: -15, opacity: 0 });
         }
       }
     });
 
-    animateTextOut(prev, () => {
-      slides.forEach((_, i) => {
-        const el = containerRef.current?.querySelector(`.s3-text-group-${i + 1}`) as HTMLElement;
-        if (el) {
-          el.style.opacity = i === next ? "1" : "0";
-          el.style.pointerEvents = i === next ? "auto" : "none";
-          el.style.visibility = i === next ? "visible" : "hidden";
-        }
-      });
-      animateTextIn(next);
-    });
-  }, []);
+    animateTextIn(next, isRapidJump);
+  }, [animateTextIn]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -183,12 +163,13 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
       const splitTargets = containerRef.current.querySelectorAll<HTMLElement>(".split-text-target");
       splitTargets.forEach((el) => splitElementIntoLines(el));
 
+      // Set initial state for all slides
       slides.forEach((_, i) => {
-        if (i !== 0) {
-          gsap.set(
-            containerRef.current!.querySelectorAll(`.s3-text-group-${i + 1} .gs-line-inner`),
-            { y: 30, opacity: 0 }
-          );
+        const targets = containerRef.current!.querySelectorAll(`.s3-text-group-${i + 1} .gs-line-inner`);
+        if (i === 0) {
+          gsap.set(targets, { y: 0, opacity: 1 });
+        } else {
+          gsap.set(targets, { y: 25, opacity: 0 });
         }
       });
     }, 50);
@@ -209,9 +190,9 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
 
   useEffect(() => {
     if (isActive && containerRef.current) {
-      animateTextIn(currentRef.current);
+      animateTextIn(currentRef.current, false);
     }
-  }, [isActive]);
+  }, [isActive, animateTextIn]);
 
   const renderTextContent = () => (
     <div className="absolute bottom-[10%] left-[5%] md:left-[8%] right-[5%] z-10 pointer-events-none max-w-6xl">
@@ -227,7 +208,6 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
             opacity: current === i ? 1 : 0,
             pointerEvents: current === i ? "auto" : "none",
             visibility: current === i ? "visible" : "hidden",
-            transition: "opacity 0.4s ease, visibility 0.4s",
           }}
         >
           {/* Title with Split Text */}

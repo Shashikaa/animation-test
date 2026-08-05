@@ -114,7 +114,6 @@ body {
 html.preloading,
 body.preloading {
   overflow: hidden !important;
-  touch-action: none !important;
   background: linear-gradient(135deg, #162D24 0%, #094146 100%) !important;
   background-color: #162D24 !important;
 }
@@ -144,7 +143,7 @@ body.preloading header {
   width: 100%;
 }
 
-/* ─── Full-Height Viewport Pin Wrapper ───────────────────────── */
+/* ─── Full-Height Viewport Pin Wrapper (iOS dvh Fix) ─────────────────── */
 .pin-all,
 .pin-all-home,
 .pin-all-contact,
@@ -152,8 +151,8 @@ body.preloading header {
 .pin-all-services,
 .pin-all-subservices,
 .pin-all-single-project {
-  height: 100% !important;
-  min-height: calc(var(--vh, 1vh) * 100) !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
   width: 100%;
   position: relative;
   overflow: hidden;
@@ -161,12 +160,12 @@ body.preloading header {
 
 /* Lock GSAP pin-spacer on iOS and Android without flickering */
 .pin-spacer {
-  min-height: calc(var(--vh, 1vh) * 100) !important;
+  min-height: 100dvh !important;
   pointer-events: auto !important;
 }
 
 .pin-spacer > div {
-  height: 100% !important;
+  height: 100dvh !important;
   max-height: none !important;
 }
 
@@ -302,7 +301,6 @@ p {
 
 /* ─── Modern Text Reveal System ─────────────────────────────── */
 
-/* 1. Base Container & Perspective Rules */
 .reveal-text {
   perspective: 1000px;
   backface-visibility: hidden;
@@ -315,7 +313,6 @@ p {
   }
 }
 
-/* 2. Line Masking (Prevents descenders like 'g', 'y', 'p' from getting cut off) */
 .gs-line {
   display: block;
   overflow: hidden;
@@ -324,15 +321,13 @@ p {
   perspective: 800px;
 }
 
-/* 3. Hardware-Accelerated 3D Transform Layer */
 .gs-line-inner {
-  display: block !important; /* Overrides inline-block to preserve 3D perspective transforms */
+  display: block !important;
   will-change: transform, opacity;
   transform-style: preserve-3d;
   backface-visibility: hidden;
 }
 
-/* 4. Word-Level Wrapping & Layout Stability */
 .gs-word-wrapper {
   display: inline-block;
   overflow: hidden;
@@ -378,7 +373,6 @@ button.btn-underline:hover,
   opacity: 0.7 !important;
 }
 
-/* The Underline Bar */
 a.btn-underline::after,
 button.btn-underline::after,
 .btn-underline::after {

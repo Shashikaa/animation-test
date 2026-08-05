@@ -24,7 +24,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   const pathname = usePathname();
   const lenisRef = useRef<Lenis | null>(null);
 
-  // Set initial --vh CSS variable based on innerHeight once to prevent dynamic recalculations
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -37,7 +36,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     let windowWidth = window.innerWidth;
     const handleResize = () => {
-      // Only recalculate on actual screen width change / orientation, not mobile URL bar hide/show
       if (window.innerWidth !== windowWidth) {
         windowWidth = window.innerWidth;
         setVh();
@@ -52,19 +50,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     };
   }, []);
 
-  // Lock native mobile scroll until preloader is finished
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    
-    if (isTouchDevice && !preloaderDone) {
-      const preventTouch = (e: TouchEvent) => e.preventDefault();
-      window.addEventListener("touchmove", preventTouch, { passive: false });
-      return () => window.removeEventListener("touchmove", preventTouch);
-    }
-  }, [preloaderDone]);
-
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -72,14 +57,17 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       window.history.scrollRestoration = "manual";
     }
 
+    const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
     ScrollTrigger.config({
       ignoreMobileResize: true,
       autoRefreshEvents: "DOMContentLoaded,load,visibilitychange"
     });
 
-    const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-
     if (isTouchDevice) {
+      // Unify iOS and Android touch scrolling & keep address bar behavior consistent
+      ScrollTrigger.normalizeScroll(true);
+
       if (thumbRef.current?.parentElement) {
         thumbRef.current.parentElement.style.display = "none";
       }
@@ -87,7 +75,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       return;
     }
 
-    // Ultrafast, buttery smooth Lenis setup for desktop
+    // Lenis setup for desktop
     const lenis = new Lenis({
       lerp: 0.14,
       wheelMultiplier: 1.4,

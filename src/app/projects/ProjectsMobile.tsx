@@ -106,8 +106,8 @@ export default function ProjectsMobile() {
       
       gsap.set([".scroll-para-1", ".scroll-para-2"], { opacity: 1, visibility: "hidden", force3D: true });
       
-      gsap.set(".section-one-wrapper", { top: "100vh", height: "auto", zIndex: 20, force3D: true });
-      gsap.set(".section-two-wrapper", { y: "100vh", zIndex: 30, force3D: true });
+      gsap.set(".section-one-wrapper", { top: "100dvh", height: "auto", zIndex: 20, force3D: true });
+      gsap.set(".section-two-wrapper", { y: "100dvh", zIndex: 30, force3D: true });
       gsap.set(".parallax-img-asset", { yPercent: -20, force3D: true });
 
       gsap.set(".projects-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden", force3D: true });
@@ -212,7 +212,7 @@ export default function ProjectsMobile() {
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
       const getSectionOneScrollDistance = () => {
-        if (!sectionOneRef.current) return "100vh";
+        if (!sectionOneRef.current) return "100dvh";
         const elementHeight = sectionOneRef.current.offsetHeight;
         return `${elementHeight}px`;
       };
@@ -232,7 +232,7 @@ export default function ProjectsMobile() {
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
       scrollTl.to(".section-two-wrapper", {
-        y: "0vh",
+        y: "0dvh",
         duration: ACTION,
         ease: "power2.inOut",
         onStart: () => setIsSectionTwoActive(true),
@@ -249,11 +249,10 @@ export default function ProjectsMobile() {
           { yPercent: 0, duration: ACTION, ease: "power2.inOut" },
           "ctaStart"
         )
-        .to(".section-two-wrapper", { y: "-10vh", duration: ACTION, ease: "power2.inOut" }, "ctaStart");
+        .to(".section-two-wrapper", { y: "-10dvh", duration: ACTION, ease: "power2.inOut" }, "ctaStart");
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP D.5: CTA INNER CONTENT FADE OUT & DISABLE INTERACTION ──
       scrollTl.addLabel("ctaFadeOut", ">")
         .to(
           [".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"],
@@ -273,7 +272,6 @@ export default function ProjectsMobile() {
           }
         );
 
-      // ── STEP E: CTA -> FOOTER ──
       scrollTl.addLabel("footerStart", ">")
         .set(".section-two-wrapper", { visibility: "hidden" }, "footerStart")
         .set(".projects-footer-wrap", { visibility: "visible" }, "footerStart")
@@ -302,7 +300,7 @@ export default function ProjectsMobile() {
   return (
     <div 
       ref={scopeRef} 
-      className="w-full relative min-h-screen overflow-hidden text-white"
+      className="w-full relative min-h-[100dvh] overflow-hidden text-white"
     >
       <div className="master-viewport pin-all-projects relative w-full overflow-hidden">
         
@@ -315,7 +313,7 @@ export default function ProjectsMobile() {
         <div 
           ref={sectionOneRef}
           className="section-one-wrapper gpu-accelerated absolute left-0 right-0 w-full h-auto"
-          style={{ top: "100vh", zIndex: 20 }}
+          style={{ top: "100dvh", zIndex: 20 }}
         >
           <SectionOne />
         </div>
@@ -323,14 +321,14 @@ export default function ProjectsMobile() {
         {/* Layer 3: Section Two Container */}
         <div 
           className="section-two-wrapper gpu-accelerated absolute inset-0 w-full h-full"
-          style={{ transform: "translateY(100vh)", zIndex: 30 }}
+          style={{ transform: "translateY(100dvh)", zIndex: 30 }}
         >
           <SectionTwo isActive={isSectionTwoActive}/>
         </div>
 
         {/* Layer 4: Section CTA Block */}
         <div 
-          className="projects-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100vh] z-[150]" 
+          className="projects-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] z-[150]" 
           style={{ 
             pointerEvents: "auto", 
             visibility: "hidden"
