@@ -59,15 +59,16 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
+    // Freeze mobile height recalculations to prevent address-bar jumps
     ScrollTrigger.config({
       ignoreMobileResize: true,
-      autoRefreshEvents: "DOMContentLoaded,load,visibilitychange"
+      autoRefreshEvents: "DOMContentLoaded,load,visibilitychange",
     });
 
-    if (isTouchDevice) {
-      // Unify iOS and Android touch scrolling & keep address bar behavior consistent
-      ScrollTrigger.normalizeScroll(true);
+    // Disable normalizeScroll to stop hero jumping/resizing on touch scroll start
+    ScrollTrigger.normalizeScroll(false);
 
+    if (isTouchDevice) {
       if (thumbRef.current?.parentElement) {
         thumbRef.current.parentElement.style.display = "none";
       }
@@ -75,7 +76,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       return;
     }
 
-    // Lenis setup for desktop
+    // Lenis setup for desktop (Untouched)
     const lenis = new Lenis({
       lerp: 0.14,
       wheelMultiplier: 1.4,
@@ -160,7 +161,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     
     const refreshTimeout = setTimeout(() => {
       ScrollTrigger.refresh();
-    }, 100);
+    }, 150);
 
     return () => clearTimeout(refreshTimeout);
   }, [pathname, preloaderDone]);

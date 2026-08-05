@@ -71,8 +71,7 @@
 }
 
 html, body {
- 
-  background-color: #e10000 !important;
+  background-color: #094146 !important;
   scrollbar-gutter: stable;
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
@@ -110,7 +109,6 @@ body {
 
 /* ─── Preloader Hide & Lock Rules ───────────────────────────── */
 
-/* Lock scrolling strictly on html and body while preloading */
 html.preloading,
 body.preloading {
   overflow: hidden !important;
@@ -118,7 +116,6 @@ body.preloading {
   background-color: #162D24 !important;
 }
 
-/* Strictly hide site-root while preloading to eliminate body flashing */
 html.preloading .site-root,
 body.preloading .site-root,
 html.preloading header,
@@ -128,7 +125,6 @@ body.preloading header {
   pointer-events: none !important;
 }
 
-/* Base site-root behavior once preloading is complete */
 .site-root {
   overflow-x: hidden;
   position: relative;
@@ -143,7 +139,7 @@ body.preloading header {
   width: 100%;
 }
 
-/* ─── Full-Height Viewport Pin Wrapper (iOS dvh Fix) ─────────────────── */
+/* ─── Full-Height Viewport Pin Wrapper (Desktop) ─────────────────── */
 .pin-all,
 .pin-all-home,
 .pin-all-contact,
@@ -158,7 +154,6 @@ body.preloading header {
   overflow: hidden;
 }
 
-/* Lock GSAP pin-spacer on iOS and Android without flickering */
 .pin-spacer {
   min-height: 100dvh !important;
   pointer-events: auto !important;
@@ -169,7 +164,50 @@ body.preloading header {
   max-height: none !important;
 }
 
-/* ─── GPU Layer Acceleration (Optimized to prevent flickering) ── */
+/* ─── Mobile Viewport Pin & Anti-Glitch Overrides (Mobile ONLY) ─── */
+@media screen and (max-width: 1024px) {
+  html, 
+  body {
+    background: #094146 !important;
+    background-color: #094146 !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Prevent GSAP pin-spacer height jumps and bottom leaks */
+  .pin-spacer {
+    padding: 0 !important;
+    margin: 0 !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+
+  .pin-spacer > div {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    top: 0 !important;
+    transform: translate3d(0, 0, 0) !important;
+  }
+
+  /* Full screen pinning without bottom gaps or layout jumps */
+  .pin-all,
+  .pin-all-home,
+  .pin-all-contact,
+  .pin-all-projects,
+  .pin-all-services,
+  .pin-all-subservices,
+  .pin-all-single-project {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    width: 100% !important;
+    position: absolute !important;
+    inset: 0 !important;
+  }
+}
+
+/* ─── GPU Layer Acceleration ────────────────────────────── */
 .gpu-accelerated,
 .structural-layer {
   transform: translate3d(0, 0, 0);
