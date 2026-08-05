@@ -2,7 +2,7 @@
 
 export default function SectionTwo() {
   return (
-    <section className="relative w-full h-[100lvh] overflow-hidden">
+    <section className="relative w-full h-full overflow-hidden">
 
       {/* ── Full bleed background image ── */}
       <div

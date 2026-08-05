@@ -160,7 +160,7 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
   }, [isActive]);
 
   return (
-    <section ref={containerRef} className="relative w-full h-full min-h-screen overflow-hidden flex flex-col lg:grid lg:grid-cols-2 bg-[#F4EEDF]">
+    <section ref={containerRef} className="relative w-full h-full  overflow-hidden flex flex-col lg:grid lg:grid-cols-2 bg-[#F4EEDF]">
       
       {/* TOP / LEFT SIDE: Image + Title Overlay */}
       <div className="relative w-full h-[65svh] lg:h-full lg:min-h-screen overflow-hidden bg-[#19211C]">
