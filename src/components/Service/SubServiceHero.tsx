@@ -25,7 +25,7 @@ export default function SubServiceHero({ data, hideText = false }: HeroProps) {
   const activeTab = data.tabs[activeTabIdx] || data.tabs[0];
 
   return (
-    <div className="relative w-full h-full bg-[#0F2828]">
+    <div className="relative w-full h-screen bg-[#0F2828]">
       
       {/* UNDERNEATH LAYER: Stationary multi-tab interaction stack */}
       <div className="absolute section-container inset-0 w-full h-full flex flex-col justify-between p-6 md:p-12 lg:p-16 z-0 text-[#F4EEDF] pointer-events-auto overflow-y-auto">
