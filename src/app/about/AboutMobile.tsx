@@ -97,8 +97,11 @@ export default function AboutMobile() {
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
         onComplete: () => {
+          window.scrollTo(0, 0);
           setIntroDone(true);
-          setTimeout(() => ScrollTrigger.refresh(), 50);
+          requestAnimationFrame(() => {
+            ScrollTrigger.refresh();
+          });
         }
       });
 
@@ -148,7 +151,7 @@ export default function AboutMobile() {
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
-          invalidateOnRefresh: false,
+          invalidateOnRefresh: true,
           onUpdate: (self) => {
             const sec5Time = tl.labels["sec5FullyRevealed"];
             const ctaTime = tl.labels["ctaStart"];
@@ -322,8 +325,9 @@ export default function AboutMobile() {
           <SectionFive isActive={isSectionFiveActive} />
         </div>
 
+        {/* Updated min-h-[100dvh] -> min-h-[100vh] */}
         <div 
-          className="about-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] z-[150]" 
+          className="about-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100vh] z-[150]" 
           style={{ pointerEvents: "auto", visibility: "hidden" }}
         >
           <SectionCTA />

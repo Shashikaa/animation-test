@@ -55,7 +55,6 @@ function executeMobileSplitting(selector: string) {
 
 export default function ProjectsMobile() {
   const scopeRef = useRef<HTMLDivElement>(null);
-  const sectionOneRef = useRef<HTMLDivElement>(null);
   const [introDone, setIntroDone] = useState(false);
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
 
@@ -106,8 +105,9 @@ export default function ProjectsMobile() {
       
       gsap.set([".scroll-para-1", ".scroll-para-2"], { opacity: 1, visibility: "hidden", force3D: true });
       
-      gsap.set(".section-one-wrapper", { top: "100dvh", height: "auto", zIndex: 20, force3D: true });
-      gsap.set(".section-two-wrapper", { y: "100dvh", zIndex: 30, force3D: true });
+      // Standardized from top: 100dvh to yPercent: 100
+      gsap.set(".section-one-wrapper", { yPercent: 100, zIndex: 20, force3D: true });
+      gsap.set(".section-two-wrapper", { yPercent: 100, zIndex: 30, force3D: true });
       gsap.set(".parallax-img-asset", { yPercent: -20, force3D: true });
 
       gsap.set(".projects-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden", force3D: true });
@@ -125,8 +125,11 @@ export default function ProjectsMobile() {
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({ 
         onComplete: () => {
+          window.scrollTo(0, 0);
           setIntroDone(true);
-          setTimeout(() => ScrollTrigger.refresh(), 50);
+          requestAnimationFrame(() => {
+            ScrollTrigger.refresh();
+          });
         }
       });
       
@@ -169,7 +172,7 @@ export default function ProjectsMobile() {
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
-          invalidateOnRefresh: false,
+          invalidateOnRefresh: true,
         }
       });
 
@@ -211,14 +214,8 @@ export default function ProjectsMobile() {
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      const getSectionOneScrollDistance = () => {
-        if (!sectionOneRef.current) return "100dvh";
-        const elementHeight = sectionOneRef.current.offsetHeight;
-        return `${elementHeight}px`;
-      };
-
       scrollTl.to(".section-one-wrapper", {
-        y: () => `-${getSectionOneScrollDistance()}`,
+        yPercent: 0,
         duration: ACTION * 1.5, 
         ease: "power2.inOut"
       }, ">");
@@ -232,7 +229,7 @@ export default function ProjectsMobile() {
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
       scrollTl.to(".section-two-wrapper", {
-        y: "0dvh",
+        yPercent: 0,
         duration: ACTION,
         ease: "power2.inOut",
         onStart: () => setIsSectionTwoActive(true),
@@ -249,7 +246,7 @@ export default function ProjectsMobile() {
           { yPercent: 0, duration: ACTION, ease: "power2.inOut" },
           "ctaStart"
         )
-        .to(".section-two-wrapper", { y: "-10dvh", duration: ACTION, ease: "power2.inOut" }, "ctaStart");
+        .to(".section-two-wrapper", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "ctaStart");
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
@@ -300,7 +297,7 @@ export default function ProjectsMobile() {
   return (
     <div 
       ref={scopeRef} 
-      className="w-full relative min-h-[100dvh] overflow-hidden text-white"
+      className="w-full relative min-h-[100vh] overflow-hidden text-white"
     >
       <div className="master-viewport pin-all-projects relative w-full overflow-hidden">
         
@@ -311,9 +308,8 @@ export default function ProjectsMobile() {
 
         {/* Layer 2: Section One Container */}
         <div 
-          ref={sectionOneRef}
-          className="section-one-wrapper gpu-accelerated absolute left-0 right-0 w-full h-auto"
-          style={{ top: "100dvh", zIndex: 20 }}
+          className="section-one-wrapper gpu-accelerated absolute inset-0 w-full h-full"
+          style={{ zIndex: 20 }}
         >
           <SectionOne />
         </div>
@@ -321,14 +317,14 @@ export default function ProjectsMobile() {
         {/* Layer 3: Section Two Container */}
         <div 
           className="section-two-wrapper gpu-accelerated absolute inset-0 w-full h-full"
-          style={{ transform: "translateY(100dvh)", zIndex: 30 }}
+          style={{ zIndex: 30 }}
         >
           <SectionTwo isActive={isSectionTwoActive}/>
         </div>
 
         {/* Layer 4: Section CTA Block */}
         <div 
-          className="projects-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] z-[150]" 
+          className="projects-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100vh] z-[150]" 
           style={{ 
             pointerEvents: "auto", 
             visibility: "hidden"
