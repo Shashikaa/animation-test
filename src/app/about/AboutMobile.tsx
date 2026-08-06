@@ -115,6 +115,12 @@ export default function AboutMobile() {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
+      // Normalize mobile touch scroll behavior to lock address bar
+      const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isTouchDevice) {
+        ScrollTrigger.normalizeScroll(true);
+      }
+
       const ACTION = 1.4; 
       const DEAD_SCROLL = 0.2; 
       const SEC5_CARDS_HOLD = 1.2;
@@ -145,6 +151,7 @@ export default function AboutMobile() {
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           scrub: 0.5,
           pin: true,
+          pinType: "fixed",
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -275,7 +282,12 @@ export default function AboutMobile() {
 
     }, scopeRef);
 
-    return () => ctx.revert();
+    return () => {
+      ctx.revert();
+      if (ScrollTrigger.isTouch) {
+        ScrollTrigger.normalizeScroll(false);
+      }
+    };
   }, [introDone]);
 
   return (
