@@ -86,7 +86,10 @@ export default function AboutMobile() {
       gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0 });
 
       gsap.set(".about-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
-      gsap.set([".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
+      gsap.set(
+        [".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"], 
+        { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
+      );
       gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden" });
     }, scopeRef);
 
@@ -268,17 +271,23 @@ export default function AboutMobile() {
           },
           "ctaFadeOut"
         )
-        .to({}, { duration: 0 });
+        .set(
+          [".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"],
+          { 
+            pointerEvents: "none", 
+            visibility: "hidden" 
+          }
+        );
 
       tl.addLabel("footerStart", ">")
+        .set(".about-section-five", { visibility: "hidden" }, "footerStart")
         .set(".about-footer-wrap", { visibility: "visible" }, "footerStart")
         .fromTo(
           ".about-footer-wrap",
           { yPercent: 100 },
           { yPercent: 0, duration: ACTION, ease: "power2.inOut" },
           "footerStart"
-        )
-        .to(".about-section-five", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "footerStart");
+        );
 
     }, scopeRef);
 
