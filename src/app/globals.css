@@ -71,23 +71,18 @@
 }
 
 html, body {
-  background-color: #162D24 !important;
+ 
+  background-color: #e10000 !important;
   scrollbar-gutter: stable;
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  
   scroll-behavior: auto !important; 
-  min-height: 100vh;
-  -webkit-overflow-scrolling: touch;
-}
+  min-height: 100%;
 
-/* Lock touch actions on mobile to prevent browser chrome resize */
-@media screen and (max-width: 1024px) {
-  html, body {
-    overflow-x: hidden;
-    touch-action: pan-x pan-y;
-  }
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ─── Hide scrollbar ONLY on desktop screens ─────────────────── */
@@ -115,6 +110,7 @@ body {
 
 /* ─── Preloader Hide & Lock Rules ───────────────────────────── */
 
+/* Lock scrolling strictly on html and body while preloading */
 html.preloading,
 body.preloading {
   overflow: hidden !important;
@@ -122,6 +118,7 @@ body.preloading {
   background-color: #162D24 !important;
 }
 
+/* Strictly hide site-root while preloading to eliminate body flashing */
 html.preloading .site-root,
 body.preloading .site-root,
 html.preloading header,
@@ -131,6 +128,7 @@ body.preloading header {
   pointer-events: none !important;
 }
 
+/* Base site-root behavior once preloading is complete */
 .site-root {
   overflow-x: hidden;
   position: relative;
@@ -145,7 +143,7 @@ body.preloading header {
   width: 100%;
 }
 
-/* ─── Strict 100vh Wrapper (Avoids dvh dynamic address bar trigger) ─── */
+/* ─── Full-Height Viewport Pin Wrapper (iOS dvh Fix) ─────────────────── */
 .pin-all,
 .pin-all-home,
 .pin-all-contact,
@@ -153,25 +151,25 @@ body.preloading header {
 .pin-all-services,
 .pin-all-subservices,
 .pin-all-single-project {
-  height: 100vh !important;
-  min-height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
   width: 100%;
   position: relative;
   overflow: hidden;
 }
 
-/* Lock GSAP pin-spacer without height fluctuations */
+/* Lock GSAP pin-spacer on iOS and Android without flickering */
 .pin-spacer {
-  min-height: 100vh !important;
+  min-height: 100dvh !important;
   pointer-events: auto !important;
 }
 
 .pin-spacer > div {
-  height: 100vh !important;
+  height: 100dvh !important;
   max-height: none !important;
 }
 
-/* ─── GPU Layer Acceleration ─────────────────────────────────── */
+/* ─── GPU Layer Acceleration (Optimized to prevent flickering) ── */
 .gpu-accelerated,
 .structural-layer {
   transform: translate3d(0, 0, 0);
@@ -302,6 +300,7 @@ p {
 }
 
 /* ─── Modern Text Reveal System ─────────────────────────────── */
+
 .reveal-text {
   perspective: 1000px;
   backface-visibility: hidden;
