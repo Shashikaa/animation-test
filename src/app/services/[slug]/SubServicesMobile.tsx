@@ -74,7 +74,9 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
       gsap.set(".service-hero-bg", { scale: 1.3, xPercent: 0, transformOrigin: "center center", force3D: true });
       gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: 30, force3D: true });
       gsap.set(".services-hero-top-layer", { width: "100%", xPercent: 0, force3D: true }); 
-      gsap.set(".section-one-wrap", { clipPath: "inset(100% 0% 0% 0%)", force3D: true });
+      
+      // Position Section One fully below the screen for a smooth slide-up
+      gsap.set(".section-one-wrap", { yPercent: 100, visibility: "hidden", force3D: true });
       
       gsap.set(".s10-seq-container", { y: 0, force3D: true });
       gsap.set(".s10-seq-p", { opacity: 1 });
@@ -158,7 +160,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         }
       });
 
-      // ── PHASE 1: FULL HERO REVEAL & CLIPPING FIX ──
+      // ── PHASE 1: HERO INNER ANIMATIONS (TEXT & BG TRANSITION) ──
       scrollTl.addLabel("phase1")
         .to(".hero-text-wrap", {
           opacity: 0,
@@ -182,10 +184,11 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── PHASE 2: REVEAL SECTION ONE SHEET ──
+      // ── PHASE 2: SECTION ONE SLIDES UP OVER HERO ──
       scrollTl.addLabel("phase2")
+        .set(".section-one-wrap", { visibility: "visible" }, "phase2")
         .to(".section-one-wrap", {
-          clipPath: "inset(0% 0% 0% 0%)",
+          yPercent: 0,
           duration: ACTION, 
           ease: "power2.inOut"
         }, "phase2")
@@ -230,7 +233,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         .addLabel("text2")
         .to(".s10-seq-container", { y: -760, duration: ACTION, ease: "power2.inOut" })
         .addLabel("text3")
-        .to(".s10-seq-container", { y: -1100, duration: ACTION, ease: "power2.inOut" })
+        .to(".s10-seq-container", { y: -1240, duration: ACTION, ease: "power2.inOut" })
         .addLabel("text4");
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
@@ -269,7 +272,13 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
             opacity: 0, 
             y: -30, 
             duration: ACTION * 0.1, 
-            ease: "power2.in" 
+            ease: "power2.in",
+            onStart: () => {
+              gsap.set(".services-faq-wrap", { visibility: "hidden" });
+            },
+            onReverseComplete: () => {
+              gsap.set(".services-faq-wrap", { visibility: "visible" });
+            }
           }, 
           "ctaFadeOut"
         )
@@ -317,7 +326,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         </div>
 
         {/* Layer 4: Section CTA wrapper */}
-        <div className="services-section-cta gpu-accelerated absolute bottom-0 left-0 w-full structural-layer z-[95]">
+        <div className="services-section-cta gpu-accelerated absolute bottom-0 left-0 w-full structural-layer z-[95] bg-black">
           <SectionCTA />
         </div>
 

@@ -45,35 +45,15 @@ export default function SubServiceFAQSection({ data }: FAQSectionProps) {
         </div>
 
         {/* Contact Us Button - Anchored to the exact bottom-right corner of the section block */}
-        <div className="absolute bottom-8 left-6 md:left-10 lg:bottom-16 lg:left-auto lg:right-18 z-30">
-          <a
-            href="/contact-us"
-            style={{
-              position: "relative",
-              display: "inline-block",
-              width: "fit-content",
-              paddingBottom: 4,
-              fontSize: 14,
-              fontWeight: 500,
-              textTransform: "uppercase",
-              color: "#F4EEDF",
-              textDecoration: "none",
-            }}
-            className="hero-btn group transition-opacity duration-200 hover:opacity-70 font-body"
+        <div className="absolute bottom-16 left-6 md:left-10 lg:bottom-16 lg:left-auto lg:right-18 z-30">
+
+                    <a
+            href="/contact"
+
+            className="group btn-underline font-body"
           >
             CONTACT US
-            <span
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: 1,
-                background: "#F4EEDF",
-                transition: "transform 0.2s ease",
-              }}
-              className="group-hover:-translate-y-[2px]"
-            />
+
           </a>
         </div>
 
