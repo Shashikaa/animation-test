@@ -280,7 +280,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
       </section>
 
       {/* MOBILE LAYOUT */}
-      <section className="s3-mobile-section flex md:hidden flex-col w-full h-screen relative overflow-hidden bg-black">
+      <section className="s3-mobile-section flex md:hidden flex-col w-full h-full relative overflow-hidden bg-black">
         <div className="absolute inset-0 w-full h-full z-0">
           {slides.map((slide, i) => (
             <div

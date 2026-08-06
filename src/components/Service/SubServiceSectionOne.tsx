@@ -28,7 +28,7 @@ export default function SubServiceSectionOne({ data }: SubServiceSectionOneProps
   return (
     <section
       ref={sectionRef}
-      className="s10-section relative w-full h-screen overflow-hidden bg-[#0a0a0a]"
+      className="s10-section relative w-full h-full overflow-hidden "
     >
       {/* ── Background Static Image Layer ── */}
       <div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full mix-blend-normal">

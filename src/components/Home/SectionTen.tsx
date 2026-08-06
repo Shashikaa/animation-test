@@ -20,7 +20,7 @@ export default function SectionTen() {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full h-screen overflow-hidden"
+      className="relative w-full h-full overflow-hidden"
     >
       {/* ── Static Background Image Layer ── */}
       <div className="s10-static-bg absolute inset-0 z-[1] w-full h-full pointer-events-none">

@@ -338,7 +338,7 @@ export default function HomeMobile() {
         .to(".section-8", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "sec10Start")
         
         .to(".s10-title, .s10-title-sub, .s10-para-top", { y: "-50dvh", duration: ACTION, ease: "power2.inOut" }, ">")
-        .fromTo(".s10-scrollable-container", { y: "0dvh" }, { y: "-36dvh", duration: ACTION, ease: "power2.inOut" }, "<")
+        .fromTo(".s10-scrollable-container", { y: "0dvh" }, { y: "-44dvh", duration: ACTION, ease: "power2.inOut" }, "<")
 
         .to({}, { duration: DEAD_SCROLL });
 

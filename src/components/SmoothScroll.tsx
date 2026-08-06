@@ -61,13 +61,11 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     ScrollTrigger.config({
       ignoreMobileResize: true,
-      autoRefreshEvents: "DOMContentLoaded,load,visibilitychange"
+      autoRefreshEvents: "DOMContentLoaded,load,visibilitychange",
     });
 
     if (isTouchDevice) {
-      // Unify iOS and Android touch scrolling & keep address bar behavior consistent
-      ScrollTrigger.normalizeScroll(true);
-
+      // NOTE: normalizeScroll(true) removed here to prevent mobile pin-jumping glitches
       if (thumbRef.current?.parentElement) {
         thumbRef.current.parentElement.style.display = "none";
       }

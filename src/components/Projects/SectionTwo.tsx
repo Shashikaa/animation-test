@@ -380,39 +380,17 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               justifyContent: "flex-end", 
               paddingLeft: "8%",
               paddingRight: "8%",
-              paddingBottom: "35px",
+              paddingBottom: "55px",
             }}
           >
-            <a
+                     <a
               href={PROJECTS[current].slug}
-              style={{
-                position: "relative",
-                display: "inline-block",
-                width: "fit-content",
-                paddingBottom: 8,
-                fontSize: 13,
-                fontWeight: 500,
-                textTransform: "uppercase",
-                color: "#F4EEDF",
-                textDecoration: "none",
-                flexShrink: 0,
-                letterSpacing: "0.15em",
-              }}
-              className="group transition-opacity duration-200 hover:opacity-70 font-body"
+
+              className="group btn-underline font-body"
             >
               LEARN MORE
-              <span
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: 1,
-                  background: "#F4EEDF",
-                  transition: "transform 0.2s ease",
-                }}
-                className="group-hover:-translate-y-[2px]"
-              />
+       
+
             </a>
           </div>
         </div>

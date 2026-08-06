@@ -122,9 +122,9 @@ export default function SectionTwo() {
       {/* CORE WORKSPACE GRID */}
       <div className="absolute inset-0 z-20 grid grid-cols-1 lg:grid-cols-2 w-full h-full pointer-events-none">
         {/* LEFT COLUMN: INITIAL TITLE */}
-        <div className="relative h-full overflow-hidden !pt-58 md:!pt-66 lg:!pt-36">
+        <div className="relative h-full overflow-hidden !pt-30 md:!pt-66 lg:!pt-36">
           <div className="!mb-33 md:!mb-80 lg:!mb-0 h-[100px] !ml-[20px] md:!ml-[30px] lg:!ml-[65px]">
-            <h2 className="s2-title-main font-display text-[#F4EEDF] !font-[100] text-3xl md:text-5xl reveal-text !mb-4">
+            <h2 className="s2-title-main font-display text-[#F4EEDF] !font-[100] text-3xl md:text-5xl reveal-text !mb-2">
               Premium Pool 
             </h2>
             <p className="s2-title-sub font-body text-[#F4EEDF] text-sm md:text-base reveal-text">
