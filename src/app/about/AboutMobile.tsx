@@ -148,6 +148,7 @@ export default function AboutMobile() {
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           scrub: 0.5,
           pin: true,
+          pinType: "fixed",
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -325,7 +326,6 @@ export default function AboutMobile() {
           <SectionFive isActive={isSectionFiveActive} />
         </div>
 
-        {/* Updated min-h-[100dvh] -> min-h-[100vh] */}
         <div 
           className="about-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100vh] z-[150]" 
           style={{ pointerEvents: "auto", visibility: "hidden" }}
