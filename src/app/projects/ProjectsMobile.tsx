@@ -105,7 +105,6 @@ export default function ProjectsMobile() {
       
       gsap.set([".scroll-para-1", ".scroll-para-2"], { opacity: 1, visibility: "hidden", force3D: true });
       
-      // Standardized from top: 100dvh to yPercent: 100
       gsap.set(".section-one-wrapper", { yPercent: 100, zIndex: 20, force3D: true });
       gsap.set(".section-two-wrapper", { yPercent: 100, zIndex: 30, force3D: true });
       gsap.set(".parallax-img-asset", { yPercent: -20, force3D: true });
@@ -148,6 +147,12 @@ export default function ProjectsMobile() {
     executeMobileSplitting(".scroll-para-2");
 
     const ctx = gsap.context(() => {
+      // Normalize mobile touch scroll behavior to lock address bar
+      const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isTouchDevice) {
+        ScrollTrigger.normalizeScroll(true);
+      }
+
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2;
 
@@ -287,6 +292,9 @@ export default function ProjectsMobile() {
 
     return () => {
       ctx.revert();
+      if (ScrollTrigger.isTouch) {
+        ScrollTrigger.normalizeScroll(false);
+      }
       if (scopeRef.current) {
         restoreTextReveal(scopeRef.current, ".scroll-para-1");
         restoreTextReveal(scopeRef.current, ".scroll-para-2");

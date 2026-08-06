@@ -119,6 +119,7 @@ export default function ContactMobile() {
           start: "top top",
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
+          pinType: "fixed",
           scrub: 0.5,
           anticipatePin: 1,
           preventOverlaps: true,
@@ -194,7 +195,12 @@ export default function ContactMobile() {
 
     }, scopeRef);
 
-    return () => ctx.revert();
+    return () => {
+      ctx.revert();
+      if (ScrollTrigger.isTouch) {
+        ScrollTrigger.normalizeScroll(false);
+      }
+    };
   }, [introDone]);
 
   return (

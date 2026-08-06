@@ -159,7 +159,7 @@ export default function ServicesMobile() {
       const triggerSec2Hook = (nextIdx: number) => {
         if (nextIdx !== lastSec2Idx.current) {
           lastSec2Idx.current = nextIdx;
-          if ((window as any)._sec2GoTo) {
+          if (typeof (window as any)._sec2GoTo === "function") {
             (window as any)._sec2GoTo(nextIdx);
           }
           gsap.set(".s2-inner-fade-target", { opacity: 1 });
@@ -294,7 +294,12 @@ export default function ServicesMobile() {
 
     }, scopeRef);
 
-    return () => ctx.revert();
+    return () => {
+      ctx.revert();
+      if (ScrollTrigger.isTouch) {
+        ScrollTrigger.normalizeScroll(false);
+      }
+    };
   }, [introDone]);
 
   return (

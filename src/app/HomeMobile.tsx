@@ -422,7 +422,12 @@ export default function HomeMobile() {
 
     }, scopeRef);
 
-    return () => ctx.revert();
+    return () => {
+      ctx.revert();
+      if (ScrollTrigger.isTouch) {
+        ScrollTrigger.normalizeScroll(false);
+      }
+    };
   }, [preloaderDone, introDone]);
 
   return (

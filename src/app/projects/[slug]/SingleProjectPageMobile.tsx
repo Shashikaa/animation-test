@@ -303,6 +303,9 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
 
     return () => {
       ctx.revert();
+      if (ScrollTrigger.isTouch) {
+        ScrollTrigger.normalizeScroll(false);
+      }
     };
   }, [introDone, pageData.images, pageData.slides, pageData.title]);
 

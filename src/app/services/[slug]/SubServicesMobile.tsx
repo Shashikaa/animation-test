@@ -288,6 +288,9 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
 
     return () => {
       ctx.revert();
+      if (ScrollTrigger.isTouch) {
+        ScrollTrigger.normalizeScroll(false);
+      }
       if (scopeRef.current) {
         restoreTextReveal(scopeRef.current, ".s2-reveal-text");
       }
