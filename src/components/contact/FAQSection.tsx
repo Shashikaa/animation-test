@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import FAQAccordion from "../FAQAccordion"; // Adjust path if needed
 
 const FAQ_ITEMS = [
@@ -26,15 +27,32 @@ const FAQ_ITEMS = [
 ];
 
 export default function FAQSection() {
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+
   return (
     <div className="w-full h-full relative overflow-hidden !bg-black flex items-stretch justify-center">
       
+      {/* POSTER THUMBNAIL OVERLAY (Shown until video loads) */}
+      <div 
+        className={`absolute inset-0 z-[1] transition-opacity duration-700 ease-in-out pointer-events-none ${
+          isVideoLoaded ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        <img
+          src="/images/video-thumbnail.webp"
+          alt="FAQ Background Thumbnail"
+          className="w-full h-full object-cover"
+        />
+      </div>
+
       {/* BACKGROUND VIDEO LAYER */}
       <video
         autoPlay
         loop
         muted
         playsInline
+        poster="/images/video-thumbnail.webp"
+        onLoadedData={() => setIsVideoLoaded(true)}
         className="absolute top-0 left-0 w-full h-full object-cover z-0"
       >
         <source src="/videos/Grand-Pools-Hero-Video.mp4" type="video/mp4" />
@@ -48,13 +66,13 @@ export default function FAQSection() {
         }}
       />
       
-      {/* Main Container — ADD 'faq-content' CLASS HERE */}
+      {/* Main Container */}
       <div className="faq-content section-container relative z-20 w-full h-full flex flex-col lg:flex-row justify-center lg:justify-between gap-16 md:gap-8">
         
         {/* LEFT SIDE — Title offset upwards matching Figma view */}
         <div className="flex flex-col select-none justify-start pt-12 md:!pt-24 lg:!pt-32">
           <h2
-            className="!text-[#F4EEDF] font-display !font-[100] "
+            className="!text-[#F4EEDF] font-display !font-[100]"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Still Have <br /> Questions?

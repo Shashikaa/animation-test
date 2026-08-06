@@ -1,13 +1,8 @@
 "use client";
 
 import { useRef } from "react";
-import LazyWaveCanvas from "../LazyWaveCanvas";
 
-type SectionThreeProps = {
-  preloaderDone?: boolean;
-};
-
-export default function SectionThree({ preloaderDone }: SectionThreeProps) {
+export default function SectionThree() {
   const sectionRef = useRef<HTMLElement>(null);
 
   return (
@@ -16,9 +11,15 @@ export default function SectionThree({ preloaderDone }: SectionThreeProps) {
       className="relative w-full h-screen overflow-hidden"
       style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
     >
-      {/* ── DESKTOP: Wave Canvas Layer ── */}
-      <div className="hidden md:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
-        <LazyWaveCanvas imageSrc="/sectiontwo.webp" preloaderDone={preloaderDone} />
+      {/* ── DESKTOP: Static Background Image ── */}
+      <div className="hidden md:block absolute inset-0 z-[1] w-full h-full">
+        <img
+          src="/sectiontwo.webp"
+          alt=""
+          aria-hidden
+          className="s3-bg w-full h-full object-cover will-change-transform"
+          style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
+        />
       </div>
 
       {/* ── MOBILE: Static Background Image ── */}
@@ -45,7 +46,7 @@ export default function SectionThree({ preloaderDone }: SectionThreeProps) {
 
         <div className="flex justify-end">
           <p className="s3-reveal-bottom reveal-text font-body text-[#F4EEDF] text-right lg:text-left max-w-[250px] md:max-w-[280px] lg:max-w-[280px] !mb-23 md:!mb-40 lg:!mb-0">
-            At Grand Pools, we create  pools with expert craftsmanship, innovative design, and personalised service, delivering seamless experiences and exceptional results.
+            At Grand Pools, we create pools with expert craftsmanship, innovative design, and personalised service, delivering seamless experiences and exceptional results.
           </p>
         </div>
       </div>

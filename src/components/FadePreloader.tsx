@@ -7,7 +7,7 @@ type FadePreloaderProps = {
   onComplete?: () => void;
 };
 
-const HOLD_DURATION_MS = 50;
+const HOLD_DURATION_MS = 150;
 const EXIT_DURATION_MS = 150;
 
 export default function FadePreloader({

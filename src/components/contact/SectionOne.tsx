@@ -3,28 +3,31 @@
 const CARDS = [
   {
     title: "Email Us",
-    description: "Send us a message and we will get back to you as soon as possible",
+    description: "Send us a message and we will get back to you as soon as possible.",
     value: "admin@grandpools.com.au",
     href: "mailto:admin@grandpools.com.au",
+    isExternal: false,
   },
   {
     title: "Call Us",
-    description: "Contact with us directly, our representative will share any information you need regarding pools",
+    description: "Contact us directly. Our representative will share any information you need regarding pools.",
     value: "0422 630 394",
     href: "tel:0422630394",
+    isExternal: false,
   },
   {
     title: "Follow Us",
-    description: "Follow us on Instagram for updates. DM us to connect!",
+    description: "Explore our latest pool designs, project updates, and inspiration on Instagram.",
     value: "@grandpool_aus",
-    href: "https://instagram.com/grandpool_aus",
+    href: "https://www.instagram.com/grandpools_aus/",
+    isExternal: true,
   },
 ];
 
 export default function SectionOne() {
   return (
     <div className="w-full min-h-screen lg:h-full relative overflow-hidden bg-black">
-      {/* Background Image Layer — Scaled cleanly at 100%, stretching deep downward */}
+      {/* Background Image Layer */}
       <div
         className="contact-one-bg absolute top-0 left-0 w-full h-[200%] bg-cover bg-top bg-no-repeat will-change-transform"
         style={{ backgroundImage: "url('/contactparalax.webp')" }}
@@ -33,8 +36,8 @@ export default function SectionOne() {
       {/* Main Layout Grid Context */}
       <div className="section-container relative z-10 w-full h-auto lg:h-full flex flex-col lg:flex-row items-stretch justify-center lg:justify-between gap-12 lg:gap-0">
         
-        {/* LEFT SIDE — Completely Static Title Block */}
-        <div className="contact-one-left flex flex-col gap-2 lg:gap-4 justify-start pb-4 select-none  lg:!pt-22">
+        {/* LEFT SIDE — Static Title Block */}
+        <div className="contact-one-left flex flex-col gap-2 lg:gap-4 justify-start pb-4 select-none lg:!pt-22">
           <h2
             className="contact-one-title text-[#F4EEDF] !font-[100]"
             style={{ fontFamily: "var(--font-display)" }}
@@ -47,23 +50,19 @@ export default function SectionOne() {
         </div>
 
         {/* RIGHT SIDE — Relative Frame Container */}
-        <div 
-          className="relative w-full lg:w-[372px] h-auto lg:h-full" 
-        >
-          {/* Master Scrolling Content Column — Anchored to TOP-0 */}
+        <div className="relative w-full lg:w-[372px] h-auto lg:h-full">
+          {/* Master Scrolling Content Column */}
           <div className="contact-right-scroll-track relative lg:absolute top-0 right-0 w-full flex flex-col will-change-transform">
             
             {/* 1. Intro Paragraph Block */}
-            <div 
-              className="w-full flex flex-col justify-start lg:justify-end text-left lg:text-right !pb-8 lg:!pb-16 h-auto lg:h-[calc(100vh-120px)]"
-            >
+            <div className="w-full flex flex-col justify-start lg:justify-end text-left lg:text-right !pb-8 lg:!pb-16 h-auto lg:h-[calc(100vh-120px)]">
               <p className="text-[#F4EEDF]">
-                Have a question or want to discuss your project? Contact us by phone, email, or connect with us on Instagram we’re always happy to help.
+                Have a question or want to discuss your project? Contact us by phone, email, or connect with us on Instagram. We’re always happy to help.
               </p>
             </div>
 
             {/* 2. Cards Group Layer */}
-            <div className="contact-cards-container flex flex-col gap-12 lg:gap-16 w-full pt-4 lg:pt-12 ">
+            <div className="contact-cards-container flex flex-col gap-12 lg:gap-16 w-full pt-4 lg:pt-12">
               {CARDS.map((card) => (
                 <div
                   key={card.title}
@@ -78,9 +77,14 @@ export default function SectionOne() {
                     </p>
                     <a
                       href={card.href}
-                      className="font-light tracking-wide inline-flex items-center gap-2 hover:underline underline-offset-4 text-[#F4EEDF]"
+                      target={card.isExternal ? "_blank" : undefined}
+                      rel={card.isExternal ? "noopener noreferrer" : undefined}
+                      className="group font-light tracking-wide inline-flex items-center gap-2 text-[#F4EEDF]"
                     >
-                      {card.value} <span aria-hidden="true">→</span>
+                      <span className="group-hover:underline underline-offset-4">
+                        {card.value}
+                      </span>
+                      <span aria-hidden="true">→</span>
                     </a>
                   </div>
                 </div>

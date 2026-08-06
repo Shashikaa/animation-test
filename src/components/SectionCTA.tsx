@@ -1,23 +1,22 @@
 "use client";
 
-import LazyWaveCanvas from "./LazyWaveCanvas";
 import CtaForm from "./CtaForm";
 
-type SectionCTAProps = {
-  preloaderDone?: boolean;
-};
-
-export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
+export default function SectionCTA() {
   return (
     <section 
       className="about-section-cta section-cta min-h-screen lg:h-full w-full relative"
       onTouchStart={(e) => e.stopPropagation()}
       onTouchMove={(e) => e.stopPropagation()}
     >
-      {/* Background Canvas & Fallback Image */}
+      {/* Background Image */}
       <div className="absolute inset-0 z-[1] pointer-events-none w-full h-full">
         <div className="hidden lg:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
-          <LazyWaveCanvas imageSrc="/CTA.webp" preloaderDone={preloaderDone} />
+          <img
+            src="/CTA.webp"
+            alt="Background"
+            className="w-full h-full object-cover"
+          />
         </div>
 
         <div className="block lg:hidden w-full h-full">

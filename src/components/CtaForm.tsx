@@ -275,7 +275,7 @@ function SubmitButton({ loading }: { loading: boolean }) {
     <button
       type="submit"
       disabled={loading}
-      className="btn-underline cursor-pointer font-body !pb-2"
+      className="btn-underline cursor-pointer font-body !pb-2 text-[16px]"
     >
       {loading ? "Submitting..." : "Submit Now"}
     </button>
@@ -308,10 +308,12 @@ function CtaInput({
         .cta-input-field::placeholder {
           color: rgba(244, 238, 223, 0.4);
           opacity: 1;
+          font-size: 16px;
         }
         .cta-input-field-mobile::placeholder {
           color: #F4EEDF !important;
           opacity: 1;
+          font-size: 16px;
         }
       `,
         }}
@@ -458,7 +460,7 @@ function CtaSelect({
         style={{
           background: "transparent",
           borderBottom: defaultBorder,
-          fontSize: isMobile ? 16 : 14,
+          fontSize: 16,
           padding: "10px 10px 10px 0",
           width: "100%",
           fontFamily: "inherit",
@@ -534,7 +536,7 @@ function CtaSelect({
                 color: selectedValue === option ? "#162D24" : "#F4EEDF",
                 background:
                   selectedValue === option ? "#F4EEDF" : "transparent",
-                fontSize: 14,
+                fontSize: 16,
                 cursor: "pointer",
                 transition: "background 0.15s ease, color 0.15s ease",
               }}

@@ -338,15 +338,23 @@ export default function AboutDesktop() {
               setIsSectionFiveActive(false);
               triggerSec5Hook(0);
             }
-          }, "sec5Start")
-          .fromTo(".s5-bg", { yPercent: 0, scale: 1.2 }, { yPercent: -20, scale: 1.15, duration: PANEL_ACTION + (SUB_ACTION * 2), ease: "none" }, "sec5Start");
+          }, "sec5Start");
 
         tl.addLabel("sec5FullyRevealed", `sec5Start+=${PANEL_ACTION}`);
 
         // ── SECTION 5 INNER CARDS TRACK ALLOCATION ──
         tl.to({}, { duration: SUB_ACTION * 2 });
 
-// ── 8. CTA REVEAL TRACK ──
+        // CONTINUOUS SECTION 5 IMAGE TRANSLATION / PARALLAX:
+        // Spans from Section 5 reveal start all the way through the third card step until CTA starts
+        tl.fromTo(
+          ".s5-bg", 
+          { yPercent: 0, scale: 1.0 }, 
+          { yPercent: -50, scale: 1.0, duration: PANEL_ACTION + (SUB_ACTION * 2), ease: "none" }, 
+          "sec5Start"
+        );
+
+        // ── 8. CTA REVEAL TRACK ──
         tl.addLabel("ctaStart", ">")
           .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
           .to(".about-section-cta", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.out" }, "ctaStart")
@@ -426,7 +434,7 @@ export default function AboutDesktop() {
         </div>
 
         <div className="about-section-three absolute inset-0 w-full h-full structural-layer" style={{ zIndex: 40, clipPath: "inset(100% 0% 0% 0%)" }}>
-          <SectionThree preloaderDone={preloaderDone} />
+          <SectionThree />
         </div>
 
         <div className="about-section-four absolute inset-0 h-full w-full structural-layer" style={{ zIndex: 50, clipPath: "inset(100% 0% 0% 0%)" }}>
@@ -438,7 +446,7 @@ export default function AboutDesktop() {
         </div>
 
         <div className="about-section-cta absolute bottom-0 left-0 w-full structural-layer" style={{ zIndex: 90 }}>
-          <SectionCTA preloaderDone={preloaderDone} />
+          <SectionCTA />
         </div>
 
         <div className="about-footer-wrap absolute left-0 bottom-0 w-full structural-layer" style={{ zIndex: 100 }}>

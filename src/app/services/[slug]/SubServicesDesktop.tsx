@@ -334,7 +334,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
 
         {/* Layer 4: Section CTA wrapper */}
         <div className="services-section-cta absolute bottom-0 left-0 w-full structural-layer pointer-events-auto" style={{ zIndex: 95 }}>
-          <SectionCTA preloaderDone={preloaderDone} />
+          <SectionCTA  />
         </div>
 
         {/* Layer 5: Footer wrapper */}

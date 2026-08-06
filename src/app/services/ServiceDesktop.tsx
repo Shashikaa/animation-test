@@ -395,7 +395,7 @@ export default function ServicesDesktop() {
         
         {/* Layer 5: CTA Section Container */}
         <div className="services-section-cta absolute bottom-0 left-0 w-full structural-layer pointer-events-auto" style={{ zIndex: 120 }}>
-          <SectionCTA preloaderDone={preloaderDone} />
+          <SectionCTA  />
         </div>
         
         {/* Layer 6: Footer Container */}

@@ -1,16 +1,13 @@
 "use client";
 
-import LazyWaveCanvas from "@/src/components/LazyWaveCanvas";
 import CtaForm from "@/src/components/CtaForm";
 
 type SectionCTAProps = {
-  preloaderDone?: boolean;
   imageSrcDesktop?: string;
   imageSrcMobile?: string;
 };
 
 export default function SectionCTA({
-  preloaderDone,
   imageSrcDesktop = "/CTAFORM.png",
   imageSrcMobile = "/CTAFORM.png",
 }: SectionCTAProps) {
@@ -21,10 +18,14 @@ export default function SectionCTA({
         background: "linear-gradient(135deg, #19211c 0%, #094146 100%)",
       }}
     >
-      {/* Background Layer */}
+      {/* Static Background Layer */}
       <div className="absolute inset-0 z-[1] pointer-events-none w-full h-full">
         <div className="hidden lg:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
-          <LazyWaveCanvas imageSrc={imageSrcDesktop} preloaderDone={preloaderDone} />
+          <img
+            src={imageSrcDesktop}
+            alt="Background"
+            className="w-full h-full object-cover"
+          />
         </div>
 
         <div className="block lg:hidden w-full h-full">
@@ -88,7 +89,7 @@ export default function SectionCTA({
         </div>
       </div>
 
-      {/* Mobile Layout - Dynamic Auto-Expanding Height */}
+      {/* Mobile Layout */}
       <div
         className="flex lg:hidden cta-inner-mobile min-h-screen h-auto !pt-12 !pb-16"
         style={{

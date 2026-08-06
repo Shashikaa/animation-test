@@ -390,7 +390,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
           className="projects-section-cta absolute bottom-0 left-0 w-full h-full structural-layer pointer-events-auto"
           style={{ zIndex: 95 }}
         >
-          <SectionCTA preloaderDone={preloaderDone ?? propPreloaderDone} />
+          <SectionCTA  />
         </div>
         
         {/* Layer 5: Footer Container */}

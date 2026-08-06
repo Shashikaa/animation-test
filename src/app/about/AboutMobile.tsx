@@ -238,12 +238,6 @@ export default function AboutMobile() {
           }
         }, "sec5Start");
 
-      tl.fromTo(".about-section-five .s5-bg", 
-        { yPercent: 5, scale: 1.25 }, 
-        { yPercent: -25, scale: 1.25, ease: "none", duration: ACTION + SEC5_CARDS_HOLD }, 
-        "sec5Start"
-      );
-
       tl.addLabel("sec5FullyRevealed", `sec5Start+=${ACTION}`);
 
       tl.to({}, { duration: SEC5_CARDS_HOLD });
@@ -257,6 +251,15 @@ export default function AboutMobile() {
           "ctaStart"
         )
         .to(".about-section-five", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart");
+
+      // CONTINUOUS MOBILE SECTION 5 IMAGE TRANSLATION / PARALLAX:
+      // Spans across the entire Section 5 reveal and inner cards duration (from sec5Start to ctaStart)
+      tl.fromTo(
+        ".about-section-five .s5-bg", 
+        { yPercent: 0, scale: 1.0 }, 
+        { yPercent: -55, scale: 1.0, duration: ACTION + SEC5_CARDS_HOLD, ease: "none" }, 
+        "sec5Start"
+      );
 
       tl.to({}, { duration: DEAD_SCROLL });
 

@@ -10,14 +10,14 @@ const slides = [
     desc: "Decades of knowledge in pool design and construction.",
   },
   {
-    stat: "100+",
-    label: "Completed Projects",
-    desc: "Completed Projects. Stunning pools crafted for homes and businesses.",
-  },
-  {
     stat: "100%",
     label: "Client Satisfaction",
     desc: "Trusted for quality, service, and seamless execution.",
+  },
+  {
+    stat: "100+",
+    label: "Completed Projects",
+    desc: "Stunning pools crafted for homes and businesses.",
   },
 ];
 
@@ -160,15 +160,15 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
   }, [isActive]);
 
   return (
-    <section ref={containerRef} className="relative w-full h-full  overflow-hidden flex flex-col lg:grid lg:grid-cols-2 bg-[#F4EEDF]">
+    <section ref={containerRef} className="relative w-full h-full overflow-hidden flex flex-col lg:grid lg:grid-cols-2 bg-[#F4EEDF]">
       
       {/* TOP / LEFT SIDE: Image + Title Overlay */}
       <div className="relative w-full h-[65svh] lg:h-full lg:min-h-screen overflow-hidden bg-[#19211C]">
-        {/* Main image container */}
-        <div className="s5-bg absolute -top-[20%] left-0 w-full h-[140%] bg-cover bg-center will-change-transform bg-[url('/projects.webp')]" />
-              <div 
-        className="absolute inset-0 bg-black/20 pointer-events-none z-[1]" 
-      />
+        {/* Main image container with oversized bounds for extended parallax motion */}
+        <div className="s5-bg absolute -top-[0%] left-0 w-full h-[240%] bg-cover bg-center will-change-transform bg-[url('/project-aerial2.webp')]" />
+        
+        <div className="absolute inset-0 bg-black/40 pointer-events-none z-[1]" />
+        
         <div className="absolute z-10 bottom-[30px] md:bottom-[60px] left-[24px] md:left-[65px] flex flex-col !gap-2 md:!gap-4 overflow-hidden">
           <h2
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl !font-[100] text-[#F4EEDF]"
