@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Instrument_Sans, Cormorant_Garamond } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -41,15 +41,23 @@ export const metadata: Metadata = {
   description: "Crafting Custom Swimming Pools with Style, Function, and Quality.",
 };
 
+// Locks viewport scale and prevents mobile browser address bar layout jumps
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html 
       lang="en" 
       className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased preloading`}
-      style={{ backgroundColor: "#162D24", minHeight: "100lvh" }}
+      style={{ backgroundColor: "#162D24", minHeight: "100vh" }}
     >
       <head>
-        {/* 1. INSTANT FRAME 0 BLOCKING STYLES (BACKGROUND MATCHES SITE THEME PERFECTLY) */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
@@ -58,23 +66,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 background-color: #162D24 !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                min-height: 100lvh !important;
+                min-height: 100vh !important;
               }
 
-              /* Preload custom display font immediately */
               @font-face {
                 font-family: 'CanelaText';
                 font-display: block;
               }
 
-              /* Strictly lock scroll while preloading without breaking touch events on Android */
               html.preloading,
               body.preloading {
                 overflow: hidden !important;
-                min-height: 100lvh !important;
+                min-height: 100vh !important;
               }
 
-              /* Hide underlying site content strictly while preloading */
               html.preloading .site-root,
               body.preloading .site-root,
               html.preloading .home-desktop-scope {
@@ -83,7 +88,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 pointer-events: none !important;
               }
 
-              /* Visibility based on synchronously set HTML classes */
               html:not(.show-brand-preloader) #brand-preloader-root {
                 display: none !important;
               }
@@ -95,7 +99,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
 
-        {/* 2. SYNCHRONOUS HEAD SCRIPT */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -127,7 +130,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preload" href="/fonts/Canela-Light-Trial.otf" as="font" type="font/otf" crossOrigin="anonymous" />
       </head>
       <body 
-        className="flex flex-col min-h-[100lvh]" 
+        className="flex flex-col min-h-[100vh]" 
         style={{ backgroundColor: "#162D24" }}
         suppressHydrationWarning
       >
@@ -136,12 +139,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <HeaderWrapper />
             <NavMenuWrapper />
 
-            <main className="site-root flex flex-col flex-1 w-full overflow-x-hidden min-h-[100lvh]">
+            <main className="site-root flex flex-col flex-1 w-full overflow-x-hidden min-h-[100vh]">
               {children}
             </main>
           </SmoothScroll>
 
-          {/* Mount Preloader Controller */}
           <PreloaderToggle />
         </SiteProvider>
       </body>

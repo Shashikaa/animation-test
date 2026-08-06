@@ -36,6 +36,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     let windowWidth = window.innerWidth;
     const handleResize = () => {
+      // Only trigger height re-calculation on width changes (orientation/window size, NOT address bar collapse)
       if (window.innerWidth !== windowWidth) {
         windowWidth = window.innerWidth;
         setVh();
@@ -65,7 +66,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     });
 
     if (isTouchDevice) {
-      // NOTE: normalizeScroll(true) removed here to prevent mobile pin-jumping glitches
       if (thumbRef.current?.parentElement) {
         thumbRef.current.parentElement.style.display = "none";
       }
@@ -73,7 +73,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       return;
     }
 
-    // Lenis setup for desktop
+    // Lenis smooth scrolling for Desktop
     const lenis = new Lenis({
       lerp: 0.14,
       wheelMultiplier: 1.4,
@@ -175,7 +175,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
           top: 0,
           right: 0,
           width: "6px",
-          height: "100lvh",
+          height: "100vh",
           zIndex: 99999,
           pointerEvents: "none",
         }}

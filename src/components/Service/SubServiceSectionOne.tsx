@@ -80,7 +80,7 @@ export default function SubServiceSectionOne({ data }: SubServiceSectionOneProps
       </div>
 
       {/* ── Overlaid 4 Sequential Paragraphs Layer ── */}
-      <div className="s10-seq-container absolute left-0 top-[100vh] w-full z-20 pointer-events-none section-container flex flex-col gap-[250px] pb-[15vh]">
+      <div className="s10-seq-container absolute left-0 top-[100vh] w-full z-20 pointer-events-none section-container flex flex-col gap-[250px] pb-[46px]">
         
         {/* FRAME 1: Left Aligned everywhere */}
         <div className="s10-seq-p s10-seq-p-1 w-full flex justify-start text-left">

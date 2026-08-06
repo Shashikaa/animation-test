@@ -97,11 +97,8 @@ export default function AboutMobile() {
     const ctx = gsap.context(() => {
       const introTl = gsap.timeline({
         onComplete: () => {
-          window.scrollTo(0, 0);
           setIntroDone(true);
-          requestAnimationFrame(() => {
-            ScrollTrigger.refresh();
-          });
+          setTimeout(() => ScrollTrigger.refresh(), 50);
         }
       });
 
@@ -151,7 +148,7 @@ export default function AboutMobile() {
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
-          invalidateOnRefresh: true,
+          invalidateOnRefresh: false,
           onUpdate: (self) => {
             const sec5Time = tl.labels["sec5FullyRevealed"];
             const ctaTime = tl.labels["ctaStart"];
