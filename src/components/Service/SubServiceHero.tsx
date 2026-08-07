@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 export interface TabContent {
   label: string;
-  type: 'paragraph' | 'points';
+  type: "paragraph" | "points";
   content: string | string[];
 }
 
@@ -26,17 +27,16 @@ export default function SubServiceHero({ data, hideText = false }: HeroProps) {
 
   return (
     <div className="relative w-full h-full bg-[#0F2828]">
-      
       {/* UNDERNEATH LAYER: Stationary multi-tab interaction stack */}
       <div className="absolute section-container inset-0 w-full h-full flex flex-col justify-between p-6 md:p-12 lg:p-16 z-0 text-[#F4EEDF] pointer-events-auto overflow-y-auto">
-        <div className="flex flex-col gap-3 text-left  lg:absolute  lg:top-32 lg:right-16 lg:w-[450px] !mt-10">
+        <div className="flex flex-col gap-3 text-left lg:absolute lg:top-32 lg:right-16 lg:w-[450px] !mt-10">
           {data.tabs.map((tab, idx) => (
             <button
               key={idx}
               onClick={() => setActiveTabIdx(idx)}
               className={`text-right sm:text-right font-light text-xl md:text-2xl lg:text-xl transition-all duration-300 pointer-events-auto cursor-pointer ${
-                activeTabIdx === idx 
-                  ? "text-[#F4EEDF] opacity-100 translate-x-1" 
+                activeTabIdx === idx
+                  ? "text-[#F4EEDF] opacity-100 translate-x-1"
                   : "text-[#F4EEDF]/40 hover:opacity-80"
               }`}
               style={{ fontFamily: "var(--font-display)" }}
@@ -49,14 +49,17 @@ export default function SubServiceHero({ data, hideText = false }: HeroProps) {
         {/* Bottom layout container */}
         <div className="w-full lg:max-w-[550px] flex flex-col sm:flex-row items-end justify-between gap-6 text-left lg:absolute lg:bottom-16 lg:right-0 mb-10">
           <div className="w-full max-w-[420px] min-h-[140px]">
-            {activeTab?.type === 'paragraph' ? (
+            {activeTab?.type === "paragraph" ? (
               <p className="text-[#F4EEDF] text-sm md:text-lg lg:text-lg leading-relaxed">
                 {activeTab.content as string}
               </p>
             ) : (
               <ol className="space-y-3 w-full text-sm md:text-lg text-[#fff] font-body list-none p-0 m-0">
                 {(activeTab?.content as string[]).map((point, i) => (
-                  <li key={i} className="flex items-baseline gap-2 leading-relaxed">
+                  <li
+                    key={i}
+                    className="flex items-baseline gap-2 leading-relaxed"
+                  >
                     <span className="text-[#fff] font-body text-xs select-none shrink-0 min-w-[4px]">
                       {String(i + 1).padStart(2)}.
                     </span>
@@ -70,32 +73,43 @@ export default function SubServiceHero({ data, hideText = false }: HeroProps) {
       </div>
 
       {/* TOP LAYER: Set pointer-events-none here to prevent blocking native mobile scroll dragging */}
-      <div 
+      <div
         className="services-hero-top-layer absolute inset-0 w-full h-full overflow-hidden z-10 pointer-events-none will-change-[clip-path]"
-        style={{ 
+        style={{
           clipPath: "inset(0% 0% 0% 0%)",
-          WebkitClipPath: "inset(0% 0% 0% 0%)"
+          WebkitClipPath: "inset(0% 0% 0% 0%)",
         }}
       >
         <section className="relative w-full h-full bg-[#111]">
-          <div
-            className="service-hero-bg absolute left-0 w-screen bg-cover bg-center will-change-transform"
-            style={{
-              top: "0%",
-              bottom: "0%",
-              height: "100%",
-              backgroundImage: `url('${data.bgImageUrl}')`,
-              transform: "scale(1) translateZ(0)",
-              backfaceVisibility: "hidden",
-            }}
-          />
+          {/* BACKGROUND IMAGE CONTAINER WITH OPTIMIZED NEXT.JS IMAGE */}
+          <div className="absolute inset-0 overflow-hidden" style={{ zIndex: 1 }}>
+            <div
+              className="service-hero-bg hero-bg-anim absolute left-0 right-0"
+              style={{
+                top: "-10%",
+                bottom: "-10%",
+                willChange: "transform",
+                backfaceVisibility: "hidden",
+              }}
+            >
+              <Image
+                src={data.bgImageUrl}
+                alt={data.title}
+                fill
+                priority
+                quality={90}
+                sizes="100vw"
+                className="object-cover object-center"
+              />
+            </div>
+          </div>
+
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 z-[1]" />
-          
+
           {!hideText && (
             /* Explicitly added pointer-events-auto to link block elements to preserve button usability */
             <div className="hero-text-wrap section-container relative z-10 h-full flex flex-col justify-end pb-20 md:pb-22 pointer-events-auto will-change-[opacity,transform]">
               <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 leading-normal w-full">
-                
                 {/* Title and Subtitle Block */}
                 <div className="flex flex-col gap-2 lg:gap-6">
                   <h1
@@ -108,18 +122,16 @@ export default function SubServiceHero({ data, hideText = false }: HeroProps) {
                     {data.subtitle}
                   </p>
                 </div>
-                
-{/* Contact Us Button */}
-<a href="/contact" className="btn-underline hero-btn lg:ml-10">
-  CONTACT US
-</a>
 
+                {/* Contact Us Button */}
+                <a href="/contact" className="btn-underline hero-btn lg:ml-10">
+                  CONTACT US
+                </a>
               </div>
             </div>
           )}
         </section>
       </div>
-
     </div>
   );
 }

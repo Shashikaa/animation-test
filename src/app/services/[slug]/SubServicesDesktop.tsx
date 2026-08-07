@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useEffect, useLayoutEffect, useState } from "react";
+import { useRef, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useSite } from "@/src/app/context/SiteContext";
-import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal";
+import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
+import { restoreTextReveal } from "@/src/app/utils/useTextReveal";
 import SubServiceHero from "@/src/components/Service/SubServiceHero";
 import SubServiceSectionOne from "@/src/components/Service/SubServiceSectionOne";
 import SubServiceFAQSection from "@/src/components/Service/SubServiceFAQSection";
@@ -26,51 +26,14 @@ type SubServicesDesktopProps = {
 };
 
 export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps) {
-  const { setPreloaderDone, preloaderDone } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
-  
-  const [introDone, setIntroDone] = useState(false);
 
-  // Setup initial scroll state and preloader signals
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.history.scrollRestoration) {
-      window.history.scrollRestoration = "manual";
-    }
-
-    const isFullyReady = preloaderDone && introDone;
-
-    if (!isFullyReady) {
-      document.documentElement.style.overflow = "hidden";
-      document.body.style.overflow = "hidden";
-      window.scrollTo(0, 0);
-    } else {
-      document.documentElement.style.overflow = "";
-      document.body.style.overflow = "";
-      requestAnimationFrame(() => {
-        ScrollTrigger.refresh();
-      });
-    }
-
-    document.body.classList.remove("preloading");
-    setPreloaderDone(true);
-
-    return () => {
-      document.documentElement.style.overflow = "";
-      document.body.style.overflow = "";
-    };
-  }, [setPreloaderDone, preloaderDone, introDone]);
+  // Single unified utility hook for Hero Intro & scroll handling
+  const { introDone, preloaderDone } = useHeroIntro(scopeRef);
 
   // Offscreen layout setup
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      ScrollTrigger.config({
-        ignoreMobileResize: true,
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange,resize",
-      });
-
-      gsap.set(".service-hero-bg", { scale: 1.4, xPercent: 0, force3D: true, transformOrigin: "center center" });
-      gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: -60, force3D: true });
       gsap.set(".services-hero-top-layer", { width: "100%", force3D: true }); 
       
       gsap.set(".section-one-wrap", { clipPath: "inset(100% 0% 0% 0%)", WebkitClipPath: "inset(100% 0% 0% 0%)", force3D: true });
@@ -91,33 +54,6 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
       gsap.set(".services-footer-wrap", { yPercent: 100, visibility: "hidden", zIndex: 96, force3D: true });
       gsap.set([".cta-inner-desktop", ".cta-inner-mobile"], { opacity: 1, force3D: true });
     }, scopeRef);
-    return () => ctx.revert();
-  }, []);
-
-  // Play Intro Cinematic Animation
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const introTl = gsap.timeline({
-        onComplete: () => {
-          setIntroDone(true);
-        }
-      });
-
-      introTl.to(".service-hero-bg", {
-        scale: 1.15, 
-        duration: 1.5,
-        ease: "power2.out"
-      }, 0);
-
-      introTl.to([".hero-title", ".hero-desc", ".hero-btn"], {
-        opacity: 1,
-        y: 0,
-        duration: 1.0,
-        stagger: 0.15,
-        ease: "power2.out",
-      }, 0.2);
-    }, scopeRef);
-
     return () => ctx.revert();
   }, []);
 
@@ -280,7 +216,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
 
         tl.to({}, { duration: PAUSE_ACTION });
 
-        // ── CTA INNER CONTENT FADE OUT FIRST (MATCHING HOME) ──
+        // ── CTA INNER CONTENT FADE OUT FIRST ──
         tl.addLabel("ctaFadeOut", ">")
           .to(".services-section-cta .cta-inner-desktop", { 
             opacity: 0, 

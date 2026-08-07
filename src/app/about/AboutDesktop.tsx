@@ -11,7 +11,7 @@ import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Footer from "@/src/components/Footer";
-import { useSite } from "@/src/app/context/SiteContext";
+import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal"; 
 
 gsap.registerPlugin(ScrollTrigger);
@@ -24,54 +24,15 @@ const PX_PER_SUB_STEP = 600;
 const PAUSE_PX = 350; 
 
 export default function AboutDesktop() {
-  const { setPreloaderDone, preloaderDone } = useSite();
-  const [introDone, setIntroDone] = useState(false);
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
   const lastSec5Idx = useRef<number>(-1);
 
-  // Setup initial scroll state and preloader signals
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.history.scrollRestoration) {
-      window.history.scrollRestoration = "manual";
-    }
-
-    const isFullyReady = preloaderDone && introDone;
-
-    if (!isFullyReady) {
-      document.documentElement.style.overflow = "hidden";
-      document.body.style.overflow = "hidden";
-      window.scrollTo(0, 0);
-    } else {
-      document.documentElement.style.overflow = "";
-      document.body.style.overflow = "";
-      requestAnimationFrame(() => {
-        ScrollTrigger.refresh();
-      });
-    }
-
-    document.body.classList.remove("preloading");
-    setPreloaderDone(true);
-
-    return () => {
-      document.documentElement.style.overflow = "";
-      document.body.style.overflow = "";
-    };
-  }, [setPreloaderDone, preloaderDone, introDone]);
+  // Single unified utility hook for Hero Intro & scroll handling
+  const { introDone, preloaderDone } = useHeroIntro(scopeRef);
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      ScrollTrigger.config({
-        ignoreMobileResize: true,
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange,resize",
-      });
-
-      gsap.set(".about-hero-bg", { scale: 1.4, force3D: true });
-      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30, force3D: true });
-      gsap.set(".about-hero-panel-left", { clipPath: "inset(0% 0% 0% 0%)", WebkitClipPath: "inset(0% 0% 0% 0%)", force3D: true });
-      gsap.set(".about-hero-panel-right", { clipPath: "inset(0% 0% 0% 0%)", WebkitClipPath: "inset(0% 0% 0% 0%)", force3D: true });
-
       gsap.set(".about-section-two", { 
         visibility: "hidden", 
         yPercent: 100,
@@ -102,33 +63,6 @@ export default function AboutDesktop() {
       gsap.set([".about-section-cta", ".about-footer-wrap"], { yPercent: 100, visibility: "hidden", force3D: true });
     }, scopeRef);
     
-    return () => ctx.revert();
-  }, []);
-
-  // Hero Intro Sequence
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const introTl = gsap.timeline({
-        onComplete: () => {
-          setIntroDone(true);
-        }
-      });
-
-      introTl.to(".about-hero-bg", {
-        scale: 1.15,
-        duration: 1.5,
-        ease: "power2.out"
-      }, 0);
-
-      introTl.to([".hero-title", ".hero-desc"], {
-        opacity: 1,
-        y: 0,
-        duration: 1.0,
-        stagger: 0.15,
-        ease: "power2.out",
-      }, 0.2);
-    }, scopeRef);
-
     return () => ctx.revert();
   }, []);
 
@@ -346,7 +280,6 @@ export default function AboutDesktop() {
         tl.to({}, { duration: SUB_ACTION * 2 });
 
         // CONTINUOUS SECTION 5 IMAGE TRANSLATION / PARALLAX:
-        // Spans from Section 5 reveal start all the way through the third card step until CTA starts
         tl.fromTo(
           ".s5-bg", 
           { yPercent: 0, scale: 1.0 }, 
@@ -362,7 +295,7 @@ export default function AboutDesktop() {
 
         tl.to({}, { duration: PAUSE_ACTION });
 
-        // ── 8.5. CTA CONTENT FADE OUT FIRST (MATCHING HOME) ──
+        // ── 8.5. CTA CONTENT FADE OUT FIRST ──
         tl.addLabel("ctaFadeOut", ">")
           .to(".about-section-cta .cta-inner-desktop", { 
             opacity: 0, 
@@ -370,8 +303,6 @@ export default function AboutDesktop() {
             duration: PANEL_ACTION * 0.5, 
             ease: "power2.in" 
           }, "ctaFadeOut")
-          
-          // Pause so content is completely clear before footer enters
           .to({}, { duration: 0 });
 
         // ── 9. FOOTER REVEAL TRACK ──

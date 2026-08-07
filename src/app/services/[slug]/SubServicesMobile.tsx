@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useEffect, useLayoutEffect, useState } from "react";
+import { useRef, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useSite } from "@/src/app/context/SiteContext";
+import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import { restoreTextReveal } from "@/src/app/utils/useTextReveal";
 import SubServiceHero from "@/src/components/Service/SubServiceHero";
 import SubServiceSectionOne from "@/src/components/Service/SubServiceSectionOne";
@@ -24,55 +24,13 @@ const PX_PER_SUB_STEP = 350;
 const PAUSE_PX = 100;          
 
 export default function SubServicesMobile({ pageData }: SubServicesMobileProps) {
-  const { setPreloaderDone } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
-  
-  const [introDone, setIntroDone] = useState(false);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.history.scrollRestoration) {
-      window.history.scrollRestoration = "manual";
-    }
-    window.scrollTo(0, 0);
-    document.body.classList.remove("preloading");
-    setPreloaderDone(true);
-  }, [setPreloaderDone]);
-
-  useEffect(() => {
-    const locked = !introDone;
-    document.body.style.overflow = locked ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [introDone]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    let lastWidth = window.innerWidth;
-
-    const handleResize = () => {
-      const currentWidth = window.innerWidth;
-      if (currentWidth !== lastWidth) {
-        lastWidth = currentWidth;
-        ScrollTrigger.refresh();
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  // Single unified utility hook configured for Mobile
+  const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      ScrollTrigger.config({ 
-        ignoreMobileResize: true,
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
-      });
-
-      gsap.set(".service-hero-bg", { scale: 1.3, xPercent: 0, transformOrigin: "center center", force3D: true });
-      gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: 30, force3D: true });
       gsap.set(".services-hero-top-layer", { width: "100%", xPercent: 0, force3D: true }); 
       
       // Position Section One fully below the screen for a smooth slide-up
@@ -93,33 +51,6 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
       gsap.set(".services-section-cta", { zIndex: 95 });
       gsap.set(".services-footer-wrap", { zIndex: 96 });
     }, scopeRef);
-    return () => ctx.revert();
-  }, []);
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const introTl = gsap.timeline({
-        onComplete: () => {
-          setIntroDone(true);
-          setTimeout(() => ScrollTrigger.refresh(), 50);
-        }
-      });
-
-      introTl.to(".service-hero-bg", {
-        scale: 1.0, 
-        duration: 2.2,
-        ease: "power2.out"
-      }, 0);
-
-      introTl.to([".hero-title", ".hero-desc", ".hero-btn"], {
-        opacity: 1,
-        y: 0,
-        duration: 1.4,
-        stagger: 0.2,
-        ease: "power3.out",
-      }, 0.4);
-    }, scopeRef);
-
     return () => ctx.revert();
   }, []);
 

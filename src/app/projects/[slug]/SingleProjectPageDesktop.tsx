@@ -8,7 +8,7 @@ import ProjectInfoSlide from "@/src/components/Projects/ProjectInfoSlide";
 import Appsection from "@/src/components/Projects/Appsection";
 import FAQSection from "@/src/components/contact/FAQSection";
 import Footer from "@/src/components/Footer";
-import { useSite } from "@/src/app/context/SiteContext";
+import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import { FullServiceData } from "./data";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -25,51 +25,17 @@ type SubServicesDesktopProps = {
 };
 
 export default function SingleProjectPageDesktop({ pageData }: SubServicesDesktopProps) {
-  const { setPreloaderDone, preloaderDone } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
   
-  const [introDone, setIntroDone] = useState(false);
   const [isProjectInfoActive, setIsProjectInfoActive] = useState(false);
   const lastInfoIdx = useRef<number>(-1);
 
-  // Setup initial scroll state and preloader signals
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.history.scrollRestoration) {
-      window.history.scrollRestoration = "manual";
-    }
-
-    const isFullyReady = preloaderDone && introDone;
-
-    if (!isFullyReady) {
-      document.documentElement.style.overflow = "hidden";
-      document.body.style.overflow = "hidden";
-      window.scrollTo(0, 0);
-    } else {
-      document.documentElement.style.overflow = "";
-      document.body.style.overflow = "";
-      requestAnimationFrame(() => {
-        ScrollTrigger.refresh();
-      });
-    }
-
-    document.body.classList.remove("preloading");
-    setPreloaderDone(true);
-
-    return () => {
-      document.documentElement.style.overflow = "";
-      document.body.style.overflow = "";
-    };
-  }, [setPreloaderDone, preloaderDone, introDone]);
+  // Single unified utility hook for Hero Intro & scroll handling
+  const { introDone, preloaderDone } = useHeroIntro(scopeRef);
 
   // Offscreen layout setup
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      ScrollTrigger.config({
-        ignoreMobileResize: true,
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange,resize",
-      });
-
       gsap.set(".project-hero-master", { zIndex: 10 });
       gsap.set(
         [
@@ -88,41 +54,6 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
       gsap.set(".faq-content", { opacity: 1, force3D: true });
 
       gsap.set(".hero-text-wrap", { autoAlpha: 1 });
-      gsap.set([".hero-title", ".hero-description"], { autoAlpha: 0, y: 30, force3D: true });
-
-      const layers = gsap.utils.toArray<HTMLElement>(".hero-image-layer");
-      if (layers.length > 0) {
-        const firstInnerImg = layers[0].querySelector(".hero-image-inner");
-        if (firstInnerImg) {
-          gsap.set(firstInnerImg, { scale: 1.4, force3D: true, transformOrigin: "center center" });
-        }
-      }
-    }, scopeRef);
-
-    return () => ctx.revert();
-  }, []);
-
-  // Hero Intro Cinematic Sequence
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const introTl = gsap.timeline({
-        onComplete: () => {
-          setIntroDone(true);
-        }
-      });
-
-      const layers = gsap.utils.toArray<HTMLElement>(".hero-image-layer");
-      const firstInnerImg = layers[0]?.querySelector(".hero-image-inner");
-
-      introTl
-        .to(firstInnerImg, { scale: 1.15, duration: 1.5, ease: "power2.out" }, 0)
-        .to([".hero-title", ".hero-description"], { 
-          autoAlpha: 1, 
-          y: 0, 
-          duration: 1.0, 
-          stagger: 0.15, 
-          ease: "power2.out" 
-        }, 0.2);
     }, scopeRef);
 
     return () => ctx.revert();
@@ -179,7 +110,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
 
         gsap.set(".appsec-phone-wrapper", { y: 40, opacity: 0 });
 
-        // Standardized Duration Metrics (Matched to Home Setup)
+        // Standardized Duration Metrics
         const PANEL_ACTION = 2.0;
         const SUB_ACTION = 1.8;
         const PAUSE_ACTION = 0.4;
@@ -292,7 +223,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
 
         scrollTl.to({}, { duration: PAUSE_ACTION });
 
-        // ── FAQ CONTENT FADE OUT FIRST (MATCHING HOME & CONTACT) ──
+        // ── FAQ CONTENT FADE OUT FIRST ──
         scrollTl.addLabel("ctaFadeOut", ">")
           .to(".faq-content", { 
             opacity: 0, 

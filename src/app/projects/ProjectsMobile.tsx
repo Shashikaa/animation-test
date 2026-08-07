@@ -9,19 +9,13 @@ import SectionOne from "@/src/components/Projects/SectionOne";
 import SectionTwo from "@/src/components/Projects/SectionTwo";
 import SectionCTA from "@/src/components/SectionCTA";
 import Footer from "@/src/components/Footer";
+import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const PX_PER_MAIN_PANEL = 850; 
 const PX_PER_SUB_STEP = 350;   
 const PAUSE_PX = 100;          
-
-if (typeof window !== "undefined") {
-  ScrollTrigger.config({ 
-    ignoreMobileResize: true,
-    autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
-  });
-}
 
 function executeMobileSplitting(selector: string) {
   const elements = document.querySelectorAll(selector);
@@ -55,54 +49,13 @@ function executeMobileSplitting(selector: string) {
 
 export default function ProjectsMobile() {
   const scopeRef = useRef<HTMLDivElement>(null);
-  const [introDone, setIntroDone] = useState(false);
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.history.scrollRestoration = "manual";
-    window.scrollTo(0, 0);
-  }, []);
-
-  useEffect(() => {
-    document.body.style.overflow = introDone ? "" : "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [introDone]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    let lastWidth = window.innerWidth;
-
-    const handleResize = () => {
-      const activeElement = document.activeElement;
-      const isInputFocused =
-        activeElement &&
-        (activeElement.tagName === "INPUT" ||
-          activeElement.tagName === "TEXTAREA" ||
-          activeElement.tagName === "SELECT" ||
-          activeElement.getAttribute("role") === "combobox");
-
-      if (isInputFocused) return;
-
-      const currentWidth = window.innerWidth;
-      if (currentWidth !== lastWidth) {
-        lastWidth = currentWidth;
-        ScrollTrigger.refresh();
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  // Single unified utility hook configured for Mobile
+  const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.set(".projects-hero-bg", { scale: 1.6, yPercent: 0, transformOrigin: "center center", force3D: true });
-      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30, force3D: true });
-      
       gsap.set([".scroll-para-1", ".scroll-para-2"], { opacity: 1, visibility: "hidden", force3D: true });
       
       gsap.set(".section-one-wrapper", { yPercent: 100, zIndex: 20, force3D: true });
@@ -115,26 +68,6 @@ export default function ProjectsMobile() {
         { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
       );
       gsap.set(".projects-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden", force3D: true });
-    }, scopeRef);
-    
-    return () => ctx.revert();
-  }, []);
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const introTl = gsap.timeline({ 
-        onComplete: () => {
-          window.scrollTo(0, 0);
-          setIntroDone(true);
-          requestAnimationFrame(() => {
-            ScrollTrigger.refresh();
-          });
-        }
-      });
-      
-      introTl
-        .to(".projects-hero-bg", { scale: 1.3, duration: 2.2, ease: "power2.out" }, 0)
-        .to([".hero-title", ".hero-desc"], { opacity: 1, y: 0, duration: 1.4, stagger: 0.15, ease: "power3.out" }, 0.4);
     }, scopeRef);
     
     return () => ctx.revert();
@@ -211,9 +144,9 @@ export default function ProjectsMobile() {
       scrollTl.set(".scroll-para-2", { visibility: "hidden" });
 
       scrollTl.fromTo(
-        ".projects-hero-bg", 
+        [".projects-hero-bg", ".about-hero-bg", ".hero-bg-anim"], 
         { yPercent: 0 }, 
-        { yPercent: -18, ease: "none", duration: scrollTl.duration() }, 
+        { yPercent: -9, ease: "none", duration: scrollTl.duration() }, 
         0
       );
 

@@ -8,6 +8,7 @@ import ProjectInfoSlide from "@/src/components/Projects/ProjectInfoSlide";
 import Appsection from "@/src/components/Projects/Appsection";
 import FAQSection from "@/src/components/contact/FAQSection";
 import Footer from "@/src/components/Footer";
+import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import { FullServiceData } from "./data";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -16,60 +17,21 @@ type SubServicesMobileProps = {
   pageData: FullServiceData;
 };
 
-// Standardized Metrics to align exact scroll feel with AboutMobile and ContactMobile
+// Standardized Metrics to align exact scroll feel
 const PX_PER_MAIN_PANEL = 850; 
 const PX_PER_SUB_STEP = 350;   
 const PAUSE_PX = 100;          
 
 export default function SingleProjectPageMobile({ pageData }: SubServicesMobileProps) {
   const scopeRef = useRef<HTMLDivElement>(null);
-  const [introDone, setIntroDone] = useState(false);
   const [isProjectInfoActive, setIsProjectInfoActive] = useState(false);
   const lastInfoIdx = useRef<number>(-1);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.history.scrollRestoration) {
-      window.history.scrollRestoration = "manual";
-    }
-    window.scrollTo(0, 0);
-    document.body.classList.remove("preloading");
-  }, []);
-
-  // Lock body scroll during intro cleanly
-  useEffect(() => {
-    const locked = !introDone;
-    document.body.style.overflow = locked ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [introDone]);
-
-  // Refresh ScrollTrigger only on width/orientation change
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    let lastWidth = window.innerWidth;
-
-    const handleResize = () => {
-      const currentWidth = window.innerWidth;
-      if (currentWidth !== lastWidth) {
-        lastWidth = currentWidth;
-        ScrollTrigger.refresh();
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  // Single unified utility hook configured for Mobile
+  const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      ScrollTrigger.config({
-        ignoreMobileResize: true,
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange",
-      });
-
       gsap.set(".project-hero-master", { zIndex: 10 });
 
       gsap.set(
@@ -89,37 +51,6 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
       gsap.set(".faq-content", { opacity: 1, y: 0 });
 
       gsap.set(".hero-text-wrap", { autoAlpha: 1 });
-      gsap.set([".hero-title", ".hero-description"], { autoAlpha: 0, y: 20 });
-
-      const layers = gsap.utils.toArray<HTMLElement>(".hero-image-layer");
-      if (layers.length > 0) {
-        const firstInnerImg = layers[0].querySelector(".hero-image-inner");
-        if (firstInnerImg) {
-          gsap.set(firstInnerImg, { scale: 1.5, transformOrigin: "center center" });
-        }
-      }
-    }, scopeRef);
-
-    return () => ctx.revert();
-  }, []);
-
-  // Hero Intro Sequence
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const introTl = gsap.timeline({
-        onComplete: () => {
-          setIntroDone(true);
-          setTimeout(() => ScrollTrigger.refresh(), 50);
-        }
-      });
-
-      const layers = gsap.utils.toArray<HTMLElement>(".hero-image-layer");
-      const firstInnerImg = layers[0]?.querySelector(".hero-image-inner");
-
-      introTl
-        .to(firstInnerImg, { scale: 1.25, duration: 1.8, ease: "power2.out" }, 0)
-        .to(".hero-title", { autoAlpha: 1, y: 0, duration: 1.0, ease: "power3.out" }, 0.2)
-        .to(".hero-description", { autoAlpha: 1, y: 0, duration: 1.0, ease: "power3.out" }, 0.4);
     }, scopeRef);
 
     return () => ctx.revert();
@@ -132,7 +63,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
     const ctx = gsap.context(() => {
       gsap.ticker.lagSmoothing(0);
 
-      // Enable touch normalization on mobile to align viewport and address bar behavior
+      // Enable touch normalization on mobile
       const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
       if (isTouchDevice) {
         ScrollTrigger.normalizeScroll(true);

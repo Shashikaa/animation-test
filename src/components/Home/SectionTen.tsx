@@ -86,7 +86,7 @@ export default function SectionTen() {
           .s10-para-top {
             bottom: clamp(180px, 25vh, 240px);
             right: clamp(40px, 6vw, 80px);
-            max-width: 430px;
+            max-width: 340px;
             text-align: left;
           }
           .s10-content-wrap {

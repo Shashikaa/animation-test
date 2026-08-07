@@ -3,13 +3,13 @@
 import { useRef, useEffect, useState, useLayoutEffect } from "react";
 import gsap from "gsap"; 
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useSite } from "@/src/app/context/SiteContext";
 import ProjectsHero from "../../components/Projects/ProjectsHero";
 import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal"; 
 import SectionOne from "@/src/components/Projects/SectionOne";
 import SectionTwo from "@/src/components/Projects/SectionTwo";
 import SectionCTA from "@/src/components/SectionCTA";
 import Footer from "@/src/components/Footer";
+import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -53,55 +53,18 @@ function executeDesktopSplitting(selector: string) {
 }
 
 export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = true }: ContactProps) {
-  const { setPreloaderDone, preloaderDone } = useSite();
   const scopeRef = useRef<HTMLDivElement>(null);
   const sectionOneRef = useRef<HTMLDivElement>(null);
-  const [introDone, setIntroDone] = useState(false);
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
 
   const isTouchOnly = () => ScrollTrigger.isTouch === 1;
 
-  // Setup initial scroll state and preloader signals
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.history.scrollRestoration) {
-      window.history.scrollRestoration = "manual";
-    }
-
-    const isFullyReady = preloaderDone && introDone;
-
-    if (!isFullyReady) {
-      document.documentElement.style.overflow = "hidden";
-      document.body.style.overflow = "hidden";
-      window.scrollTo(0, 0);
-    } else {
-      document.documentElement.style.overflow = "";
-      document.body.style.overflow = "";
-      requestAnimationFrame(() => {
-        ScrollTrigger.refresh();
-      });
-    }
-
-    document.body.classList.remove("preloading");
-    setPreloaderDone(true);
-
-    return () => {
-      document.documentElement.style.overflow = "";
-      document.body.style.overflow = "";
-    };
-  }, [setPreloaderDone, preloaderDone, introDone]);
+  // Single unified utility hook for Hero Intro & scroll handling
+  const { introDone, preloaderDone } = useHeroIntro(scopeRef);
 
   // Establish precise starting positions cleanly BEFORE browser paint
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      ScrollTrigger.config({
-        ignoreMobileResize: true,
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange,resize",
-      });
-
-      gsap.set(".projects-hero-bg", { scale: 1.4, yPercent: 0, force3D: true, transformOrigin: "center center" });
-      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30, force3D: true });
-      
       gsap.set([".scroll-para-1", ".scroll-para-2"], { opacity: 1, visibility: "hidden" });
       
       gsap.set(".section-one-wrapper", { top: "100vh", y: 0, height: "auto", zIndex: 20 });
@@ -112,23 +75,6 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
       gsap.set(".projects-section-cta", { zIndex: 95 });
       gsap.set(".projects-footer-wrap", { zIndex: 96 });
       gsap.set([".cta-inner-desktop", ".cta-inner-mobile"], { opacity: 1, force3D: true });
-    }, scopeRef);
-    
-    return () => ctx.revert();
-  }, []);
-
-  // Hero Intro Sequence matched to Home / About Desktop setup
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const introTl = gsap.timeline({ 
-        onComplete: () => {
-          setIntroDone(true);
-        }
-      });
-      
-      introTl
-        .to(".projects-hero-bg", { scale: 1.15, duration: 1.2, ease: "power2.out" }, 0)
-        .to([".hero-title", ".hero-desc"], { opacity: 1, y: 0, duration: 0.8, stagger: 0.12, ease: "power2.out" }, 0.2);
     }, scopeRef);
     
     return () => ctx.revert();
@@ -211,7 +157,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
         const revealedElements = new Set<string>();
 
-        // Original Text Reveal logic preserved exact offsets (-0.65) and duration (0.8)
+        // Text Reveal logic
         const addPlayOnceTextReveal = (labelName: string, timeOffset: number, selector: string) => {
           const absoluteTime = scrollTl.labels[labelName] + timeOffset;
 
@@ -232,7 +178,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
           }, [], absoluteTime);
         };
 
-        // ── STEP 1: HERO INNER TEXT SWAPPING (FAST & CRISP) ──
+        // ── STEP 1: HERO INNER TEXT SWAPPING ──
         scrollTl.addLabel("start", 0); 
         scrollTl.addLabel("phaseHeroMain", 0); 
         scrollTl.set([".scroll-para-1 .custom-line-inner", ".scroll-para-2 .custom-line-inner"], { opacity: 0, yPercent: 100 }, 0);
@@ -251,7 +197,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
         }, PANEL_ACTION * 0.4);
 
         // Hero Scale smoothly anchors without shifting position
-        scrollTl.to(".projects-hero-bg", { scale: 1.05, duration: PANEL_ACTION, ease: "power1.inOut" }, 0);
+        scrollTl.to([".projects-hero-bg", ".about-hero-bg", ".hero-bg-anim"], { scale: 1.05, duration: PANEL_ACTION, ease: "power1.inOut" }, 0);
 
         scrollTl.to({}, { duration: PAUSE_ACTION });
 
@@ -302,7 +248,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
           duration: PANEL_ACTION * 1.5
         }, "sectionOneStart");
 
-        addPlayOnceTextReveal("sectionOneStart", 1, ".section-one-wrapper .gs-line-inner, .section-one-wrapper .custom-line-inner, .section-one-wrapper .reveal-text > *");
+        addPlayOnceTextReveal("sectionOneStart", 0.3, ".section-one-wrapper .gs-line-inner, .section-one-wrapper .custom-line-inner, .section-one-wrapper .reveal-text > *");
 
         scrollTl.to({}, { duration: PAUSE_ACTION });
 
@@ -326,7 +272,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
         scrollTl.to({}, { duration: PAUSE_ACTION });
 
-        // ── STEP 4.5: CTA INNER CONTENT FADE OUT FIRST (MATCHING HOME) ──
+        // ── STEP 4.5: CTA INNER CONTENT FADE OUT FIRST ──
         scrollTl.addLabel("ctaFadeOut", ">")
           .to(".projects-section-cta .cta-inner-desktop", { 
             opacity: 0, 

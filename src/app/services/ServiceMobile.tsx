@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useSite } from "@/src/app/context/SiteContext";
+import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import Hero from "@/src/components/Service/Hero";
 import SectionOne from "@/src/components/Service/SectionOne";
 import SectionTwo from "@/src/components/Service/SectionTwo";
@@ -19,60 +19,16 @@ const PX_PER_SUB_STEP = 350;
 const PAUSE_PX = 100;          
 
 export default function ServicesMobile() {
-  const { setPreloaderDone } = useSite(); 
-  const [introDone, setIntroDone] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
   const lastSec2Idx = useRef<number>(-1);
 
-  // Reset scroll mechanics on mount
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.history.scrollRestoration) {
-      window.history.scrollRestoration = "manual";
-    }
-    window.scrollTo(0, 0);
-    document.body.classList.remove("preloading");
-    setPreloaderDone(true);
-  }, [setPreloaderDone]);
+  // Single unified utility hook configured for Mobile
+  const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // Handle body overflow logic during initial page loading
-  useEffect(() => {
-    const locked = !introDone;
-    document.body.style.overflow = locked ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [introDone]);
-
-  // Refresh ScrollTrigger only on width/orientation change
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    let lastWidth = window.innerWidth;
-
-    const handleResize = () => {
-      const currentWidth = window.innerWidth;
-      if (currentWidth !== lastWidth) {
-        lastWidth = currentWidth;
-        ScrollTrigger.refresh();
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // 1. Set up safe baseline states before animations run
+  // Set up safe baseline states before scroll timeline runs
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      ScrollTrigger.config({ 
-        ignoreMobileResize: true,
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
-      });
-
-      gsap.set(".service-hero-bg", { scale: 1.3, force3D: true });
-      gsap.set([".hero-title", ".hero-desc", ".hero-btn"], { opacity: 0, y: 30, force3D: true });
       gsap.set(".services-hero-top-layer", { clipPath: "inset(0px 0px 0px 0px)", WebkitClipPath: "inset(0px 0px 0px 0px)", force3D: true });
 
       // Initialize Section One with bottom-to-top mask hide
@@ -106,35 +62,7 @@ export default function ServicesMobile() {
     return () => ctx.revert();
   }, []);
 
-  // 2. Intro Sequence
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const masterTl = gsap.timeline();
-
-      masterTl.to(".service-hero-bg", {
-        scale: 1.0,
-        duration: 2.2,
-        ease: "power2.out",
-        onComplete: () => {
-          setIntroDone(true);
-          setTimeout(() => ScrollTrigger.refresh(), 50);
-        }
-      }, 0);
-
-      masterTl.to([".hero-title", ".hero-desc", ".hero-btn"], {
-        opacity: 1,
-        y: 0,
-        duration: 1.4,
-        stagger: 0.2,
-        ease: "power3.out",
-      }, 0.4);
-
-    }, scopeRef);
-
-    return () => ctx.revert();
-  }, []);
-
-  // 3. Absolute Panel Stacking Scroll Timeline
+  // Absolute Panel Stacking Scroll Timeline
   useEffect(() => {
     if (!introDone) return;
 

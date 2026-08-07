@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { useRef, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useSite } from "@/src/app/context/SiteContext";
 import ContactHero from "@/src/components/contact/Hero";
 import SectionCTA from "@/src/components/contact/SectionCTA";
 import SectionOne from "@/src/components/contact/SectionOne";
 import FAQSection from "@/src/components/contact/FAQSection";
 import Footer from "@/src/components/Footer";
+import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -17,78 +17,19 @@ const PX_PER_MAIN_PANEL = 850;
 const PAUSE_PX = 150;
 
 export default function ContactMobile() {
-  const { setPreloaderDone } = useSite();
-  const [introDone, setIntroDone] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.scrollTo(0, 0);
-    setPreloaderDone(true);
-  }, [setPreloaderDone]);
-
-  // Lock scrolling during intro
-  useEffect(() => {
-    const locked = !introDone;
-    document.body.style.overflow = locked ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [introDone]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    let lastWidth = window.innerWidth;
-
-    const handleResize = () => {
-      const currentWidth = window.innerWidth;
-      if (currentWidth !== lastWidth) {
-        lastWidth = currentWidth;
-        ScrollTrigger.refresh();
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    window.addEventListener("orientationchange", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("orientationchange", handleResize);
-    };
-  }, []);
+  // Single unified utility hook configured for Mobile
+  const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      ScrollTrigger.config({ 
-        ignoreMobileResize: true,
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
-      });
-
-      gsap.set(".contact-hero-bg", { scale: 1.3 });
-      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
-      
       gsap.set(".cta-scroll-wrapper", { yPercent: 100 });
       gsap.set(".section-one-scroll-wrapper", { yPercent: 100 });
       gsap.set(".faq-scroll-wrapper", { yPercent: 100 });
       gsap.set(".footer-scroll-wrapper", { yPercent: 100 });
       
       gsap.set([".faq-content", ".cta-inner-mobile", ".cta-inner-desktop"], { opacity: 1 });
-    }, scopeRef);
-
-    return () => ctx.revert();
-  }, []);
-
-  // Hero Intro Sequence
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const masterTl = gsap.timeline({
-        onComplete: () => {
-          setIntroDone(true);
-          setTimeout(() => ScrollTrigger.refresh(), 50);
-        }
-      });
-      masterTl.to(".contact-hero-bg", { scale: 1.0, duration: 2.2, ease: "power2.out" }, 0)
-              .to([".hero-title", ".hero-desc"], { opacity: 1, y: 0, duration: 1.4, stagger: 0.2, ease: "power3.out" }, 0.4);
     }, scopeRef);
 
     return () => ctx.revert();
@@ -212,7 +153,7 @@ export default function ContactMobile() {
         
         {/* Layer 1: Hero Section */}
         <div className="gpu-accelerated absolute inset-0 w-full h-full z-10">
-          <ContactHero />
+          <ContactHero isMobile={true} />
         </div>
 
         {/* Layer 2: CTA Section */}

@@ -11,7 +11,7 @@ import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Footer from "@/src/components/Footer";
-import { useSite } from "@/src/app/context/SiteContext";
+import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -20,57 +20,15 @@ const PX_PER_SUB_STEP = 450;
 const PAUSE_PX = 150; 
 
 export default function AboutMobile() {
-  const { setPreloaderDone } = useSite(); 
-  const [introDone, setIntroDone] = useState(false);
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
   const lastSec5Idx = useRef<number>(-1);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.scrollTo(0, 0);
-    setPreloaderDone(true);
-  }, [setPreloaderDone]);
-
-  useEffect(() => {
-    const locked = !introDone;
-    document.body.style.overflow = locked ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [introDone]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    let lastWidth = window.innerWidth;
-
-    const handleResize = () => {
-      const currentWidth = window.innerWidth;
-      if (currentWidth !== lastWidth) {
-        lastWidth = currentWidth;
-        ScrollTrigger.refresh();
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    window.addEventListener("orientationchange", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("orientationchange", handleResize);
-    };
-  }, []);
+  // Single unified utility hook configured for Mobile
+  const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      ScrollTrigger.config({ 
-        ignoreMobileResize: true,
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
-      });
-
-      gsap.set(".about-hero-bg", { scale: 1.3 });
-      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30 });
-
       gsap.set(".about-section-one", { yPercent: 100 });
       gsap.set(".about-section-two", { visibility: "hidden", yPercent: 100 });
       
@@ -82,7 +40,8 @@ export default function AboutMobile() {
 
       gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0 });
 
-      gsap.set(".about-section-five", { yPercent: 100 });
+      // FIX: Ensure opacity is set to 1 so SectionFive is visible when it slides up
+      gsap.set(".about-section-five", { yPercent: 100, opacity: 1, visibility: "hidden" });
       gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0 });
 
       gsap.set(".about-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
@@ -91,24 +50,6 @@ export default function AboutMobile() {
         { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
       );
       gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden" });
-    }, scopeRef);
-
-    return () => ctx.revert();
-  }, []);
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const introTl = gsap.timeline({
-        onComplete: () => {
-          setIntroDone(true);
-          setTimeout(() => ScrollTrigger.refresh(), 50);
-        }
-      });
-
-      introTl.to(".about-hero-bg", { scale: 1.1, duration: 2.2, ease: "power2.out" }, 0);
-      introTl.to([".hero-title", ".hero-desc"], { opacity: 1, y: 0, duration: 1.4, stagger: 0.2, ease: "power3.out" }, 0.4);
-      introTl.to(".about-section-five", { opacity: 1, duration: 1.2, ease: "linear" }, 0.2);
-
     }, scopeRef);
 
     return () => ctx.revert();
@@ -253,7 +194,6 @@ export default function AboutMobile() {
         .to(".about-section-five", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart");
 
       // CONTINUOUS MOBILE SECTION 5 IMAGE TRANSLATION / PARALLAX:
-      // Spans across the entire Section 5 reveal and inner cards duration (from sec5Start to ctaStart)
       tl.fromTo(
         ".about-section-five .s5-bg", 
         { yPercent: 0, scale: 1.0 }, 
@@ -339,7 +279,6 @@ export default function AboutMobile() {
           className="about-section-five gpu-accelerated absolute inset-0 w-full h-full" 
           style={{ 
             zIndex: 45,
-            opacity: 0,
             visibility: "hidden"
           }}
         >

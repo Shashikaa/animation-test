@@ -66,12 +66,20 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
   const [engineReady, setEngineReady] = useState(false);
   const appInstanceRef = useRef<any>(null);
 
+  // Detect device type
   useEffect(() => {
-    if (!isHome) return;
     const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     setIsMobileOrTablet(isMobileUA || window.innerWidth <= 1024);
-  }, [isHome]);
+  }, []);
 
+  // Handle immediate readiness for non-home pages or mobile/tablet
+  useEffect(() => {
+    if (!isHome || isMobileOrTablet) {
+      onReady?.();
+    }
+  }, [isHome, isMobileOrTablet, onReady]);
+
+  // WebGL Interactive Engine Setup (ONLY for Home page on Desktop)
   useEffect(() => {
     if (!isHome || isMobileOrTablet === null || isMobileOrTablet) return;
 
@@ -85,7 +93,7 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
       if (!canvasRef.current || appInstanceRef.current) return;
 
       try {
-        // High-performance async texture load without offscreen bitmap duplication
+        // High-performance async texture load
         if (imageSrc) {
           const loader = new TextureLoader();
           loader.setCrossOrigin("anonymous");
@@ -98,7 +106,7 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
 
         if (destroyed) return;
 
-        // Bypasses heavy PMREM environment generation
+        // Bypass heavy PMREM environment generation
         const originalFromScene = THREE.PMREMGenerator.prototype.fromScene;
         THREE.PMREMGenerator.prototype.fromScene = function () { return { texture: null } as any; };
         
@@ -186,6 +194,8 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
         onReady?.();
       } catch (err) {
         console.error("WebGL Setup Error:", err);
+        // Fallback to ready state if WebGL setup fails
+        onReady?.();
       }
     };
 
@@ -202,8 +212,9 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
       if (appInstanceRef.current?.dispose) appInstanceRef.current.dispose();
       appInstanceRef.current = null;
     };
-  }, [isHome, isMobileOrTablet, imageSrc]);
+  }, [isHome, isMobileOrTablet, imageSrc, onReady]);
 
+  // Non-Home static fallback render (Ultra-lightweight, zero WebGL overhead)
   if (!isHome) {
     return (
       <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-black">
@@ -212,6 +223,7 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
             src={imageSrc}
             alt="Background"
             className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            onLoad={() => onReady?.()}
           />
         )}
       </div>
@@ -239,6 +251,9 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
           alt="Background"
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
           style={{ opacity: 1 }}
+          onLoad={() => {
+            if (isMobileOrTablet) onReady?.();
+          }}
         />
       )}
       

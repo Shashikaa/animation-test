@@ -5,9 +5,10 @@ import SectionOne from "@/src/components/contact/SectionOne";
 import SectionCTA from "@/src/components/contact/SectionCTA";
 import FAQSection from "@/src/components/contact/FAQSection";
 import Footer from "@/src/components/Footer";
-import { useState, useRef, useEffect, useLayoutEffect } from "react";
+import { useRef, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -19,29 +20,13 @@ const PX_PER_SUB_STEP = 600;
 const PAUSE_PX = 350;
 
 export default function ContactDesktop() {
-  const [introDone, setIntroDone] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.history.scrollRestoration) {
-      window.history.scrollRestoration = "manual";
-    }
-    document.body.classList.remove("preloading");
-  }, []);
+  // Single unified hook (Desktop mode by default)
+  const { introDone } = useHeroIntro(scopeRef);
 
-  // Single consolidated layout phase
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      ScrollTrigger.config({
-        ignoreMobileResize: true,
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange,resize",
-      });
-
-      // Initial state setup
-      gsap.set(".contact-hero-bg", { scale: 1.25, force3D: true });
-      gsap.set([".hero-title", ".hero-desc"], { opacity: 0, y: 30, force3D: true });
-
       gsap.set(".cta-scroll-wrapper", { yPercent: 0, visibility: "visible", force3D: true });
       gsap.set(".section-one-scroll-wrapper", { visibility: "hidden", y: "100vh", force3D: true });
       gsap.set(".faq-scroll-wrapper", { visibility: "hidden", y: "100vh", force3D: true });
@@ -50,21 +35,11 @@ export default function ContactDesktop() {
       gsap.set([".faq-content", ".cta-inner-desktop", ".cta-inner-mobile"], { opacity: 1, force3D: true });
       gsap.set(".contact-one-bg", { scale: 1, yPercent: 0, force3D: true });
       gsap.set(".contact-right-scroll-track", { y: 0, force3D: true });
-
-      // Run Intro Animation
-      const introTl = gsap.timeline({
-        onComplete: () => setIntroDone(true),
-      });
-
-      introTl
-        .to(".contact-hero-bg", { scale: 1.0, duration: 1.2, ease: "power2.out" }, 0)
-        .to([".hero-title", ".hero-desc"], { opacity: 1, y: 0, duration: 0.8, stagger: 0.1, ease: "power2.out" }, 0.2);
     }, scopeRef);
 
     return () => ctx.revert();
   }, []);
 
-  // Master Scroll Timeline setup
   useEffect(() => {
     if (!introDone) return;
 
@@ -75,7 +50,6 @@ export default function ContactDesktop() {
     const ctx = gsap.context(() => {
       gsap.ticker.lagSmoothing(500, 33);
 
-      // Optimized performance targets (Removed clip-path to save GPU memory)
       const performanceTargets = [
         ".contact-hero-master",
         ".contact-hero-bg",
@@ -104,7 +78,6 @@ export default function ContactDesktop() {
         ".faq-scroll-wrapper .reveal-text > *"
       ], { y: 45, opacity: 0 });
 
-      // Cache DOM elements before timeline creation to avoid layout thrashing
       const cardContainer = document.querySelector(".contact-cards-container");
       const scrollDistance = cardContainer
         ? cardContainer.getBoundingClientRect().height + 96
@@ -125,7 +98,7 @@ export default function ContactDesktop() {
           trigger: ".contact-hero-master",
           start: "top top",
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
-          scrub: 1, // Reduced scrub latency for a snappier feel
+          scrub: 1,
           pin: true,
           pinSpacing: true,
           anticipatePin: 1,

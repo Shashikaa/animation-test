@@ -1,31 +1,53 @@
 "use client";
 
-interface HeroProps {
+import Image from "next/image";
+
+interface ProjectsHeroProps {
   hideText?: boolean;
+  isMobile?: boolean;
 }
 
-export default function ProjectsHero({ hideText = false }: HeroProps) {
+export default function ProjectsHero({
+  hideText = false,
+  isMobile = false,
+}: ProjectsHeroProps) {
+  const desktopImg = "/parallax-image.webp";
+  const mobileImg = "/parallax-image.webp";
+
+  const bgImage = isMobile ? mobileImg : desktopImg;
+
   return (
     <div className="relative w-full h-full bg-[#F4EEDF]">
-      <div 
+      <div
         className="projects-hero-top-layer absolute inset-0 w-full h-full overflow-hidden z-10 will-change-[clip-path]"
         style={{ clipPath: "inset(0px 0px 0px 0px)" }}
       >
         <section className="relative w-full h-full bg-[#111]">
-          {/* BACKGROUND IMAGE WITH DARK OVERLAY */}
-          <div
-            className="projects-hero-bg absolute left-0 right-0 bg-cover bg-center will-change-transform after:content-[''] after:absolute after:inset-0 after:bg-black/50"
-            style={{
-              top: "-10%",
-              bottom: "-10%",
-              backgroundImage: "url('/parallax-image.webp')", 
-              backfaceVisibility: "hidden",
-              transform: "scale(1.6) translateY(0%)", 
-            }}
-          />
+          {/* BACKGROUND IMAGE CONTAINER */}
+          <div className="absolute inset-0 overflow-hidden" style={{ zIndex: 1 }}>
+            <div
+              className="projects-hero-bg hero-bg-anim absolute left-0 right-0"
+              style={{
+                top: "-10%",
+                bottom: "-10%",
+                willChange: "transform",
+                backfaceVisibility: "hidden",
+              }}
+            >
+              <Image
+                src={bgImage}
+                alt="Projects Hero"
+                fill
+                priority
+                quality={90}
+                sizes="100vw"
+                className="object-cover object-center"
+              />
+            </div>
+          </div>
 
-          {/* Alternatively, if you prefer an explicit overlay div instead of CSS pseudo-elements: */}
-          {/* <div className="absolute inset-0 bg-black/50 z-0 pointer-events-none" /> */}
+          {/* Dark Overlay */}
+          <div className="absolute inset-0 bg-black/50 z-[2] pointer-events-none" />
 
           {!hideText && (
             <>
@@ -34,21 +56,13 @@ export default function ProjectsHero({ hideText = false }: HeroProps) {
                 <div className="flex flex-col !gap-4 lg:!gap-8">
                   <h1
                     className="hero-title text-[#F4EEDF] font-[100]"
-                    style={{ 
+                    style={{
                       fontFamily: "var(--font-display)",
-                      opacity: 0,
-                      transform: "translateY(30px)"
                     }}
                   >
                     Projects
                   </h1>
-                  <p 
-                    className="hero-desc text-[#F4EEDF] !mt-1 max-w-[380px]"
-                    style={{
-                      opacity: 0,
-                      transform: "translateY(30px)"
-                    }}
-                  >
+                  <p className="hero-desc text-[#F4EEDF] !mt-1 max-w-[380px]">
                     That truly speak for themselves.
                     <br />
                     Take a look at some of our completed projects across Melbourne
@@ -61,11 +75,19 @@ export default function ProjectsHero({ hideText = false }: HeroProps) {
                 <div className="relative w-full max-w-[310px] md:max-w-[400px] lg:max-w-[440px] mb-12 md:mb-16 lg:mb-22 pr-6 md:pr-12 lg:pr-20 text-[#F4EEDF]">
                   <div className="relative w-full h-full min-h-[150px]">
                     <p className="scroll-para-1 invisible absolute top-0 left-0 w-full pointer-events-auto">
-                      Our projects showcase the quality, craftsmanship, and attention to detail that define Grand Pools. From luxury backyard retreats to large-scale custom builds across Melbourne, every pool is designed to complement its surroundings while delivering lasting beauty, functionality, and value.
+                      Our projects showcase the quality, craftsmanship, and
+                      attention to detail that define Grand Pools. From luxury
+                      backyard retreats to large-scale custom builds across
+                      Melbourne, every pool is designed to complement its
+                      surroundings while delivering lasting beauty,
+                      functionality, and value.
                     </p>
 
                     <p className="scroll-para-2 invisible absolute top-0 left-0 w-full pointer-events-auto">
-                      We work closely with each client to create tailored solutions that transform outdoor spaces into stunning environments for relaxation, entertaining, and everyday enjoyment.
+                      We work closely with each client to create tailored
+                      solutions that transform outdoor spaces into stunning
+                      environments for relaxation, entertaining, and everyday
+                      enjoyment.
                     </p>
                   </div>
                 </div>

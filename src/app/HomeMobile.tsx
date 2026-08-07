@@ -106,7 +106,7 @@ export default function HomeMobile() {
 
       gsap.set([
         ".hero-bg-wrapper", ".hero-bg", ".section-10", 
-        ".s10-img-right-wrap", ".s10-scrollable-container", 
+        ".s10-img-right-wrap", ".s10-scrollable-container", ".s10-title", ".s10-title-sub", ".s10-para-top",
         ".section-7", ".s7-bg-img", ".s7-mob-bg", ".section-8", ".s8-bg-img", 
         ".s8-mob-bg", ".section-9", ".s9-bg-img", ".section-cta", ".footer", ".section-appsec"
       ], { force3D: true });
@@ -141,9 +141,10 @@ export default function HomeMobile() {
       gsap.set(".s8-bg-img", { yPercent: 20, force3D: true });
       gsap.set(".s8-mob-bg", { scale: 1.35, transformOrigin: "center center", force3D: true });
 
+      // Baseline positioning for Section 10
       gsap.set(".section-10", { visibility: "hidden", yPercent: 100, zIndex: 105, force3D: true });
-      gsap.set(".s10-img-right-wrap", { clipPath: "inset(0% 0% 0% 0%)" });
-      gsap.set(".s10-scrollable-container", { y: "0dvh" });
+      gsap.set(".s10-scrollable-container", { yPercent: 0, force3D: true });
+      gsap.set([".s10-title", ".s10-title-sub", ".s10-para-top"], { yPercent: 0, opacity: 1, force3D: true });
 
       gsap.set(".section-7", { visibility: "hidden", yPercent: 100, zIndex: 110, force3D: true });
       gsap.set(".s7-bg-img", { yPercent: 20, force3D: true });
@@ -331,14 +332,25 @@ export default function HomeMobile() {
 
         .to({}, { duration: DEAD_SCROLL });
 
-      // ── SECTION 10 SLIDE UP ──
+      // ── SECTION 10 SLIDE UP & TEXT INNER SLIDE UP ──
       tl.addLabel("sec10Start", ">")
         .set(".section-10", { visibility: "visible" }, "sec10Start")
         .fromTo(".section-10", { yPercent: 100 }, { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec10Start")
-        .to(".section-8", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "sec10Start")
-        
-        .to(".s10-title, .s10-title-sub, .s10-para-top", { y: "-50dvh", duration: ACTION, ease: "power2.inOut" }, ">")
-        .fromTo(".s10-scrollable-container", { y: "0dvh" }, { y: "-54dvh", duration: ACTION, ease: "power2.inOut" }, "<")
+        .to(".section-8", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "sec10Start");
+
+      // Slide initial header elements up while pulling the card content upward
+      tl.addLabel("sec10InnerScroll", ">")
+        .to([".s10-title", ".s10-title-sub", ".s10-para-top"], {
+          y: -300,
+          opacity: 1,
+          duration: ACTION * 0.5,
+          ease: "power2.in"
+        }, "sec10InnerScroll")
+        .fromTo(".s10-scrollable-container", 
+          { yPercent: 100 },
+          { yPercent: -220, duration: ACTION * 1, ease: "power2.inOut" }, 
+          "sec10InnerScroll"
+        )
 
         .to({}, { duration: DEAD_SCROLL });
 

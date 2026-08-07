@@ -1,11 +1,18 @@
 "use client";
 
+import Image from "next/image";
+
 interface HeroProps {
   hideText?: boolean;
   isMobile?: boolean;
 }
 
 export default function ServicesHero({ hideText = false, isMobile = false }: HeroProps) {
+  const desktopImg = "/servicehero.webp";
+  const mobileImg = "/servicehero.webp";
+
+  const bgImage = isMobile ? mobileImg : desktopImg;
+
   return (
     <div className="relative w-full h-full bg-[#12322D]">
       
@@ -39,15 +46,24 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
       >
         <section className="relative w-full h-full bg-[#111]">
           <div
-            className="service-hero-bg absolute left-0 right-0 bg-cover bg-center will-change-transform"
+            className="service-hero-bg hero-bg-anim absolute left-0 right-0"
             style={{
               top: "-10%",
               bottom: "-10%",
-              backgroundImage: "url('/servicehero.webp')",
-              transform: "scale(1.3) translateZ(0)",
+              willChange: "transform",
               backfaceVisibility: "hidden",
             }}
-          />
+          >
+            <Image
+              src={bgImage}
+              alt="Services Hero"
+              fill
+              priority
+              quality={90}
+              sizes="100vw"
+              className="object-cover object-center"
+            />
+          </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 z-[1]" />
           
           {!hideText && (
@@ -70,14 +86,12 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
 
       {/* BUTTON LAYER: Exact position maintained, fades out when scroll starts */}
       {!hideText && (
-        <div className="hero-btn absolute z-50 pointer-events-auto block left-6 bottom-12 md:left-9  lg:bottom-24 lg:!left-18 transform-gpu">
+        <div className="hero-btn absolute z-50 pointer-events-auto block left-6 bottom-12 md:left-9 lg:bottom-24 lg:!left-18 transform-gpu">
           <a
             href="/contact"
-
             className="group btn-underline font-body"
           >
             CONTACT US
-
           </a>
         </div>
       )}
