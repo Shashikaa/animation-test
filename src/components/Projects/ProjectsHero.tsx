@@ -65,7 +65,7 @@ export default function ProjectsHero({
                   <p className="hero-desc text-[#F4EEDF] !mt-1 max-w-[380px]">
                     That truly speak for themselves.
                     <br />
-                    Take a look at some of our completed projects across Melbourne
+                    Take a look at some of our completed projects across Melbourne.
                   </p>
                 </div>
               </div>
@@ -81,13 +81,6 @@ export default function ProjectsHero({
                       Melbourne, every pool is designed to complement its
                       surroundings while delivering lasting beauty,
                       functionality, and value.
-                    </p>
-
-                    <p className="scroll-para-2 invisible absolute top-0 left-0 w-full pointer-events-auto">
-                      We work closely with each client to create tailored
-                      solutions that transform outdoor spaces into stunning
-                      environments for relaxation, entertaining, and everyday
-                      enjoyment.
                     </p>
                   </div>
                 </div>

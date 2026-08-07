@@ -32,10 +32,8 @@ const canelaText = localFont({
     { path: "../../public/fonts/Canela-RegularItalic-Trial.otf", weight: "400", style: "italic" },
   ],
   variable: "--font-display",
-  display: "block",
-  preload: true,
+  display: "swap",
 });
-
 export const metadata: Metadata = {
   title: "Grand Pools",
   description: "Crafting Custom Swimming Pools with Style, Function, and Quality.",

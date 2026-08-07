@@ -14,7 +14,7 @@ const FAQ_ITEMS = [
   },
   {
     question: "Which areas do you service?",
-    answer: "We work across Melbourne and surrounding suburbs throughout the year. If you’re unsure about your location, get in touch and we’ll let you know if we can help in your area.",
+    answer: "We work across Melbourne and surrounding suburbs. If you’re unsure about your location, get in touch and we’ll let you know if we can help in your area.",
   },
   {
     question: "How long does the process take?",
@@ -75,7 +75,7 @@ export default function FAQSection() {
             className="!text-[#F4EEDF] font-display !font-[100]"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Still Have <br /> Questions?
+            Frequently Asked <br /> Questions
           </h2>
         </div>
 

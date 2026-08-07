@@ -273,7 +273,8 @@ export default function HomeDesktop() {
                 opacity: 1,
                 stagger: 0.04,
                 duration: 0.7,
-                ease: "power2.out"
+                ease: "power2.out",
+                overwrite: "auto"
               });
             }
           }, [], absoluteTime);
@@ -289,14 +290,14 @@ export default function HomeDesktop() {
         tl.addLabel("heroPhase1", 0)
           .to(".hero-bg", { scale: 1.15, duration: PANEL_ACTION, ease: "sine.inOut" }, "heroPhase1")
 
-          // SMOOTHER: Initial Left Title slides UP smoothly across the scroll span
+          // Initial Left Title slides UP smoothly across the scroll span
           .to(".hero-left-initial", {
             y: "-100vh",
             duration: PANEL_ACTION,
             ease: "none"
           }, "heroPhase1")
 
-          // Meantime: Right paragraph reveals above the button
+          // Right paragraph reveals above the button
           .set(".hero-right-text", { visibility: "visible", opacity: 1 }, "heroPhase1+=0.05")
           .to(".hero-right-text .custom-line-inner", {
             opacity: 1,
@@ -316,7 +317,7 @@ export default function HomeDesktop() {
           
           .to(".hero-bg", { scale: 1.3, duration: PANEL_ACTION, ease: "sine.inOut" }, "heroPhase2")
           
-          // SMOOTHER: 2nd Left Para slides UP smoothly from bottom to middle (-50vh)
+          // 2nd Left Para slides UP smoothly from bottom to middle (-50vh)
           .set(".hero-secondary-text-wrap", { visibility: "visible", opacity: 1 }, "heroPhase2")
           .to(".hero-secondary-text-wrap", {
             y: "-50vh",
@@ -328,7 +329,7 @@ export default function HomeDesktop() {
 
         // ── 2. HERO TO SECTION 2 REVEAL ──
         tl.addLabel("sec2Arrived", ">")
-          // SMOOTHER: 2nd left text continues sliding smoothly out off top
+          // 2nd left text continues sliding smoothly out off top
           .to(".hero-secondary-text-wrap", {
             y: "-110vh",
             duration: PANEL_ACTION,
@@ -355,7 +356,9 @@ export default function HomeDesktop() {
         // ── SECTION 2 INNER ANIMATIONS ──
         tl.addLabel("s2InnerAnimation", `sec2Arrived+=${PANEL_ACTION}`)
           .set(".hero", { display: "none" }, "s2InnerAnimation")
-          .to(s2TextSelector, { opacity: 0, y: -40, duration: PANEL_ACTION * 0.5, ease: "power1.in" }, "s2InnerAnimation")
+
+          // Fade out Section 2 text (overwrite: "auto" safely overrides any active reveal tween)
+          .to(s2TextSelector, { opacity: 0, y: -40, duration: PANEL_ACTION * 0.5, ease: "power1.in", overwrite: "auto" }, "s2InnerAnimation")
 
           .addLabel("s2TitleFaded", `s2InnerAnimation+=${PANEL_ACTION * 0.5}`)
           .fromTo(".s2-right-img-frame", 
@@ -410,7 +413,9 @@ export default function HomeDesktop() {
 
         // Section 10 Paragraph Content Slide Up
         tl.addLabel("sec10TextHide", `sec10Start+=${PANEL_ACTION}`)
-          .to(s10TextSelector, { opacity: 0, y: -100, duration: PANEL_ACTION * 0.5, ease: "power2.in" }, "sec10TextHide")
+
+          // Fade out Section 10 text (overwrite: "auto" safely overrides any active reveal tween)
+          .to(s10TextSelector, { opacity: 0, y: -100, duration: PANEL_ACTION * 0.5, ease: "power2.in", overwrite: "auto" }, "sec10TextHide")
 
           .addLabel("sec10ContentReveal", `sec10TextHide+=${PANEL_ACTION * 0.3}`)
           .fromTo(".s10-content-wrap", { opacity: 1, y: "150vh" }, { opacity: 1, y: 0, duration: PANEL_ACTION, ease: "power2.out" }, "sec10ContentReveal")

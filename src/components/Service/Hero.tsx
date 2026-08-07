@@ -73,10 +73,10 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
                   className="hero-title text-[#F4EEDF] !font-[100]"
                   style={{ fontFamily: "var(--font-display)" }}
                 >
-                  Expert Pool Solutions
+                  Expert Pool Solutions  
                 </h1>
                 <p className="hero-desc text-[#F4EEDF] w-[320px]">
-                  Tailored pools for relaxing, hosting, and elevated outdoor living.
+                  Custom-designed pools crafted for relaxing, hosting, and elevated outdoor living.
                 </p>
               </div>
             </div>
@@ -86,7 +86,7 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
 
       {/* BUTTON LAYER: Exact position maintained, fades out when scroll starts */}
       {!hideText && (
-        <div className="hero-btn absolute z-50 pointer-events-auto block left-6 bottom-12 md:left-9 lg:bottom-24 lg:!left-18 transform-gpu">
+        <div className="hero-btn absolute z-50 pointer-events-auto block left-[20px] bottom-12 md:left-[30px] lg:bottom-[90px] lg:!left-[60px] transform-gpu">
           <a
             href="/contact"
             className="group btn-underline font-body"

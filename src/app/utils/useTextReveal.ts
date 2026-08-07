@@ -4,12 +4,12 @@ import gsap from "gsap";
 import { RefObject } from "react";
 
 export interface TextRevealOptions {
-  yPercent?: number;      // Distance to start from (percentage)
-  stagger?: number;       // Stagger delay between lines
-  ease?: string;          // Easing curve
-  duration?: number;      // Animation duration
-  rotation?: number;      // Subtle tilt/skew during entrance
-  tl?: gsap.core.Timeline;// Timeline to append to
+  yPercent?: number;       // Distance to start from (percentage)
+  stagger?: number;        // Stagger delay between lines
+  ease?: string;           // Easing curve
+  duration?: number;       // Animation duration
+  rotation?: number;       // Subtle tilt/skew during entrance
+  tl?: gsap.core.Timeline; // Timeline to append to
   position?: gsap.Position;
   static?: boolean;
   immediate?: boolean;
@@ -54,7 +54,8 @@ function splitIntoLines(el: HTMLElement): HTMLElement[] {
 
   lineMap.forEach((group) => {
     const lineOuter = document.createElement("span");
-    lineOuter.className = "gs-line block overflow-hidden py-[0.1em] -my-[0.1em]";
+    // ADDED: gs-line-outer class for clean exit targeting
+    lineOuter.className = "gs-line gs-line-outer block overflow-hidden py-[0.1em] -my-[0.1em] will-change-transform";
 
     const lineInner = document.createElement("span");
     lineInner.className = "gs-line-inner block will-change-transform";
@@ -94,11 +95,11 @@ export function useTextReveal(
   options: TextRevealOptions = {}
 ) {
   const {
-    yPercent = 110,
-    stagger = 0.06,
-    ease = "power4.out",
-    duration = 1.1,
-    rotation = 3,
+    yPercent = 100,       // Distance to start from
+    stagger = 0.03,       // Snappier gap between lines
+    ease = "power3.out",  // Faster start curve
+    duration = 0.6,       // Reduced duration for high speed
+    rotation = 2,         // Subtle tilt
     tl,
     position = ">",
     static: isStatic = false,
@@ -126,12 +127,12 @@ export function useTextReveal(
     el.style.visibility = "hidden";
     const lineInners = splitIntoLines(el);
 
-    // Initial transforms for modern masked entrance
+    // Initial transforms optimized for swift entrance
     const initialProps = {
       yPercent: yPercent,
-      rotateX: -15,
+      rotateX: -10,
       rotateZ: rotation,
-      scaleY: 1.25,
+      scaleY: 1.1,
       transformOrigin: "0% 100%",
       opacity: 0,
       force3D: true,
@@ -167,7 +168,7 @@ export function useTextReveal(
         onStart: () => { el.style.visibility = "visible"; },
         scrollTrigger: scrollTrigger || {
           trigger: el,
-          start: "top 88%",
+          start: "top 90%",
           once: true,
         },
       });

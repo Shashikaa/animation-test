@@ -12,7 +12,7 @@ const slides = [
   {
     img: "/pool-new.webp",
     label: "Pool Equipment & Installation",
-    desc: "Breathe new life into your existing pool with high-quality renovations. Whether it needs resurfacing, structural repairs, or a modern upgrade, we ensure a seamless transformation with lasting results.",
+    desc: "Upgrade and protect your pool with high-performance equipment and professional installation. From energy-efficient pumps and advanced filtration systems to smart automation, we ensure seamless setup and reliable performance for crystal-clear water.",
   },
   {
     img: "/pool.webp",

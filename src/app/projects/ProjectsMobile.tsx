@@ -56,7 +56,7 @@ export default function ProjectsMobile() {
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.set([".scroll-para-1", ".scroll-para-2"], { opacity: 1, visibility: "hidden", force3D: true });
+      gsap.set(".scroll-para-1", { opacity: 1, visibility: "hidden", force3D: true });
       
       gsap.set(".section-one-wrapper", { yPercent: 100, zIndex: 20, force3D: true });
       gsap.set(".section-two-wrapper", { yPercent: 100, zIndex: 30, force3D: true });
@@ -77,7 +77,6 @@ export default function ProjectsMobile() {
     if (!introDone) return;
 
     executeMobileSplitting(".scroll-para-1");
-    executeMobileSplitting(".scroll-para-2");
 
     const ctx = gsap.context(() => {
       // Normalize mobile touch scroll behavior to lock address bar
@@ -89,9 +88,9 @@ export default function ProjectsMobile() {
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2;
 
-      const MAIN_PANELS_COUNT = 5;
-      const SUB_STEPS_COUNT = 2;
-      const PAUSES_COUNT = 6;
+      const MAIN_PANELS_COUNT = 4;
+      const SUB_STEPS_COUNT = 1;
+      const PAUSES_COUNT = 5;
 
       const DYNAMIC_SCROLL_TRACK = 
         (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -114,7 +113,7 @@ export default function ProjectsMobile() {
         }
       });
 
-      scrollTl.set([".scroll-para-1 .custom-line-inner", ".scroll-para-2 .custom-line-inner"], { opacity: 0, yPercent: 100 }, 0);
+      scrollTl.set(".scroll-para-1 .custom-line-inner", { opacity: 0, yPercent: 100 }, 0);
 
       scrollTl.to(".hero-text-wrap", { opacity: 0, y: -30, ease: "power2.in", duration: ACTION * 0.5 }, 0);
       scrollTl.set(".hero-text-wrap", { visibility: "hidden" }, ACTION * 0.5);
@@ -130,18 +129,6 @@ export default function ProjectsMobile() {
 
       scrollTl.to(".scroll-para-1 .custom-line-inner", { opacity: 0, y: -30, ease: "power1.in", duration: ACTION * 0.5 }, "+=0.2");
       scrollTl.set(".scroll-para-1", { visibility: "hidden" });
-      
-      scrollTl.set(".scroll-para-2", { visibility: "visible" }, ">");
-      scrollTl.to(".scroll-para-2 .custom-line-inner", { 
-        opacity: 1, 
-        yPercent: 0, 
-        stagger: 0.05, 
-        duration: ACTION * 0.8, 
-        ease: "power2.out" 
-      }, ">");
-      
-      scrollTl.to(".scroll-para-2 .custom-line-inner", { opacity: 0, y: -40, ease: "power1.in", duration: ACTION * 0.5 }, "+=0.2");
-      scrollTl.set(".scroll-para-2", { visibility: "hidden" });
 
       scrollTl.fromTo(
         [".projects-hero-bg", ".about-hero-bg", ".hero-bg-anim"], 
@@ -230,7 +217,6 @@ export default function ProjectsMobile() {
       }
       if (scopeRef.current) {
         restoreTextReveal(scopeRef.current, ".scroll-para-1");
-        restoreTextReveal(scopeRef.current, ".scroll-para-2");
       }
     };
   }, [introDone]);

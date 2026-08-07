@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 
 const WaveCanvas = dynamic(() => import("./WaveCanvas"), {
@@ -14,15 +15,16 @@ type LazyWaveCanvasProps = {
 };
 
 export default function LazyWaveCanvas({ imageSrc, preloaderDone }: LazyWaveCanvasProps) {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
   const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
-    if (!preloaderDone) return;
+    // Skip canvas mounting if not home page or preloader isn't ready
+    if (!isHome || !preloaderDone) return;
 
-    // Yield 1 frame after preloader completes to let UI animations finish setup,
-    // then immediately mount WaveCanvas so WebGL is initialized before the user scrolls to CTA.
     let animationFrameId: number;
-    
+
     animationFrameId = requestAnimationFrame(() => {
       setShouldRender(true);
     });
@@ -30,7 +32,20 @@ export default function LazyWaveCanvas({ imageSrc, preloaderDone }: LazyWaveCanv
     return () => {
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
-  }, [preloaderDone]);
+  }, [preloaderDone, isHome]);
+
+  // Non-home routes instantly return static image (no WebGL or dynamic import overhead)
+  if (!isHome) {
+    return (
+      <div className="relative w-full h-full">
+        <img
+          src={imageSrc}
+          alt="Background"
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-full">

@@ -65,7 +65,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
   // Establish precise starting positions cleanly BEFORE browser paint
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.set([".scroll-para-1", ".scroll-para-2"], { opacity: 1, visibility: "hidden" });
+      gsap.set(".scroll-para-1", { opacity: 1, visibility: "hidden" });
       
       gsap.set(".section-one-wrapper", { top: "100vh", y: 0, height: "auto", zIndex: 20 });
       gsap.set(".section-two-wrapper", { y: "100vh", zIndex: 30 });
@@ -91,7 +91,6 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     let vvCleanup: (() => void) | null = null;
 
     executeDesktopSplitting(".scroll-para-1");
-    executeDesktopSplitting(".scroll-para-2");
 
     const ctx = gsap.context(() => {
       gsap.ticker.lagSmoothing(500, 33);
@@ -131,9 +130,9 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
         const PANEL_ACTION = 2.0; 
         const PAUSE_ACTION = 0.4;
 
-        const MAIN_PANELS_COUNT = 6;
-        const SUB_STEPS_COUNT = 2;
-        const PAUSES_COUNT = 5;
+        const MAIN_PANELS_COUNT = 5;
+        const SUB_STEPS_COUNT = 1;
+        const PAUSES_COUNT = 4;
 
         const DYNAMIC_SCROLL_TRACK = 
           (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
@@ -181,7 +180,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
         // ── STEP 1: HERO INNER TEXT SWAPPING ──
         scrollTl.addLabel("start", 0); 
         scrollTl.addLabel("phaseHeroMain", 0); 
-        scrollTl.set([".scroll-para-1 .custom-line-inner", ".scroll-para-2 .custom-line-inner"], { opacity: 0, yPercent: 100 }, 0);
+        scrollTl.set(".scroll-para-1 .custom-line-inner", { opacity: 0, yPercent: 100 }, 0);
 
         // Fast transition out of title into Para 1
         scrollTl.to(".hero-text-wrap", { opacity: 0, y: -20, ease: "power1.inOut", duration: PANEL_ACTION * 0.4 }, 0);
@@ -201,23 +200,6 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
         scrollTl.to({}, { duration: PAUSE_ACTION });
 
-        // Swap Para 1 for Para 2
-        scrollTl.addLabel("phaseHeroParaOne", ">"); 
-
-        scrollTl.to(".scroll-para-1 .custom-line-inner", { opacity: 0, y: -20, ease: "power1.in", duration: PANEL_ACTION * 0.4 }, "phaseHeroParaOne");
-        scrollTl.set(".scroll-para-1", { visibility: "hidden" }, `phaseHeroParaOne+=${PANEL_ACTION * 0.4}`);
-        
-        scrollTl.set(".scroll-para-2", { visibility: "visible" }, `phaseHeroParaOne+=${PANEL_ACTION * 0.4}`);
-        scrollTl.to(".scroll-para-2 .custom-line-inner", { 
-          opacity: 1, 
-          yPercent: 0, 
-          stagger: 0.03, 
-          duration: PANEL_ACTION * 0.5, 
-          ease: "power2.out" 
-        }, `phaseHeroParaOne+=${PANEL_ACTION * 0.4}`);
-
-        scrollTl.to({}, { duration: PAUSE_ACTION });
-
         // ── STEP 2: SECTION ONE SCROLL UP ──
         const getSectionOneScrollDistance = () => {
           if (!sectionOneRef.current) return "100vh";
@@ -227,14 +209,14 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
         scrollTl.addLabel("sectionOneStart", ">");
 
-        scrollTl.to(".scroll-para-2 .custom-line-inner", { 
+        scrollTl.to(".scroll-para-1 .custom-line-inner", { 
           opacity: 0, 
           y: -40, 
           ease: "power1.in", 
           duration: PANEL_ACTION * 0.4 
         }, "sectionOneStart");
         
-        scrollTl.set(".scroll-para-2", { visibility: "hidden" }, `sectionOneStart+=${PANEL_ACTION * 0.4}`);
+        scrollTl.set(".scroll-para-1", { visibility: "hidden" }, `sectionOneStart+=${PANEL_ACTION * 0.4}`);
 
         scrollTl.to(".section-one-wrapper", {
           y: () => `-${getSectionOneScrollDistance()}`,
@@ -300,7 +282,6 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
       ctx.revert();
       if (scopeRef.current) {
         restoreTextReveal(scopeRef.current, ".scroll-para-1");
-        restoreTextReveal(scopeRef.current, ".scroll-para-2");
         restoreTextReveal(scopeRef.current, ".section-one-wrapper .reveal-text");
       }
     };
