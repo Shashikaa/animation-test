@@ -211,7 +211,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
           }}
         >
           {/* Title with Split Text */}
-          <h2 className="split-text-target font-display text-[#F4EEDF] text-3xl md:text-5xl lg:text-[70px] tracking-wide leading-[1.1] font-light">
+          <h2 className="split-text-target font-display text-[#F4EEDF] text-3xl md:text-5xl lg:text-[70px]  !leading-[1] font-light">
             {slide.label}
           </h2>
 

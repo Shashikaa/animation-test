@@ -176,7 +176,7 @@ export default function ServicesDesktop() {
 
         tl.to(".hero-text-wrap", { y: 60, scale: 0.75, duration: PANEL_ACTION }, 0)
           .to(".services-hero-top-layer", { width: "60%", duration: PANEL_ACTION }, 0)
-          .to(".hero-btn", { opacity: 0, duration: PANEL_ACTION * 0.4, ease: "power2.out", pointerEvents: "none" }, 0);
+          .to(".hero-btn", { opacity: 0, duration: PANEL_ACTION * 0.2, ease: "power2.out", pointerEvents: "none" }, 0);
 
         // ── SECTION 1 SHEET REVEAL ──
         tl.addLabel("sec1Start")

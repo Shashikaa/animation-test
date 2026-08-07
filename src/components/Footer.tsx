@@ -273,7 +273,7 @@ export default function Footer() {
 
           {/* Original Desktop Order Elements */}
           <span className="desktop-only-row-4" style={{ color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
-            © 2026 Grand Pools. All rights reserved.
+            © 2026 Grand Pools. All Rights Reserved.
           </span>
 
           <div className="desktop-only-row-4 !text-[14px] md:!text-[16px]" style={{ display: "flex", gap: 24, alignItems: "center" }}>
@@ -304,7 +304,7 @@ export default function Footer() {
 
             {/* Mobile copy block placement container */}
             <span className="mobile-only-row-4 !text-[14px] md:!text-[16px] !text-right" style={{ display: "none", color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
-              © 2026 Grand Pools.<br />All rights reserved.
+              © 2026 Grand Pools.<br />All Rights Reserved.
             </span>
           </div>
 

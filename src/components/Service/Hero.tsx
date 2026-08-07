@@ -84,9 +84,9 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
         </section>
       </div>
 
-      {/* BUTTON LAYER: Exact position maintained, fades out when scroll starts */}
+      {/* BUTTON LAYER: Left on mobile/tablet, Right on desktop */}
       {!hideText && (
-        <div className="hero-btn absolute z-50 pointer-events-auto block left-[20px] bottom-12 md:left-[30px] lg:bottom-[90px] lg:!left-[60px] transform-gpu">
+        <div className="hero-btn absolute z-50 pointer-events-auto block left-[20px] bottom-12 md:left-[30px] lg:!left-auto lg:!right-[60px] lg:bottom-[90px] transform-gpu">
           <a
             href="/contact"
             className="group btn-underline font-body"

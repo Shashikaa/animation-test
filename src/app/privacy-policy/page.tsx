@@ -117,8 +117,7 @@ export default function PrivacyPolicyPage() {
                   Privacy Policy
                 </h1>
                 <p className="font-body text-[#F4EEDF] !mt-6 max-w-md text-sm sm:text-base leading-relaxed">
-                  Privacy, data protection, and transparency standards for clients and
-                  website visitors. Here you can find clear information about how
+                  This Privacy Policy outlines our commitment to privacy, data protection, and transparency for all clients and website visitors. Here you can find clear information about how
                   Grand Pools handles personal data, client communications, third-party
                   integrations, and cookie policies.
                 </p>
