@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation"; // Hook to detect current route
-import { useSite } from "../app/context/SiteContext"; // adjust path if needed
+import { usePathname } from "next/navigation"; 
+import { useSite } from "../app/context/SiteContext"; 
 
 const SOCIAL_LINKS = [
   { label: "Instagram", href: "https://www.instagram.com/grandpools_aus/", src: "/ig.svg" },
@@ -73,14 +73,35 @@ export default function Footer() {
             text-align: left !important;
           }
         }
+
+        /* Mobile Screen Centering Fix Only (< 768px) */
+        @media (max-width: 767px) {
+          .responsive-attribution {
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            gap: 16px !important;
+          }
+          .responsive-attribution span {
+            width: 100% !important;
+            text-align: center !important;
+          }
+          .mobile-copy-text {
+            display: block !important;
+            width: 100% !important;
+            text-align: center !important;
+          }
+        }
       `}</style>
 
-      {/* Background / Container */}
+      {/* Glassmorphism Background Container */}
       <div 
-        className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[20px]"
+        className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[20px] !pt-[30px] md:!pt-[40px] backdrop-blur-md   shadow-2xl"
         style={{
           width: "100%",
           overflow: "hidden",
+          backgroundColor: "rgba(255, 255, 255, 0.05)", // Glass effect tint
+          WebkitBackdropFilter: "blur(12px)", // Safari support
         }}
       >
         {/* ══════════════════════════════════════
@@ -136,7 +157,7 @@ export default function Footer() {
             marginBottom: 48,
           }}
         >
-          {/* Wrapper around Col 1 & Col 2 to manage desktop layout cleanly */}
+          {/* Wrapper around Col 1 & Col 2 */}
           <div 
             className="responsive-links-container flex flex-row justify-between lg:w-[60%] !text-[14px] md:!text-[16px]" 
             style={{ display: "flex", flexDirection: "row" }}
@@ -150,7 +171,7 @@ export default function Footer() {
                 { item: "Projects", href: "/projects" },
                 { item: "Contact Us", href: "/contact" },
               ].map(({ item, href }) => (
-                <a
+                <Link
                   key={item}
                   href={href}
                   style={{
@@ -164,7 +185,7 @@ export default function Footer() {
                   onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
                 >
                   {item}
-                </a>
+                </Link>
               ))}
             </nav>
 
@@ -175,7 +196,7 @@ export default function Footer() {
                 { item: "Pool Equipment & Installation", href: "/services/pool-equipment-and-installation" },
                 { item: "Commercial Pool Construction", href: "/services/commercial-pool-construction" },
               ].map(({ item, href }) => (
-                <a
+                <Link
                   key={item}
                   href={href}
                   style={{
@@ -189,12 +210,12 @@ export default function Footer() {
                   onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
                 >
                   {item}
-                </a>
+                </Link>
               ))}
             </nav>
           </div>
 
-          {/* Col 3 — Contact Info & Restored Social Icons */}
+          {/* Col 3 — Contact Info & Social Icons */}
           <div className="responsive-socials-container" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
             <div className="desktop-only-contacts !text-[14px] md:!text-[16px]" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
               <a
@@ -227,7 +248,7 @@ export default function Footer() {
               </a>
             </div>
 
-            {/* Restored Social Icons row */}
+            {/* Social Icons row */}
             <div style={{ display: "flex", alignItems: "center", gap: 52, marginTop: 12 }}>
               {SOCIAL_LINKS.map(({ label, href, src }) => (
                 <SocialLink key={label} href={href} label={label} src={src} size={24} />
@@ -236,9 +257,9 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Divider Line */}
+        {/* Glass Divider Line */}
         <div
-          style={{ height: "1px", background: "#F4EBE4", marginBottom: 20 }}
+          style={{ height: "1px", background: "rgba(244, 235, 228, 0.2)", marginBottom: 20 }}
           className="w-full"
         />
 
@@ -271,7 +292,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Original Desktop Order Elements */}
+          {/* Desktop Order Elements */}
           <span className="desktop-only-row-4" style={{ color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
             © 2026 Grand Pools. All Rights Reserved.
           </span>
@@ -281,7 +302,7 @@ export default function Footer() {
             <BottomLink href="/privacy-policy">Privacy Policy</BottomLink>
           </div>
 
-          {/* Dynamic bottom attribution block for mobile screen layout */}
+          {/* Dynamic bottom attribution block */}
           <div className="responsive-attribution !text-[14px] md:!text-[16px] !pt-4" style={{ display: "contents" }}>
             <span
               style={{
@@ -302,9 +323,9 @@ export default function Footer() {
               </a>
             </span>
 
-            {/* Mobile copy block placement container */}
-            <span className="mobile-only-row-4 !text-[14px] md:!text-[16px] !text-right" style={{ display: "none", color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
-              © 2026 Grand Pools.<br />All Rights Reserved.
+            {/* Mobile copy block */}
+            <span className="mobile-only-row-4 mobile-copy-text !text-[14px] md:!text-[16px] !text-center" style={{ display: "none", color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
+              © 2026 Grand Pools. All Rights Reserved.
             </span>
           </div>
 
@@ -351,7 +372,7 @@ function SocialLink({ href, label, src, size = 20 }: { href: string; label: stri
 
 function BottomLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a
+    <Link
       href={href}
       style={{
         color: "#F4EBE4",
@@ -363,6 +384,6 @@ function BottomLink({ href, children }: { href: string; children: React.ReactNod
       onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
     >
       {children}
-    </a>
+    </Link>
   );
 }

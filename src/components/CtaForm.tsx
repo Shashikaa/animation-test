@@ -70,28 +70,28 @@ export default function CtaForm({
 
     const errors: Record<string, string> = {};
 
-    if (!fullName) errors[getName("fullName")] = "Full name is required";
+    if (!fullName) errors[getName("fullName")] = "Full name is required.";
     if (!email) {
-      errors[getName("email")] = "Email is required";
+      errors[getName("email")] = "Email is required.";
     } else if (!EMAIL_REGEX.test(email)) {
-      errors[getName("email")] = "Please enter a valid email address";
+      errors[getName("email")] = "Please enter a valid email address.";
     }
 
     if (!phone) {
-      errors[getName("phone")] = "Phone number is required";
+      errors[getName("phone")] = "Phone number is required.";
     } else if (!AU_PHONE_REGEX.test(phone.replace(/\s+/g, ""))) {
-      errors[getName("phone")] = "Please enter a valid Australian phone number";
+      errors[getName("phone")] = "Please enter a valid Australian phone number.";
     }
 
     if (!postCode) {
-      errors[getName("postCode")] = "Post Code is required";
+      errors[getName("postCode")] = "Post Code is required.";
     } else if (!AU_POSTCODE_REGEX.test(postCode)) {
-      errors[getName("postCode")] = "Please enter a valid 4-digit Post Code";
+      errors[getName("postCode")] = "Please enter a valid 4-digit Post Code.";
     }
 
-    if (!budgetType) errors[getName("budgetType")] = "Budget type is required";
-    if (!budgetRange) errors[getName("budgetRange")] = "Budget range is required";
-    if (!contractMethod) errors[getName("contractMethod")] = "Contract method is required";
+    if (!budgetType) errors[getName("budgetType")] = "Budget type is required.";
+    if (!budgetRange) errors[getName("budgetRange")] = "Budget range is required.";
+    if (!contractMethod) errors[getName("contractMethod")] = "Contract method is required.";
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);

@@ -175,25 +175,7 @@ export default function ProjectsMobile() {
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      scrollTl.addLabel("ctaFadeOut", ">")
-        .to(
-          [".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"],
-          { 
-            opacity: 0, 
-            y: -30, 
-            duration: ACTION * 0.1, 
-            ease: "power2.in" 
-          }, 
-          "ctaFadeOut"
-        )
-        .set(
-          [".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"],
-          { 
-            pointerEvents: "none", 
-            visibility: "hidden" 
-          }
-        );
-
+      // Footer slides up over CTA without fading out CTA inner contents
       scrollTl.addLabel("footerStart", ">")
         .set(".section-two-wrapper", { visibility: "hidden" }, "footerStart")
         .set(".projects-footer-wrap", { visibility: "visible" }, "footerStart")
