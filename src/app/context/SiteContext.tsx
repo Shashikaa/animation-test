@@ -29,6 +29,7 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
 
     const handlePopState = () => {
       setPreloaderDone(true);
+      document.documentElement.classList.remove("preloading", "show-brand-preloader", "show-fade-preloader");
       document.body.classList.remove("preloading");
     };
 

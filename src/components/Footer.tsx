@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation"; // Hook to detect current route
-import { useSite } from "../app/context/SiteContext"; // adjust path if needed
+import { usePathname } from "next/navigation";
+import { useSite } from "../app/context/SiteContext";
 
 const SOCIAL_LINKS = [
   { label: "Instagram", href: "https://www.instagram.com/grandpools_aus/", src: "/ig.svg" },
@@ -12,11 +12,15 @@ export default function Footer() {
   const { smootherRef } = useSite();
   const pathname = usePathname();
 
-  // Force full reload if user clicks logo while on home page
+  // Scroll smoothly to top if user clicks logo while already on the home page
   const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (pathname === "/") {
       e.preventDefault();
-      window.location.href = "/";
+      if (smootherRef?.current) {
+        smootherRef.current.scrollTo(0, { immediate: false });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     }
   };
 
@@ -100,6 +104,7 @@ export default function Footer() {
         >
           <Link 
             href="/" 
+            scroll={false}
             onClick={handleLogoClick}
             style={{ 
               display: "block", 
@@ -150,9 +155,10 @@ export default function Footer() {
                 { item: "Projects", href: "/projects" },
                 { item: "Contact Us", href: "/contact" },
               ].map(({ item, href }) => (
-                <a
+                <Link
                   key={item}
                   href={href}
+                  scroll={false}
                   style={{
                     color: "#F4EBE4",
                     textDecoration: "none",
@@ -164,7 +170,7 @@ export default function Footer() {
                   onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
                 >
                   {item}
-                </a>
+                </Link>
               ))}
             </nav>
 
@@ -175,9 +181,10 @@ export default function Footer() {
                 { item: "Pool Equipment & Installation", href: "/services/pool-equipment-and-installation" },
                 { item: "Commercial Pool Construction", href: "/services/commercial-pool-construction" },
               ].map(({ item, href }) => (
-                <a
+                <Link
                   key={item}
                   href={href}
+                  scroll={false}
                   style={{
                     color: "#F4EBE4",
                     textDecoration: "none",
@@ -189,7 +196,7 @@ export default function Footer() {
                   onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
                 >
                   {item}
-                </a>
+                </Link>
               ))}
             </nav>
           </div>
@@ -351,8 +358,9 @@ function SocialLink({ href, label, src, size = 20 }: { href: string; label: stri
 
 function BottomLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a
+    <Link
       href={href}
+      scroll={false}
       style={{
         color: "#F4EBE4",
         fontFamily: "var(--font-body)",
@@ -363,6 +371,6 @@ function BottomLink({ href, children }: { href: string; children: React.ReactNod
       onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
     >
       {children}
-    </a>
+    </Link>
   );
 }

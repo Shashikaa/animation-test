@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconMark } from "./IconMark";
 import { HEADER_LOGO_SCALE, LOGO_COLOR, LOGO_ICON_W, LOGO_ICON_H, LOGO_GAP } from "./Preloader";
@@ -50,8 +51,9 @@ function PoolsSVG({ width, height }: { width: number; height: number }) {
 
 function SharedLogoMarkup({ onClose }: { onClose?: () => void }) {
   return (
-    <a
+    <Link
       href="/"
+      scroll={false}
       onClick={onClose}
       id="header-logo-inner"
       className="active:opacity-80 active:scale-95 transition-all duration-150"
@@ -81,7 +83,7 @@ function SharedLogoMarkup({ onClose }: { onClose?: () => void }) {
           <PoolsSVG width={202 * HEADER_LOGO_SCALE} height={30 * HEADER_LOGO_SCALE} />
         </span>
       </span>
-    </a>
+    </Link>
   );
 }
 
@@ -399,11 +401,12 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
           />
 
           {/* ── LEFT PANEL ── */}
-<div className="!relative !flex !flex-col !justify-between !pb-12 !px-5 md:!px-[30px] lg:!px-[55px] !w-full !h-full !z-10">
-  {/* Header section with Logo — Matched exactly to header heights (56px / 66px / 72px) */}
-  <div className="!flex !items-center !justify-between !h-[56px] md:!h-[66px] lg:!h-[72px] !w-full">
-    <SharedLogoMarkup onClose={onClose} />
-  </div>
+          <div className="!relative !flex !flex-col !justify-between !pb-12 !px-5 md:!px-[30px] lg:!px-[55px] !w-full !h-full !z-10">
+            {/* Header section with Logo — Matched exactly to header heights */}
+            <div className="!flex !items-center !justify-between !h-[56px] md:!h-[66px] lg:!h-[72px] !w-full">
+              <SharedLogoMarkup onClose={onClose} />
+            </div>
+
             <div className="!my-auto !py-8">
               <motion.nav
                 variants={linkContainerVariants}
@@ -477,7 +480,6 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Standardize mobile/tablet switch breakpoint at 1023px (Tailwind lg boundary)
     const mq = window.matchMedia("(max-width: 1023px)");
     setIsMobile(mq.matches);
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
@@ -502,8 +504,9 @@ function NavLink({
   const highlighted = isActive || isCurrentPage || isTouched;
 
   return (
-    <a
+    <Link
       href={href}
+      scroll={false}
       onClick={onClose}
       onMouseEnter={onMouseEnter}
       onFocus={onMouseEnter}
@@ -528,6 +531,6 @@ function NavLink({
       >
         {label}
       </span>
-    </a>
+    </Link>
   );
 }

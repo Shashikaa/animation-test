@@ -23,7 +23,18 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   const { preloaderDone, smootherRef } = useSite();
   const pathname = usePathname();
   const lenisRef = useRef<Lenis | null>(null);
+  
+  // Guard flags to prevent scroll resets from overwriting saved coordinates
+  const isPopStateRef = useRef<boolean>(false);
+  const isProgrammaticScrollRef = useRef<boolean>(false);
+  const currentPathRef = useRef<string>(pathname);
 
+  // Sync current path synchronously
+  useEffect(() => {
+    currentPathRef.current = pathname;
+  }, [pathname]);
+
+  // Set up screen vh custom property
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -36,7 +47,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     let windowWidth = window.innerWidth;
     const handleResize = () => {
-      // Only trigger height re-calculation on width changes (orientation/window size, NOT address bar collapse)
       if (window.innerWidth !== windowWidth) {
         windowWidth = window.innerWidth;
         setVh();
@@ -51,12 +61,26 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     };
   }, []);
 
+  // Detect browser Back/Forward (popstate)
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
+
+    const handlePopState = () => {
+      isPopStateRef.current = true;
+      sessionStorage.setItem("is_popstate_navigation", "true");
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // Initialize Lenis Smooth Scrolling (Runs once)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
 
     const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
@@ -73,7 +97,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       return;
     }
 
-    // Lenis smooth scrolling for Desktop
     const lenis = new Lenis({
       lerp: 0.14,
       wheelMultiplier: 1.4,
@@ -103,6 +126,11 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     const handleScroll = (e: any) => {
       const y = e.scroll; 
+
+      // CRITICAL FIX: Do NOT save scroll position if this scroll event was caused by a programmatic reset to 0
+      if (!isProgrammaticScrollRef.current && currentPathRef.current) {
+        sessionStorage.setItem(`scroll_pos_${currentPathRef.current}`, y.toString());
+      }
 
       if (!thumbRef.current) return;
       
@@ -147,18 +175,68 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     };
   }, [smootherRef, preloaderDone, onScrollReady]);
 
+  // Route Change & Scroll Position Restoration
   useEffect(() => {
     if (!preloaderDone) return;
-    
-    if (lenisRef.current) {
-      lenisRef.current.scrollTo(0, { immediate: true });
+
+    const isPopStateNav = isPopStateRef.current || sessionStorage.getItem("is_popstate_navigation") === "true";
+
+    if (isPopStateNav) {
+      // BACK/FORWARD NAVIGATION: Restore saved scroll position
+      const savedPos = sessionStorage.getItem(`scroll_pos_${pathname}`);
+      const targetY = savedPos ? parseFloat(savedPos) : 0;
+
+      isProgrammaticScrollRef.current = true;
+
+      if (lenisRef.current) {
+        lenisRef.current.start();
+      }
+
+      let attempts = 0;
+      const maxAttempts = 12;
+
+      const restoreScroll = () => {
+        attempts++;
+        if (lenisRef.current) {
+          lenisRef.current.scrollTo(targetY, { immediate: true });
+        } else {
+          window.scrollTo(0, targetY);
+        }
+        ScrollTrigger.refresh();
+
+        const currentScroll = lenisRef.current ? lenisRef.current.scroll : window.scrollY;
+        if (Math.abs(currentScroll - targetY) > 5 && attempts < maxAttempts) {
+          setTimeout(restoreScroll, 40);
+        } else {
+          // Allow normal scroll tracking again
+          setTimeout(() => {
+            isProgrammaticScrollRef.current = false;
+          }, 100);
+        }
+      };
+
+      restoreScroll();
+      isPopStateRef.current = false;
+      sessionStorage.removeItem("is_popstate_navigation");
+
     } else {
-      window.scrollTo(0, 0);
+      // NORMAL LINK CLICK: Scroll to Top
+      isProgrammaticScrollRef.current = true;
+
+      if (lenisRef.current) {
+        lenisRef.current.scrollTo(0, { immediate: true });
+      } else {
+        window.scrollTo(0, 0);
+      }
+
+      setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 100);
     }
-    
+
     const refreshTimeout = setTimeout(() => {
       ScrollTrigger.refresh();
-    }, 100);
+    }, 150);
 
     return () => clearTimeout(refreshTimeout);
   }, [pathname, preloaderDone]);

@@ -34,12 +34,12 @@ const canelaText = localFont({
   variable: "--font-display",
   display: "swap",
 });
+
 export const metadata: Metadata = {
   title: "Grand Pools",
   description: "Crafting Custom Swimming Pools with Style, Function, and Quality.",
 };
 
-// Locks viewport scale and prevents mobile browser address bar layout jumps
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -102,8 +102,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `
               (function() {
                 try {
+                  var entries = performance.getEntriesByType("navigation");
+                  var isBackForward = (entries.length > 0 && entries[0].type === "back_forward") ||
+                                      (window.performance && window.performance.navigation && window.performance.navigation.type === 2);
+
+                  if (isBackForward) {
+                    document.documentElement.classList.remove('preloading', 'show-brand-preloader', 'show-fade-preloader');
+                    return;
+                  }
+
                   var p = window.location.pathname;
-                  if (p === '/terms' || p === '/privacy-policy') {
+                  if (p === '/terms' || p === '/privacy-policy' || p === '/not-found') {
                     document.documentElement.classList.remove('preloading');
                     return;
                   }
