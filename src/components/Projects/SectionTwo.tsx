@@ -2,62 +2,19 @@
 
 import { useRef, useState, useCallback, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
+import { GRAND_POOLS_DATA } from "@/src/app/projects/[slug]/data"; // Update path if needed
 
-const PROJECTS = [
-  {
-    id: "kooyong",
-    label: "Kooyong Rd Toorak",
-    tag: "Exceptional Pools,",
-    tagline: "Built to Impress",
-    description:
-      "This stunning Toorak build creates a sophisticated, resort-style escape tailored for elite inner-city living.",
-    image: "/kooyong-rd-toorak.webp",
-    slug: "/projects/kooyong",
-  },
-  {
-    id: "dennett",
-    label: "Dennett st Carrum",
-    tag: "A flawless blend",
-    tagline: "of luxury",
-    description:
-      "This custom concrete pool transforms a classic Carrum backyard into a private, light-filled family sanctuary.",
-    image: "/pool-renovation.webp",
-    slug: "/projects/dennett",
-  },
-  {
-    id: "murray",
-    label: "Murray st Prahran",
-    tag: "When master",
-    tagline: "craftsmanship meets smart",
-    description:
-      "Our Murray St, Prahran project masterfully conquers a compact, inner-city space with a striking, custom-engineered concrete pool.",
-    image: "/murray-st-prahran.webp",
-    slug: "/projects/murray",
-  },
-  {
-    id: "reay",
-    label: "Reay Rd Mooroolbark",
-    tag: "Showcase luxury",
-    tagline: "at its finest",
-    description:
-      "This custom residential oasis seamlessly blends sun-drenched outdoor living with sleek, modern concrete pool design in Mooroolbark.",
-    image: "/the-corner-toorak.webp",
-    slug: "/projects/reay",
-  },
-  {
-    id: "como",
-    label: "‘The Como’ Toorak",
-    tag: "High-End",
-    tagline: "Architectural Vibe",
-    description:
-      "'The Como' project in Toorak showcases our commitment to custom engineering, sophisticated integration, and master craftsmanship.",
-    image: "/mernda-ave-bonbeach.webp",
-    slug: "/projects/como",
-  },
-];
+// Map the keys from GRAND_POOLS_DATA into the array structure needed for SectionTwo
+const PROJECTS = Object.entries(GRAND_POOLS_DATA).map(([key, data]) => ({
+  id: key,
+  label: data.title,
+  description: data.description,
+  // Uses the primary/first image from the dataset, falling back to a default if empty
+  image: data.images[0] || "/kooyong-rd-toorak.webp",
+  slug: `/projects/${key}`,
+}));
 
-// Reduced slightly for a snappier, more modern modern fade feel (e.g., 0.7s - 0.8s)
-const FADE_DURATION = 0.8; 
+const FADE_DURATION = 0.8;
 
 type SectionTwoProps = {
   isActive: boolean;
@@ -76,19 +33,24 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
       gsap.set(".s2-projects-nav", { x: -60, opacity: 0 });
       gsap.set(".s2-indicator-container", { scaleX: 0, opacity: 0 });
 
-      entranceTimeline.current = gsap.timeline({ paused: true })
+      entranceTimeline.current = gsap
+        .timeline({ paused: true })
         .to(".s2-projects-nav", {
           x: 0,
           opacity: 1,
           duration: 1.2,
           ease: "power3.out",
         })
-        .to(".s2-indicator-container", {
-          scaleX: 1,
-          opacity: 1,
-          duration: 1.0,
-          ease: "power3.out",
-        }, "-=1.0");
+        .to(
+          ".s2-indicator-container",
+          {
+            scaleX: 1,
+            opacity: 1,
+            duration: 1.0,
+            ease: "power3.out",
+          },
+          "-=1.0"
+        );
     }, containerRef);
 
     return () => ctx.revert();
@@ -115,7 +77,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
     if (indicatorRef.current) {
       const segmentWidthPercentage = 100 / PROJECTS.length;
       const targetLeftPosition = next * segmentWidthPercentage;
-      
+
       gsap.to(indicatorRef.current, {
         left: `${targetLeftPosition}%`,
         duration: FADE_DURATION,
@@ -130,13 +92,13 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
       opacity: 0,
       zIndex: 2,
     });
-    
-    // Maintain old layout layer underneath during the transition fade
+
+    // Maintain old layout layer underneath during transition fade
     gsap.set(`${contextPrefix} .s3-bg-${prev + 1}`, {
       zIndex: 1,
     });
 
-    // Animate opacity for the premium fade look
+    // Animate opacity
     gsap.to(`${contextPrefix} .s3-bg-${next + 1}`, {
       opacity: 1,
       duration: FADE_DURATION,
@@ -151,7 +113,9 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
     });
 
     PROJECTS.forEach((_, i) => {
-      const textBlocks = containerRef.current!.querySelectorAll(`.s3-text-${i + 1}`) as NodeListOf<HTMLElement>;
+      const textBlocks = containerRef.current!.querySelectorAll(
+        `.s3-text-${i + 1}`
+      ) as NodeListOf<HTMLElement>;
       textBlocks.forEach((textBlock) => {
         if (textBlock) {
           textBlock.style.opacity = i === next ? "1" : "0";
@@ -186,7 +150,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
             key={project.id}
             className={`s3-bg s3-bg-${i + 1}`}
             src={project.image}
-            alt=""
+            alt={project.label}
             aria-hidden
             style={{
               position: "absolute",
@@ -194,7 +158,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               width: "100%",
               height: "100%",
               objectFit: "cover",
-              transition: "none", // Ensures pure GSAP control
+              transition: "none",
               zIndex: i === 0 ? 1 : 0,
               opacity: i === 0 ? 1 : 0,
             }}
@@ -231,7 +195,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               key={project.id}
               type="button"
               onClick={() => handleTab(i)}
-              className="s2-card-btn font-display text-left transition-all duration-300 hover:!opacity-100 "
+              className="s2-card-btn font-display text-left transition-all duration-300 hover:!opacity-100"
               style={{
                 background: "none",
                 border: "none",
@@ -240,7 +204,6 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
                 fontSize: "32px",
                 fontWeight: "300",
                 color: current === i ? "#F4EEDF" : "rgba(244, 238, 223, 0.65)",
-         
               }}
             >
               {project.label}
@@ -267,7 +230,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
             style={{
               display: "flex",
               alignItems: "flex-end",
-              justifyContent: "flex-end", 
+              justifyContent: "flex-end",
               paddingLeft: "8%",
               paddingRight: "8%",
               paddingBottom: "35px",
@@ -275,12 +238,9 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
           >
             <a
               href={PROJECTS[current].slug}
-
               className="group btn-underline font-body"
             >
               LEARN MORE
-       
-
             </a>
           </div>
         </div>
@@ -296,7 +256,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
             key={project.id}
             className={`s3-bg s3-bg-${i + 1}`}
             src={project.image}
-            alt=""
+            alt={project.label}
             aria-hidden
             style={{
               position: "absolute",
@@ -351,7 +311,6 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
                 letterSpacing: "-0.02em",
                 fontWeight: "300",
                 color: current === i ? "#F4EEDF" : "rgba(244, 238, 223, 0.65)",
-             
               }}
             >
               {project.label}
@@ -377,20 +336,17 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
             style={{
               display: "flex",
               alignItems: "flex-end",
-              justifyContent: "flex-end", 
+              justifyContent: "flex-end",
               paddingLeft: "8%",
               paddingRight: "8%",
               paddingBottom: "55px",
             }}
           >
-                     <a
+            <a
               href={PROJECTS[current].slug}
-
               className="group btn-underline font-body"
             >
               LEARN MORE
-       
-
             </a>
           </div>
         </div>
