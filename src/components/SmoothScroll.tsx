@@ -77,8 +77,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       touchMultiplier: 1.2,
       infinite: false,
       smoothWheel: true,
-      syncTouch: true,
-      syncTouchLerp: 0.08,
+      syncTouch: false, // Prevents Lenis from hijacking touch inputs over form controls
     });
 
     lenisRef.current = lenis;
@@ -125,58 +124,13 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     lenis.on("scroll", handleScroll);
 
-    let refreshTimeout: ReturnType<typeof setTimeout>;
-
-    const resumeScrolling = () => {
-      if (lenisRef.current) {
-        lenisRef.current.start();
-      }
-      clearTimeout(refreshTimeout);
-      refreshTimeout = setTimeout(() => {
-        ScrollTrigger.refresh();
-      }, 150);
+    // Auto-refresh ScrollTrigger when iOS virtual keyboard opens or closes
+    const handleViewportChange = () => {
+      ScrollTrigger.refresh();
     };
-
-    const handleInputFocusIn = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT"
-      ) {
-        lenis.stop();
-      }
-    };
-
-    const handleInputFocusOut = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT"
-      ) {
-        resumeScrolling();
-      }
-    };
-
-    const handleViewportResize = () => {
-      const activeEl = document.activeElement;
-      const isInputActive =
-        activeEl &&
-        (activeEl.tagName === "INPUT" ||
-          activeEl.tagName === "TEXTAREA" ||
-          activeEl.tagName === "SELECT");
-
-      if (!isInputActive) {
-        resumeScrolling();
-      }
-    };
-
-    window.addEventListener("focusin", handleInputFocusIn);
-    window.addEventListener("focusout", handleInputFocusOut);
 
     if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", handleViewportResize);
+      window.visualViewport.addEventListener("resize", handleViewportChange);
     }
 
     if (!preloaderDone) {
@@ -188,13 +142,10 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     onScrollReady?.();
 
     return () => {
-      window.removeEventListener("focusin", handleInputFocusIn);
-      window.removeEventListener("focusout", handleInputFocusOut);
       if (window.visualViewport) {
-        window.visualViewport.removeEventListener("resize", handleViewportResize);
+        window.visualViewport.removeEventListener("resize", handleViewportChange);
       }
       clearTimeout(scrollTimerRef.current);
-      clearTimeout(refreshTimeout);
       gsap.ticker.remove(tickerCallback);
       lenis.destroy();
       if (smootherRef) {

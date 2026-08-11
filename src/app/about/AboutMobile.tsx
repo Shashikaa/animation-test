@@ -59,52 +59,9 @@ export default function AboutMobile() {
     if (isDesktop) return;
 
     const isAndroid = /Android/i.test(navigator.userAgent);
-    const scopeNode = scopeRef.current;
-
-    const handleFocusIn = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT"
-      ) {
-        if (!isAndroid) {
-          ScrollTrigger.normalizeScroll(false);
-        }
-      }
-    };
-
-    const handleFocusOut = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT"
-      ) {
-        if (!isAndroid) {
-          setTimeout(() => {
-            ScrollTrigger.normalizeScroll({
-              allowNestedScroll: true,
-              lockAxis: true,
-            });
-            ScrollTrigger.refresh();
-          }, 200);
-        }
-      }
-    };
-
-    scopeNode?.addEventListener("focusin", handleFocusIn);
-    scopeNode?.addEventListener("focusout", handleFocusOut);
 
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ ignoreMobileResize: true });
-
-      if (!isAndroid) {
-        ScrollTrigger.normalizeScroll({
-          allowNestedScroll: true,
-          lockAxis: true,
-        });
-      }
 
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.15;
@@ -245,12 +202,7 @@ export default function AboutMobile() {
     }, scopeRef);
 
     return () => {
-      scopeNode?.removeEventListener("focusin", handleFocusIn);
-      scopeNode?.removeEventListener("focusout", handleFocusOut);
       ctx.revert();
-      if (!isAndroid) {
-        ScrollTrigger.normalizeScroll(false);
-      }
     };
   }, [introDone]);
 

@@ -322,19 +322,12 @@ function CtaInput({
           fontFamily: "inherit",
           letterSpacing: "0.02em",
           transition: "border-color 0.25s",
+          touchAction: "manipulation",
         }}
         onFocus={(e) => {
-          const target = e.target as HTMLInputElement;
-          target.style.borderColor = error
+          (e.target as HTMLInputElement).style.borderColor = error
             ? "#feb2b2"
             : "rgba(244,238,223,0.75)";
-
-          if (isMobile) {
-            e.preventDefault();
-            setTimeout(() => {
-              target.focus({ preventScroll: true });
-            }, 50);
-          }
         }}
         onBlur={(e) => {
           (e.target as HTMLInputElement).style.borderColor = error
@@ -458,6 +451,7 @@ function CtaSelect({
           userSelect: "none",
           outline: "none",
           transition: "border-color 0.25s",
+          touchAction: "manipulation",
         }}
       >
         <span style={{ flexGrow: 1 }}>{selectedValue || placeholder}</span>
