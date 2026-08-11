@@ -53,6 +53,37 @@ export default function AboutMobile() {
     if (!introDone) return;
 
     const isAndroid = /Android/i.test(navigator.userAgent);
+    const scopeNode = scopeRef.current;
+
+    // --- Prevent iOS Visual Viewport Jumps on Form Focus ---
+    const handleInputFocus = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT"
+      ) {
+        if (scopeNode) {
+          scopeNode.style.touchAction = "pan-y";
+        }
+      }
+    };
+
+    const handleInputBlur = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT"
+      ) {
+        if (scopeNode) {
+          scopeNode.style.touchAction = "";
+        }
+      }
+    };
+
+    scopeNode?.addEventListener("focusin", handleInputFocus);
+    scopeNode?.addEventListener("focusout", handleInputBlur);
 
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ ignoreMobileResize: true });
@@ -210,6 +241,8 @@ export default function AboutMobile() {
     }, scopeRef);
 
     return () => {
+      scopeNode?.removeEventListener("focusin", handleInputFocus);
+      scopeNode?.removeEventListener("focusout", handleInputBlur);
       ctx.revert();
       if (!isAndroid) {
         ScrollTrigger.normalizeScroll(false);
@@ -250,12 +283,12 @@ export default function AboutMobile() {
           <SectionFive isActive={isSectionFiveActive} />
         </div>
 
-        <div
-          className="about-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] z-[150]"
-          style={{ pointerEvents: "auto", visibility: "hidden" }}
-        >
-          <SectionCTA />
-        </div>
+<div
+  className="about-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] z-[150]"
+  style={{ pointerEvents: "auto", visibility: "hidden" }}
+>
+  <SectionCTA />
+</div>
 
         <div className="about-footer-wrap gpu-accelerated absolute left-0 bottom-0 w-full z-[160]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <Footer />
