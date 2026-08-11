@@ -10,10 +10,15 @@ import SectionCTA from "@/src/components/SectionCTA";
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Observer } from "gsap/Observer";
 import Footer from "@/src/components/Footer";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, Observer);
+
+const PX_PER_MAIN_PANEL = 850;
+const PX_PER_SUB_STEP = 450;
+const PAUSE_PX = 150; 
 
 export default function AboutMobile() {
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
@@ -53,14 +58,19 @@ export default function AboutMobile() {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-      const vh = window.innerHeight;
-      
-      // Increased scroll track length so fast flings run out of distance before bypassing multiple panels
-      const DYNAMIC_SCROLL_TRACK = vh * 8.5; 
+      const ACTION = 1.4; 
+      const DEAD_SCROLL = 0.2; 
+      const SEC5_CARDS_HOLD = 1.2;
 
-      const ACTION = 1; 
-      const DEAD_SCROLL = 0.15; 
-      const SEC5_CARDS_HOLD = 1;
+      const MAIN_PANELS_COUNT = 7;
+      const SUB_STEPS_COUNT = 3; 
+      const PAUSES_COUNT = 7;    
+
+      // Original scroll track distance preserved
+      const DYNAMIC_SCROLL_TRACK = 
+        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
+        (SUB_STEPS_COUNT * PX_PER_SUB_STEP) + 
+        (PAUSES_COUNT * PAUSE_PX);
 
       const triggerSec5Hook = (nextIdx: number) => {
         if (nextIdx !== lastSec5Idx.current) {
@@ -77,24 +87,14 @@ export default function AboutMobile() {
           trigger: ".about-pin",
           start: "top top",
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
-          scrub: 0.4, // Smooth catch-up without hard snapping
+          scrub: 0.5,
           pin: true,
           pinType: "fixed",
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
           invalidateOnRefresh: false,
-
           onUpdate: (self) => {
-            // CLAMP VELOCITY: Smoothly caps high-speed flick momentum without forcing snaps
-            const velocity = self.getVelocity();
-            const maxAllowedVelocity = 1800; // Adjust down (e.g. 1500) if you want even stronger resistance to fast flings
-
-            if (Math.abs(velocity) > maxAllowedVelocity) {
-              const clampedVelocity = Math.sign(velocity) * maxAllowedVelocity;
-              self.scroll(self.scroll() - (velocity - clampedVelocity) * 0.012);
-            }
-
             const sec5Time = tl.labels["sec5FullyRevealed"];
             const ctaTime = tl.labels["ctaStart"];
 
@@ -130,13 +130,29 @@ export default function AboutMobile() {
         },
       });
 
-      tl.to(".about-section-one", { yPercent: 0, duration: ACTION, ease: "power1.inOut" })
-        .to(".about-hero-bg", { scale: 1.0, yPercent: -10, duration: ACTION, ease: "power1.inOut" }, "<");
+      // OBSERVER TOUCH DAMPENING:
+      // Prevents fast finger swipes from skipping panels without changing element heights or unlocking address bar
+      const MAX_TOUCH_DELTA = 35; // Maximum pixel scroll distance allowed per touch event tick
+
+      const touchObserver = Observer.create({
+        type: "touch",
+        wheelSpeed: -1,
+        onChangeY: (self) => {
+          if (Math.abs(self.deltaY) > MAX_TOUCH_DELTA) {
+            const clampedDelta = Math.sign(self.deltaY) * MAX_TOUCH_DELTA;
+            const scrollDiff = self.deltaY - clampedDelta;
+            window.scrollBy(0, -scrollDiff);
+          }
+        }
+      });
+
+      tl.to(".about-section-one", { yPercent: 0, duration: ACTION, ease: "power2.inOut" })
+        .to(".about-hero-bg", { scale: 1.0, yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "<");
 
       tl.to({}, { duration: DEAD_SCROLL }); 
 
       tl.set(".about-section-two", { visibility: "visible" })
-        .to(".about-section-two", { yPercent: 0, duration: ACTION, ease: "power1.inOut" });
+        .to(".about-section-two", { yPercent: 0, duration: ACTION, ease: "power2.inOut" });
       
       tl.to({}, { duration: DEAD_SCROLL }); 
 
@@ -144,17 +160,17 @@ export default function AboutMobile() {
         .fromTo(
           ".about-section-three",
           { clipPath: "inset(100% 0% 0% 0%)", WebkitClipPath: "inset(100% 0% 0% 0%)" },
-          { clipPath: "inset(0% 0% 0% 0%)", WebkitClipPath: "inset(0% 0% 0% 0%)", duration: ACTION, ease: "power1.inOut" }
+          { clipPath: "inset(0% 0% 0% 0%)", WebkitClipPath: "inset(0% 0% 0% 0%)", duration: ACTION, ease: "power2.inOut" }
         );
       
       tl.to({}, { duration: DEAD_SCROLL }); 
 
       tl.set(".about-section-four", { visibility: "visible" })
         .addLabel("sec3to4Transition")
-        .to(".about-section-three", { yPercent: -100, duration: ACTION, ease: "power1.inOut" }, "sec3to4Transition")
+        .to(".about-section-three", { yPercent: -100, duration: ACTION, ease: "power2.inOut" }, "sec3to4Transition")
         .fromTo(".about-section-four .s4-img-bg", 
           { yPercent: 15 },
-          { yPercent: 0, duration: ACTION, ease: "power1.inOut" }, 
+          { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, 
           "sec3to4Transition"
         );
       
@@ -165,7 +181,7 @@ export default function AboutMobile() {
         .to(".about-section-five", { 
           yPercent: 0, 
           duration: ACTION, 
-          ease: "power1.inOut",
+          ease: "power2.inOut",
           onStart: () => setIsSectionFiveActive(true),
           onReverseComplete: () => {
             setIsSectionFiveActive(false);
@@ -182,10 +198,10 @@ export default function AboutMobile() {
         .fromTo(
           ".about-section-cta",
           { yPercent: 100 },
-          { yPercent: 0, duration: ACTION, ease: "power1.inOut" },
+          { yPercent: 0, duration: ACTION, ease: "power2.inOut" },
           "ctaStart"
         )
-        .to(".about-section-five", { yPercent: 0, duration: ACTION, ease: "power1.inOut" }, "ctaStart");
+        .to(".about-section-five", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart");
 
       tl.fromTo(
         ".about-section-five .s5-bg", 
@@ -202,9 +218,13 @@ export default function AboutMobile() {
         .fromTo(
           ".about-footer-wrap",
           { yPercent: 100 },
-          { yPercent: 0, duration: ACTION, ease: "power1.inOut" },
+          { yPercent: 0, duration: ACTION, ease: "power2.inOut" },
           "footerStart"
         );
+
+      return () => {
+        touchObserver.kill();
+      };
 
     }, scopeRef);
 
