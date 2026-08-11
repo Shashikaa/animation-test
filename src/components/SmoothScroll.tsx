@@ -27,24 +27,30 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Set custom dynamic CSS variable for consistent viewport sizing
-    const setVh = () => {
-      const vh = window.innerHeight * 0.01;
+    // Lock initial screen dimensions to avoid viewport jumping when virtual keyboard appears
+    let initialWidth = window.innerWidth;
+    let initialHeight = window.innerHeight;
+
+    const setVh = (height: number) => {
+      const vh = height * 0.01;
       document.documentElement.style.setProperty("--vh", `${vh}px`);
     };
 
-    setVh();
+    setVh(initialHeight);
 
-    let windowWidth = window.innerWidth;
     const handleResize = () => {
-      if (window.innerWidth !== windowWidth) {
-        windowWidth = window.innerWidth;
-        setVh();
+      // Only recalculate --vh if the width changes (orientation flip or actual screen resize)
+      // This ignores height changes triggered by mobile virtual keyboards opening
+      if (window.innerWidth !== initialWidth) {
+        initialWidth = window.innerWidth;
+        initialHeight = window.innerHeight;
+        setVh(initialHeight);
       }
     };
 
     window.addEventListener("resize", handleResize);
     window.addEventListener("orientationchange", handleResize);
+
     return () => {
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", handleResize);
@@ -72,14 +78,13 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     const screenHeight = window.innerHeight;
     const heightFactor = Math.min(Math.max(800 / screenHeight, 0.6), 1.2);
 
-    // Initializing Lenis for ALL devices (Desktop & Touch) to prevent browser address bar shifts
     const lenis = new Lenis({
       lerp: isTouchDevice ? 0.12 : 0.1 * heightFactor,
       wheelMultiplier: 1.1 * heightFactor,
-      touchMultiplier: isTouchDevice ? 1.4 : 0.8 * heightFactor, // Standardizes gesture input delta across iOS & Android
+      touchMultiplier: isTouchDevice ? 1.4 : 0.8 * heightFactor,
       infinite: false,
       smoothWheel: true,
-      syncTouch: true, // Intercepts touch events to prevent native address bar toggling
+      syncTouch: !isTouchDevice, // Disable syncTouch on mobile touch devices to allow native input focus
       syncTouchLerp: 0.08,
     });
 
@@ -89,7 +94,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       smootherRef.current = lenis;
     }
 
-    // Direct binding of Lenis updates to ScrollTrigger
     lenis.on("scroll", ScrollTrigger.update);
 
     const tickerCallback = (time: number) => {
@@ -134,10 +138,36 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       lenis.start();
     }
 
+    // --- PAUSE LENIS ON FORM INPUT FOCUS ---
+    const handleFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT")
+      ) {
+        lenis.stop();
+      }
+    };
+
+    const handleFocusOut = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT")
+      ) {
+        lenis.start();
+      }
+    };
+
+    document.addEventListener("focusin", handleFocusIn);
+    document.addEventListener("focusout", handleFocusOut);
+
     onScrollReady?.();
 
     return () => {
       clearTimeout(scrollTimerRef.current);
+      document.removeEventListener("focusin", handleFocusIn);
+      document.removeEventListener("focusout", handleFocusOut);
       gsap.ticker.remove(tickerCallback);
       lenis.destroy();
       if (smootherRef) {
