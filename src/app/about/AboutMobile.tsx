@@ -12,7 +12,6 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Footer from "@/src/components/Footer";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
-import { useSite } from "@/src/app/context/SiteContext";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -26,30 +25,10 @@ export default function AboutMobile() {
   const scopeRef = useRef<HTMLDivElement>(null);
   const lastSec5Idx = useRef<number>(-1);
 
-  const { smootherRef } = useSite();
   const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // 1. Force top alignment and unblock Lenis only after intro sequence completes
-  useEffect(() => {
-    if (!introDone) {
-      smootherRef?.current?.stop();
-    } else {
-      window.scrollTo(0, 0);
-      smootherRef?.current?.scrollTo(0, { immediate: true });
-
-      requestAnimationFrame(() => {
-        ScrollTrigger.refresh();
-        smootherRef?.current?.start();
-      });
-    }
-  }, [introDone, smootherRef]);
-
-  // 2. Build ScrollTrigger & Pin-Spacer IMMEDIATELY on mount (Frame 0)
   useLayoutEffect(() => {
-    const isAndroid = /Android/i.test(navigator.userAgent);
-
     const ctx = gsap.context(() => {
-      // Force panel positions before DOM paint
       gsap.set(".about-hero-panel-left", { yPercent: 0, force3D: true });
       gsap.set(".about-section-one", { yPercent: 100, visibility: "visible", force3D: true });
       gsap.set(".about-section-two", { yPercent: 100, visibility: "visible", force3D: true });
@@ -65,8 +44,25 @@ export default function AboutMobile() {
         { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
       );
       gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 160, visibility: "hidden", force3D: true });
+    }, scopeRef);
 
+    return () => ctx.revert();
+  }, []);
+
+  useEffect(() => {
+    if (!introDone) return;
+
+    const isAndroid = /Android/i.test(navigator.userAgent);
+
+    const ctx = gsap.context(() => {
       ScrollTrigger.config({ ignoreMobileResize: true });
+
+      if (!isAndroid) {
+        ScrollTrigger.normalizeScroll({
+          allowNestedScroll: true,
+          lockAxis: true,
+        });
+      }
 
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.15;
@@ -213,8 +209,13 @@ export default function AboutMobile() {
         );
     }, scopeRef);
 
-    return () => ctx.revert();
-  }, []);
+    return () => {
+      ctx.revert();
+      if (!isAndroid) {
+        ScrollTrigger.normalizeScroll(false);
+      }
+    };
+  }, [introDone]);
 
   return (
     <div ref={scopeRef}>
