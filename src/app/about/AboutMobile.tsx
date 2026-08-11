@@ -49,7 +49,7 @@ export default function AboutMobile() {
         [".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"],
         { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
       );
-      gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden", force3D: true });
+      gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 160, visibility: "hidden", force3D: true });
     }, scopeRef);
 
     return () => ctx.revert();
@@ -109,7 +109,7 @@ export default function AboutMobile() {
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: isAndroid ? 0.2 : 0.6, // Uniform scrub factor
+          scrub: isAndroid ? 0.2 : 0.6,
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -216,8 +216,8 @@ export default function AboutMobile() {
       tl.to({}, { duration: DEAD_SCROLL });
 
       // --- TRANSITION 7: CTA -> Footer Wrap ---
+      // Fix: Keep CTA visible while footer slides directly over top
       tl.addLabel("footerStart", ">")
-        .set(".about-section-five", { visibility: "hidden" }, "footerStart")
         .set(".about-footer-wrap", { visibility: "visible" }, "footerStart")
         .fromTo(
           ".about-footer-wrap",
@@ -278,7 +278,7 @@ export default function AboutMobile() {
           <SectionCTA />
         </div>
 
-        <div className="about-footer-wrap gpu-accelerated absolute left-0 bottom-0 w-full z-[151]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        <div className="about-footer-wrap gpu-accelerated absolute left-0 bottom-0 w-full z-[160]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <Footer />
         </div>
       </div>
