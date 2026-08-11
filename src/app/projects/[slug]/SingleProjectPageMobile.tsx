@@ -17,7 +17,7 @@ type SubServicesMobileProps = {
   pageData: FullServiceData;
 };
 
-// Standardized Metrics to align exact scroll feel
+// Standardized Metrics for pin-scroll duration
 const PX_PER_MAIN_PANEL = 850; 
 const PX_PER_SUB_STEP = 350;   
 const PAUSE_PX = 100;          
@@ -27,7 +27,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
   const [isProjectInfoActive, setIsProjectInfoActive] = useState(false);
   const lastInfoIdx = useRef<number>(-1);
 
-  // Single unified utility hook configured for Mobile
+  // Hero intro hook trigger
   const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
@@ -63,17 +63,18 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
     const ctx = gsap.context(() => {
       gsap.ticker.lagSmoothing(0);
 
-      // Enable touch normalization on mobile
+      // Mobile Touch Normalization
       const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
       if (isTouchDevice) {
         ScrollTrigger.normalizeScroll(true);
       }
 
+      // EXCLUDED .footer-scroll-wrapper to prevent GPU transform contexts breaking backdrop-blur
       const performanceTargets = [
         ".project-hero-master", ".hero-image-layer", ".hero-image-inner",
         ".project-info-wrap", ".info-text-block", ".info-img-layer",
         ".project-app-wrap", ".appsec-bg", ".appsec-phone-wrapper",
-        ".faq-scroll-wrapper", ".faq-content", ".footer-scroll-wrapper"
+        ".faq-scroll-wrapper", ".faq-content"
       ];
 
       performanceTargets.forEach(selector => {
@@ -206,18 +207,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP D.5: FAQ CONTENT FADE OUT FIRST ──
-      scrollTl.addLabel("ctaFadeOut", ">")
-        .to(".faq-content", { 
-          opacity: 0, 
-          y: -30, 
-          duration: ACTION * 0.1, 
-          ease: "power2.in",
-          pointerEvents: "none"
-        }, "ctaFadeOut")
-        .to({}, { duration: 0 });
-
-      // ── STEP E: FOOTER SLIDE-UP ──
+      // ── STEP E: FOOTER REVEAL (MATCHING CONTACT PAGE — NO FAQ FADE OUT) ──
       scrollTl.addLabel("footerStart", ">");
 
       scrollTl.set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
@@ -245,8 +235,9 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
       ref={scopeRef} 
       className="w-full relative min-h-[100dvh] bg-black text-white overflow-hidden"
     >
-      <div className="master-viewport pin-all-single-project relative w-full overflow-hidden bg-black" style={{ visibility: "visible" }}>
+      <div className="master-viewport pin-all-single-project relative w-full h-[100dvh] overflow-hidden bg-black" style={{ visibility: "visible" }}>
         
+        {/* Layer 10: Hero Section */}
         <div className="project-hero-master gpu-accelerated absolute inset-0 w-full h-full">
           <ProjectScrollHero 
             title={pageData.title}
@@ -255,6 +246,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
           />
         </div>
 
+        {/* Layer 50: Project Info Section */}
         <div 
           className="project-info-wrap gpu-accelerated absolute inset-0 w-full h-full structural-layer"
           style={{ 
@@ -269,6 +261,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
           />
         </div>
 
+        {/* Layer 60: App Section */}
         <div 
           className="project-app-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] structural-layer"
           style={{ 
@@ -280,6 +273,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
           <Appsection />
         </div>
 
+        {/* Layer 70: FAQ Section */}
         <div 
           className="faq-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full structural-layer overflow-hidden"
           style={{ 
@@ -288,11 +282,14 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
             transform: "translateY(100%)" 
           }}
         >
-          <FAQSection />
+          <div className="faq-content w-full h-full">
+            <FAQSection />
+          </div>
         </div>
 
+        {/* Layer 80: Footer Section (Positioned & Structured identical to Contact Page) */}
         <div 
-          className="footer-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full flex flex-col justify-end pointer-events-none"
+          className="footer-scroll-wrapper absolute left-0 bottom-0 w-full pointer-events-none"
           style={{ 
             zIndex: 80, 
             visibility: "hidden", 

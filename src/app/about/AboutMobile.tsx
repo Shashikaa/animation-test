@@ -40,7 +40,7 @@ export default function AboutMobile() {
 
       gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0 });
 
-      // FIX: Ensure opacity is set to 1 so SectionFive is visible when it slides up
+      // Ensure opacity is set to 1 so SectionFive is visible when it slides up
       gsap.set(".about-section-five", { yPercent: 100, opacity: 1, visibility: "hidden" });
       gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0 });
 
@@ -203,25 +203,7 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      tl.addLabel("ctaFadeOut", ">")
-        .to(
-          [".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"],
-          {
-            opacity: 0,
-            y: -30,
-            duration: ACTION * 0.1,
-            ease: "power2.in",
-          },
-          "ctaFadeOut"
-        )
-        .set(
-          [".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"],
-          { 
-            pointerEvents: "none", 
-            visibility: "hidden" 
-          }
-        );
-
+      // Footer slides up over CTA without fading out CTA inner contents
       tl.addLabel("footerStart", ">")
         .set(".about-section-five", { visibility: "hidden" }, "footerStart")
         .set(".about-footer-wrap", { visibility: "visible" }, "footerStart")

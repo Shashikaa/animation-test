@@ -106,18 +106,7 @@ export default function ContactMobile() {
 
         .to({}, { duration: DEAD_SCROLL })
 
-        // 3.5. FAQ / CTA CONTENT FADE OUT
-        .addLabel("ctaFadeOut", ">")
-        .to(
-          [".faq-content", ".cta-scroll-wrapper .cta-inner-mobile", ".cta-scroll-wrapper .cta-inner-desktop"],
-          {
-            opacity: 0,
-            y: -30,
-            duration: ACTION * 0.1,
-            ease: "power2.in",
-          },
-          "ctaFadeOut"
-        )
+
 
         .to({}, { duration: 0 })
 

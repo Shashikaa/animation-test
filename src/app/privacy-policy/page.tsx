@@ -52,8 +52,8 @@ export default function PrivacyPolicyPage() {
     const ctx = gsap.context(() => {
       const mm = gsap.matchMedia();
 
-      // ── DESKTOP VIEWPORT (min-width: 1024px) ──
-      mm.add("(min-width: 1024px)", () => {
+      // Enable pinned scroll animation across ALL screen sizes (Mobile + Desktop)
+      mm.add("(min-width: 0px)", () => {
         const section = sectionRef.current;
         const wrapper = scrollWrapperRef.current;
         const content = scrollContentRef.current;
@@ -108,28 +108,25 @@ export default function PrivacyPolicyPage() {
           className="hero relative w-full h-screen bg-transparent overflow-hidden z-10"
         >
           {/* Policy Content Container */}
-          <div className="section-container relative h-full w-full flex flex-col lg:flex-row justify-between gap-18 px-6 lg:px-16 py-16">
+          <div className="section-container relative h-full w-full flex flex-col lg:flex-row justify-between gap-6 lg:gap-18 px-6 lg:px-16 py-8 lg:py-16">
             
             {/* Left Column */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-between h-full">
+            <div className="w-full lg:w-1/2 flex flex-col justify-between h-auto lg:h-full">
               <div>
-                <h1 className="font-display text-[#F4EEDF] text-4xl lg:text-6xl leading-tight select-none">
+                <h1 className="font-display text-[#F4EEDF] text-3xl sm:text-4xl lg:text-6xl leading-tight select-none">
                   Privacy Policy
                 </h1>
-                <p className="font-body text-[#F4EEDF] !mt-6 max-w-md text-sm sm:text-base leading-relaxed">
-                  This Privacy Policy outlines our commitment to privacy, data protection, and transparency for all clients and website visitors. Here you can find clear information about how
-                  Grand Pools handles personal data, client communications, third-party
-                  integrations, and cookie policies.
+                <p className="font-body text-[#F4EEDF] !mt-4 lg:!mt-6 max-w-md text-xs sm:text-base leading-relaxed">
+                  This Privacy Policy outlines our commitment to privacy, data protection, and transparency for all clients and website visitors. Here you can find clear information about how Grand Pools handles personal data, client communications, third-party integrations, and cookie policies.
                 </p>
               </div>
 
-              {/* Contact Information with Purpose Heading & Intro */}
-              <div className="flex flex-col gap-3 font-body text-[#F4EEDF] !mt-8 lg:mt-0">
+              {/* Contact Information (Desktop View) */}
+              <div className="hidden lg:flex flex-col gap-3 font-body text-[#F4EEDF] !mt-8 lg:mt-0">
                 <div>
                   <h3 className="text-base font-bold tracking-wide text-[#F4EEDF]">
                     Legal & Privacy Inquiries
                   </h3>
-        
                 </div>
 
                 <div className="flex flex-col gap-2 text-sm sm:text-base pt-1">
@@ -162,19 +159,19 @@ export default function PrivacyPolicyPage() {
               </div>
             </div>
 
-            {/* Right Column (Inner Scroll Content) */}
-            <div className="w-full lg:w-5/12 flex items-center h-full">
+            {/* Right Column (Inner Scroll Content Enabled for Mobile & Desktop) */}
+            <div className="w-full lg:w-5/12 flex items-center flex-1 h-full min-h-0">
               <div
                 ref={scrollWrapperRef}
-                className="w-full h-auto lg:h-[520px] lg:overflow-hidden relative py-4"
+                className="w-full h-full lg:h-[520px] overflow-hidden relative py-2 lg:py-4"
               >
                 <div
                   ref={scrollContentRef}
-                  className="w-full flex flex-col gap-8 text-[#F4EEDF] lg:pr-6 pb-12 lg:pb-24"
+                  className="w-full flex flex-col gap-6 lg:gap-8 text-[#F4EEDF] lg:pr-6 pb-12 lg:pb-24"
                 >
                   {policySections.map((item, index) => (
-                    <div key={index} className="flex flex-col gap-3 flex-shrink-0">
-                      <h3 className="text-lg md:text-xl font-body font-medium tracking-wide text-[#F4EEDF]">
+                    <div key={index} className="flex flex-col gap-2 lg:gap-3 flex-shrink-0">
+                      <h3 className="text-base md:text-xl font-body font-medium tracking-wide text-[#F4EEDF]">
                         {item.title}
                       </h3>
                       <p className="font-body text-[#F4EEDF] text-xs sm:text-sm leading-relaxed lg:max-w-md">
@@ -185,6 +182,25 @@ export default function PrivacyPolicyPage() {
                 </div>
               </div>
             </div>
+
+            {/* Contact details for Mobile Viewport */}
+            <div className="flex lg:hidden flex-row gap-4 justify-between items-center font-body text-[#F4EEDF] text-xs pt-4 border-t border-[#F4EEDF]/20">
+              <a href="tel:0422630394" className="hover:opacity-75">
+                0422 630 394
+              </a>
+              <a href="mailto:hello@grandpools.com.au" className="hover:opacity-75">
+                hello@grandpools.com.au
+              </a>
+              <a
+                href="https://www.instagram.com/grandpools_aus/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+              >
+                <img src="/ig.svg" alt="Instagram" className="w-4 h-4 object-contain" />
+              </a>
+            </div>
+
           </div>
         </section>
 

@@ -200,21 +200,7 @@ export default function ServicesMobile() {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP F.5: CTA INNER CONTENT FADE OUT FIRST ──
-      tl.addLabel("ctaFadeOut", ">")
-        .to(
-          [".services-section-cta .cta-inner-mobile", ".services-section-cta .cta-inner-desktop"],
-          { 
-            opacity: 0, 
-            y: -30, 
-            duration: ACTION * 0.1, 
-            ease: "power2.in" 
-          }, 
-          "ctaFadeOut"
-        )
-        .to({}, { duration: 0 });
-
-      // ── STEP G: CTA -> FOOTER ──
+      // ── STEP G: CTA -> FOOTER (Footer slides up directly over CTA without fading out inner contents) ──
       tl.addLabel("footerStart")
         .set(".services-appsec-wrap", { visibility: "hidden" }, "footerStart")
         .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")

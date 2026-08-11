@@ -319,7 +319,7 @@ export default function Footer() {
                 onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
                 onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
               >
-                Tactik
+                Tactik.
               </a>
             </span>
 

@@ -394,21 +394,7 @@ export default function HomeMobile() {
 
         .to({}, { duration: DEAD_SCROLL });
 
-      // ── CTA CONTENT FADE OUT FIRST ──
-      tl.addLabel("ctaFadeOut", ">")
-        .to(
-          [".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"],
-          {
-            opacity: 0,
-            y: -30,
-            duration: ACTION * 0.1,
-            ease: "power2.in",
-          },
-          "ctaFadeOut"
-        )
-        .to({}, { duration: 0 });
-
-      // ── FOOTER SLIDE UP ──
+      // ── FOOTER SLIDE UP (Directly over CTA) ──
       tl.addLabel("footerStart", ">")
         .set(".footer", { visibility: "visible" }, "footerStart")
         .to(

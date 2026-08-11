@@ -188,34 +188,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── CTA INNER CONTENT FADE OUT FIRST ──
-      scrollTl.addLabel("ctaFadeOut", ">")
-        .to(".faq-content", {
-          opacity: 0,
-          y: -40,
-          duration: ACTION * 0.4,
-          ease: "power2.in",
-          pointerEvents: "none"
-        }, "ctaFadeOut")
-        .to(
-          [".services-section-cta .cta-inner-mobile", ".services-section-cta .cta-inner-desktop"],
-          { 
-            opacity: 0, 
-            y: -30, 
-            duration: ACTION * 0.1, 
-            ease: "power2.in",
-            onStart: () => {
-              gsap.set(".services-faq-wrap", { visibility: "hidden" });
-            },
-            onReverseComplete: () => {
-              gsap.set(".services-faq-wrap", { visibility: "visible" });
-            }
-          }, 
-          "ctaFadeOut"
-        )
-        .to({}, { duration: 0 });
-
-      // ── FOOTER REVEAL TRACK ──
+      // ── FOOTER REVEAL TRACK (Slides up directly over CTA) ──
       scrollTl.addLabel("footerStart", ">")
         .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
         .to(".services-footer-wrap", { 
