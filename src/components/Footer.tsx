@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation"; 
 import { useSite } from "../app/context/SiteContext"; 
 
@@ -123,7 +122,7 @@ export default function Footer() {
             zIndex: 20,
           }}
         >
-          <Link 
+          <a 
             href="/" 
             onClick={handleLogoClick}
             style={{ 
@@ -145,7 +144,7 @@ export default function Footer() {
                 pointerEvents: "auto",
               }}
             />
-          </Link>
+          </a>
         </div>
 
         {/* ══════════════════════════════════════
@@ -175,7 +174,7 @@ export default function Footer() {
                 { item: "Projects", href: "/projects" },
                 { item: "Contact Us", href: "/contact" },
               ].map(({ item, href }) => (
-                <Link
+                <a
                   key={item}
                   href={href}
                   style={{
@@ -189,7 +188,7 @@ export default function Footer() {
                   onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
                 >
                   {item}
-                </Link>
+                </a>
               ))}
             </nav>
 
@@ -200,7 +199,7 @@ export default function Footer() {
                 { item: "Pool Equipment & Installation", href: "/services/pool-equipment-and-installation" },
                 { item: "Commercial Pool Construction", href: "/services/commercial-pool-construction" },
               ].map(({ item, href }) => (
-                <Link
+                <a
                   key={item}
                   href={href}
                   style={{
@@ -214,7 +213,7 @@ export default function Footer() {
                   onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
                 >
                   {item}
-                </Link>
+                </a>
               ))}
             </nav>
           </div>
@@ -376,7 +375,7 @@ function SocialLink({ href, label, src, size = 20 }: { href: string; label: stri
 
 function BottomLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link
+    <a
       href={href}
       style={{
         color: "#F4EBE4",
@@ -388,6 +387,6 @@ function BottomLink({ href, children }: { href: string; children: React.ReactNod
       onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
     >
       {children}
-    </Link>
+    </a>
   );
 }

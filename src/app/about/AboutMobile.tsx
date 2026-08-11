@@ -57,13 +57,6 @@ export default function AboutMobile() {
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ ignoreMobileResize: true });
 
-      if (!isAndroid) {
-        ScrollTrigger.normalizeScroll({
-          allowNestedScroll: true,
-          lockAxis: true,
-        });
-      }
-
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.15;
       const SEC5_CARDS_HOLD = 1.2;
@@ -207,13 +200,15 @@ export default function AboutMobile() {
           { yPercent: 0, duration: ACTION, ease: "power1.out" },
           "footerStart"
         );
+
+      // Force refresh on next frame to sync pinned trigger calculations
+      requestAnimationFrame(() => {
+        ScrollTrigger.refresh();
+      });
     }, scopeRef);
 
     return () => {
       ctx.revert();
-      if (!isAndroid) {
-        ScrollTrigger.normalizeScroll(false);
-      }
     };
   }, [introDone]);
 
