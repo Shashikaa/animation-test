@@ -94,14 +94,18 @@ export default function Footer() {
         }
       `}</style>
 
-      {/* Glassmorphism Background Container */}
+      {/* Figma Linear Gradient Container (#162D24 -> #094146) */}
       <div 
-        className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[20px] !pt-[30px] md:!pt-[40px] backdrop-blur-md   shadow-2xl"
+        className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[20px] !pt-[30px] md:!pt-[40px] shadow-2xl overflow-hidden"
         style={{
           width: "100%",
-          overflow: "hidden",
-          backgroundColor: "rgba(255, 255, 255, 0.05)", // Glass effect tint
-          WebkitBackdropFilter: "blur(12px)", // Safari support
+          /* Exact Figma linear gradient from top-left (#162D24) to bottom-right (#094146) */
+          background: "linear-gradient(135deg, #162D24 0%, #094146 100%)",
+          borderTop: "1px solid rgba(255, 255, 255, 0.15)",
+          boxShadow: "0 -10px 30px rgba(0, 0, 0, 0.3)",
+          transform: "translate3d(0, 0, 0)",
+          WebkitTransform: "translate3d(0, 0, 0)",
+          isolation: "isolate",
         }}
       >
         {/* ══════════════════════════════════════
