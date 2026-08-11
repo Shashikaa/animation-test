@@ -23,22 +23,11 @@ const BASELINE_VH = 800;
 export default function AboutMobile() {
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
-  const pinRef = useRef<HTMLDivElement>(null);
   const lastSec5Idx = useRef<number>(-1);
-  const lockedScreenHeight = useRef<number>(BASELINE_VH);
 
   const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
-    if (typeof window !== "undefined") {
-      lockedScreenHeight.current = window.innerHeight || BASELINE_VH;
-      
-      // Explicitly lock the container's height in px to prevent keyboard resize shifts
-      if (pinRef.current) {
-        pinRef.current.style.height = `${lockedScreenHeight.current}px`;
-      }
-    }
-
     const ctx = gsap.context(() => {
       gsap.set(".about-hero-panel-left", { yPercent: 0, force3D: true });
       gsap.set(".about-section-one", { yPercent: 100, visibility: "visible", force3D: true });
@@ -49,11 +38,12 @@ export default function AboutMobile() {
       gsap.set(".about-section-five", { yPercent: 100, opacity: 1, visibility: "visible", force3D: true });
       gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0, force3D: true });
 
-      gsap.set(".about-bottom-stack", { y: lockedScreenHeight.current, zIndex: 150, visibility: "hidden", force3D: true });
+      gsap.set(".about-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden", force3D: true });
       gsap.set(
         [".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"],
         { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
       );
+      gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 160, visibility: "hidden", force3D: true });
     }, scopeRef);
 
     return () => ctx.revert();
@@ -65,10 +55,7 @@ export default function AboutMobile() {
     const isAndroid = /Android/i.test(navigator.userAgent);
 
     const ctx = gsap.context(() => {
-      ScrollTrigger.config({
-        ignoreMobileResize: true,
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange",
-      });
+      ScrollTrigger.config({ ignoreMobileResize: true });
 
       if (!isAndroid) {
         ScrollTrigger.normalizeScroll({
@@ -84,9 +71,9 @@ export default function AboutMobile() {
 
       const MAIN_PANELS_COUNT = 7;
       const SUB_STEPS_COUNT = 3;
-      const PAUSES_COUNT = 6;
+      const PAUSES_COUNT = 7;
 
-      const vh = lockedScreenHeight.current;
+      const vh = window.innerHeight || BASELINE_VH;
       const scaleFactor = vh / BASELINE_VH;
 
       const DYNAMIC_SCROLL_TRACK =
@@ -116,7 +103,7 @@ export default function AboutMobile() {
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
-          invalidateOnRefresh: false,
+          invalidateOnRefresh: true,
           onUpdate: () => {
             const sec5Time = tl.labels["sec5FullyRevealed"];
             const ctaTime = tl.labels["ctaStart"];
@@ -142,27 +129,31 @@ export default function AboutMobile() {
         },
       });
 
-      // --- TRANSITIONS ---
+      // --- TRANSITION 1: Hero -> Section One ---
       tl.to(".about-section-one", { yPercent: 0, duration: ACTION })
         .to(".about-hero-bg", { scale: 1.0, yPercent: -15, duration: ACTION }, "<");
 
       tl.to({}, { duration: DEAD_SCROLL });
 
+      // --- TRANSITION 2: Section One -> Section Two ---
       tl.to(".about-section-two", { yPercent: 0, duration: ACTION })
         .to(".about-section-one", { yPercent: -15, duration: ACTION }, "<");
 
       tl.to({}, { duration: DEAD_SCROLL });
 
+      // --- TRANSITION 3: Section Two -> Section Three ---
       tl.to(".about-section-three", { yPercent: 0, duration: ACTION })
         .to(".about-section-two", { yPercent: -15, duration: ACTION }, "<");
 
       tl.to({}, { duration: DEAD_SCROLL });
 
+      // --- TRANSITION 4: Section Three -> Section Four ---
       tl.to(".about-section-four", { yPercent: 0, duration: ACTION })
         .to(".about-section-three", { yPercent: -15, duration: ACTION }, "<");
 
       tl.to({}, { duration: DEAD_SCROLL });
 
+      // --- TRANSITION 5: Section Four -> Section Five ---
       tl.addLabel("sec5Start")
         .to(
           ".about-section-five",
@@ -183,21 +174,20 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: SEC5_CARDS_HOLD });
 
-      const stackElement = document.querySelector(".about-bottom-stack");
-      const totalStackHeight = stackElement ? stackElement.clientHeight : vh * 1.5;
-
+      // --- TRANSITION 6: Section Five -> CTA ---
       tl.addLabel("ctaStart", ">")
-        .set(".about-bottom-stack", { visibility: "visible" }, "ctaStart")
-        .to(
-          ".about-bottom-stack",
+        .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
+        .fromTo(
+          ".about-section-cta",
+          { yPercent: 100 },
           {
-            y: -(totalStackHeight - vh),
-            duration: ACTION * 1.8,
+            yPercent: 0,
+            duration: ACTION * 1.2,
             ease: "power1.out",
           },
           "ctaStart"
         )
-        .to(".about-section-five", { yPercent: 0, duration: ACTION * 1.8, ease: "power1.out" }, "ctaStart");
+        .to(".about-section-five", { yPercent: 0, duration: ACTION * 1.2, ease: "power1.out" }, "ctaStart");
 
       tl.fromTo(
         ".about-section-five .s5-bg",
@@ -205,6 +195,18 @@ export default function AboutMobile() {
         { yPercent: -55, scale: 1.0, duration: ACTION + SEC5_CARDS_HOLD, ease: "none" },
         "sec5Start"
       );
+
+      tl.to({}, { duration: DEAD_SCROLL });
+
+      // --- TRANSITION 7: CTA -> Footer Wrap ---
+      tl.addLabel("footerStart", ">")
+        .set(".about-footer-wrap", { visibility: "visible" }, "footerStart")
+        .fromTo(
+          ".about-footer-wrap",
+          { yPercent: 100 },
+          { yPercent: 0, duration: ACTION, ease: "power1.out" },
+          "footerStart"
+        );
     }, scopeRef);
 
     return () => {
@@ -218,8 +220,7 @@ export default function AboutMobile() {
   return (
     <div ref={scopeRef}>
       <div
-        ref={pinRef}
-        className="about-pin pin-all relative w-full overflow-hidden"
+        className="about-pin pin-all relative w-full overflow-hidden h-[100dvh]"
         style={{ visibility: "visible" }}
       >
         <div className="about-hero-panel-left gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
@@ -250,15 +251,14 @@ export default function AboutMobile() {
         </div>
 
         <div
-          className="about-bottom-stack gpu-accelerated absolute left-0 top-0 w-full h-auto z-[150] flex flex-col"
+          className="about-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] z-[150]"
           style={{ pointerEvents: "auto", visibility: "hidden" }}
         >
-          <div className="about-section-cta w-full min-h-screen">
-            <SectionCTA />
-          </div>
-          <div className="about-footer-wrap w-full">
-            <Footer />
-          </div>
+          <SectionCTA />
+        </div>
+
+        <div className="about-footer-wrap gpu-accelerated absolute left-0 bottom-0 w-full z-[160]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+          <Footer />
         </div>
       </div>
     </div>
