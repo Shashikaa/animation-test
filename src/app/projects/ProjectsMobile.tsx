@@ -102,7 +102,8 @@ export default function ProjectsMobile() {
       const SUB_STEPS_COUNT = 1;
       const PAUSES_COUNT = 5;
 
-      const vh = window.innerHeight || BASELINE_VH;
+      // Use visualViewport height or fallback to small viewport calculation
+      const vh = window.visualViewport?.height || window.innerHeight || BASELINE_VH;
       const scaleFactor = vh / BASELINE_VH;
 
       const DYNAMIC_SCROLL_TRACK =
@@ -237,9 +238,9 @@ export default function ProjectsMobile() {
   }, [introDone]);
 
   return (
-    <div ref={scopeRef} className="w-full relative min-h-[100dvh] overflow-hidden text-white">
+    <div ref={scopeRef} className="w-full relative min-h-[100svh] overflow-hidden text-white">
       <div
-        className="master-viewport pin-all-projects relative w-full h-[100dvh] overflow-hidden"
+        className="master-viewport pin-all-projects relative w-full h-[100svh] overflow-hidden"
         style={{ visibility: "visible" }}
       >
         {/* Layer 1: Hero Section */}
@@ -265,7 +266,7 @@ export default function ProjectsMobile() {
 
         {/* Layer 4: Section CTA */}
         <div
-          className="projects-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh]"
+          className="projects-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100svh]"
           style={{ zIndex: 150, pointerEvents: "auto", visibility: "hidden" }}
         >
           <SectionCTA />
