@@ -23,14 +23,20 @@ const BASELINE_VH = 800;
 export default function AboutMobile() {
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
+  const pinRef = useRef<HTMLDivElement>(null);
   const lastSec5Idx = useRef<number>(-1);
-  const initialVhRef = useRef<number>(BASELINE_VH);
+  const lockedScreenHeight = useRef<number>(BASELINE_VH);
 
   const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
     if (typeof window !== "undefined") {
-      initialVhRef.current = window.innerHeight || BASELINE_VH;
+      lockedScreenHeight.current = window.innerHeight || BASELINE_VH;
+      
+      // Explicitly lock the container's height in px to prevent keyboard resize shifts
+      if (pinRef.current) {
+        pinRef.current.style.height = `${lockedScreenHeight.current}px`;
+      }
     }
 
     const ctx = gsap.context(() => {
@@ -43,7 +49,7 @@ export default function AboutMobile() {
       gsap.set(".about-section-five", { yPercent: 100, opacity: 1, visibility: "visible", force3D: true });
       gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0, force3D: true });
 
-      gsap.set(".about-bottom-stack", { y: initialVhRef.current, zIndex: 150, visibility: "hidden", force3D: true });
+      gsap.set(".about-bottom-stack", { y: lockedScreenHeight.current, zIndex: 150, visibility: "hidden", force3D: true });
       gsap.set(
         [".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"],
         { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
@@ -61,7 +67,7 @@ export default function AboutMobile() {
     const ctx = gsap.context(() => {
       ScrollTrigger.config({
         ignoreMobileResize: true,
-        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
+        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange",
       });
 
       if (!isAndroid) {
@@ -80,7 +86,7 @@ export default function AboutMobile() {
       const SUB_STEPS_COUNT = 3;
       const PAUSES_COUNT = 6;
 
-      const vh = initialVhRef.current;
+      const vh = lockedScreenHeight.current;
       const scaleFactor = vh / BASELINE_VH;
 
       const DYNAMIC_SCROLL_TRACK =
@@ -136,31 +142,27 @@ export default function AboutMobile() {
         },
       });
 
-      // --- TRANSITION 1: Hero -> Section One ---
+      // --- TRANSITIONS ---
       tl.to(".about-section-one", { yPercent: 0, duration: ACTION })
         .to(".about-hero-bg", { scale: 1.0, yPercent: -15, duration: ACTION }, "<");
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // --- TRANSITION 2: Section One -> Section Two ---
       tl.to(".about-section-two", { yPercent: 0, duration: ACTION })
         .to(".about-section-one", { yPercent: -15, duration: ACTION }, "<");
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // --- TRANSITION 3: Section Two -> Section Three ---
       tl.to(".about-section-three", { yPercent: 0, duration: ACTION })
         .to(".about-section-two", { yPercent: -15, duration: ACTION }, "<");
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // --- TRANSITION 4: Section Three -> Section Four ---
       tl.to(".about-section-four", { yPercent: 0, duration: ACTION })
         .to(".about-section-three", { yPercent: -15, duration: ACTION }, "<");
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // --- TRANSITION 5: Section Four -> Section Five ---
       tl.addLabel("sec5Start")
         .to(
           ".about-section-five",
@@ -181,7 +183,6 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: SEC5_CARDS_HOLD });
 
-      // --- TRANSITION 6: Section Five -> CTA + Footer Stack ---
       const stackElement = document.querySelector(".about-bottom-stack");
       const totalStackHeight = stackElement ? stackElement.clientHeight : vh * 1.5;
 
@@ -206,49 +207,7 @@ export default function AboutMobile() {
       );
     }, scopeRef);
 
-    // --- FORM FIELD INTERACTION FIX ---
-    // Pause normalizeScroll during input focus so native keyboard scroll behavior works naturally
-    const handleFocusIn = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target &&
-        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT")
-      ) {
-        if (!isAndroid) {
-          ScrollTrigger.normalizeScroll(false);
-        }
-        setTimeout(() => {
-          target.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 300);
-      }
-    };
-
-    const handleFocusOut = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target &&
-        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT")
-      ) {
-        if (!isAndroid) {
-          ScrollTrigger.normalizeScroll({
-            allowNestedScroll: true,
-            lockAxis: true,
-          });
-        }
-      }
-    };
-
-    const scopeNode = scopeRef.current;
-    if (scopeNode) {
-      scopeNode.addEventListener("focusin", handleFocusIn);
-      scopeNode.addEventListener("focusout", handleFocusOut);
-    }
-
     return () => {
-      if (scopeNode) {
-        scopeNode.removeEventListener("focusin", handleFocusIn);
-        scopeNode.removeEventListener("focusout", handleFocusOut);
-      }
       ctx.revert();
       if (!isAndroid) {
         ScrollTrigger.normalizeScroll(false);
@@ -259,7 +218,8 @@ export default function AboutMobile() {
   return (
     <div ref={scopeRef}>
       <div
-        className="about-pin pin-all relative w-full overflow-hidden h-[100vh]"
+        ref={pinRef}
+        className="about-pin pin-all relative w-full overflow-hidden"
         style={{ visibility: "visible" }}
       >
         <div className="about-hero-panel-left gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
@@ -293,7 +253,7 @@ export default function AboutMobile() {
           className="about-bottom-stack gpu-accelerated absolute left-0 top-0 w-full h-auto z-[150] flex flex-col"
           style={{ pointerEvents: "auto", visibility: "hidden" }}
         >
-          <div className="about-section-cta w-full min-h-[100vh]">
+          <div className="about-section-cta w-full min-h-screen">
             <SectionCTA />
           </div>
           <div className="about-footer-wrap w-full">

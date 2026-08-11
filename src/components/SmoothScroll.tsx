@@ -27,7 +27,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Lock initial screen dimensions to avoid viewport jumping when virtual keyboard appears
     let initialWidth = window.innerWidth;
     let initialHeight = window.innerHeight;
 
@@ -39,8 +38,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     setVh(initialHeight);
 
     const handleResize = () => {
-      // Only recalculate --vh if the width changes (orientation flip or actual screen resize)
-      // This ignores height changes triggered by mobile virtual keyboards opening
       if (window.innerWidth !== initialWidth) {
         initialWidth = window.innerWidth;
         initialHeight = window.innerHeight;
@@ -50,7 +47,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     window.addEventListener("resize", handleResize);
     window.addEventListener("orientationchange", handleResize);
-
     return () => {
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", handleResize);
@@ -84,7 +80,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       touchMultiplier: isTouchDevice ? 1.4 : 0.8 * heightFactor,
       infinite: false,
       smoothWheel: true,
-      syncTouch: !isTouchDevice, // Disable syncTouch on mobile touch devices to allow native input focus
+      syncTouch: false, // Turned off to prevent Lenis from controlling mobile touch events on form focus
       syncTouchLerp: 0.08,
     });
 
@@ -138,7 +134,8 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       lenis.start();
     }
 
-    // --- PAUSE LENIS ON FORM INPUT FOCUS ---
+    // --- FORM INTERACTION HANDLER ---
+    // Stops Lenis and ScrollTrigger from forcing scroll shifts on focus
     const handleFocusIn = (e: FocusEvent) => {
       const target = e.target as HTMLElement;
       if (
@@ -146,6 +143,9 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
         (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT")
       ) {
         lenis.stop();
+        if (ScrollTrigger.isTouch > 0) {
+          ScrollTrigger.normalizeScroll(false);
+        }
       }
     };
 
