@@ -405,3 +405,19 @@ button.btn-underline:hover::after,
 .btn-underline:hover::after {
   transform: translateY(-2px) !important;
 }
+
+/* Add to Design Tokens / GPU section in globals.css */
+
+.info-img-layer {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: clip-path;
+}
+
+.info-image-inner {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: transform;
+}
