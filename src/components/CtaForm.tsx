@@ -123,7 +123,6 @@ export default function CtaForm({
 
   return (
     <form onSubmit={handleSubmit} className="w-full h-auto" noValidate>
-      {/* Honeypot Field */}
       <div style={{ display: "none" }} aria-hidden="true">
         <input
           type="text"
@@ -325,9 +324,17 @@ function CtaInput({
           transition: "border-color 0.25s",
         }}
         onFocus={(e) => {
-          (e.target as HTMLInputElement).style.borderColor = error
+          const target = e.target as HTMLInputElement;
+          target.style.borderColor = error
             ? "#feb2b2"
             : "rgba(244,238,223,0.75)";
+
+          if (isMobile) {
+            e.preventDefault();
+            setTimeout(() => {
+              target.focus({ preventScroll: true });
+            }, 50);
+          }
         }}
         onBlur={(e) => {
           (e.target as HTMLInputElement).style.borderColor = error
