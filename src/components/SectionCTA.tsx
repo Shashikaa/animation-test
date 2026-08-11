@@ -78,9 +78,9 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
         </div>
       </div>
 
-      {/* Mobile Layout - Touch-friendly viewport scrolling */}
+      {/* Mobile Layout - Dynamic Content Height & Vertically Centered */}
       <div
-        className="flex lg:hidden cta-inner-mobile min-h-[100dvh] h-auto w-full !py-12 !pb-16 overscroll-contain"
+        className="flex lg:hidden cta-inner-mobile min-h-[100dvh] h-auto w-full !py-12 !pb-16"
         style={{
           position: "relative",
           zIndex: 10,

@@ -325,18 +325,9 @@ function CtaInput({
           transition: "border-color 0.25s",
         }}
         onFocus={(e) => {
-          const target = e.target as HTMLInputElement;
-          target.style.borderColor = error
+          (e.target as HTMLInputElement).style.borderColor = error
             ? "#feb2b2"
             : "rgba(244,238,223,0.75)";
-
-          // Prevents iOS Safari from aggressively scrolling the outer pinned viewport
-          if (isMobile) {
-            e.preventDefault();
-            setTimeout(() => {
-              target.focus({ preventScroll: true });
-            }, 50);
-          }
         }}
         onBlur={(e) => {
           (e.target as HTMLInputElement).style.borderColor = error
