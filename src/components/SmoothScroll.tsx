@@ -28,7 +28,9 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     if (typeof window === "undefined") return;
 
     const setVh = () => {
-      const vh = window.innerHeight * 0.01;
+      // Use visualViewport height when available to ignore dynamic browser UI bars
+      const actualHeight = window.visualViewport?.height || window.innerHeight;
+      const vh = actualHeight * 0.01;
       document.documentElement.style.setProperty("--vh", `${vh}px`);
     };
 
@@ -44,9 +46,16 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     window.addEventListener("resize", handleResize);
     window.addEventListener("orientationchange", handleResize);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", setVh);
+    }
+
     return () => {
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", handleResize);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", setVh);
+      }
     };
   }, []);
 
@@ -68,7 +77,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       thumbRef.current.parentElement.style.display = "none";
     }
 
-    const screenHeight = window.innerHeight;
+    const screenHeight = window.visualViewport?.height || window.innerHeight;
     const heightFactor = Math.min(Math.max(800 / screenHeight, 0.6), 1.2);
 
     const lenis = new Lenis({
@@ -103,7 +112,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
       const y = e.scroll;
       const limit = lenis.limit;
-      const trackH = window.innerHeight;
+      const trackH = window.visualViewport?.height || window.innerHeight;
       const thumbH = Math.max((trackH / (limit + trackH)) * trackH, 40);
       const maxTop = trackH - thumbH;
       const top = limit > 0 ? (y / limit) * maxTop : 0;
@@ -170,7 +179,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
   return (
     <>
-      <div className="flex flex-col min-h-screen w-full">
+      <div className="flex flex-col min-h-[100svh] w-full">
         {children}
       </div>
 
@@ -180,7 +189,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
           top: 0,
           right: 0,
           width: "6px",
-          height: "100vh",
+          height: "100svh",
           zIndex: 99999,
           pointerEvents: "none",
         }}
