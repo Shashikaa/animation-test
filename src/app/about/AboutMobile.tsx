@@ -48,7 +48,6 @@ export default function AboutMobile() {
       gsap.set(".about-section-five", { yPercent: 100, opacity: 1, visibility: "hidden" });
       gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0 });
 
-      // Fix CTA Initial State: Standardize transform properties so scrub passes cleanly
       gsap.set(".about-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
       gsap.set(
         [".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"],
@@ -201,7 +200,7 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: SEC5_CARDS_HOLD });
 
-      // UNSTUCK CTA SECTION: Animate CTA smoothly over Section 5 without getting trapped
+      // SLOW DOWN SECTION CTA ENTRANCE TO MATCH STANDARD VIEWPORT SPEED
       tl.addLabel("ctaStart", ">")
         .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
         .fromTo(
@@ -213,7 +212,8 @@ export default function AboutMobile() {
             ease: "power1.out",
           },
           "ctaStart"
-        );
+        )
+        .to(".about-section-five", { yPercent: 0, duration: ACTION * 1.35, ease: "power1.out" }, "ctaStart");
 
       tl.fromTo(
         ".about-section-five .s5-bg",
@@ -224,7 +224,6 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // Transition smoothly from CTA to Footer
       tl.addLabel("footerStart", ">")
         .set(".about-section-five", { visibility: "hidden" }, "footerStart")
         .set(".about-footer-wrap", { visibility: "visible" }, "footerStart")
@@ -232,11 +231,6 @@ export default function AboutMobile() {
           ".about-footer-wrap",
           { yPercent: 100 },
           { yPercent: 0, duration: ACTION, ease: "power2.inOut" },
-          "footerStart"
-        )
-        .to(
-          ".about-section-cta",
-          { yPercent: -30, duration: ACTION, ease: "power2.inOut" },
           "footerStart"
         );
     }, scopeRef);
@@ -249,9 +243,8 @@ export default function AboutMobile() {
 
   return (
     <div ref={scopeRef}>
-      {/* Removed fixed h-[100dvh] class to stop clipping CTA scroll touches */}
       <div
-        className="about-pin pin-all relative w-full overflow-hidden min-h-screen"
+        className="about-pin pin-all relative w-full overflow-hidden h-[100dvh]"
         style={{ visibility: "visible" }}
       >
         <div className="about-hero-panel-left gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
@@ -291,9 +284,8 @@ export default function AboutMobile() {
           <SectionFive isActive={isSectionFiveActive} />
         </div>
 
-        {/* CTA Container updated with touch pass-through styling */}
         <div
-          className="about-section-cta gpu-accelerated absolute inset-0 w-full h-full z-[150]"
+          className="about-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] z-[150]"
           style={{ pointerEvents: "auto", visibility: "hidden" }}
         >
           <SectionCTA />

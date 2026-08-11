@@ -22,19 +22,6 @@ const AU_PHONE_REGEX = /^(?:\+?61|0)[23478](?:[ -]?\d){8}$/;
 const AU_POSTCODE_REGEX = /^(?:0[89]\d{2}|[1-9]\d{3})$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Native scroll locking helpers (no ScrollTrigger disabling)
-const lockScrollForInput = () => {
-  if (typeof window === "undefined") return;
-  document.body.style.overflow = "hidden";
-  document.body.style.touchAction = "none";
-};
-
-const unlockScrollForInput = () => {
-  if (typeof window === "undefined") return;
-  document.body.style.overflow = "";
-  document.body.style.touchAction = "";
-};
-
 export default function CtaForm({
   isMobile = false,
   nameSuffix = "",
@@ -337,16 +324,12 @@ function CtaInput({
           letterSpacing: "0.02em",
           transition: "border-color 0.25s",
         }}
-        onTouchStart={(e) => e.stopPropagation()}
-        onTouchMove={(e) => e.stopPropagation()}
         onFocus={(e) => {
-          lockScrollForInput();
           (e.target as HTMLInputElement).style.borderColor = error
             ? "#feb2b2"
             : "rgba(244,238,223,0.75)";
         }}
         onBlur={(e) => {
-          unlockScrollForInput();
           (e.target as HTMLInputElement).style.borderColor = error
             ? "#feb2b2"
             : `rgba(244, 238, 223, ${borderOpacity})`;
@@ -442,8 +425,6 @@ function CtaSelect({
       ref={dropdownRef}
       className="flex flex-col"
       style={{ position: "relative", width: "100%", zIndex: isOpen ? 9999 : 1 }}
-      onTouchStart={(e) => e.stopPropagation()}
-      onTouchMove={(e) => e.stopPropagation()}
     >
       <input type="hidden" name={name} value={selectedValue} />
 
@@ -455,8 +436,6 @@ function CtaSelect({
         tabIndex={0}
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
-        onFocus={lockScrollForInput}
-        onBlur={unlockScrollForInput}
         style={{
           background: "transparent",
           borderBottom: defaultBorder,
@@ -501,9 +480,6 @@ function CtaSelect({
       {isOpen && (
         <div
           role="listbox"
-          onTouchStart={(e) => e.stopPropagation()}
-          onTouchMove={(e) => e.stopPropagation()}
-          onWheel={(e) => e.stopPropagation()}
           style={{
             position: "absolute",
             top: openUpward ? "auto" : "100%",
