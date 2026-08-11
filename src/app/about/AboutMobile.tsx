@@ -29,18 +29,27 @@ export default function AboutMobile() {
   const { smootherRef } = useSite();
   const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // Lock scroll while intro animation is running
+  // 1. Force top alignment and unblock Lenis only after intro sequence completes
   useEffect(() => {
     if (!introDone) {
       smootherRef?.current?.stop();
-      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "";
+      window.scrollTo(0, 0);
+      smootherRef?.current?.scrollTo(0, { immediate: true });
+
+      requestAnimationFrame(() => {
+        ScrollTrigger.refresh();
+        smootherRef?.current?.start();
+      });
     }
   }, [introDone, smootherRef]);
 
+  // 2. Build ScrollTrigger & Pin-Spacer IMMEDIATELY on mount (Frame 0)
   useLayoutEffect(() => {
+    const isAndroid = /Android/i.test(navigator.userAgent);
+
     const ctx = gsap.context(() => {
+      // Force panel positions before DOM paint
       gsap.set(".about-hero-panel-left", { yPercent: 0, force3D: true });
       gsap.set(".about-section-one", { yPercent: 100, visibility: "visible", force3D: true });
       gsap.set(".about-section-two", { yPercent: 100, visibility: "visible", force3D: true });
@@ -56,23 +65,7 @@ export default function AboutMobile() {
         { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
       );
       gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 160, visibility: "hidden", force3D: true });
-    }, scopeRef);
 
-    return () => ctx.revert();
-  }, []);
-
-  useEffect(() => {
-    if (!introDone) return;
-
-    // Ensure page is at the top before mounting ScrollTrigger
-    window.scrollTo(0, 0);
-    if (smootherRef?.current) {
-      smootherRef.current.scrollTo(0, { immediate: true });
-    }
-
-    const isAndroid = /Android/i.test(navigator.userAgent);
-
-    const ctx = gsap.context(() => {
       ScrollTrigger.config({ ignoreMobileResize: true });
 
       const ACTION = 1.4;
@@ -218,18 +211,10 @@ export default function AboutMobile() {
           { yPercent: 0, duration: ACTION, ease: "power1.out" },
           "footerStart"
         );
-
-      // Refresh ScrollTrigger and release Lenis scroll
-      requestAnimationFrame(() => {
-        ScrollTrigger.refresh();
-        smootherRef?.current?.start();
-      });
     }, scopeRef);
 
-    return () => {
-      ctx.revert();
-    };
-  }, [introDone, smootherRef]);
+    return () => ctx.revert();
+  }, []);
 
   return (
     <div ref={scopeRef}>
