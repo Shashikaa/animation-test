@@ -15,6 +15,12 @@ export default function PreloaderToggle() {
   useEffect(() => {
     setMounted(true);
     
+    // Disable native scroll restoration instantly on route change
+    if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+      window.scrollTo(0, 0);
+    }
+    
     if (pathname === "/terms" || pathname === "/privacy-policy" || pathname === "/not-found") {
       setLoaderType("none");
       document.documentElement.classList.remove("show-brand-preloader", "show-fade-preloader", "preloading");
@@ -31,25 +37,27 @@ export default function PreloaderToggle() {
     }
   }, [pathname, setPreloaderDone]);
 
-  // Brand Preloader Complete Callback (Triggers when Brand Loader animation finishes)
+  // Brand Preloader Complete Callback
   const handleBrandComplete = useCallback(() => {
     markBrandPreloaderSeen();
     document.documentElement.classList.remove("show-brand-preloader", "preloading");
     document.body.classList.remove("preloading");
+    window.scrollTo(0, 0);
     setPreloaderDone(true);
     setLoaderType("none");
   }, [markBrandPreloaderSeen, setPreloaderDone]);
 
-  // Fade Preloader Exit Start (removes body scrolling lock, keeps preloaderDone false until completely faded)
+  // Fade Preloader Exit Start
   const handleFadeExitStart = useCallback(() => {
     document.documentElement.classList.remove("preloading");
     document.body.classList.remove("preloading");
   }, []);
 
-  // Fade Preloader Complete Callback (Triggers ONLY when Fade Loader opacity hits 0)
+  // Fade Preloader Complete Callback (Triggers strictly when opacity hits 0)
   const handleFadeComplete = useCallback(() => {
     document.documentElement.classList.remove("show-fade-preloader", "preloading");
     document.body.classList.remove("preloading");
+    window.scrollTo(0, 0);
     setPreloaderDone(true);
     setLoaderType("none");
   }, [setPreloaderDone]);

@@ -10,11 +10,15 @@ export default function FadePreloaderWrapper() {
 
   const handleExitStart = () => {
     document.body.classList.remove("preloading");
-    setPreloaderDone(true);
+    document.documentElement.classList.remove("preloading");
   };
 
   const handleComplete = () => {
     document.body.classList.remove("preloading");
+    document.documentElement.classList.remove("preloading");
+    if (typeof window !== "undefined") {
+      window.scrollTo(0, 0);
+    }
     setPreloaderDone(true);
   };
 

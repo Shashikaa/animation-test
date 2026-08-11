@@ -128,10 +128,15 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     if (!preloaderDone) {
       lenis.stop();
     } else {
-      // Delay enabling scroll input briefly to ensure layout & triggers are calculated
+      // Force scroll reset and recalculate triggers before enabling Lenis
+      window.scrollTo(0, 0);
+      lenis.scrollTo(0, { immediate: true });
+
       requestAnimationFrame(() => {
-        ScrollTrigger.refresh();
-        lenis.start();
+        requestAnimationFrame(() => {
+          ScrollTrigger.refresh();
+          lenis.start();
+        });
       });
     }
 
