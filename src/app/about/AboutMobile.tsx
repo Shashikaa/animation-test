@@ -33,24 +33,23 @@ export default function AboutMobile() {
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.set(".about-section-one", { yPercent: 100 });
-      gsap.set(".about-section-two", { visibility: "hidden", yPercent: 100 });
+      // Pre-set all panel initial positions & visibilities upfront to prevent mid-scroll layout hits
+      gsap.set(".about-hero-panel-left", { yPercent: 0, force3D: true });
+      gsap.set(".about-section-one", { yPercent: 100, visibility: "visible", force3D: true });
+      gsap.set(".about-section-two", { yPercent: 100, visibility: "visible", force3D: true });
+      gsap.set(".about-section-three", { yPercent: 100, visibility: "visible", force3D: true });
+      gsap.set(".about-section-four", { yPercent: 100, visibility: "visible", force3D: true });
 
-      // Hardware-accelerated translate instead of clipPath for smooth Android renders
-      gsap.set(".about-section-three", { visibility: "hidden", yPercent: 100 });
+      // Section 5 and CTA setups
+      gsap.set(".about-section-five", { yPercent: 100, opacity: 1, visibility: "visible", force3D: true });
+      gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0, force3D: true });
 
-      gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0 });
-
-      // Ensure opacity is set to 1 so SectionFive is visible when it slides up
-      gsap.set(".about-section-five", { yPercent: 100, opacity: 1, visibility: "hidden" });
-      gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0 });
-
-      gsap.set(".about-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden" });
+      gsap.set(".about-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden", force3D: true });
       gsap.set(
         [".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"],
         { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
       );
-      gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden" });
+      gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden", force3D: true });
     }, scopeRef);
 
     return () => ctx.revert();
@@ -73,9 +72,11 @@ export default function AboutMobile() {
         });
       }
 
+      // Standardized transition metrics matching Hero -> Sec1 smoothness
       const ACTION = 1.4;
-      const DEAD_SCROLL = 0.2;
+      const DEAD_SCROLL = 0.25;
       const SEC5_CARDS_HOLD = 1.2;
+      const UNIFIED_EASE = "power1.inOut"; // Silky ease for scrub control
 
       const MAIN_PANELS_COUNT = 7;
       const SUB_STEPS_COUNT = 3;
@@ -101,18 +102,18 @@ export default function AboutMobile() {
       };
 
       const tl = gsap.timeline({
-        defaults: { ease: "none", lazy: true },
+        defaults: { ease: UNIFIED_EASE, lazy: true },
         scrollTrigger: {
           trigger: ".about-pin",
           start: "top top",
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: isAndroid ? 0.2 : 0.8, // Shorter scrub on Android reduces GPU frame workload
+          scrub: isAndroid ? 0.2 : 0.6, // Uniform scrub factor
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
-          invalidateOnRefresh: false,
+          invalidateOnRefresh: true,
           onUpdate: () => {
             const sec5Time = tl.labels["sec5FullyRevealed"];
             const ctaTime = tl.labels["ctaStart"];
@@ -138,42 +139,44 @@ export default function AboutMobile() {
         },
       });
 
-      tl.to(".about-section-one", { yPercent: 0, duration: ACTION, ease: "power2.inOut" })
-        .to(".about-hero-bg", { scale: 1.0, yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "<");
+      // --- TRANSITION 1: Hero -> Section One ---
+      tl.to(".about-section-one", { yPercent: 0, duration: ACTION })
+        .to(".about-hero-bg", { scale: 1.0, yPercent: -15, duration: ACTION }, "<");
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      tl.set(".about-section-two", { visibility: "visible" })
-        .to(".about-section-two", { yPercent: 0, duration: ACTION, ease: "power2.inOut" });
+      // --- TRANSITION 2: Section One -> Section Two ---
+      tl.to(".about-section-two", { yPercent: 0, duration: ACTION })
+        .to(".about-section-one", { yPercent: -15, duration: ACTION }, "<");
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // Clean yPercent translate replacement for clipPath
-      tl.set(".about-section-three", { visibility: "visible" })
-        .to(".about-section-three", { yPercent: 0, duration: ACTION, ease: "power2.inOut" });
+      // --- TRANSITION 3: Section Two -> Section Three ---
+      tl.to(".about-section-three", { yPercent: 0, duration: ACTION })
+        .to(".about-section-two", { yPercent: -15, duration: ACTION }, "<");
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      tl.set(".about-section-four", { visibility: "visible" })
-        .addLabel("sec3to4Transition")
-        .to(".about-section-three", { yPercent: -100, duration: ACTION, ease: "power2.inOut" }, "sec3to4Transition")
+      // --- TRANSITION 4: Section Three -> Section Four ---
+      tl.addLabel("sec3to4Transition")
+        .to(".about-section-four", { yPercent: 0, duration: ACTION }, "sec3to4Transition")
+        .to(".about-section-three", { yPercent: -105, duration: ACTION }, "sec3to4Transition")
         .fromTo(
           ".about-section-four .s4-img-bg",
           { yPercent: 15 },
-          { yPercent: 0, duration: ACTION, ease: "power2.inOut" },
+          { yPercent: 0, duration: ACTION },
           "sec3to4Transition"
         );
 
       tl.to({}, { duration: DEAD_SCROLL });
 
+      // --- TRANSITION 5: Section Four -> Section Five ---
       tl.addLabel("sec5Start")
-        .set(".about-section-five", { visibility: "visible" }, "sec5Start")
         .to(
           ".about-section-five",
           {
             yPercent: 0,
             duration: ACTION,
-            ease: "power2.inOut",
             onStart: () => setIsSectionFiveActive(true),
             onReverseComplete: () => {
               setIsSectionFiveActive(false);
@@ -181,12 +184,14 @@ export default function AboutMobile() {
             },
           },
           "sec5Start"
-        );
+        )
+        .to(".about-section-four", { yPercent: -15, duration: ACTION }, "sec5Start");
 
       tl.addLabel("sec5FullyRevealed", `sec5Start+=${ACTION}`);
 
       tl.to({}, { duration: SEC5_CARDS_HOLD });
 
+      // --- TRANSITION 6: Section Five -> CTA ---
       tl.addLabel("ctaStart", ">")
         .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
         .fromTo(
@@ -194,12 +199,12 @@ export default function AboutMobile() {
           { yPercent: 100 },
           {
             yPercent: 0,
-            duration: ACTION * 1.35,
+            duration: ACTION * 1.2,
             ease: "power1.out",
           },
           "ctaStart"
         )
-        .to(".about-section-five", { yPercent: 0, duration: ACTION * 1.35, ease: "power1.out" }, "ctaStart");
+        .to(".about-section-five", { yPercent: -15, duration: ACTION * 1.2, ease: "power1.out" }, "ctaStart");
 
       tl.fromTo(
         ".about-section-five .s5-bg",
@@ -210,13 +215,14 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
+      // --- TRANSITION 7: CTA -> Footer Wrap ---
       tl.addLabel("footerStart", ">")
         .set(".about-section-five", { visibility: "hidden" }, "footerStart")
         .set(".about-footer-wrap", { visibility: "visible" }, "footerStart")
         .fromTo(
           ".about-footer-wrap",
           { yPercent: 100 },
-          { yPercent: 0, duration: ACTION, ease: "power2.inOut" },
+          { yPercent: 0, duration: ACTION, ease: "power1.out" },
           "footerStart"
         );
     }, scopeRef);
@@ -247,7 +253,10 @@ export default function AboutMobile() {
           <SectionTwo />
         </div>
 
-        <div className="about-section-three gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 40 }}>
+        <div
+          className="about-section-three gpu-accelerated absolute inset-0 w-full h-[100dvh]"
+          style={{ zIndex: 40, willChange: "transform" }}
+        >
           <SectionThree />
         </div>
 
@@ -257,10 +266,7 @@ export default function AboutMobile() {
 
         <div
           className="about-section-five gpu-accelerated absolute inset-0 w-full h-full"
-          style={{
-            zIndex: 45,
-            visibility: "hidden",
-          }}
+          style={{ zIndex: 45 }}
         >
           <SectionFive isActive={isSectionFiveActive} />
         </div>
