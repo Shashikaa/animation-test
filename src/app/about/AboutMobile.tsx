@@ -15,16 +15,16 @@ import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const PX_PER_MAIN_PANEL = 850;
-const PX_PER_SUB_STEP = 450;
-const PAUSE_PX = 150; 
+// Reduced base scroll values for a faster, responsive scroll
+const PX_PER_MAIN_PANEL = 600; 
+const PX_PER_SUB_STEP = 320;   
+const PAUSE_PX = 80;          
 
 export default function AboutMobile() {
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
   const lastSec5Idx = useRef<number>(-1);
 
-  // Single unified utility hook configured for Mobile
   const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
@@ -40,7 +40,6 @@ export default function AboutMobile() {
 
       gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0 });
 
-      // Ensure opacity is set to 1 so SectionFive is visible when it slides up
       gsap.set(".about-section-five", { yPercent: 100, opacity: 1, visibility: "hidden" });
       gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0 });
 
@@ -59,11 +58,19 @@ export default function AboutMobile() {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-      // Normalize mobile touch scroll behavior to lock address bar
-      const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-      if (isTouchDevice) {
-        ScrollTrigger.normalizeScroll(true);
-      }
+      ScrollTrigger.normalizeScroll({
+        allowNestedScroll: true,
+        lockAxis: true,
+        momentum: (self: { getVelocity: () => number; }) => Math.min(Math.abs(self.getVelocity()), 2000), // Higher velocity cap for faster scrolling
+      });
+
+      // Height ratio with an upper limit (max 1.15) so tall displays stay fast
+      const vh = window.innerHeight;
+      const heightRatio = Math.min(Math.max(vh / 812, 1), 1.15);
+
+      const pxPerMainPanel = PX_PER_MAIN_PANEL * heightRatio;
+      const pxPerSubStep = PX_PER_SUB_STEP * heightRatio;
+      const pausePx = PAUSE_PX * heightRatio;
 
       const ACTION = 1.4; 
       const DEAD_SCROLL = 0.2; 
@@ -74,9 +81,9 @@ export default function AboutMobile() {
       const PAUSES_COUNT = 7;    
 
       const DYNAMIC_SCROLL_TRACK = 
-        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
-        (SUB_STEPS_COUNT * PX_PER_SUB_STEP) + 
-        (PAUSES_COUNT * PAUSE_PX);
+        (MAIN_PANELS_COUNT * pxPerMainPanel) + 
+        (SUB_STEPS_COUNT * pxPerSubStep) + 
+        (PAUSES_COUNT * pausePx);
 
       const triggerSec5Hook = (nextIdx: number) => {
         if (nextIdx !== lastSec5Idx.current) {
@@ -93,7 +100,7 @@ export default function AboutMobile() {
           trigger: ".about-pin",
           start: "top top",
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
-          scrub: 0.5,
+          scrub: 0.35, // Snappier response directly bound to finger drag
           pin: true,
           pinType: "fixed",
           anticipatePin: 1,
@@ -193,7 +200,6 @@ export default function AboutMobile() {
         )
         .to(".about-section-five", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart");
 
-      // CONTINUOUS MOBILE SECTION 5 IMAGE TRANSLATION / PARALLAX:
       tl.fromTo(
         ".about-section-five .s5-bg", 
         { yPercent: 0, scale: 1.0 }, 
@@ -203,7 +209,6 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // Footer slides up over CTA without fading out CTA inner contents
       tl.addLabel("footerStart", ">")
         .set(".about-section-five", { visibility: "hidden" }, "footerStart")
         .set(".about-footer-wrap", { visibility: "visible" }, "footerStart")
@@ -218,9 +223,7 @@ export default function AboutMobile() {
 
     return () => {
       ctx.revert();
-      if (ScrollTrigger.isTouch) {
-        ScrollTrigger.normalizeScroll(false);
-      }
+      ScrollTrigger.normalizeScroll(false);
     };
   }, [introDone]);
 

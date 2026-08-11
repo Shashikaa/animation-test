@@ -36,7 +36,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     let windowWidth = window.innerWidth;
     const handleResize = () => {
-      // Only trigger height re-calculation on width changes (orientation/window size, NOT address bar collapse)
       if (window.innerWidth !== windowWidth) {
         windowWidth = window.innerWidth;
         setVh();
@@ -73,11 +72,16 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       return;
     }
 
+    // Dynamic multiplier calculation based on standard desktop height (800px)
+    // Prevents hyper-fast scrolling on high-res / tall displays
+    const screenHeight = window.innerHeight;
+    const heightFactor = Math.min(Math.max(800 / screenHeight, 0.6), 1.2);
+
     // Lenis smooth scrolling for Desktop
     const lenis = new Lenis({
-      lerp: 0.14,
-      wheelMultiplier: 1.4,
-      touchMultiplier: 1.0,
+      lerp: 0.1 * heightFactor, // Adjusted dynamically for display height
+      wheelMultiplier: 1.1 * heightFactor,
+      touchMultiplier: 0.8 * heightFactor,
       infinite: false,
       smoothWheel: true,
     });
