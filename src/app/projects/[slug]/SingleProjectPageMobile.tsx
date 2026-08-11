@@ -33,14 +33,13 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      // Direct GSAP state setups matching standard panel layout
+      // Direct GSAP state setups matching the standard panel layout
       gsap.set(".project-hero-master", { yPercent: 0, force3D: true });
       gsap.set(".project-info-wrap", { yPercent: 100, zIndex: 20, visibility: "visible", force3D: true });
       gsap.set(".project-app-wrap", { yPercent: 100, zIndex: 30, visibility: "visible", force3D: true });
       gsap.set(".faq-scroll-wrapper", { yPercent: 100, zIndex: 40, visibility: "visible", force3D: true });
       gsap.set(".footer-scroll-wrapper", { yPercent: 100, zIndex: 50, visibility: "hidden", force3D: true });
 
-      gsap.set(".appsec-phone-wrapper", { y: 30, opacity: 0, force3D: true });
       gsap.set(".faq-content", { opacity: 1, y: 0 });
     }, scopeRef);
 
@@ -90,6 +89,8 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
         }
       };
 
+      gsap.set(".appsec-phone-wrapper", { y: 30, opacity: 0 });
+
       const tl = gsap.timeline({
         defaults: { ease: UNIFIED_EASE, lazy: true },
         scrollTrigger: {
@@ -103,39 +104,24 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
           preventOverlaps: true,
           fastScrollEnd: true,
           invalidateOnRefresh: true,
-          onUpdate: () => {
-            // Smoothly evaluate slide hook in onUpdate instead of timeline callbacks
-            const infoTime = tl.labels["infoStart"];
-            const appTime = tl.labels["appSectionStart"];
-
-            if (typeof infoTime === "number" && typeof appTime === "number") {
-              const currentTime = tl.time();
-              if (currentTime >= infoTime && currentTime < appTime) {
-                if (!isProjectInfoActive) setIsProjectInfoActive(true);
-
-                if (infoSlides.length > 1) {
-                  const progress = (currentTime - infoTime) / (appTime - infoTime);
-                  const stepIndex = Math.min(
-                    infoSlides.length - 1,
-                    Math.floor(progress * infoSlides.length)
-                  );
-                  triggerInfoHook(stepIndex);
-                } else {
-                  triggerInfoHook(0);
-                }
-              } else if (currentTime < infoTime) {
-                if (isProjectInfoActive) setIsProjectInfoActive(false);
-                triggerInfoHook(0);
-              }
-            }
-          },
         },
       });
 
       // --- TRANSITION 1: Hero -> Project Info Slide ---
-      tl.addLabel("infoStart")
-        .to(".project-info-wrap", { yPercent: 0, duration: ACTION }, "infoStart")
-        .to(".project-hero-bg", { scale: 1.0, yPercent: -15, duration: ACTION }, "infoStart");
+      tl.to(".project-info-wrap", {
+        yPercent: 0,
+        duration: ACTION,
+        onStart: () => setIsProjectInfoActive(true),
+        onReverseComplete: () => {
+          setIsProjectInfoActive(false);
+          triggerInfoHook(0);
+        },
+      })
+        .to(".project-hero-master", { yPercent: -15, duration: ACTION }, "<");
+
+      tl.call(() => {
+        triggerInfoHook(0);
+      }, [], `<+=${ACTION * 0.4}`);
 
       tl.to({}, { duration: DEAD_SCROLL });
 
@@ -155,7 +141,6 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
             {
               clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
               duration: ACTION,
-              force3D: true,
             },
             slideLabel
           );
@@ -163,9 +148,14 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
           tl.fromTo(
             innerImage,
             { scale: 1.25 },
-            { scale: 1.0, duration: ACTION, force3D: true },
+            { scale: 1.0, duration: ACTION },
             slideLabel
           );
+
+          tl.call(() => {
+            const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+            triggerInfoHook(isForward ? index : index - 1);
+          }, [], `${slideLabel}+=0.6`);
         });
       }
 
@@ -178,7 +168,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
 
       tl.to(
         ".appsec-phone-wrapper",
-        { y: 0, opacity: 1, duration: ACTION * 0.8, force3D: true },
+        { y: 0, opacity: 1, duration: ACTION * 0.8 },
         "appSectionStart+=0.4"
       );
 
@@ -208,7 +198,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
         ScrollTrigger.normalizeScroll(false);
       }
     };
-  }, [introDone, pageData.slides, isProjectInfoActive]);
+  }, [introDone, pageData.slides]);
 
   return (
     <div ref={scopeRef} className="w-full relative min-h-[100dvh] bg-black text-white overflow-hidden">

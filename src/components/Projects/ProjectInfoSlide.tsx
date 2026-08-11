@@ -9,7 +9,7 @@ interface ProjectInfoSlideProps {
   isActive?: boolean;
 }
 
-const TEXT_DURATION = 0.45;
+const TEXT_DURATION = 0.55;
 
 function splitElementIntoLines(el: HTMLElement) {
   if (el.dataset.originalHtml !== undefined) return;
@@ -17,19 +17,18 @@ function splitElementIntoLines(el: HTMLElement) {
   el.dataset.originalHtml = el.innerHTML;
   el.style.transform = "none";
 
-  el.innerHTML = el.innerHTML.replace(
-    /(\S+)/g,
-    '<span class="gs-word" style="display:inline-block; white-space:nowrap;">$1</span>'
-  );
+  // Wrap words and prevent internal hyphen splitting during line calculation
+  el.innerHTML = el.innerHTML.replace(/(\S+)/g, '<span class="gs-word" style="display:inline-block; white-space:nowrap;">$1</span>');
   const words = Array.from(el.querySelectorAll<HTMLElement>(".gs-word"));
 
+  // Group words into lines using a 6px threshold buffer to avoid subpixel layout bugs
   const lines: HTMLElement[][] = [];
   words.forEach((w) => {
     const top = w.getBoundingClientRect().top;
     let added = false;
     for (const line of lines) {
       const lineTop = line[0].getBoundingClientRect().top;
-      if (Math.abs(top - lineTop) < 6) {
+      if (Math.abs(top - lineTop) < 6) { // 6px tolerance threshold
         line.push(w);
         added = true;
         break;
@@ -46,15 +45,15 @@ function splitElementIntoLines(el: HTMLElement) {
     const lineOuter = document.createElement("span");
     lineOuter.className = "gs-line";
     lineOuter.style.cssText =
-      "display:block; overflow:hidden; padding-bottom:0.15em; margin-bottom:-0.15em;";
+      "display:block; overflow:hidden; padding-bottom:0.25em; margin-bottom:-0.25em;";
 
     const lineInner = document.createElement("span");
     lineInner.className = "gs-line-inner";
     lineInner.style.cssText =
-      "display:block; will-change:transform, opacity; padding-bottom:0.15em;";
+      "display:block; will-change:transform, opacity; padding-bottom:0.25em;";
 
     group.forEach((w, i) => {
-      w.style.display = "";
+      w.style.display = ""; // Reset inline-block back to default
       w.style.whiteSpace = "";
       lineInner.appendChild(w);
       if (i < group.length - 1) {
@@ -67,82 +66,45 @@ function splitElementIntoLines(el: HTMLElement) {
   });
 }
 
-export default function ProjectInfoSlide({ slides }: ProjectInfoSlideProps) {
+export default function ProjectInfoSlide({ slides, isActive = true }: ProjectInfoSlideProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const currentRef = useRef<number>(0);
-  const isAnimatingRef = useRef<boolean>(false);
 
-  function transitionToSlide(nextIdx: number) {
+  function animateTextIn(index: number) {
     if (!containerRef.current) return;
-
-    const prevIdx = currentRef.current;
-    if (nextIdx === prevIdx && isAnimatingRef.current) return;
-    currentRef.current = nextIdx;
-    isAnimatingRef.current = true;
-
-    const prevTargets = containerRef.current.querySelectorAll(
-      `.slide-text-${prevIdx} .gs-line-inner`
-    );
-    const nextTargets = containerRef.current.querySelectorAll(
-      `.slide-text-${nextIdx} .gs-line-inner`
-    );
-
-    // Synchronous immediate toggle to avoid animation overlap lag
-    slides.forEach((_, i) => {
-      const el = containerRef.current?.querySelector(`.slide-text-${i}`) as HTMLElement;
-      if (el) {
-        if (i === nextIdx) {
-          el.style.opacity = "1";
-          el.style.pointerEvents = "auto";
-          el.style.visibility = "visible";
-        } else if (i !== prevIdx) {
-          el.style.opacity = "0";
-          el.style.pointerEvents = "none";
-          el.style.visibility = "hidden";
-        }
-      }
-    });
-
-    // Animate out previous text
-    if (prevTargets.length > 0 && prevIdx !== nextIdx) {
-      gsap.killTweensOf(Array.from(prevTargets));
-      gsap.to(Array.from(prevTargets), {
-        y: -20,
-        opacity: 0,
-        duration: 0.25,
-        ease: "power2.in",
-        stagger: 0.015,
-        onComplete: () => {
-          const prevEl = containerRef.current?.querySelector(`.slide-text-${prevIdx}`) as HTMLElement;
-          if (prevEl && currentRef.current !== prevIdx) {
-            prevEl.style.opacity = "0";
-            prevEl.style.pointerEvents = "none";
-            prevEl.style.visibility = "hidden";
-          }
-        },
-      });
-    }
-
-    // Animate in new text
-    if (nextTargets.length > 0) {
-      gsap.killTweensOf(Array.from(nextTargets));
+    const targets = containerRef.current.querySelectorAll(`.slide-text-${index} .gs-line-inner`);
+    targets.forEach((inner, idx) => {
+      gsap.killTweensOf(inner);
       gsap.fromTo(
-        Array.from(nextTargets),
+        inner,
         { y: 30, opacity: 0 },
         {
           y: 0,
           opacity: 1,
           duration: TEXT_DURATION,
           ease: "power2.out",
-          stagger: 0.02,
-          onComplete: () => {
-            isAnimatingRef.current = false;
-          },
+          delay: idx * 0.03,
         }
       );
-    } else {
-      isAnimatingRef.current = false;
+    });
+  }
+
+  function animateTextOut(index: number, callback?: () => void) {
+    if (!containerRef.current) return;
+    const targets = containerRef.current.querySelectorAll(`.slide-text-${index} .gs-line-inner`);
+    if (targets.length === 0) {
+      if (callback) callback();
+      return;
     }
+    gsap.killTweensOf(Array.from(targets));
+    gsap.to(Array.from(targets), {
+      y: -20,
+      opacity: 0,
+      duration: 0.35,
+      ease: "power2.in",
+      stagger: 0.02,
+      onComplete: callback,
+    });
   }
 
   useEffect(() => {
@@ -178,18 +140,37 @@ export default function ProjectInfoSlide({ slides }: ProjectInfoSlideProps) {
       });
     };
 
+    // Wait until fonts are 100% loaded before splitting text
     if (document.fonts) {
       document.fonts.ready.then(() => {
-        requestAnimationFrame(runSplitLogic);
+        setTimeout(runSplitLogic, 50);
       });
     } else {
-      setTimeout(runSplitLogic, 100);
+      setTimeout(runSplitLogic, 150);
     }
   }, [slides]);
 
   useEffect(() => {
     (window as any)._projectInfoGoTo = (nextIdx: number) => {
-      transitionToSlide(nextIdx);
+      const prevIdx = currentRef.current;
+      if (nextIdx === prevIdx) return;
+
+      currentRef.current = nextIdx;
+
+      animateTextOut(prevIdx, () => {
+        if (!containerRef.current) return;
+
+        slides.forEach((_, i) => {
+          const el = containerRef.current?.querySelector(`.slide-text-${i}`) as HTMLElement;
+          if (el) {
+            el.style.opacity = i === nextIdx ? "1" : "0";
+            el.style.pointerEvents = i === nextIdx ? "auto" : "none";
+            el.style.visibility = i === nextIdx ? "visible" : "hidden";
+          }
+        });
+
+        animateTextIn(nextIdx);
+      });
     };
 
     return () => {
@@ -202,26 +183,27 @@ export default function ProjectInfoSlide({ slides }: ProjectInfoSlideProps) {
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 w-full h-full overflow-hidden bg-[#131313] project-info-master z-[20] touch-none select-none"
+      className="absolute inset-0 w-full h-full overflow-y-auto lg:overflow-hidden bg-[#131313] project-info-master z-[20]"
     >
-      <div className="w-full h-full flex flex-col lg:grid lg:grid-cols-2">
+      <div className="w-full min-h-full flex flex-col lg:grid lg:grid-cols-2">
         {/* Text Column */}
-        <div className="relative w-full h-[55%] lg:h-full order-1 lg:order-2 bg-[#EFECE6] !p-6 sm:p-12 md:!p-16 lg:!p-20 flex flex-col justify-center z-[60] text-[#131313]">
-          <div className="relative w-full h-full flex flex-col justify-center">
+        <div className="relative w-full h-auto min-h-[55vh] lg:h-full order-1 lg:order-2 bg-[#EFECE6] !p-6 md:!p-16 lg:!p-20 flex flex-col justify-center z-[60] text-[#131313]">
+          <div className="relative w-full h-full flex flex-col justify-center  md:pt-20 md:pb-8">
             {slides.map((slide, index) => (
               <div
                 key={`info-text-${index}`}
-                className={`info-text-block slide-text-${index} absolute inset-0 flex flex-col justify-center gap-3 sm:gap-4 md:gap-6`}
+                className={`info-text-block slide-text-${index} absolute inset-0 flex flex-col justify-center  !gap-4 md:!gap-8`}
                 style={{
                   opacity: index === 0 ? 1 : 0,
                   pointerEvents: index === 0 ? "auto" : "none",
                   visibility: index === 0 ? "visible" : "hidden",
+                  transition: "opacity 0.4s ease, visibility 0.4s",
                 }}
               >
-                <h2 className="text-[#242A27] font-display split-text-target text-xl sm:text-2xl md:text-4xl lg:text-5xl font-light">
+                <h2 className="text-[#242A27] font-display split-text-target text-2xl sm:text-3xl md:text-5xl font-light">
                   {slide.title}
                 </h2>
-                <div className="max-w-md pt-1 md:pt-0">
+                <div className="max-w-md pt-2 md:pt-0 pb-0 md:pb-12">
                   <p className="text-xs sm:text-sm md:text-base leading-relaxed text-[#242A27] font-normal split-text-target">
                     {slide.description}
                   </p>
@@ -232,7 +214,7 @@ export default function ProjectInfoSlide({ slides }: ProjectInfoSlideProps) {
         </div>
 
         {/* Image Layer Column */}
-        <div className="relative w-full h-[45%] lg:h-full order-2 lg:order-1 overflow-hidden bg-[#1e1e1e]">
+        <div className="relative w-full h-[45vh] lg:h-full order-2 lg:order-1 overflow-hidden bg-[#1e1e1e]">
           {slides.map((slide, index) => (
             <div
               key={`info-img-layer-${index}`}
