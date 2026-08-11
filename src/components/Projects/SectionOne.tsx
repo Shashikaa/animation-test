@@ -4,8 +4,8 @@ import Image from "next/image";
 
 export default function SectionOne() {
   return (
-    <section className="w-full min-h-[100dvh] h-auto md:h-auto bg-[#F4EEDF] py-12 md:py-32 lg:py-48 px-6 md:px-12 lg:px-20 text-[#111] flex items-center">
-      <div className=" w-full h-full md:h-auto flex flex-col justify-start items-stretch section-container">
+    <section className="w-full min-h-[100svh] h-auto md:h-auto bg-[#F4EEDF] py-12 md:py-32 lg:py-48 px-6 md:px-12 lg:px-20 text-[#111] flex items-center">
+      <div className="w-full h-full md:h-auto flex flex-col justify-start items-stretch section-container">
         
         {/* Row 1: Right-Aligned Title */}
         <div className="w-full flex justify-end !mb-12 lg:!mb-8">
@@ -26,7 +26,7 @@ export default function SectionOne() {
 
         {/* Row 3: Centered Image Container */}
         <div className="w-full flex justify-center items-center">
-          <div className="relative w-full h-[45vh] md:h-auto md:aspect-[4/3] max-h-[650px] overflow-hidden ">
+          <div className="relative w-full h-[45svh] md:h-auto md:aspect-[4/3] max-h-[650px] overflow-hidden">
             
             <div className="absolute inset-0 w-full h-full overflow-hidden">
               <Image
