@@ -142,7 +142,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
     <div ref={containerRef}>
       {/* ── DESKTOP LAYOUT ── */}
       <section
-        className="s2-desktop-section hidden md:block w-full min-h-screen relative overflow-hidden z-30"
+        className="s2-desktop-section hidden md:block w-full min-h-[100svh] relative overflow-hidden z-30"
         style={{ pointerEvents: "auto" }}
       >
         {PROJECTS.map((project, i) => (
@@ -248,7 +248,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
 
       {/* ── MOBILE LAYOUT ── */}
       <section
-        className="s3-mobile-section block md:hidden w-full min-h-screen relative overflow-hidden z-30"
+        className="s3-mobile-section block md:hidden w-full min-h-[100svh] relative overflow-hidden z-30"
         style={{ pointerEvents: "auto" }}
       >
         {PROJECTS.map((project, i) => (
