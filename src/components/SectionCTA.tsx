@@ -79,7 +79,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
 
       {/* Mobile Layout - Vertically Centered (Original Text Alignments Intact) */}
       <div
-        className="flex lg:hidden cta-inner-mobile h-[100dvh] w-full overflow-y-auto overscroll-contain !py-12"
+        className="flex lg:hidden cta-inner-mobile h-full w-full overflow-y-auto overscroll-contain !py-12"
         onTouchMove={(e) => {
           // Allow internal scrolling without bleeding into GSAP page scroll trigger when at boundaries
           const target = e.currentTarget;
