@@ -123,8 +123,8 @@ body.preloading {
 }
 
 /* Hard pin container on load while preloading to prevent hero movement */
-html.preloading .about-pin,
-body.preloading .about-pin {
+html.preloading .about-pin, .contact-pin-master, .pin-all-single-project, .pin-all-projects, .services-hero-master, .services-pin-master
+body.preloading .about-pin, .contact-pin-master, .pin-all-single-project, .pin-all-projects, .services-hero-master, .services-pin-master {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
