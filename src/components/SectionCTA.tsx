@@ -9,7 +9,7 @@ type SectionCTAProps = {
 
 export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
   return (
-    <section className="about-section-cta section-cta min-h-screen lg:h-full w-full relative">
+    <section className="about-section-cta section-cta h-[100dvh] w-full relative overflow-hidden">
       {/* Background Canvas & Fallback Image */}
       <div className="absolute inset-0 z-[1] pointer-events-none w-full h-full">
         <div className="hidden lg:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
@@ -34,7 +34,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
           alignItems: "center",
           justifyContent: "space-between",
           gap: 44,
-          minHeight: "100vh",
+          height: "100%",
           maxWidth: 1440,
           padding: "40px 48px",
           margin: "0 auto",
@@ -77,9 +77,20 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
         </div>
       </div>
 
-      {/* Mobile Layout */}
+      {/* Mobile Layout - Vertically Centered (Original Text Alignments Intact) */}
       <div
-        className="flex lg:hidden cta-inner-mobile min-h-screen h-auto !pt-12 !pb-16"
+        className="flex lg:hidden cta-inner-mobile h-[100dvh] w-full overflow-y-auto overscroll-contain !py-12"
+        onTouchMove={(e) => {
+          // Allow internal scrolling without bleeding into GSAP page scroll trigger when at boundaries
+          const target = e.currentTarget;
+          const isAtTop = target.scrollTop === 0;
+          const isAtBottom =
+            Math.abs(target.scrollHeight - target.clientHeight - target.scrollTop) < 2;
+
+          if (!isAtTop && !isAtBottom) {
+            e.stopPropagation();
+          }
+        }}
         style={{
           position: "relative",
           zIndex: 10,
@@ -89,6 +100,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
           paddingLeft: "20px",
           paddingRight: "20px",
           margin: 0,
+          WebkitOverflowScrolling: "touch",
         }}
       >
         <h2
@@ -96,7 +108,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
           style={{
             color: "#F4EEDF",
             margin: 0,
-            marginBottom: 28,
+            marginBottom: 20,
           }}
         >
           Ready to Build Your Dream
@@ -107,7 +119,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
           style={{
             color: "#F4EEDF",
             margin: 0,
-            marginBottom: 28,
+            marginBottom: 20,
           }}
         >
           Let&apos;s bring your vision to life with a custom-designed pool

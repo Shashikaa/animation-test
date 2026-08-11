@@ -15,12 +15,9 @@ import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Standardized Metrics aligned with ContactMobile
 const PX_PER_MAIN_PANEL = 850;
 const PX_PER_SUB_STEP = 450;
 const PAUSE_PX = 150;
-
-// Baseline viewport height these px values were designed against.
 const BASELINE_VH = 800;
 
 export default function AboutMobile() {
@@ -28,19 +25,16 @@ export default function AboutMobile() {
   const scopeRef = useRef<HTMLDivElement>(null);
   const lastSec5Idx = useRef<number>(-1);
 
-  // Single unified utility hook configured for Mobile
   const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      // Pre-set all panel initial positions & visibilities upfront
       gsap.set(".about-hero-panel-left", { yPercent: 0, force3D: true });
       gsap.set(".about-section-one", { yPercent: 100, visibility: "visible", force3D: true });
       gsap.set(".about-section-two", { yPercent: 100, visibility: "visible", force3D: true });
       gsap.set(".about-section-three", { yPercent: 100, visibility: "visible", force3D: true });
       gsap.set(".about-section-four", { yPercent: 100, visibility: "visible", force3D: true });
 
-      // Section 5 and CTA setups
       gsap.set(".about-section-five", { yPercent: 100, opacity: 1, visibility: "visible", force3D: true });
       gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0, force3D: true });
 
@@ -55,7 +49,6 @@ export default function AboutMobile() {
     return () => ctx.revert();
   }, []);
 
-  // Master Section Transition Scroll Timeline
   useEffect(() => {
     if (!introDone) return;
 
@@ -64,7 +57,6 @@ export default function AboutMobile() {
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ ignoreMobileResize: true });
 
-      // Disable normalizeScroll on Android to avoid touch-event thread blocking
       if (!isAndroid) {
         ScrollTrigger.normalizeScroll({
           allowNestedScroll: true,
@@ -72,17 +64,15 @@ export default function AboutMobile() {
         });
       }
 
-      // Standardized transition metrics matching Hero -> Sec1 smoothness
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.15;
       const SEC5_CARDS_HOLD = 1.2;
-      const UNIFIED_EASE = "power1.inOut"; // Silky ease for scrub control
+      const UNIFIED_EASE = "power1.inOut";
 
       const MAIN_PANELS_COUNT = 7;
       const SUB_STEPS_COUNT = 3;
       const PAUSES_COUNT = 7;
 
-      // Scale scroll track relative to viewport height
       const vh = window.innerHeight || BASELINE_VH;
       const scaleFactor = vh / BASELINE_VH;
 
@@ -157,7 +147,7 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // --- TRANSITION 4: Section Three -> Section Four (Matched with all other transitions) ---
+      // --- TRANSITION 4: Section Three -> Section Four ---
       tl.to(".about-section-four", { yPercent: 0, duration: ACTION })
         .to(".about-section-three", { yPercent: -15, duration: ACTION }, "<");
 
