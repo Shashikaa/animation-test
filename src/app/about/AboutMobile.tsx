@@ -15,9 +15,14 @@ import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Standardized Metrics aligned with ContactMobile
 const PX_PER_MAIN_PANEL = 850;
 const PX_PER_SUB_STEP = 450;
 const PAUSE_PX = 150;
+
+// Baseline viewport height these px values were designed against.
+// Used to scale the scroll track so tall Android phones don't feel
+// "faster" than shorter iPhones.
 const BASELINE_VH = 800;
 
 export default function AboutMobile() {
@@ -25,6 +30,7 @@ export default function AboutMobile() {
   const scopeRef = useRef<HTMLDivElement>(null);
   const lastSec5Idx = useRef<number>(-1);
 
+  // Single unified utility hook configured for Mobile
   const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
@@ -40,6 +46,7 @@ export default function AboutMobile() {
 
       gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0 });
 
+      // Ensure opacity is set to 1 so SectionFive is visible when it slides up
       gsap.set(".about-section-five", { yPercent: 100, opacity: 1, visibility: "hidden" });
       gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0 });
 
@@ -48,13 +55,13 @@ export default function AboutMobile() {
         [".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"],
         { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
       );
-
-      gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 160, visibility: "hidden" });
+      gsap.set(".about-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden" });
     }, scopeRef);
 
     return () => ctx.revert();
   }, []);
 
+  // Master Section Transition Scroll Timeline
   useEffect(() => {
     if (!introDone) return;
 
@@ -62,8 +69,14 @@ export default function AboutMobile() {
       const ua = navigator.userAgent;
       const isIOS = /iPhone|iPad|iPod/i.test(ua);
 
+      // Prevent Android's dynamic toolbar / keyboard show-hide from
+      // forcing a ScrollTrigger.refresh() mid-scroll, which causes jumps.
       ScrollTrigger.config({ ignoreMobileResize: true });
 
+      // normalizeScroll exists to fix iOS Safari's address-bar resize
+      // jank. Applying it on Android replaces native (smooth) fling
+      // scrolling with GSAP's proxy scroller, which feels faster/jerkier
+      // on Android's touch deltas. So: iOS only.
       if (isIOS) {
         ScrollTrigger.normalizeScroll(true);
       }
@@ -76,6 +89,9 @@ export default function AboutMobile() {
       const SUB_STEPS_COUNT = 3;
       const PAUSES_COUNT = 7;
 
+      // Scale the scroll track relative to the device's viewport height so
+      // taller Android screens don't compress the same content into a
+      // shorter effective scroll distance (which feels "faster").
       const vh = window.innerHeight || BASELINE_VH;
       const scaleFactor = vh / BASELINE_VH;
 
@@ -195,6 +211,7 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: SEC5_CARDS_HOLD });
 
+      // SLOW DOWN SECTION CTA ENTRANCE TO MATCH STANDARD VIEWPORT SPEED
       tl.addLabel("ctaStart", ">")
         .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
         .fromTo(
@@ -202,8 +219,8 @@ export default function AboutMobile() {
           { yPercent: 100 },
           {
             yPercent: 0,
-            duration: ACTION * 1.35,
-            ease: "power1.out",
+            duration: ACTION * 1.35, // Extended duration compensates for extra height
+            ease: "power1.out", // Softer deceleration prevents aggressive middle acceleration
           },
           "ctaStart"
         )
@@ -282,25 +299,12 @@ export default function AboutMobile() {
 
         <div
           className="about-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] z-[150]"
-          style={{ 
-            pointerEvents: "auto", 
-            visibility: "hidden",
-            transform: "translate3d(0, 0, 0)",
-            WebkitTransform: "translate3d(0, 0, 0)",
-          }}
+          style={{ pointerEvents: "auto", visibility: "hidden" }}
         >
           <SectionCTA />
         </div>
 
-        <div 
-          className="about-footer-wrap gpu-accelerated absolute left-0 bottom-0 w-full z-[160]" 
-          style={{ 
-            pointerEvents: "auto", 
-            visibility: "hidden",
-            transform: "translate3d(0, 0, 0)",
-            WebkitTransform: "translate3d(0, 0, 0)",
-          }}
-        >
+        <div className="about-footer-wrap gpu-accelerated absolute left-0 bottom-0 w-full z-[151]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
           <Footer />
         </div>
       </div>
