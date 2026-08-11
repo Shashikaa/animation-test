@@ -5,20 +5,21 @@ import gsap from "gsap";
 
 const slides = [
   {
-    stat: "25+ ",
+    stat: "25+ years ",
     label: "Industry Experience",
     desc: "Decades of knowledge in pool design and construction.",
+  },
+    {
+    stat: "100+",
+    label: "Completed Projects",
+    desc: "Stunning pools crafted for homes and businesses.",
   },
   {
     stat: "100%",
     label: "Client Satisfaction",
     desc: "Trusted for quality, service, and seamless execution.",
   },
-  {
-    stat: "100+",
-    label: "Completed Projects",
-    desc: "Stunning pools crafted for homes and businesses.",
-  },
+
 ];
 
 const TEXT_DURATION = 0.55;

@@ -282,7 +282,7 @@ export default function Footer() {
           {/* Mobile Split Layout */}
           <div className="mobile-only-row-4" style={{ display: "none", justifyContent: "space-between", alignItems: "flex-start", width: "100%" }}>
             <div className="!text-[14px] md:!text-[16px]" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <BottomLink href="/terms">Terms of Use</BottomLink>
+              <BottomLink href="/terms-of-use">Terms of Use</BottomLink>
               <BottomLink href="/privacy-policy">Privacy Policy</BottomLink>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12, textAlign: "right"}}>
@@ -301,7 +301,7 @@ export default function Footer() {
           </span>
 
           <div className="desktop-only-row-4 !text-[14px] md:!text-[16px]" style={{ display: "flex", gap: 24, alignItems: "center" }}>
-            <BottomLink href="/terms">Terms of Use</BottomLink>
+            <BottomLink href="/terms-of-use">Terms of Use</BottomLink>
             <BottomLink href="/privacy-policy">Privacy Policy</BottomLink>
           </div>
 

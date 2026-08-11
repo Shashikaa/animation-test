@@ -62,7 +62,7 @@ export default function SectionTwo() {
         />
       </div>
 
-      {/* MOBILE BACKGROUND LAYER 2 - Opacity Transition to prevent image squishing */}
+      {/* MOBILE BACKGROUND LAYER 2 */}
       <div
         className="s2-mob-clip-bg-1 lg:hidden absolute inset-0 z-[1] overflow-hidden pointer-events-none"
         style={{
@@ -113,7 +113,7 @@ export default function SectionTwo() {
       {/* CONTENT BLOCK OVERLAY (FIRST FRAME TEXT) */}
       <div className="section-container absolute inset-0 z-10 h-full flex flex-col justify-end pointer-events-none">
         <div className="s2-body flex flex-col items-end text-right gap-2 lg:gap-3 p-4 md:p-8 !mb-6">
-          <p className="reveal-text text-[#F4EEDF] font-body text-sm md:text-base leading-relaxed text-right w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px]">
+          <p className="text-[#F4EEDF] font-body text-sm md:text-base leading-relaxed text-right w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px]">
             From renovations to new builds, we design and construct pools that combine style, functionality, and durability.
           </p>
         </div>
@@ -124,10 +124,10 @@ export default function SectionTwo() {
         {/* LEFT COLUMN: INITIAL TITLE */}
         <div className="relative h-full overflow-hidden !pt-30 md:!pt-66 lg:!pt-36">
           <div className="!mb-33 md:!mb-80 lg:!mb-0 h-[100px] !ml-[20px] md:!ml-[30px] lg:!ml-[65px]">
-            <h2 className="s2-title-main font-display text-[#F4EEDF] !font-[100] text-3xl md:text-5xl reveal-text !mb-2">
+            <h2 className="s2-title-main font-display text-[#F4EEDF] !font-[100] text-3xl md:text-5xl !mb-2">
               Premium Pool 
             </h2>
-            <p className="s2-title-sub font-body text-[#F4EEDF] text-sm md:text-base reveal-text">
+            <p className="s2-title-sub font-body text-[#F4EEDF] text-sm md:text-base">
               Solution for Every Need
             </p>
           </div>

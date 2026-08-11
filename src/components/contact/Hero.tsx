@@ -60,9 +60,7 @@ export default function ContactHero({
               Dream Pool to Life
             </h1>
             <p className="hero-desc text-[#F4EEDF] max-w-[434px]">
-              Have a question or ready to start your project? Get in touch with
-              our friendly team. We’re here to help every step of the way, from
-              planning to completion.
+Have a question or are you ready to start your project? Get in touch with our friendly team. We’re here to help every step of the way, from planning to completion.
             </p>
           </div>
         </div>

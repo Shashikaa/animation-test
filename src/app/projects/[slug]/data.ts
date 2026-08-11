@@ -13,7 +13,7 @@ export interface FullServiceData {
 }
 
 export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
-  "kooyong": {
+  "kooyong-rd-toorak": {
     title: "Kooyong Rd Toorak",
     category: "Custom Concrete Pool",
     description: "A refined architectural pool designed with privacy, structure, and timeless detail in mind. Set within a premium Toorak residence, this project combines a raised pool form, dark mosaic finishes, soft stone surfaces, and layered landscaping to create a calm, private outdoor retreat.",
@@ -53,7 +53,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       }
     ]
   },
-  "dennett": {
+  "dennett-st-carrum": {
     title: "Dennett St Carrum",
     category: "Family Sanctuary",
     description: "Designed for relaxation and play, this expansive backyard oasis balances child-friendly functionality with contemporary aesthetics.",
@@ -93,7 +93,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       }
     ]
   },
-  "murray": {
+  "murray-st-prahran": {
     title: "Murray St Prahran",
     category: "Architectural Plunge",
     description: "Maximising urban space, this compact plunge pool features high-end custom tilework and space-efficient engineering.",
@@ -133,7 +133,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       }
     ]
   },
-  "reay": {
+  "reay-rd-mooroolbark": {
     title: "Reay Rd Mooroolbark",
     category: "Residential Oasis",
     description: "Framed by lush natural landscaping, this resort-style pool delivers a tranquil retreat right at home.",
@@ -173,7 +173,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       }
     ]
   },
-  "como": {
+  "the-como-toorak": {
     title: "‘The Como’ Toorak",
     category: "Luxury Showcase",
     description: "An elegant centerpiece featuring state-of-the-art water filtration, ambient lighting, and bespoke architectural surrounds.",

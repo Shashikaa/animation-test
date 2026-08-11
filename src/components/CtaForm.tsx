@@ -29,7 +29,6 @@ export default function CtaForm({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [resetKey, setResetKey] = useState(0);
 
@@ -40,7 +39,6 @@ export default function CtaForm({
     e.preventDefault();
     setLoading(true);
     setGlobalError(null);
-    setSuccessMessage(null);
     setFieldErrors({});
 
     const formElement = e.currentTarget;
@@ -107,7 +105,6 @@ export default function CtaForm({
       const result = await response.json();
 
       if (response.ok && result.success) {
-        setSuccessMessage("Thank you! Your submission has been received.");
         formElement.reset();
         setResetKey((prev) => prev + 1);
         router.push("/thank-you");
@@ -231,25 +228,6 @@ export default function CtaForm({
             }}
           >
             {globalError}
-          </div>
-        )}
-
-        {successMessage && (
-          <div
-            role="status"
-            style={{
-              marginTop: 12,
-              padding: "10px 14px",
-              borderRadius: "4px",
-              background: "rgba(129, 230, 217, 0.15)",
-              border: "1px solid #81e6d9",
-              color: "#81e6d9",
-              fontSize: 13,
-              fontFamily: "inherit",
-              lineHeight: "1.4",
-            }}
-          >
-            {successMessage}
           </div>
         )}
       </div>

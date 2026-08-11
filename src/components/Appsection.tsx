@@ -53,7 +53,7 @@ Pool Care + keeps you informed and involved from start to finish. Live updates, 
             Pool Care +
           </span>
 
-          <p className="font-body text-[#F4EEDF] text-sm md:text-base leading-relaxed self-start text-left !mb-12  max-w-[360px]">
+          <p className="font-body text-[#F4EEDF] text-sm md:text-base leading-relaxed self-start text-left !mb-12  ">
 Pool Care + keeps you informed and involved from start to finish. Live updates, progress tracking and everything you need, all in one place.          </p>
 
           <a

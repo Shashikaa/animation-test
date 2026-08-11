@@ -42,7 +42,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
         {
           label: 'Designed Around You',
           type: 'paragraph',
-          content: 'Every layout footprint is sculpted around your specific landscape contours, optimizing spatial workflow and view corridors to fit your family lifestyle perfectly.'
+          content: 'Every layout footprint is sculpted around your specific landscape contours, optimising spatial workflow and view corridors to fit your family lifestyle perfectly.'
         },
         {
           label: 'Built with Precision & Quality',

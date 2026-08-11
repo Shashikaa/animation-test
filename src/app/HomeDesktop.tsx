@@ -199,29 +199,31 @@ export default function HomeDesktop() {
         executeDesktopSplitting(".hero-right-text");
         executeDesktopSplitting(".hero-secondary-para");
 
-        useTextReveal(scopeRef, ".section-2 .reveal-text");
+        // Execute text reveal setup only for other animated sections
         useTextReveal(scopeRef, ".section-8 .reveal-text");
-        useTextReveal(scopeRef, ".section-10 .reveal-text");
         useTextReveal(scopeRef, ".section-7 .reveal-text");
         useTextReveal(scopeRef, ".section-appsec .reveal-text");
 
         gsap.set([
-          ".section-2 .reveal-text",
           ".section-8 .reveal-text",
-          ".section-10 .reveal-text",
           ".section-7 .reveal-text",
           ".section-appsec .reveal-text"
         ], { visibility: "visible", opacity: 1 });
 
-        const allTextInners = [
-          ".section-2 .gs-line-inner, .section-2 .custom-line-inner, .section-2 .reveal-text > *",
+        // Ensure static text in Section 2 and 10 are completely visible initially
+        gsap.set([".s2-title-main", ".s2-title-sub", ".s2-body-text", ".s10-title", ".s10-title-sub", ".s10-para-top"], {
+          opacity: 1,
+          y: 0,
+          visibility: "visible"
+        });
+
+        const animatedTextInners = [
           ".section-8 .gs-line-inner, .section-8 .custom-line-inner, .section-8 .reveal-text > *",
-          ".section-10 .gs-line-inner, .section-10 .custom-line-inner, .section-10 .reveal-text > *",
           ".section-7 .gs-line-inner, .section-7 .custom-line-inner, .section-7 .reveal-text > *",
           ".section-appsec .gs-line-inner, .section-appsec .custom-line-inner, .section-appsec .reveal-text > *"
         ].join(",");
         
-        gsap.set(allTextInners, { y: 45, opacity: 0, immediateRender: true });
+        gsap.set(animatedTextInners, { y: 45, opacity: 0, immediateRender: true });
 
         const vv = typeof visualViewport !== "undefined" ? visualViewport : null;
         if (vv) {
@@ -261,28 +263,7 @@ export default function HomeDesktop() {
           }
         });
 
-        const addPlayOnceTextReveal = (labelName: string, timeOffset: number, selector: string) => {
-          const absoluteTime = tl.labels[labelName] + timeOffset;
-
-          tl.call(() => {
-            if (!revealedElements.has(selector)) {
-              revealedElements.add(selector);
-
-              gsap.to(selector, {
-                y: 0,
-                opacity: 1,
-                stagger: 0.04,
-                duration: 0.7,
-                ease: "power2.out",
-                overwrite: "auto"
-              });
-            }
-          }, [], absoluteTime);
-        };
-
-        const s2TextSelector = ".section-2 .gs-line-inner, .section-2 .custom-line-inner, .section-2 .reveal-text > *";
         const s8TextSelector = ".section-8 .gs-line-inner, .section-8 .custom-line-inner, .section-8 .reveal-text > *";
-        const s10TextSelector = ".section-10 .gs-line-inner, .section-10 .custom-line-inner, .section-10 .reveal-text > *";
         const s7TextSelector = ".section-7 .gs-line-inner, .section-7 .custom-line-inner, .section-7 .reveal-text > *";
         const appSecTextSelector = ".section-appsec .gs-line-inner, .section-appsec .custom-line-inner, .section-appsec .reveal-text > *";
 
@@ -351,14 +332,17 @@ export default function HomeDesktop() {
             "sec2Arrived"
           );
 
-        addPlayOnceTextReveal("sec2Arrived", 0.9, s2TextSelector);
-
-        // ── SECTION 2 INNER ANIMATIONS ──
+        // ── SECTION 2 INNER ANIMATIONS (Fade Out Initial Text on Scroll) ──
         tl.addLabel("s2InnerAnimation", `sec2Arrived+=${PANEL_ACTION}`)
           .set(".hero", { display: "none" }, "s2InnerAnimation")
 
-          // Fade out Section 2 text (overwrite: "auto" safely overrides any active reveal tween)
-          .to(s2TextSelector, { opacity: 0, y: -40, duration: PANEL_ACTION * 0.5, ease: "power1.in", overwrite: "auto" }, "s2InnerAnimation")
+          // Section 2 text fades out as inner scroll begins
+          .to([".s2-title-main", ".s2-title-sub", ".s2-body-text"], {
+            opacity: 0,
+            y: -40,
+            duration: PANEL_ACTION * 0.5,
+            ease: "power1.in"
+          }, "s2InnerAnimation")
 
           .addLabel("s2TitleFaded", `s2InnerAnimation+=${PANEL_ACTION * 0.5}`)
           .fromTo(".s2-right-img-frame", 
@@ -392,7 +376,19 @@ export default function HomeDesktop() {
           .to(".s8-bg-img", { yPercent: 0, duration: PANEL_ACTION, ease: "power2.inOut" }, "sec8Start")
           .set(".section-2", { display: "none" }, `sec8Start+=${PANEL_ACTION}`);
 
-        addPlayOnceTextReveal("sec8Start", 0.9, s8TextSelector);
+        tl.call(() => {
+          if (!revealedElements.has(s8TextSelector)) {
+            revealedElements.add(s8TextSelector);
+            gsap.to(s8TextSelector, {
+              y: 0,
+              opacity: 1,
+              stagger: 0.04,
+              duration: 0.7,
+              ease: "power2.out",
+              overwrite: "auto"
+            });
+          }
+        }, [], tl.labels["sec8Start"] + 0.9);
 
         tl.to({}, { duration: PAUSE_ACTION });
 
@@ -407,15 +403,16 @@ export default function HomeDesktop() {
             "sec10Start"
           )
           .set(".section-8", { display: "none" }, `sec10Start+=${PANEL_ACTION}`)
-          .set(".s10-content-wrap", { opacity: 1, yPercent: 0, y: "100vh" }, "sec10Start");
+          .set(".s10-content-wrap", { opacity: 1, yPercent: 0, y: "150vh" }, "sec10Start");
 
-        addPlayOnceTextReveal("sec10Start", 0.9, s10TextSelector);
-
-        // Section 10 Paragraph Content Slide Up
+        // Section 10 Fade Out Initial Text on Inner Scroll
         tl.addLabel("sec10TextHide", `sec10Start+=${PANEL_ACTION}`)
-
-          // Fade out Section 10 text (overwrite: "auto" safely overrides any active reveal tween)
-          .to(s10TextSelector, { opacity: 0, y: -100, duration: PANEL_ACTION * 0.5, ease: "power2.in", overwrite: "auto" }, "sec10TextHide")
+          .to([".s10-title", ".s10-title-sub", ".s10-para-top"], {
+            opacity: 0,
+            y: -100,
+            duration: PANEL_ACTION * 0.5,
+            ease: "power2.in"
+          }, "sec10TextHide")
 
           .addLabel("sec10ContentReveal", `sec10TextHide+=${PANEL_ACTION * 0.3}`)
           .fromTo(".s10-content-wrap", { opacity: 1, y: "150vh" }, { opacity: 1, y: 0, duration: PANEL_ACTION, ease: "power2.out" }, "sec10ContentReveal")
@@ -431,7 +428,19 @@ export default function HomeDesktop() {
           .to(".s10-content-wrap", { opacity: 0, y: -60, duration: PANEL_ACTION * 0.75, ease: "power2.in" }, "sec7Start")
           .set(".section-10", { display: "none" }, `sec7Start+=${PANEL_ACTION}`);
 
-        addPlayOnceTextReveal("sec7Start", 0.9, s7TextSelector);
+        tl.call(() => {
+          if (!revealedElements.has(s7TextSelector)) {
+            revealedElements.add(s7TextSelector);
+            gsap.to(s7TextSelector, {
+              y: 0,
+              opacity: 1,
+              stagger: 0.04,
+              duration: 0.7,
+              ease: "power2.out",
+              overwrite: "auto"
+            });
+          }
+        }, [], tl.labels["sec7Start"] + 0.9);
 
         tl.to({}, { duration: PAUSE_ACTION });
 
@@ -446,7 +455,19 @@ export default function HomeDesktop() {
           .to(".appsec-phone-wrapper", { yPercent: 0, duration: PANEL_ACTION * 0.8, ease: "power2.out" }, `appSecStart+=${PANEL_ACTION * 0.1}`)
           .set(".section-7", { display: "none" }, `appSecStart+=${PANEL_ACTION}`);
 
-        addPlayOnceTextReveal("appSecStart", 0.9, appSecTextSelector);
+        tl.call(() => {
+          if (!revealedElements.has(appSecTextSelector)) {
+            revealedElements.add(appSecTextSelector);
+            gsap.to(appSecTextSelector, {
+              y: 0,
+              opacity: 1,
+              stagger: 0.04,
+              duration: 0.7,
+              ease: "power2.out",
+              overwrite: "auto"
+            });
+          }
+        }, [], tl.labels["appSecStart"] + 0.9);
 
         tl.to({}, { duration: PAUSE_ACTION });
 
@@ -553,9 +574,7 @@ export default function HomeDesktop() {
         restoreTextReveal(
           scopeRef.current,
           [
-            ".section-2 .reveal-text",
             ".section-8 .reveal-text",
-            ".section-10 .reveal-text",
             ".section-7 .reveal-text",
             ".section-appsec .reveal-text",
             ".s9-para-desktop", ".s9-para-mobile"

@@ -27,7 +27,7 @@ export default function Appsection() {
           </div>
 
           <div className="hidden lg:flex flex-col items-center w-full gap-6">
-            <p className="font-body text-[#F4EEDF] text-sm md:text-base max-w-[360px] self-start">
+            <p className="font-body text-[#F4EEDF] text-sm md:text-base  self-start">
               Pool Care+ keeps you informed and involved from start to finish. Track progress, receive live updates, and follow each stage of your pool project — all in one place.
             </p>
           </div>

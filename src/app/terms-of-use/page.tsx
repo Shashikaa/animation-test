@@ -114,7 +114,7 @@ export default function TermsPage() {
             <div className="w-full lg:w-1/2 flex flex-col justify-between h-auto lg:h-full">
               <div>
                 <h1 className="font-display text-[#F4EEDF] text-3xl sm:text-4xl lg:text-6xl leading-tight select-none">
-                  Terms
+                  Terms of Use
                 </h1>
                 <p className="font-body text-[#F4EEDF] !mt-4 lg:!mt-6 max-w-md text-xs sm:text-base leading-relaxed">
                   These Terms of Use detail the terms, conditions, and service agreements governing our interactions with clients, website visitors, and project partners. Here you can find clear information about engagement rules, client obligations, intellectual property rights, and legal responsibilities.
