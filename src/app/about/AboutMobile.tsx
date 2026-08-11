@@ -10,12 +10,12 @@ import SectionCTA from "@/src/components/SectionCTA";
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Observer } from "gsap/Observer";
 import Footer from "@/src/components/Footer";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
-gsap.registerPlugin(ScrollTrigger, Observer);
+gsap.registerPlugin(ScrollTrigger);
 
+// Standardized Metrics aligned with ContactMobile
 const PX_PER_MAIN_PANEL = 850;
 const PX_PER_SUB_STEP = 450;
 const PAUSE_PX = 150; 
@@ -25,6 +25,7 @@ export default function AboutMobile() {
   const scopeRef = useRef<HTMLDivElement>(null);
   const lastSec5Idx = useRef<number>(-1);
 
+  // Single unified utility hook configured for Mobile
   const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
@@ -40,6 +41,7 @@ export default function AboutMobile() {
 
       gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0 });
 
+      // Ensure opacity is set to 1 so SectionFive is visible when it slides up
       gsap.set(".about-section-five", { yPercent: 100, opacity: 1, visibility: "hidden" });
       gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0 });
 
@@ -54,10 +56,16 @@ export default function AboutMobile() {
     return () => ctx.revert();
   }, []);
 
+  // Master Section Transition Scroll Timeline (Identical lifecycle structure to ContactMobile)
   useEffect(() => {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
+      const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isTouchDevice) {
+        ScrollTrigger.normalizeScroll(true);
+      }
+
       const ACTION = 1.4; 
       const DEAD_SCROLL = 0.2; 
       const SEC5_CARDS_HOLD = 1.2;
@@ -66,7 +74,6 @@ export default function AboutMobile() {
       const SUB_STEPS_COUNT = 3; 
       const PAUSES_COUNT = 7;    
 
-      // Original scroll track distance preserved
       const DYNAMIC_SCROLL_TRACK = 
         (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
         (SUB_STEPS_COUNT * PX_PER_SUB_STEP) + 
@@ -87,9 +94,9 @@ export default function AboutMobile() {
           trigger: ".about-pin",
           start: "top top",
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
-          scrub: 0.5,
           pin: true,
           pinType: "fixed",
+          scrub: 0.5,
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -128,22 +135,6 @@ export default function AboutMobile() {
             }
           },
         },
-      });
-
-      // OBSERVER TOUCH DAMPENING:
-      // Prevents fast finger swipes from skipping panels without changing element heights or unlocking address bar
-      const MAX_TOUCH_DELTA = 35; // Maximum pixel scroll distance allowed per touch event tick
-
-      const touchObserver = Observer.create({
-        type: "touch",
-        wheelSpeed: -1,
-        onChangeY: (self) => {
-          if (Math.abs(self.deltaY) > MAX_TOUCH_DELTA) {
-            const clampedDelta = Math.sign(self.deltaY) * MAX_TOUCH_DELTA;
-            const scrollDiff = self.deltaY - clampedDelta;
-            window.scrollBy(0, -scrollDiff);
-          }
-        }
       });
 
       tl.to(".about-section-one", { yPercent: 0, duration: ACTION, ease: "power2.inOut" })
@@ -222,13 +213,14 @@ export default function AboutMobile() {
           "footerStart"
         );
 
-      return () => {
-        touchObserver.kill();
-      };
-
     }, scopeRef);
 
-    return () => ctx.revert();
+    return () => {
+      ctx.revert();
+      if (ScrollTrigger.isTouch) {
+        ScrollTrigger.normalizeScroll(false);
+      }
+    };
   }, [introDone]);
 
   return (
