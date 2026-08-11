@@ -10,6 +10,7 @@ type SectionCTAProps = {
 export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
   return (
     <section className="about-section-cta section-cta min-h-[100dvh] h-auto w-full relative">
+      {/* Background Canvas & Fallback Image */}
       <div className="absolute inset-0 z-[1] pointer-events-none w-full h-full">
         <div className="hidden lg:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
           <LazyWaveCanvas imageSrc="/CTA.webp" preloaderDone={preloaderDone} />
@@ -24,6 +25,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
         </div>
       </div>
 
+      {/* Desktop Layout */}
       <div
         className="hidden lg:flex section-container cta-inner-desktop"
         style={{
@@ -76,8 +78,9 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
         </div>
       </div>
 
+      {/* Mobile Layout - Dynamic Content Height & Vertically Centered */}
       <div
-        className="flex lg:hidden cta-inner-mobile min-h-[100dvh] h-auto w-full !py-12 !pb-16 overscroll-contain"
+        className="flex lg:hidden cta-inner-mobile min-h-[100dvh] h-auto w-full !py-12 !pb-16"
         style={{
           position: "relative",
           zIndex: 10,

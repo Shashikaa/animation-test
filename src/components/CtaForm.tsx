@@ -123,6 +123,7 @@ export default function CtaForm({
 
   return (
     <form onSubmit={handleSubmit} className="w-full h-auto" noValidate>
+      {/* Honeypot Field */}
       <div style={{ display: "none" }} aria-hidden="true">
         <input
           type="text"
@@ -322,7 +323,6 @@ function CtaInput({
           fontFamily: "inherit",
           letterSpacing: "0.02em",
           transition: "border-color 0.25s",
-          touchAction: "manipulation",
         }}
         onFocus={(e) => {
           (e.target as HTMLInputElement).style.borderColor = error
@@ -451,7 +451,6 @@ function CtaSelect({
           userSelect: "none",
           outline: "none",
           transition: "border-color 0.25s",
-          touchAction: "manipulation",
         }}
       >
         <span style={{ flexGrow: 1 }}>{selectedValue || placeholder}</span>

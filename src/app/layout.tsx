@@ -34,15 +34,17 @@ const canelaText = localFont({
   variable: "--font-display",
   display: "swap",
 });
-
 export const metadata: Metadata = {
   title: "Grand Pools",
   description: "Crafting Custom Swimming Pools with Style, Function, and Quality.",
 };
 
+// Locks viewport scale and prevents mobile browser address bar layout jumps
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
 };
 
@@ -135,7 +137,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <HeaderWrapper />
             <NavMenuWrapper />
 
-            <main className="site-root flex flex-col flex-1 w-full overflow-x-clip min-h-[100vh]">
+            <main className="site-root flex flex-col flex-1 w-full overflow-x-hidden min-h-[100vh]">
               {children}
             </main>
           </SmoothScroll>
