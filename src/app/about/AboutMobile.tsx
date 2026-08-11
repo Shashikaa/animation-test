@@ -36,11 +36,8 @@ export default function AboutMobile() {
       gsap.set(".about-section-one", { yPercent: 100 });
       gsap.set(".about-section-two", { visibility: "hidden", yPercent: 100 });
 
-      gsap.set(".about-section-three", {
-        visibility: "hidden",
-        clipPath: "inset(100% 0% 0% 0%)",
-        WebkitClipPath: "inset(100% 0% 0% 0%)",
-      });
+      // Hardware-accelerated translate instead of clipPath for smooth Android renders
+      gsap.set(".about-section-three", { visibility: "hidden", yPercent: 100 });
 
       gsap.set(".about-section-four", { visibility: "hidden", yPercent: 0 });
 
@@ -63,14 +60,18 @@ export default function AboutMobile() {
   useEffect(() => {
     if (!introDone) return;
 
+    const isAndroid = /Android/i.test(navigator.userAgent);
+
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ ignoreMobileResize: true });
 
-      // Universal normalizeScroll configuration to prevent native mobile address bar toggle
-      ScrollTrigger.normalizeScroll({
-        allowNestedScroll: true,
-        lockAxis: true,
-      });
+      // Disable normalizeScroll on Android to avoid touch-event thread blocking
+      if (!isAndroid) {
+        ScrollTrigger.normalizeScroll({
+          allowNestedScroll: true,
+          lockAxis: true,
+        });
+      }
 
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2;
@@ -107,12 +108,12 @@ export default function AboutMobile() {
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: 0.8, // Smooth scrub to eliminate 120Hz/60Hz touch jitter
+          scrub: isAndroid ? 0.2 : 0.8, // Shorter scrub on Android reduces GPU frame workload
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
           invalidateOnRefresh: false,
-          onUpdate: (self) => {
+          onUpdate: () => {
             const sec5Time = tl.labels["sec5FullyRevealed"];
             const ctaTime = tl.labels["ctaStart"];
 
@@ -132,17 +133,6 @@ export default function AboutMobile() {
               } else if (currentTime < sec5Time) {
                 triggerSec5Hook(0);
               }
-            } else {
-              const totalDuration = tl.duration();
-              if (totalDuration > 0) {
-                const progress = self.progress;
-                if (progress > 0.55 && progress < 0.75) {
-                  const localProg = (progress - 0.55) / 0.2;
-                  if (localProg < 0.33) triggerSec5Hook(0);
-                  else if (localProg < 0.66) triggerSec5Hook(1);
-                  else triggerSec5Hook(2);
-                }
-              }
             }
           },
         },
@@ -158,12 +148,9 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
+      // Clean yPercent translate replacement for clipPath
       tl.set(".about-section-three", { visibility: "visible" })
-        .fromTo(
-          ".about-section-three",
-          { clipPath: "inset(100% 0% 0% 0%)", WebkitClipPath: "inset(100% 0% 0% 0%)" },
-          { clipPath: "inset(0% 0% 0% 0%)", WebkitClipPath: "inset(0% 0% 0% 0%)", duration: ACTION, ease: "power2.inOut" }
-        );
+        .to(".about-section-three", { yPercent: 0, duration: ACTION, ease: "power2.inOut" });
 
       tl.to({}, { duration: DEAD_SCROLL });
 
@@ -200,7 +187,6 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: SEC5_CARDS_HOLD });
 
-      // SLOW DOWN SECTION CTA ENTRANCE TO MATCH STANDARD VIEWPORT SPEED
       tl.addLabel("ctaStart", ">")
         .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
         .fromTo(
@@ -237,7 +223,9 @@ export default function AboutMobile() {
 
     return () => {
       ctx.revert();
-      ScrollTrigger.normalizeScroll(false);
+      if (!isAndroid) {
+        ScrollTrigger.normalizeScroll(false);
+      }
     };
   }, [introDone]);
 
@@ -259,14 +247,7 @@ export default function AboutMobile() {
           <SectionTwo />
         </div>
 
-        <div
-          className="about-section-three gpu-accelerated absolute inset-0 w-full h-full"
-          style={{
-            zIndex: 40,
-            clipPath: "inset(100% 0% 0% 0%)",
-            WebkitClipPath: "inset(100% 0% 0% 0%)",
-          }}
-        >
+        <div className="about-section-three gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 40 }}>
           <SectionThree />
         </div>
 
