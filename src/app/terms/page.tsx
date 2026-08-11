@@ -90,7 +90,7 @@ export default function TermsPage() {
 
   return (
     <div ref={scopeRef}>
-      <main className="relative w-full bg-[#10221C] min-h-screen">
+      <main className="relative w-full bg-[#10221C] h-full">
         {/* Fixed Background Image */}
         <div
           className="hero-bg-wrapper fixed inset-0 w-full h-full z-0 pointer-events-none overflow-hidden"
