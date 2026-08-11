@@ -125,6 +125,32 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     lenis.on("scroll", handleScroll);
 
+    // Pause Lenis strictly during explicit form focus
+    const handleInputFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT"
+      ) {
+        lenis.stop();
+      }
+    };
+
+    const handleInputFocusOut = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT"
+      ) {
+        lenis.start();
+      }
+    };
+
+    window.addEventListener("focusin", handleInputFocusIn);
+    window.addEventListener("focusout", handleInputFocusOut);
+
     if (!preloaderDone) {
       lenis.stop();
     } else {
@@ -134,6 +160,8 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     onScrollReady?.();
 
     return () => {
+      window.removeEventListener("focusin", handleInputFocusIn);
+      window.removeEventListener("focusout", handleInputFocusOut);
       clearTimeout(scrollTimerRef.current);
       gsap.ticker.remove(tickerCallback);
       lenis.destroy();

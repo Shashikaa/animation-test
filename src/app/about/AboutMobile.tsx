@@ -29,7 +29,7 @@ export default function AboutMobile() {
 
   useLayoutEffect(() => {
     const isDesktop = window.innerWidth >= 1024;
-    if (isDesktop) return; // Skip pinned layout setup on desktop screens
+    if (isDesktop) return;
 
     const ctx = gsap.context(() => {
       gsap.set(".about-hero-panel-left", { yPercent: 0, force3D: true });
@@ -56,9 +56,48 @@ export default function AboutMobile() {
     if (!introDone) return;
 
     const isDesktop = window.innerWidth >= 1024;
-    if (isDesktop) return; // Do not run mobile pinned ScrollTrigger on desktop
+    if (isDesktop) return;
 
     const isAndroid = /Android/i.test(navigator.userAgent);
+    const scopeNode = scopeRef.current;
+
+    // --- CRITICAL FORM KEYBOARD FIX FOR GSAP & IOS SAFARI ---
+    const handleFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT"
+      ) {
+        // Temporarily disable ScrollTrigger normalization so iOS keyboard can focus naturally
+        if (!isAndroid) {
+          ScrollTrigger.normalizeScroll(false);
+        }
+      }
+    };
+
+    const handleFocusOut = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT"
+      ) {
+        // Restore ScrollTrigger normalization when user leaves the form field
+        if (!isAndroid) {
+          setTimeout(() => {
+            ScrollTrigger.normalizeScroll({
+              allowNestedScroll: true,
+              lockAxis: true,
+            });
+            ScrollTrigger.refresh();
+          }, 300);
+        }
+      }
+    };
+
+    scopeNode?.addEventListener("focusin", handleFocusIn);
+    scopeNode?.addEventListener("focusout", handleFocusOut);
 
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ ignoreMobileResize: true });
@@ -216,6 +255,8 @@ export default function AboutMobile() {
     }, scopeRef);
 
     return () => {
+      scopeNode?.removeEventListener("focusin", handleFocusIn);
+      scopeNode?.removeEventListener("focusout", handleFocusOut);
       ctx.revert();
       if (!isAndroid) {
         ScrollTrigger.normalizeScroll(false);

@@ -70,21 +70,19 @@
   padding:    0;
 }
 
-html {
-  overscroll-behavior-y: none;
-  text-size-adjust: 100%;
-  -webkit-text-size-adjust: 100%;
-}
-
 html, body {
-  width: 100%;
-  min-height: 100%;
+ 
+  background-color: #e10000 !important;
   scrollbar-gutter: stable;
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  scroll-behavior: auto !important;
+  
+  scroll-behavior: auto !important; 
+  min-height: 100%;
+
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ─── Hide scrollbar ONLY on desktop screens ─────────────────── */
@@ -107,11 +105,12 @@ body {
   font-family:  var(--font-body);
   font-size:    var(--text-body);
   line-height:  var(--leading-body);
-  overflow-x:   clip;
+  overflow-x:   hidden;
 }
 
 /* ─── Preloader Hide & Lock Rules ───────────────────────────── */
 
+/* Lock scrolling strictly on html and body while preloading */
 html.preloading,
 body.preloading {
   overflow: hidden !important;
@@ -119,6 +118,7 @@ body.preloading {
   background-color: #162D24 !important;
 }
 
+/* Strictly hide site-root while preloading to eliminate body flashing */
 html.preloading .site-root,
 body.preloading .site-root,
 html.preloading header,
@@ -128,8 +128,9 @@ body.preloading header {
   pointer-events: none !important;
 }
 
+/* Base site-root behavior once preloading is complete */
 .site-root {
-  overflow-x: clip;
+  overflow-x: hidden;
   position: relative;
   width: 100%;
   opacity: 1;
@@ -142,50 +143,33 @@ body.preloading header {
   width: 100%;
 }
 
-/* ─── Viewport Pin Wrapper Fixes ─────────────────── */
-@media screen and (max-width: 1023px) {
-  .pin-all,
-  .pin-all-home,
-  .pin-all-contact,
-  .pin-all-projects,
-  .pin-all-services,
-  .pin-all-subservices,
-  .pin-all-single-project {
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    width: 100%;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .pin-spacer {
-    min-height: 100dvh !important;
-    pointer-events: auto !important;
-  }
-
-  .pin-spacer > div {
-    height: 100dvh !important;
-    max-height: none !important;
-  }
+/* ─── Full-Height Viewport Pin Wrapper (iOS dvh Fix) ─────────────────── */
+.pin-all,
+.pin-all-home,
+.pin-all-contact,
+.pin-all-projects,
+.pin-all-services,
+.pin-all-subservices,
+.pin-all-single-project {
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Desktop override to disable pin constraints */
-@media screen and (min-width: 1024px) {
-  .pin-all,
-  .pin-all-home,
-  .pin-all-contact,
-  .pin-all-projects,
-  .pin-all-services,
-  .pin-all-subservices,
-  .pin-all-single-project {
-    height: auto !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-    position: static !important;
-  }
+/* Lock GSAP pin-spacer on iOS and Android without flickering */
+.pin-spacer {
+  min-height: 100dvh !important;
+  pointer-events: auto !important;
 }
 
-/* ─── GPU Layer Acceleration ─────────────────────────────────── */
+.pin-spacer > div {
+  height: 100dvh !important;
+  max-height: none !important;
+}
+
+/* ─── GPU Layer Acceleration (Optimized to prevent flickering) ── */
 .gpu-accelerated,
 .structural-layer {
   transform: translate3d(0, 0, 0);
