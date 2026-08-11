@@ -17,7 +17,7 @@ type SubServicesMobileProps = {
   pageData: FullServiceData;
 };
 
-// Standardized Metrics matched strictly to AboutMobile architecture
+// Standardized Metrics aligned with AboutMobile
 const PX_PER_MAIN_PANEL = 850;
 const PX_PER_SUB_STEP = 450;
 const PAUSE_PX = 150;
@@ -28,27 +28,31 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
   const [isProjectInfoActive, setIsProjectInfoActive] = useState(false);
   const lastInfoIdx = useRef<number>(-1);
 
-  // Unified utility hook configured for Mobile
   const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // 1. INITIAL LAYOUT SETUP
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
+      // Set initial state for all panels
       gsap.set(".project-hero-master", { yPercent: 0, force3D: true, zIndex: 10 });
-
-      gsap.set(".project-info-wrap", { yPercent: 100, visibility: "visible", force3D: true, zIndex: 20 });
-      gsap.set(".project-app-wrap", { yPercent: 100, visibility: "visible", force3D: true, zIndex: 30 });
-      gsap.set(".faq-scroll-wrapper", { yPercent: 100, visibility: "visible", force3D: true, zIndex: 40 });
-
-      gsap.set(".footer-scroll-wrapper", { yPercent: 100, visibility: "hidden", force3D: true, zIndex: 160 });
+      gsap.set(".project-info-wrap", { yPercent: 100, visibility: "visible", force3D: true, zIndex: 50 });
+      gsap.set(".project-app-wrap", { yPercent: 100, visibility: "visible", force3D: true, zIndex: 60 });
+      gsap.set(".faq-scroll-wrapper", { yPercent: 100, visibility: "visible", force3D: true, zIndex: 70 });
       gsap.set(".faq-content", { opacity: 1, y: 0 });
+
+      gsap.set(".footer-scroll-wrapper", { 
+        yPercent: 100, 
+        zIndex: 80, 
+        visibility: "hidden", 
+        force3D: true 
+      });
+
       gsap.set(".hero-text-wrap", { autoAlpha: 1 });
     }, scopeRef);
 
     return () => ctx.revert();
   }, []);
 
-  // 2. MASTER SCROLL TIMELINE (Mirroring AboutMobile)
+  // Master Scroll Timeline
   useEffect(() => {
     if (!introDone) return;
 
@@ -67,9 +71,8 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.15;
       const UNIFIED_EASE = "power1.inOut";
-      const infoSlides = pageData.slides || [];
 
-      // Calculated panels match the structural slide steps
+      const infoSlides = pageData.slides || [];
       const MAIN_PANELS_COUNT = 4;
       const SUB_STEPS_COUNT = Math.max(0, infoSlides.length - 1);
       const PAUSES_COUNT = 5;
@@ -92,6 +95,8 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
         }
       };
 
+      gsap.set(".appsec-phone-wrapper", { y: 30, opacity: 0 });
+
       const scrollTl = gsap.timeline({
         defaults: { ease: UNIFIED_EASE, lazy: true },
         scrollTrigger: {
@@ -105,11 +110,38 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
           preventOverlaps: true,
           fastScrollEnd: true,
           invalidateOnRefresh: true,
+          onUpdate: () => {
+            const infoStart = scrollTl.labels["infoFullyRevealed"];
+            const appStart = scrollTl.labels["appSectionStart"];
+
+            if (typeof infoStart === "number" && typeof appStart === "number" && infoSlides.length > 1) {
+              const currentTime = scrollTl.time();
+
+              if (currentTime >= infoStart && currentTime < appStart) {
+                const infoProgress = (currentTime - infoStart) / (appStart - infoStart);
+                const step = 1 / infoSlides.length;
+                const nextIdx = Math.min(
+                  infoSlides.length - 1,
+                  Math.floor(infoProgress / step)
+                );
+                triggerInfoHook(nextIdx);
+              } else if (currentTime < infoStart) {
+                triggerInfoHook(0);
+              }
+            }
+          },
         },
       });
 
-      // --- TRANSITION 1: Hero -> Project Info Section ---
+      // ── STEP A: HERO TRANSITION & INFO SECTION SLIDE UP ──
       scrollTl.addLabel("start", 0);
+
+      scrollTl.to(".hero-text-wrap", {
+        autoAlpha: 0,
+        y: -30,
+        duration: ACTION * 0.75,
+        ease: "power2.in"
+      }, 0);
 
       scrollTl.to(".project-info-wrap", {
         yPercent: 0,
@@ -118,17 +150,13 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
         onReverseComplete: () => {
           setIsProjectInfoActive(false);
           triggerInfoHook(0);
-        },
-      }, "start")
-      .to(".project-hero-master", { yPercent: -15, duration: ACTION }, "start");
+        }
+      }, 0);
 
-      scrollTl.call(() => {
-        triggerInfoHook(0);
-      }, [], 0.6);
-
+      scrollTl.addLabel("infoFullyRevealed", ACTION);
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // --- TRANSITION 2: Sequential Inner Info Slides ---
+      // ── STEP B: SEQUENTIAL INNER INFO SLIDES ──
       if (infoSlides.length > 0) {
         infoSlides.forEach((_, index) => {
           if (index === 0) return;
@@ -142,34 +170,33 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
           scrollTl.to(currentImgLayer, {
             clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
             duration: ACTION,
-            ease: "power2.inOut",
           }, slideLabel);
 
-          scrollTl.fromTo(
-            innerImage,
+          scrollTl.fromTo(innerImage,
             { scale: 1.25 },
             { scale: 1.0, duration: ACTION, ease: "power2.out" },
             slideLabel
           );
-
-          scrollTl.call(() => {
-            const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
-            triggerInfoHook(isForward ? index : index - 1);
-          }, [], `${slideLabel}+=0.6`);
         });
       }
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // --- TRANSITION 3: Info Section -> App Section ---
+      // ── STEP C: APP SECTION SLIDES UP OVER INFO WRAP ──
       scrollTl.addLabel("appSectionStart");
 
       scrollTl.to(".project-app-wrap", { yPercent: 0, duration: ACTION }, "appSectionStart")
               .to(".project-info-wrap", { yPercent: -15, duration: ACTION }, "appSectionStart");
 
+      scrollTl.to(
+        ".appsec-phone-wrapper",
+        { y: 0, opacity: 1, duration: ACTION * 0.8, ease: "power2.out" },
+        "appSectionStart+=0.4"
+      );
+
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // --- TRANSITION 4: App Section -> FAQ Section ---
+      // ── STEP D: FAQ SECTION SLIDES UP OVER APP WRAP ──
       scrollTl.addLabel("faqStart");
 
       scrollTl.to(".faq-scroll-wrapper", { yPercent: 0, duration: ACTION }, "faqStart")
@@ -177,28 +204,26 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // --- TRANSITION 5: FAQ Content Fade Out ---
+      // ── STEP D.5: FAQ CONTENT FADE OUT ──
       scrollTl.addLabel("ctaFadeOut", ">")
         .to(".faq-content", {
           opacity: 0,
           y: -30,
-          duration: ACTION * 0.1,
+          duration: ACTION * 0.5,
           ease: "power2.in",
-          pointerEvents: "none",
-        }, "ctaFadeOut")
-        .to({}, { duration: 0 });
+          pointerEvents: "none"
+        }, "ctaFadeOut");
 
-      // --- TRANSITION 6: FAQ Section -> Footer ---
-      scrollTl.addLabel("footerStart", ">")
-        .set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
-        .fromTo(
-          ".footer-scroll-wrapper",
-          { yPercent: 100 },
-          { yPercent: 0, duration: ACTION, ease: "power1.out" },
-          "footerStart"
-        );
+      // ── STEP E: FOOTER SLIDE-UP ──
+      scrollTl.addLabel("footerStart", ">");
 
-      scrollTl.addLabel("end");
+      scrollTl.set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
+              .fromTo(
+                ".footer-scroll-wrapper",
+                { yPercent: 100 },
+                { yPercent: 0, duration: ACTION, ease: "power1.out" },
+                "footerStart"
+              );
 
     }, scopeRef);
 
@@ -210,11 +235,10 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
     };
   }, [introDone, pageData.images, pageData.slides, pageData.title]);
 
-  // 3. DOM LAYOUT STRUCTURE (Aligned directly with AboutMobile)
   return (
-    <div ref={scopeRef}>
-      <div
-        className="master-viewport pin-all relative w-full overflow-hidden h-[100dvh]"
+    <div ref={scopeRef} className="w-full relative min-h-[100dvh] bg-black text-white overflow-hidden">
+      <div 
+        className="master-viewport pin-all relative w-full overflow-hidden h-[100dvh] bg-black" 
         style={{ visibility: "visible" }}
       >
         <div className="project-hero-master gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
@@ -227,7 +251,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
 
         <div
           className="project-info-wrap gpu-accelerated absolute inset-0 w-full h-full"
-          style={{ zIndex: 20 }}
+          style={{ zIndex: 50 }}
         >
           <ProjectInfoSlide
             slides={pageData.slides || []}
@@ -237,20 +261,20 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
 
         <div
           className="project-app-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh]"
-          style={{ zIndex: 30 }}
+          style={{ zIndex: 60 }}
         >
           <Appsection />
         </div>
 
         <div
           className="faq-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full overflow-hidden"
-          style={{ zIndex: 40 }}
+          style={{ zIndex: 70 }}
         >
           <FAQSection />
         </div>
 
         <div
-          className="footer-scroll-wrapper gpu-accelerated absolute left-0 bottom-0 w-full z-[160]"
+          className="footer-scroll-wrapper gpu-accelerated absolute left-0 bottom-0 w-full z-[80]"
           style={{ pointerEvents: "auto", visibility: "hidden" }}
         >
           <Footer />
