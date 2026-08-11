@@ -12,6 +12,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Footer from "@/src/components/Footer";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
+import { useSite } from "@/src/app/context/SiteContext";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -25,7 +26,18 @@ export default function AboutMobile() {
   const scopeRef = useRef<HTMLDivElement>(null);
   const lastSec5Idx = useRef<number>(-1);
 
+  const { smootherRef } = useSite();
   const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
+
+  // Lock scroll while intro animation is running
+  useEffect(() => {
+    if (!introDone) {
+      smootherRef?.current?.stop();
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [introDone, smootherRef]);
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -52,17 +64,16 @@ export default function AboutMobile() {
   useEffect(() => {
     if (!introDone) return;
 
+    // Ensure page is at the top before mounting ScrollTrigger
+    window.scrollTo(0, 0);
+    if (smootherRef?.current) {
+      smootherRef.current.scrollTo(0, { immediate: true });
+    }
+
     const isAndroid = /Android/i.test(navigator.userAgent);
 
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ ignoreMobileResize: true });
-
-      if (!isAndroid) {
-        ScrollTrigger.normalizeScroll({
-          allowNestedScroll: true,
-          lockAxis: true,
-        });
-      }
 
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.15;
@@ -207,15 +218,18 @@ export default function AboutMobile() {
           { yPercent: 0, duration: ACTION, ease: "power1.out" },
           "footerStart"
         );
+
+      // Refresh ScrollTrigger and release Lenis scroll
+      requestAnimationFrame(() => {
+        ScrollTrigger.refresh();
+        smootherRef?.current?.start();
+      });
     }, scopeRef);
 
     return () => {
       ctx.revert();
-      if (!isAndroid) {
-        ScrollTrigger.normalizeScroll(false);
-      }
     };
-  }, [introDone]);
+  }, [introDone, smootherRef]);
 
   return (
     <div ref={scopeRef}>
