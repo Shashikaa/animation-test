@@ -29,7 +29,6 @@ export default function AboutMobile() {
   const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
-    // Lock initial screen height before keyboard ever pops up
     if (typeof window !== "undefined") {
       initialVhRef.current = window.innerHeight || BASELINE_VH;
     }
@@ -44,7 +43,6 @@ export default function AboutMobile() {
       gsap.set(".about-section-five", { yPercent: 100, opacity: 1, visibility: "visible", force3D: true });
       gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0, force3D: true });
 
-      // Position bottom stack directly below pinned container
       gsap.set(".about-bottom-stack", { y: initialVhRef.current, zIndex: 150, visibility: "hidden", force3D: true });
       gsap.set(
         [".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"],
@@ -61,7 +59,6 @@ export default function AboutMobile() {
     const isAndroid = /Android/i.test(navigator.userAgent);
 
     const ctx = gsap.context(() => {
-      // Prevent ScrollTrigger from refreshing layout on mobile keyboard popup/resize
       ScrollTrigger.config({
         ignoreMobileResize: true,
         autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
@@ -113,7 +110,7 @@ export default function AboutMobile() {
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
-          invalidateOnRefresh: false, // Prevent recalculations on focus input
+          invalidateOnRefresh: false,
           onUpdate: () => {
             const sec5Time = tl.labels["sec5FullyRevealed"];
             const ctaTime = tl.labels["ctaStart"];
@@ -185,7 +182,6 @@ export default function AboutMobile() {
       tl.to({}, { duration: SEC5_CARDS_HOLD });
 
       // --- TRANSITION 6: Section Five -> CTA + Footer Stack ---
-      // Slide up based on locked pixel heights rather than relative vh percentages
       const stackElement = document.querySelector(".about-bottom-stack");
       const totalStackHeight = stackElement ? stackElement.clientHeight : vh * 1.5;
 
@@ -210,7 +206,49 @@ export default function AboutMobile() {
       );
     }, scopeRef);
 
+    // --- FORM FIELD INTERACTION FIX ---
+    // Pause normalizeScroll during input focus so native keyboard scroll behavior works naturally
+    const handleFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT")
+      ) {
+        if (!isAndroid) {
+          ScrollTrigger.normalizeScroll(false);
+        }
+        setTimeout(() => {
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 300);
+      }
+    };
+
+    const handleFocusOut = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT")
+      ) {
+        if (!isAndroid) {
+          ScrollTrigger.normalizeScroll({
+            allowNestedScroll: true,
+            lockAxis: true,
+          });
+        }
+      }
+    };
+
+    const scopeNode = scopeRef.current;
+    if (scopeNode) {
+      scopeNode.addEventListener("focusin", handleFocusIn);
+      scopeNode.addEventListener("focusout", handleFocusOut);
+    }
+
     return () => {
+      if (scopeNode) {
+        scopeNode.removeEventListener("focusin", handleFocusIn);
+        scopeNode.removeEventListener("focusout", handleFocusOut);
+      }
       ctx.revert();
       if (!isAndroid) {
         ScrollTrigger.normalizeScroll(false);
@@ -251,7 +289,6 @@ export default function AboutMobile() {
           <SectionFive isActive={isSectionFiveActive} />
         </div>
 
-        {/* COMBINED CONTINUOUS SLIDING STACK LOCKED IN PIXELS */}
         <div
           className="about-bottom-stack gpu-accelerated absolute left-0 top-0 w-full h-auto z-[150] flex flex-col"
           style={{ pointerEvents: "auto", visibility: "hidden" }}
