@@ -22,30 +22,15 @@ const AU_PHONE_REGEX = /^(?:\+?61|0)[23478](?:[ -]?\d){8}$/;
 const AU_POSTCODE_REGEX = /^(?:0[89]\d{2}|[1-9]\d{3})$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Simple scroll lock — do NOT use position:fixed on <body> here.
-// The master timeline pins .about-pin using GSAP's pinType:"fixed",
-// which calculates its own fixed-position offset from window scroll.
-// Toggling body to position:fixed changes that reference frame and
-// snaps the pinned content back to scrollY:0. overflow:hidden avoids
-// that conflict entirely, and ignoreMobileResize (set below) already
-// stops the keyboard-open resize from re-triggering ScrollTrigger.refresh(),
-// which was the actual cause of the footer sliding up.
-let lockCount = 0;
-
+// Native scroll locking helpers (no ScrollTrigger disabling)
 const lockScrollForInput = () => {
   if (typeof window === "undefined") return;
-  lockCount++;
-  if (lockCount > 1) return; // already locked (e.g. tabbing between fields)
-
   document.body.style.overflow = "hidden";
   document.body.style.touchAction = "none";
 };
 
 const unlockScrollForInput = () => {
   if (typeof window === "undefined") return;
-  lockCount = Math.max(0, lockCount - 1);
-  if (lockCount > 0) return; // another field still focused
-
   document.body.style.overflow = "";
   document.body.style.touchAction = "";
 };
@@ -60,13 +45,6 @@ export default function CtaForm({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [resetKey, setResetKey] = useState(0);
-
-  // Belt-and-braces: ensure ScrollTrigger ignores keyboard/address-bar
-  // driven resize events even if this form is used somewhere that
-  // doesn't already set this on its master timeline.
-  useEffect(() => {
-    ScrollTrigger.config({ ignoreMobileResize: true });
-  }, []);
 
   const getName = (baseName: string) =>
     nameSuffix ? `${baseName}_${nameSuffix}` : baseName;
