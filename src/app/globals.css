@@ -10,12 +10,12 @@
 
 /* ─── Design Tokens ──────────────────────────────────────────── */
 :root {
-  --background: #000000;
-  --foreground: #ffffff;
+  --background: #ffffff;
+  --foreground: #171717;
   --muted:      #6b6b6b;
   --muted-bg:   #f5f5f5;
   --border:     #e5e5e5;
-  --accent:     #ffffff;
+  --accent:     #171717;
 
   --text-display: 40px;
   --text-body:    16px;
@@ -71,7 +71,7 @@
 }
 
 html, body {
-  background-color: #000000 !important;
+  background-color: #e10000 !important;
   scrollbar-gutter: stable;
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
@@ -107,7 +107,9 @@ body {
   overflow-x:   hidden;
 }
 
-/* ─── Preloader Hide & Lock Rules ────────────────────────────── */
+/* ─── Preloader Hide & Lock Rules (Fixes Hero Drift & Pre-scroll) ── */
+
+/* Lock scrolling strictly on html and body while preloading */
 html.preloading,
 body.preloading {
   overflow: hidden !important;
@@ -120,7 +122,8 @@ body.preloading {
   background-color: #162D24 !important;
 }
 
-html.preloading .about-pin, .contact-pin-master, .master-viewport, .pin-all-projects, .services-hero-master, .services-pin-master,
+/* Hard pin container on load while preloading to prevent hero movement */
+html.preloading .about-pin, .contact-pin-master, .master-viewport, .pin-all-projects, .services-hero-master, .services-pin-master
 body.preloading .about-pin, .contact-pin-master, .master-viewport, .pin-all-projects, .services-hero-master, .services-pin-master {
   position: fixed !important;
   top: 0 !important;
@@ -129,6 +132,7 @@ body.preloading .about-pin, .contact-pin-master, .master-viewport, .pin-all-proj
   transform: translate3d(0, 0, 0) !important;
 }
 
+/* Strictly hide site-root while preloading to eliminate body flashing */
 html.preloading .site-root,
 body.preloading .site-root,
 html.preloading header,
@@ -138,6 +142,7 @@ body.preloading header {
   pointer-events: none !important;
 }
 
+/* Base site-root behavior once preloading is complete */
 .site-root {
   overflow-x: hidden;
   position: relative;
@@ -152,7 +157,7 @@ body.preloading header {
   width: 100%;
 }
 
-/* ─── Full-Height Viewport Pin Wrapper ───────────────────────── */
+/* ─── Full-Height Viewport Pin Wrapper (iOS dvh Fix) ─────────────────── */
 .pin-all,
 .pin-all-home,
 .pin-all-contact,
@@ -167,6 +172,7 @@ body.preloading header {
   overflow: hidden;
 }
 
+/* Lock GSAP pin-spacer on iOS and Android without flickering */
 .pin-spacer {
   min-height: 100dvh !important;
   pointer-events: auto !important;
@@ -177,27 +183,12 @@ body.preloading header {
   max-height: none !important;
 }
 
-/* ─── Isolated GPU Compositor Layer Acceleration ──────────────── */
+/* ─── GPU Layer Acceleration (Optimized to prevent flickering) ── */
 .gpu-accelerated,
-.structural-layer,
-.project-hero-master,
-.project-info-wrap,
-.project-app-wrap,
-.faq-scroll-wrapper,
-.footer-scroll-wrapper {
+.structural-layer {
   transform: translate3d(0, 0, 0);
-  -webkit-transform: translate3d(0, 0, 0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  transform-style: preserve-3d;
-  -webkit-transform-style: preserve-3d;
-  will-change: transform;
-}
-
-/* Fix mobile Safari clip-path stutter during GSAP scrub */
-.info-img-layer {
-  -webkit-mask-image: -webkit-radial-gradient(white, black);
-  will-change: clip-path, transform;
 }
 
 /* ─── Section Wrappers ───────────────────────────────────────── */
@@ -322,7 +313,8 @@ p {
   }
 }
 
-/* ─── Text Reveal System ───────────────────────────────────── */
+/* ─── Modern Text Reveal System ─────────────────────────────── */
+
 .reveal-text {
   perspective: 1000px;
   backface-visibility: hidden;

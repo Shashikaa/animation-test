@@ -17,30 +17,40 @@ type SubServicesMobileProps = {
   pageData: FullServiceData;
 };
 
-// Standardized Metrics aligned with AboutMobile
-const PX_PER_MAIN_PANEL = 850;
-const PX_PER_SUB_STEP = 350;
-const PAUSE_PX = 150;
-const BASELINE_VH = 800;
+// Standardized Metrics to align exact scroll feel
+const PX_PER_MAIN_PANEL = 850; 
+const PX_PER_SUB_STEP = 350;   
+const PAUSE_PX = 100;          
 
 export default function SingleProjectPageMobile({ pageData }: SubServicesMobileProps) {
   const scopeRef = useRef<HTMLDivElement>(null);
   const [isProjectInfoActive, setIsProjectInfoActive] = useState(false);
   const lastInfoIdx = useRef<number>(-1);
 
-  // Hero intro hook trigger
+  // Single unified utility hook configured for Mobile
   const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      // Direct GSAP state setups matching the standard panel layout
-      gsap.set(".project-hero-master", { yPercent: 0, force3D: true });
-      gsap.set(".project-info-wrap", { yPercent: 100, zIndex: 20, visibility: "visible", force3D: true });
-      gsap.set(".project-app-wrap", { yPercent: 100, zIndex: 30, visibility: "visible", force3D: true });
-      gsap.set(".faq-scroll-wrapper", { yPercent: 100, zIndex: 40, visibility: "visible", force3D: true });
-      gsap.set(".footer-scroll-wrapper", { yPercent: 100, zIndex: 50, visibility: "hidden", force3D: true });
+      gsap.set(".project-hero-master", { zIndex: 10 });
 
+      gsap.set(
+        [
+          ".project-info-wrap",
+          ".project-app-wrap",
+          ".faq-scroll-wrapper",
+          ".footer-scroll-wrapper"
+        ],
+        { clearProps: "transform" }
+      );
+
+      gsap.set(".project-info-wrap", { yPercent: 100, visibility: "hidden", zIndex: 50 });
+      gsap.set(".project-app-wrap", { yPercent: 100, visibility: "hidden", zIndex: 60 });
+      gsap.set(".faq-scroll-wrapper", { yPercent: 100, visibility: "hidden", zIndex: 70 });
+      gsap.set(".footer-scroll-wrapper", { yPercent: 100, visibility: "hidden", zIndex: 80 });
       gsap.set(".faq-content", { opacity: 1, y: 0 });
+
+      gsap.set(".hero-text-wrap", { autoAlpha: 1 });
     }, scopeRef);
 
     return () => ctx.revert();
@@ -50,35 +60,41 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
   useEffect(() => {
     if (!introDone) return;
 
-    const isAndroid = /Android/i.test(navigator.userAgent);
-
     const ctx = gsap.context(() => {
-      ScrollTrigger.config({ ignoreMobileResize: true });
+      gsap.ticker.lagSmoothing(0);
 
-      if (!isAndroid) {
-        ScrollTrigger.normalizeScroll({
-          allowNestedScroll: true,
-          lockAxis: true,
-        });
+      // Enable touch normalization on mobile
+      const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if (isTouchDevice) {
+        ScrollTrigger.normalizeScroll(true);
       }
 
-      const ACTION = 1.4;
-      const DEAD_SCROLL = 0.15;
-      const UNIFIED_EASE = "power1.inOut";
+      const performanceTargets = [
+        ".project-hero-master", ".hero-image-layer", ".hero-image-inner",
+        ".project-info-wrap", ".info-text-block", ".info-img-layer",
+        ".project-app-wrap", ".appsec-bg", ".appsec-phone-wrapper",
+        ".faq-scroll-wrapper", ".faq-content", ".footer-scroll-wrapper"
+      ];
 
+      performanceTargets.forEach(selector => {
+        gsap.set(selector, {
+          force3D: true,
+          willChange: "transform, opacity, clip-path"
+        });
+      });
+
+      const ACTION = 1.4;
+      const DEAD_SCROLL = 0.2;
       const infoSlides = pageData.slides || [];
+
       const MAIN_PANELS_COUNT = 4;
       const SUB_STEPS_COUNT = Math.max(0, infoSlides.length - 1);
       const PAUSES_COUNT = 5;
 
-      const vh = window.innerHeight || BASELINE_VH;
-      const scaleFactor = vh / BASELINE_VH;
-
-      const DYNAMIC_SCROLL_TRACK =
-        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL +
-          SUB_STEPS_COUNT * PX_PER_SUB_STEP +
-          PAUSES_COUNT * PAUSE_PX) *
-        scaleFactor;
+      const DYNAMIC_SCROLL_TRACK = 
+        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
+        (SUB_STEPS_COUNT * PX_PER_SUB_STEP) + 
+        (PAUSES_COUNT * PAUSE_PX);
 
       const triggerInfoHook = (nextIdx: number) => {
         if (nextIdx !== lastInfoIdx.current) {
@@ -91,166 +107,203 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
 
       gsap.set(".appsec-phone-wrapper", { y: 30, opacity: 0 });
 
-      const tl = gsap.timeline({
-        defaults: { ease: UNIFIED_EASE, lazy: true },
+      const scrollTl = gsap.timeline({
+        defaults: { ease: "none", lazy: true },
         scrollTrigger: {
           trigger: ".master-viewport",
           start: "top top",
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: isAndroid ? 0.2 : 0.6,
+          pinSpacing: true,
+          scrub: 0.5,
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
-          invalidateOnRefresh: true,
-        },
+          invalidateOnRefresh: false,
+        }
       });
 
-      // --- TRANSITION 1: Hero -> Project Info Slide ---
-      tl.to(".project-info-wrap", {
-        yPercent: 0,
-        duration: ACTION,
-        onStart: () => setIsProjectInfoActive(true),
-        onReverseComplete: () => {
-          setIsProjectInfoActive(false);
-          triggerInfoHook(0);
-        },
-      })
-        .to(".project-hero-master", { yPercent: -15, duration: ACTION }, "<");
+      // ── STEP A: HERO TRANSITION & INFO SECTION SLIDE UP ──
+      scrollTl.addLabel("start", 0);
 
-      tl.call(() => {
+      scrollTl.to(".hero-text-wrap", { 
+        autoAlpha: 0, 
+        y: -30, 
+        duration: ACTION * 0.75, 
+        ease: "power2.in" 
+      }, 0);
+
+      scrollTl.set(".project-info-wrap", { visibility: "visible" }, 0)
+              .to(".project-info-wrap", { 
+                yPercent: 0, 
+                duration: ACTION, 
+                ease: "power2.inOut",
+                onStart: () => setIsProjectInfoActive(true),
+                onReverseComplete: () => {
+                  setIsProjectInfoActive(false);
+                  triggerInfoHook(0);
+                }
+              }, 0);
+
+      scrollTl.call(() => {
         triggerInfoHook(0);
-      }, [], `<+=${ACTION * 0.4}`);
+      }, [], 0.6);
 
-      tl.to({}, { duration: DEAD_SCROLL });
+      scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // --- TRANSITION 2: Sequential Inner Info Slides ---
+      // ── STEP B: SEQUENTIAL INNER INFO SLIDES ──
       if (infoSlides.length > 0) {
         infoSlides.forEach((_, index) => {
           if (index === 0) return;
 
           const slideLabel = `info_slide_${index}`;
-          tl.addLabel(slideLabel);
+          scrollTl.addLabel(slideLabel);
 
           const currentImgLayer = `.info-img-layer-${index}`;
           const innerImage = `${currentImgLayer} .info-image-inner`;
 
-          tl.to(
-            currentImgLayer,
-            {
-              clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-              duration: ACTION,
-            },
-            slideLabel
-          );
+          scrollTl.to(currentImgLayer, {
+            clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
+            duration: ACTION,
+            ease: "power2.inOut"
+          }, slideLabel);
 
-          tl.fromTo(
-            innerImage,
+          scrollTl.fromTo(innerImage, 
             { scale: 1.25 },
-            { scale: 1.0, duration: ACTION },
+            { scale: 1.0, duration: ACTION, ease: "power2.out" },
             slideLabel
           );
 
-          tl.call(() => {
-            const isForward = tl.scrollTrigger ? tl.scrollTrigger.direction > 0 : true;
+          scrollTl.call(() => {
+            const isForward = scrollTl.scrollTrigger ? scrollTl.scrollTrigger.direction > 0 : true;
             triggerInfoHook(isForward ? index : index - 1);
           }, [], `${slideLabel}+=0.6`);
         });
       }
 
-      tl.to({}, { duration: DEAD_SCROLL });
+      scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // --- TRANSITION 3: Project Info -> App Section ---
-      tl.addLabel("appSectionStart", ">")
-        .to(".project-app-wrap", { yPercent: 0, duration: ACTION }, "appSectionStart")
-        .to(".project-info-wrap", { yPercent: -15, duration: ACTION }, "appSectionStart");
+      // ── STEP C: APP SECTION SLIDES UP OVER INFO WRAP ──
+      scrollTl.addLabel("appSectionStart");
 
-      tl.to(
+      scrollTl.set(".project-app-wrap", { visibility: "visible" }, "appSectionStart")
+              .to(".project-app-wrap", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "appSectionStart");
+
+      scrollTl.to(
         ".appsec-phone-wrapper",
-        { y: 0, opacity: 1, duration: ACTION * 0.8 },
+        { y: 0, opacity: 1, duration: ACTION * 0.8, ease: "power2.out" },
         "appSectionStart+=0.4"
       );
 
-      tl.to({}, { duration: DEAD_SCROLL });
+      scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // --- TRANSITION 4: App Section -> FAQ Section ---
-      tl.addLabel("faqStart", ">")
-        .to(".faq-scroll-wrapper", { yPercent: 0, duration: ACTION }, "faqStart")
-        .to(".project-app-wrap", { yPercent: -15, duration: ACTION }, "faqStart");
+      // ── STEP D: FAQ SECTION SLIDES UP OVER APP WRAP ──
+      scrollTl.addLabel("faqStart");
 
-      tl.to({}, { duration: DEAD_SCROLL });
+      scrollTl.set(".faq-scroll-wrapper", { visibility: "visible" }, "faqStart")
+              .to(".faq-scroll-wrapper", { yPercent: 0, ease: "power2.inOut", duration: ACTION }, "faqStart");
 
-      // --- TRANSITION 5: FAQ Section -> Footer ---
-      tl.addLabel("footerStart", ">")
-        .set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
-        .fromTo(
-          ".footer-scroll-wrapper",
-          { yPercent: 100 },
-          { yPercent: 0, duration: ACTION, ease: "power1.out" },
-          "footerStart"
-        );
+      scrollTl.to({}, { duration: DEAD_SCROLL });
+
+      // ── STEP D.5: FAQ CONTENT FADE OUT FIRST ──
+      scrollTl.addLabel("ctaFadeOut", ">")
+        .to(".faq-content", { 
+          opacity: 0, 
+          y: -30, 
+          duration: ACTION * 0.1, 
+          ease: "power2.in",
+          pointerEvents: "none"
+        }, "ctaFadeOut")
+        .to({}, { duration: 0 });
+
+      // ── STEP E: FOOTER SLIDE-UP ──
+      scrollTl.addLabel("footerStart", ">");
+
+      scrollTl.set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
+              .fromTo(
+                ".footer-scroll-wrapper",
+                { yPercent: 100 },
+                { yPercent: 0, ease: "power2.inOut", duration: ACTION },
+                "footerStart"
+              );
+
+      scrollTl.addLabel("end");
+
     }, scopeRef);
 
     return () => {
       ctx.revert();
-      if (!isAndroid) {
+      if (ScrollTrigger.isTouch) {
         ScrollTrigger.normalizeScroll(false);
       }
     };
-  }, [introDone, pageData.slides]);
+  }, [introDone, pageData.images, pageData.slides, pageData.title]);
 
   return (
-    <div ref={scopeRef} className="w-full relative min-h-[100dvh] bg-black text-white overflow-hidden">
-      <div
-        className="master-viewport pin-all-single-project relative w-full h-[100dvh] overflow-hidden bg-black"
-        style={{ visibility: "visible" }}
-      >
-        {/* Layer 1: Hero Section */}
-        <div className="project-hero-master gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
-          <ProjectScrollHero
+    <div 
+      ref={scopeRef} 
+      className="w-full relative min-h-[100dvh] bg-black text-white overflow-hidden"
+    >
+      <div className="master-viewport pin-all-single-project relative w-full overflow-hidden bg-black" style={{ visibility: "visible" }}>
+        
+        <div className="project-hero-master gpu-accelerated absolute inset-0 w-full h-full">
+          <ProjectScrollHero 
             title={pageData.title}
             description={pageData.description}
             images={pageData.images || []}
           />
         </div>
 
-        {/* Layer 2: Project Info Section */}
-        <div
-          className="project-info-wrap gpu-accelerated absolute inset-0 w-full h-full"
-          style={{ zIndex: 20 }}
+        <div 
+          className="project-info-wrap gpu-accelerated absolute inset-0 w-full h-full structural-layer"
+          style={{ 
+            zIndex: 50, 
+            visibility: "hidden", 
+            transform: "translateY(100%)" 
+          }}
         >
-          <ProjectInfoSlide
-            slides={pageData.slides || []}
+          <ProjectInfoSlide 
+            slides={pageData.slides || []} 
             isActive={isProjectInfoActive}
           />
         </div>
 
-        {/* Layer 3: App Section */}
-        <div
-          className="project-app-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh]"
-          style={{ zIndex: 30 }}
+        <div 
+          className="project-app-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] structural-layer"
+          style={{ 
+            zIndex: 60, 
+            visibility: "hidden", 
+            transform: "translateY(100%)" 
+          }}
         >
           <Appsection />
         </div>
 
-        {/* Layer 4: FAQ Section */}
-        <div
-          className="faq-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full overflow-hidden"
-          style={{ zIndex: 40 }}
+        <div 
+          className="faq-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full structural-layer overflow-hidden"
+          style={{ 
+            zIndex: 70, 
+            visibility: "hidden", 
+            transform: "translateY(100%)" 
+          }}
         >
-          <div className="faq-content w-full h-full">
-            <FAQSection />
+          <FAQSection />
+        </div>
+
+        <div 
+          className="footer-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full flex flex-col justify-end pointer-events-none"
+          style={{ 
+            zIndex: 80, 
+            visibility: "hidden", 
+            transform: "translateY(100%)" 
+          }}
+        >
+          <div className="w-full pointer-events-auto">
+            <Footer />
           </div>
         </div>
 
-        {/* Layer 5: Footer */}
-        <div
-          className="footer-scroll-wrapper gpu-accelerated absolute left-0 bottom-0 w-full"
-          style={{ zIndex: 50, pointerEvents: "auto", visibility: "hidden" }}
-        >
-          <Footer />
-        </div>
       </div>
     </div>
   );
