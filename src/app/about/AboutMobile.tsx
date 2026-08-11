@@ -28,6 +28,9 @@ export default function AboutMobile() {
   const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
+    const isDesktop = window.innerWidth >= 1024;
+    if (isDesktop) return; // Skip pinned layout setup on desktop screens
+
     const ctx = gsap.context(() => {
       gsap.set(".about-hero-panel-left", { yPercent: 0, force3D: true });
       gsap.set(".about-section-one", { yPercent: 100, visibility: "visible", force3D: true });
@@ -52,38 +55,10 @@ export default function AboutMobile() {
   useEffect(() => {
     if (!introDone) return;
 
+    const isDesktop = window.innerWidth >= 1024;
+    if (isDesktop) return; // Do not run mobile pinned ScrollTrigger on desktop
+
     const isAndroid = /Android/i.test(navigator.userAgent);
-    const scopeNode = scopeRef.current;
-
-    // --- Prevent iOS Visual Viewport Jumps on Form Focus ---
-    const handleInputFocus = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT"
-      ) {
-        if (scopeNode) {
-          scopeNode.style.touchAction = "pan-y";
-        }
-      }
-    };
-
-    const handleInputBlur = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.tagName === "SELECT"
-      ) {
-        if (scopeNode) {
-          scopeNode.style.touchAction = "";
-        }
-      }
-    };
-
-    scopeNode?.addEventListener("focusin", handleInputFocus);
-    scopeNode?.addEventListener("focusout", handleInputBlur);
 
     const ctx = gsap.context(() => {
       ScrollTrigger.config({ ignoreMobileResize: true });
@@ -241,8 +216,6 @@ export default function AboutMobile() {
     }, scopeRef);
 
     return () => {
-      scopeNode?.removeEventListener("focusin", handleInputFocus);
-      scopeNode?.removeEventListener("focusout", handleInputBlur);
       ctx.revert();
       if (!isAndroid) {
         ScrollTrigger.normalizeScroll(false);
@@ -252,45 +225,36 @@ export default function AboutMobile() {
 
   return (
     <div ref={scopeRef}>
-      <div
-        className="about-pin pin-all relative w-full overflow-hidden h-[100dvh]"
-        style={{ visibility: "visible" }}
-      >
-        <div className="about-hero-panel-left gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
+      <div className="about-pin lg:static relative w-full overflow-hidden lg:overflow-visible lg:h-auto h-[100dvh]">
+        <div className="about-hero-panel-left gpu-accelerated lg:relative absolute inset-0 w-full lg:h-auto h-full z-10">
           <Hero isMobile={true} />
         </div>
 
-        <div className="about-section-one gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 20 }}>
+        <div className="about-section-one gpu-accelerated lg:relative absolute inset-0 w-full lg:h-auto h-full z-20">
           <SectionOne />
         </div>
 
-        <div className="about-section-two gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 30 }}>
+        <div className="about-section-two gpu-accelerated lg:relative absolute inset-0 w-full lg:h-auto h-full z-30">
           <SectionTwo />
         </div>
 
-        <div className="about-section-three gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 40 }}>
+        <div className="about-section-three gpu-accelerated lg:relative absolute inset-0 w-full lg:h-auto h-full z-40">
           <SectionThree />
         </div>
 
-        <div className="about-section-four gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 50 }}>
+        <div className="about-section-four gpu-accelerated lg:relative absolute inset-0 w-full lg:h-auto h-full z-50">
           <SectionFour />
         </div>
 
-        <div
-          className="about-section-five gpu-accelerated absolute inset-0 w-full h-full"
-          style={{ zIndex: 60 }}
-        >
+        <div className="about-section-five gpu-accelerated lg:relative absolute inset-0 w-full lg:h-auto h-full z-60">
           <SectionFive isActive={isSectionFiveActive} />
         </div>
 
-<div
-  className="about-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] z-[150]"
-  style={{ pointerEvents: "auto", visibility: "hidden" }}
->
-  <SectionCTA />
-</div>
+        <div className="about-section-cta gpu-accelerated lg:relative absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] lg:min-h-0 z-[150] lg:visible">
+          <SectionCTA />
+        </div>
 
-        <div className="about-footer-wrap gpu-accelerated absolute left-0 bottom-0 w-full z-[160]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        <div className="about-footer-wrap gpu-accelerated lg:relative absolute left-0 bottom-0 w-full z-[160] lg:visible">
           <Footer />
         </div>
       </div>

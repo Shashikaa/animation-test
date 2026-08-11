@@ -74,10 +74,11 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     const lenis = new Lenis({
       lerp: isTouchDevice ? 0.12 : 0.1 * heightFactor,
       wheelMultiplier: 1.1 * heightFactor,
-      touchMultiplier: isTouchDevice ? 1.2 : 0.8 * heightFactor,
+      touchMultiplier: 1.2,
       infinite: false,
       smoothWheel: true,
-      syncTouch: false, // Turned off to prevent scroll lock on pinned GSAP containers
+      syncTouch: true,
+      syncTouchLerp: 0.08,
     });
 
     lenisRef.current = lenis;
