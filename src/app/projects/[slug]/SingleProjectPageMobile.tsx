@@ -17,7 +17,7 @@ type SubServicesMobileProps = {
   pageData: FullServiceData;
 };
 
-// Standardized Metrics aligned with AboutMobile
+// Standardized Metrics aligned with AboutMobile & ContactMobile
 const PX_PER_MAIN_PANEL = 850;
 const PX_PER_SUB_STEP = 450;
 const PAUSE_PX = 150;
@@ -204,18 +204,8 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
 
       scrollTl.to({}, { duration: DEAD_SCROLL });
 
-      // ── STEP D.5: FAQ CONTENT FADE OUT ──
-      scrollTl.addLabel("ctaFadeOut", ">")
-        .to(".faq-content", {
-          opacity: 0,
-          y: -30,
-          duration: ACTION * 0.5,
-          ease: "power2.in",
-          pointerEvents: "none"
-        }, "ctaFadeOut");
-
       // ── STEP E: FOOTER SLIDE-UP ──
-      scrollTl.addLabel("footerStart", ">");
+      scrollTl.addLabel("footerStart");
 
       scrollTl.set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
               .fromTo(
@@ -223,7 +213,8 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
                 { yPercent: 100 },
                 { yPercent: 0, duration: ACTION, ease: "power1.out" },
                 "footerStart"
-              );
+              )
+              .to(".faq-scroll-wrapper", { yPercent: 0, duration: ACTION }, "footerStart");
 
     }, scopeRef);
 
