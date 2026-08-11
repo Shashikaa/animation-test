@@ -24,10 +24,16 @@ export default function AboutMobile() {
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
   const lastSec5Idx = useRef<number>(-1);
+  const initialVhRef = useRef<number>(BASELINE_VH);
 
   const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
+    // Lock initial screen height before keyboard ever pops up
+    if (typeof window !== "undefined") {
+      initialVhRef.current = window.innerHeight || BASELINE_VH;
+    }
+
     const ctx = gsap.context(() => {
       gsap.set(".about-hero-panel-left", { yPercent: 0, force3D: true });
       gsap.set(".about-section-one", { yPercent: 100, visibility: "visible", force3D: true });
@@ -38,8 +44,8 @@ export default function AboutMobile() {
       gsap.set(".about-section-five", { yPercent: 100, opacity: 1, visibility: "visible", force3D: true });
       gsap.set(".about-section-five .s5-bg", { scale: 1.25, yPercent: 0, force3D: true });
 
-      // Position bottom stack directly below the viewport
-      gsap.set(".about-bottom-stack", { yPercent: 100, zIndex: 150, visibility: "hidden", force3D: true });
+      // Position bottom stack directly below pinned container
+      gsap.set(".about-bottom-stack", { y: initialVhRef.current, zIndex: 150, visibility: "hidden", force3D: true });
       gsap.set(
         [".about-section-cta .cta-inner-mobile", ".about-section-cta .cta-inner-desktop"],
         { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
@@ -55,7 +61,11 @@ export default function AboutMobile() {
     const isAndroid = /Android/i.test(navigator.userAgent);
 
     const ctx = gsap.context(() => {
-      ScrollTrigger.config({ ignoreMobileResize: true });
+      // Prevent ScrollTrigger from refreshing layout on mobile keyboard popup/resize
+      ScrollTrigger.config({
+        ignoreMobileResize: true,
+        autoRefreshEvents: "visibilitychange,DOMContentLoaded,load",
+      });
 
       if (!isAndroid) {
         ScrollTrigger.normalizeScroll({
@@ -69,11 +79,11 @@ export default function AboutMobile() {
       const SEC5_CARDS_HOLD = 1.2;
       const UNIFIED_EASE = "power1.inOut";
 
-      const MAIN_PANELS_COUNT = 7; 
+      const MAIN_PANELS_COUNT = 7;
       const SUB_STEPS_COUNT = 3;
       const PAUSES_COUNT = 6;
 
-      const vh = window.innerHeight || BASELINE_VH;
+      const vh = initialVhRef.current;
       const scaleFactor = vh / BASELINE_VH;
 
       const DYNAMIC_SCROLL_TRACK =
@@ -103,7 +113,7 @@ export default function AboutMobile() {
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
-          invalidateOnRefresh: true,
+          invalidateOnRefresh: false, // Prevent recalculations on focus input
           onUpdate: () => {
             const sec5Time = tl.labels["sec5FullyRevealed"];
             const ctaTime = tl.labels["ctaStart"];
@@ -174,14 +184,17 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: SEC5_CARDS_HOLD });
 
-      // --- TRANSITION 6: Section Five -> CTA + Footer Combined ---
-      // Slides up the full vertical block (CTA followed naturally by Footer) over Section 5
+      // --- TRANSITION 6: Section Five -> CTA + Footer Stack ---
+      // Slide up based on locked pixel heights rather than relative vh percentages
+      const stackElement = document.querySelector(".about-bottom-stack");
+      const totalStackHeight = stackElement ? stackElement.clientHeight : vh * 1.5;
+
       tl.addLabel("ctaStart", ">")
         .set(".about-bottom-stack", { visibility: "visible" }, "ctaStart")
         .to(
           ".about-bottom-stack",
           {
-            yPercent: -100,
+            y: -(totalStackHeight - vh),
             duration: ACTION * 1.8,
             ease: "power1.out",
           },
@@ -208,7 +221,7 @@ export default function AboutMobile() {
   return (
     <div ref={scopeRef}>
       <div
-        className="about-pin pin-all relative w-full overflow-hidden h-[100dvh]"
+        className="about-pin pin-all relative w-full overflow-hidden h-[100vh]"
         style={{ visibility: "visible" }}
       >
         <div className="about-hero-panel-left gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
@@ -238,12 +251,12 @@ export default function AboutMobile() {
           <SectionFive isActive={isSectionFiveActive} />
         </div>
 
-        {/* COMBINED CONTINUOUS SLIDING STACK */}
+        {/* COMBINED CONTINUOUS SLIDING STACK LOCKED IN PIXELS */}
         <div
-          className="about-bottom-stack gpu-accelerated absolute left-0 top-full w-full h-auto z-[150] flex flex-col"
+          className="about-bottom-stack gpu-accelerated absolute left-0 top-0 w-full h-auto z-[150] flex flex-col"
           style={{ pointerEvents: "auto", visibility: "hidden" }}
         >
-          <div className="about-section-cta w-full min-h-[100dvh]">
+          <div className="about-section-cta w-full min-h-[100vh]">
             <SectionCTA />
           </div>
           <div className="about-footer-wrap w-full">
