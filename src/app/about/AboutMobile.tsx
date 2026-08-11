@@ -56,7 +56,7 @@ export default function AboutMobile() {
     return () => ctx.revert();
   }, []);
 
-  // Master Section Transition Scroll Timeline (Identical lifecycle structure to ContactMobile)
+  // Master Section Transition Scroll Timeline
   useEffect(() => {
     if (!introDone) return;
 
@@ -184,15 +184,20 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: SEC5_CARDS_HOLD });
 
+      // SLOW DOWN SECTION CTA ENTRANCE TO MATCH STANDARD VIEWPORT SPEED
       tl.addLabel("ctaStart", ">")
         .set(".about-section-cta", { visibility: "visible" }, "ctaStart")
         .fromTo(
           ".about-section-cta",
           { yPercent: 100 },
-          { yPercent: 0, duration: ACTION, ease: "power2.inOut" },
+          { 
+            yPercent: 0, 
+            duration: ACTION * 1.35, // Extended duration compensates for extra height
+            ease: "power1.out"       // Softer deceleration prevents aggressive middle acceleration
+          },
           "ctaStart"
         )
-        .to(".about-section-five", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "ctaStart");
+        .to(".about-section-five", { yPercent: 0, duration: ACTION * 1.35, ease: "power1.out" }, "ctaStart");
 
       tl.fromTo(
         ".about-section-five .s5-bg", 
