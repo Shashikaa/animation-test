@@ -21,8 +21,6 @@ const PX_PER_SUB_STEP = 450;
 const PAUSE_PX = 150;
 
 // Baseline viewport height these px values were designed against.
-// Used to scale the scroll track so tall Android phones don't feel
-// "faster" than shorter iPhones.
 const BASELINE_VH = 800;
 
 export default function AboutMobile() {
@@ -66,20 +64,13 @@ export default function AboutMobile() {
     if (!introDone) return;
 
     const ctx = gsap.context(() => {
-      const ua = navigator.userAgent;
-      const isIOS = /iPhone|iPad|iPod/i.test(ua);
-
-      // Prevent Android's dynamic toolbar / keyboard show-hide from
-      // forcing a ScrollTrigger.refresh() mid-scroll, which causes jumps.
       ScrollTrigger.config({ ignoreMobileResize: true });
 
-      // normalizeScroll exists to fix iOS Safari's address-bar resize
-      // jank. Applying it on Android replaces native (smooth) fling
-      // scrolling with GSAP's proxy scroller, which feels faster/jerkier
-      // on Android's touch deltas. So: iOS only.
-      if (isIOS) {
-        ScrollTrigger.normalizeScroll(true);
-      }
+      // Universal normalizeScroll configuration to prevent native mobile address bar toggle
+      ScrollTrigger.normalizeScroll({
+        allowNestedScroll: true,
+        lockAxis: true,
+      });
 
       const ACTION = 1.4;
       const DEAD_SCROLL = 0.2;
@@ -89,16 +80,14 @@ export default function AboutMobile() {
       const SUB_STEPS_COUNT = 3;
       const PAUSES_COUNT = 7;
 
-      // Scale the scroll track relative to the device's viewport height so
-      // taller Android screens don't compress the same content into a
-      // shorter effective scroll distance (which feels "faster").
+      // Scale scroll track relative to viewport height
       const vh = window.innerHeight || BASELINE_VH;
       const scaleFactor = vh / BASELINE_VH;
 
       const DYNAMIC_SCROLL_TRACK =
-        ((MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) +
-          (SUB_STEPS_COUNT * PX_PER_SUB_STEP) +
-          (PAUSES_COUNT * PAUSE_PX)) *
+        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL +
+          SUB_STEPS_COUNT * PX_PER_SUB_STEP +
+          PAUSES_COUNT * PAUSE_PX) *
         scaleFactor;
 
       const triggerSec5Hook = (nextIdx: number) => {
@@ -118,7 +107,7 @@ export default function AboutMobile() {
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: 0.5,
+          scrub: 0.8, // Smooth scrub to eliminate 120Hz/60Hz touch jitter
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
@@ -219,8 +208,8 @@ export default function AboutMobile() {
           { yPercent: 100 },
           {
             yPercent: 0,
-            duration: ACTION * 1.35, // Extended duration compensates for extra height
-            ease: "power1.out", // Softer deceleration prevents aggressive middle acceleration
+            duration: ACTION * 1.35,
+            ease: "power1.out",
           },
           "ctaStart"
         )
@@ -248,16 +237,14 @@ export default function AboutMobile() {
 
     return () => {
       ctx.revert();
-      if (ScrollTrigger.isTouch) {
-        ScrollTrigger.normalizeScroll(false);
-      }
+      ScrollTrigger.normalizeScroll(false);
     };
   }, [introDone]);
 
   return (
     <div ref={scopeRef}>
       <div
-        className="about-pin pin-all relative w-full overflow-hidden"
+        className="about-pin pin-all relative w-full overflow-hidden h-[100dvh]"
         style={{ visibility: "visible" }}
       >
         <div className="about-hero-panel-left gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>

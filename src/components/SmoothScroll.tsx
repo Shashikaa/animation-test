@@ -19,7 +19,7 @@ interface SmoothScrollProps {
 export default function SmoothScroll({ children, onScrollReady }: SmoothScrollProps) {
   const thumbRef = useRef<HTMLDivElement>(null);
   const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  
+
   const { preloaderDone, smootherRef } = useSite();
   const pathname = usePathname();
   const lenisRef = useRef<Lenis | null>(null);
@@ -27,6 +27,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    // Set custom dynamic CSS variable for consistent viewport sizing
     const setVh = () => {
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty("--vh", `${vh}px`);
@@ -64,26 +65,22 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       autoRefreshEvents: "DOMContentLoaded,load,visibilitychange",
     });
 
-    if (isTouchDevice) {
-      if (thumbRef.current?.parentElement) {
-        thumbRef.current.parentElement.style.display = "none";
-      }
-      onScrollReady?.();
-      return;
+    if (isTouchDevice && thumbRef.current?.parentElement) {
+      thumbRef.current.parentElement.style.display = "none";
     }
 
-    // Dynamic multiplier calculation based on standard desktop height (800px)
-    // Prevents hyper-fast scrolling on high-res / tall displays
     const screenHeight = window.innerHeight;
     const heightFactor = Math.min(Math.max(800 / screenHeight, 0.6), 1.2);
 
-    // Lenis smooth scrolling for Desktop
+    // Initializing Lenis for ALL devices (Desktop & Touch) to prevent browser address bar shifts
     const lenis = new Lenis({
-      lerp: 0.1 * heightFactor, // Adjusted dynamically for display height
+      lerp: isTouchDevice ? 0.12 : 0.1 * heightFactor,
       wheelMultiplier: 1.1 * heightFactor,
-      touchMultiplier: 0.8 * heightFactor,
+      touchMultiplier: isTouchDevice ? 1.4 : 0.8 * heightFactor, // Standardizes gesture input delta across iOS & Android
       infinite: false,
       smoothWheel: true,
+      syncTouch: true, // Intercepts touch events to prevent native address bar toggling
+      syncTouchLerp: 0.08,
     });
 
     lenisRef.current = lenis;
@@ -92,24 +89,22 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       smootherRef.current = lenis;
     }
 
-    lenis.on("scroll", () => {
-      ScrollTrigger.update();
-    });
+    // Direct binding of Lenis updates to ScrollTrigger
+    lenis.on("scroll", ScrollTrigger.update);
 
     const tickerCallback = (time: number) => {
       lenis.raf(time * 1000);
     };
-    
+
     gsap.ticker.add(tickerCallback);
     gsap.ticker.lagSmoothing(100, 16);
 
     let thumbVisible = false;
 
     const handleScroll = (e: any) => {
-      const y = e.scroll; 
+      if (isTouchDevice || !thumbRef.current) return;
 
-      if (!thumbRef.current) return;
-      
+      const y = e.scroll;
       const limit = lenis.limit;
       const trackH = window.innerHeight;
       const thumbH = Math.max((trackH / (limit + trackH)) * trackH, 40);
@@ -123,7 +118,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
         thumbVisible = true;
         thumbRef.current.style.opacity = "1";
       }
-      
+
       clearTimeout(scrollTimerRef.current);
       scrollTimerRef.current = setTimeout(() => {
         thumbVisible = false;
@@ -153,13 +148,13 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
   useEffect(() => {
     if (!preloaderDone) return;
-    
+
     if (lenisRef.current) {
       lenisRef.current.scrollTo(0, { immediate: true });
     } else {
       window.scrollTo(0, 0);
     }
-    
+
     const refreshTimeout = setTimeout(() => {
       ScrollTrigger.refresh();
     }, 100);
