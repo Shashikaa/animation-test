@@ -19,9 +19,10 @@ const Appsection = dynamic(() => import("../components/Appsection"), { ssr: fals
 
 gsap.registerPlugin(ScrollTrigger);
 
-const PX_PER_MAIN_PANEL = 850; 
-const PX_PER_SUB_STEP = 350;   
-const PAUSE_PX = 100;          
+const PX_PER_MAIN_PANEL = 850;
+const PX_PER_SUB_STEP = 350;
+const PAUSE_PX = 150;
+const BASELINE_VH = 800;
 
 function executeInlineSplitting(selector: string) {
   const element = document.querySelector(selector) as HTMLElement;
@@ -29,7 +30,7 @@ function executeInlineSplitting(selector: string) {
 
   const rawText = element.textContent || "";
   const linesArray = rawText.split("\n").map(line => line.trim()).filter(line => line.length > 0);
-  
+
   element.innerHTML = "";
   linesArray.forEach(lineText => {
     const wrapper = document.createElement("span");
@@ -55,7 +56,7 @@ export default function HomeMobile() {
   const contextValues = useSite() as any;
   const preloaderDone = contextValues?.preloaderDone ?? false;
   const onScrollReady = contextValues?.onScrollReady ?? (() => {});
-  
+
   const [introDone, setIntroDone] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
 
@@ -95,30 +96,25 @@ export default function HomeMobile() {
     if (!preloaderDone) return;
 
     const ctx = gsap.context(() => {
-      ScrollTrigger.config({ 
-        ignoreMobileResize: true,
-        autoRefreshEvents: "DOMContentLoaded,load,visibilitychange" 
-      });
-
       executeInlineSplitting(".hero-title");
       executeInlineSplitting(".hero-right-text");
       executeInlineSplitting(".hero-secondary-para");
 
       gsap.set([
-        ".hero-bg-wrapper", ".hero-bg", ".section-10", 
+        ".hero-bg-wrapper", ".hero-bg", ".section-10",
         ".s10-img-right-wrap", ".s10-scrollable-container", ".s10-title", ".s10-title-sub", ".s10-para-top",
-        ".section-7", ".s7-bg-img", ".s7-mob-bg", ".section-8", ".s8-bg-img", 
+        ".section-7", ".s7-bg-img", ".s7-mob-bg", ".section-8", ".s8-bg-img",
         ".s8-mob-bg", ".section-9", ".s9-bg-img", ".section-cta", ".footer", ".section-appsec"
       ], { force3D: true });
 
       gsap.set(".hero", { yPercent: 0, zIndex: 90, display: "block", opacity: 1, force3D: true });
       gsap.set(".hero-bg-wrapper", { opacity: 1, visibility: "visible", clipPath: "none" });
       gsap.set(".hero-gradient-bg", { opacity: 1, visibility: "visible" });
-      
+
       gsap.set([".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 1, y: 0 });
       gsap.set(".hero-progress-wrapper", { opacity: 1, visibility: "visible" });
       gsap.set(".hero-progress-bar-fill", { scaleY: 0, transformOrigin: "top center", force3D: true });
-      
+
       gsap.set(".hero-left-initial", { visibility: "visible", opacity: 1 });
       gsap.set(".hero-title .custom-line-inner", { opacity: 1, yPercent: 0 });
 
@@ -129,36 +125,39 @@ export default function HomeMobile() {
       gsap.set(".hero-secondary-para .custom-line-inner", { opacity: 0, yPercent: 100 });
 
       gsap.set(".section-2", { display: "block", clipPath: "none", zIndex: 95, yPercent: 100, opacity: 1, visibility: "visible", force3D: true });
-      gsap.set(".s2-mob-scroll-wrapper", { opacity: 0, yPercent: 100, y: 0 }); 
+      gsap.set(".s2-mob-scroll-wrapper", { opacity: 0, yPercent: 100, y: 0 });
       gsap.set([".s2-title-main", ".s2-title-sub", ".s2-body"], { opacity: 1, y: 0, visibility: "visible" });
-      
-      gsap.set([".s2-mob-clip-bg-1", ".s2-mob-clip-bg-2", ".s2-mob-clip-bg-3"], { 
+
+      gsap.set([".s2-mob-clip-bg-1", ".s2-mob-clip-bg-2", ".s2-mob-clip-bg-3"], {
         opacity: 0,
         force3D: true
       });
 
-      gsap.set(".section-8", { visibility: "hidden", yPercent: 100, zIndex: 100, force3D: true });
+      gsap.set(".section-8", { visibility: "visible", yPercent: 100, zIndex: 100, force3D: true });
       gsap.set(".s8-bg-img", { yPercent: 20, force3D: true });
       gsap.set(".s8-mob-bg", { scale: 1.35, transformOrigin: "center center", force3D: true });
 
       // Baseline positioning for Section 10
-      gsap.set(".section-10", { visibility: "hidden", yPercent: 100, zIndex: 105, force3D: true });
+      gsap.set(".section-10", { visibility: "visible", yPercent: 100, zIndex: 105, force3D: true });
       gsap.set(".s10-scrollable-container", { yPercent: 0, force3D: true });
       gsap.set([".s10-title", ".s10-title-sub", ".s10-para-top"], { yPercent: 0, opacity: 1, force3D: true });
 
-      gsap.set(".section-7", { visibility: "hidden", yPercent: 100, zIndex: 110, force3D: true });
+      gsap.set(".section-7", { visibility: "visible", yPercent: 100, zIndex: 110, force3D: true });
       gsap.set(".s7-bg-img", { yPercent: 20, force3D: true });
       gsap.set(".s7-mob-bg", { scale: 1.35, transformOrigin: "center center", force3D: true });
 
-      gsap.set(".section-appsec", { visibility: "hidden", yPercent: 100, zIndex: 115, force3D: true });
+      gsap.set(".section-appsec", { visibility: "visible", yPercent: 100, zIndex: 115, force3D: true });
 
-      gsap.set(".section-9", { visibility: "hidden", yPercent: 100, zIndex: 120, force3D: true });
+      gsap.set(".section-9", { visibility: "visible", yPercent: 100, zIndex: 120, force3D: true });
       gsap.set(".s9-bg-img", { yPercent: 20, scale: 1.35, transformOrigin: "center center", force3D: true });
       gsap.set(".s9-title", { opacity: 1 });
       gsap.set(".s9-para", { opacity: 1 });
 
       gsap.set(".section-cta", { yPercent: 100, zIndex: 125, visibility: "hidden", force3D: true });
-      gsap.set([".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"], { opacity: 1, y: 0 });
+      gsap.set(
+        [".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"],
+        { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
+      );
       gsap.set(".footer", { yPercent: 100, zIndex: 126, visibility: "hidden", force3D: true });
 
       gsap.set(".hero-bg", { scale: 1.0, transformOrigin: "center center", force3D: true });
@@ -172,37 +171,48 @@ export default function HomeMobile() {
   useEffect(() => {
     if (!preloaderDone || !introDone) return;
 
+    const isAndroid = /Android/i.test(navigator.userAgent);
+
     const ctx = gsap.context(() => {
-      const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-      if (isTouchDevice) {
-        ScrollTrigger.normalizeScroll(true);
+      ScrollTrigger.config({ ignoreMobileResize: true });
+
+      if (!isAndroid) {
+        ScrollTrigger.normalizeScroll({
+          allowNestedScroll: true,
+          lockAxis: true,
+        });
       }
 
       const ACTION = 1.4;
-      const DEAD_SCROLL = 0.2; 
+      const DEAD_SCROLL = 0.15;
+      const UNIFIED_EASE = "power1.inOut";
 
       const MAIN_PANELS_COUNT = 8;
       const SUB_STEPS_COUNT = 5;
       const PAUSES_COUNT = 8;
 
-      const DYNAMIC_SCROLL_TRACK = 
-        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + 
-        (SUB_STEPS_COUNT * PX_PER_SUB_STEP) + 
-        (PAUSES_COUNT * PAUSE_PX);
+      const vh = window.innerHeight || BASELINE_VH;
+      const scaleFactor = vh / BASELINE_VH;
+
+      const DYNAMIC_SCROLL_TRACK =
+        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL +
+          SUB_STEPS_COUNT * PX_PER_SUB_STEP +
+          PAUSES_COUNT * PAUSE_PX) *
+        scaleFactor;
 
       const tl = gsap.timeline({
-        defaults: { ease: "none", lazy: true },
+        defaults: { ease: UNIFIED_EASE, lazy: true },
         scrollTrigger: {
           trigger: ".home-pin-master",
           start: "top top",
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: 0.5,
+          scrub: isAndroid ? 0.2 : 0.6,
           anticipatePin: 1,
-          preventOverlaps: true, 
-          fastScrollEnd: true, 
-          invalidateOnRefresh: false,
+          preventOverlaps: true,
+          fastScrollEnd: true,
+          invalidateOnRefresh: true,
         },
       });
 
@@ -213,7 +223,7 @@ export default function HomeMobile() {
           { scaleY: 0.33, duration: ACTION, ease: "none" },
           "heroStart"
         )
-        .fromTo(".hero-bg", 
+        .fromTo(".hero-bg",
           { scale: 1.0 },
           { scale: 1.15, duration: ACTION * 2.0, ease: "power1.out" },
           "heroStart"
@@ -279,26 +289,27 @@ export default function HomeMobile() {
           ease: "power1.inOut"
         }, "heroExit")
 
-        .fromTo(".section-2", 
-          { yPercent: 100 }, 
-          { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, 
+        .fromTo(".section-2",
+          { yPercent: 100 },
+          { yPercent: 0, duration: ACTION },
           "heroExit"
         )
+        .to(".hero", { yPercent: -15, duration: ACTION }, "heroExit")
         .addLabel("textLanding", `heroExit+=${ACTION}`);
 
       // ── SECTION 2 INNER ANIMATIONS ──
       tl.addLabel("s2TextDismissal", "textLanding")
-        .to([".s2-title-main", ".s2-title-sub", ".s2-body"], { 
-          opacity: 0, 
-          y: -40, 
+        .to([".s2-title-main", ".s2-title-sub", ".s2-body"], {
+          opacity: 0,
+          y: -40,
           duration: ACTION * 0.8,
           ease: "power2.in"
         }, "s2TextDismissal")
-        
+
         .addLabel("s2MobileScrollStart", "s2TextDismissal+=" + (ACTION * 0.4))
         .to(".s2-mob-scroll-wrapper", { opacity: 1, duration: ACTION * 0.3 }, "s2MobileScrollStart")
-        .fromTo(".s2-mob-scroll-wrapper", 
-          { yPercent: 100 }, 
+        .fromTo(".s2-mob-scroll-wrapper",
+          { yPercent: 100 },
           { yPercent: -70, duration: ACTION * 2.5 },
           "s2MobileScrollStart"
         )
@@ -306,39 +317,34 @@ export default function HomeMobile() {
         .to(".s2-mob-clip-bg-1", {
           opacity: 1,
           duration: ACTION * 0.7,
-          ease: "power2.inOut"
         }, "s2MobileScrollStart+=" + (ACTION * 0.3))
 
         .to(".s2-mob-clip-bg-2", {
           opacity: 1,
           duration: ACTION * 0.7,
-          ease: "power2.inOut"
         }, "s2MobileScrollStart+=" + (ACTION * 0.9))
 
         .to(".s2-mob-clip-bg-3", {
           opacity: 1,
           duration: ACTION * 0.7,
-          ease: "power2.inOut"
         }, "s2MobileScrollStart+=" + (ACTION * 1.5))
 
         .to({}, { duration: DEAD_SCROLL });
 
       // ── SECTION 8 SLIDE UP ──
       tl.addLabel("sec8Start", ">")
-        .set(".section-8", { visibility: "visible" }, "sec8Start")
-        .to(".section-8", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec8Start")
-        .to(".s8-bg-img", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec8Start")
-        .to(".s8-mob-bg", { scale: 1, duration: ACTION, ease: "power2.inOut" }, "sec8Start")
+        .to(".section-8", { yPercent: 0, duration: ACTION }, "sec8Start")
+        .to(".section-2", { yPercent: -15, duration: ACTION }, "sec8Start")
+        .to(".s8-bg-img", { yPercent: 0, duration: ACTION }, "sec8Start")
+        .to(".s8-mob-bg", { scale: 1, duration: ACTION }, "sec8Start")
 
         .to({}, { duration: DEAD_SCROLL });
 
-      // ── SECTION 10 SLIDE UP & TEXT INNER SLIDE UP ──
+      // ── SECTION 10 SLIDE UP & TEXT INNER SLIDE UP FROM BELOW ──
       tl.addLabel("sec10Start", ">")
-        .set(".section-10", { visibility: "visible" }, "sec10Start")
-        .fromTo(".section-10", { yPercent: 100 }, { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec10Start")
-        .to(".section-8", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "sec10Start");
+        .to(".section-10", { yPercent: 0, duration: ACTION }, "sec10Start")
+        .to(".section-8", { yPercent: -15, duration: ACTION }, "sec10Start");
 
-      // Slide initial header elements up while pulling the card content upward
       tl.addLabel("sec10InnerScroll", ">")
         .to([".s10-title", ".s10-title-sub", ".s10-para-top"], {
           y: -300,
@@ -346,9 +352,9 @@ export default function HomeMobile() {
           duration: ACTION * 0.5,
           ease: "power2.in"
         }, "sec10InnerScroll")
-        .fromTo(".s10-scrollable-container", 
+        .fromTo(".s10-scrollable-container",
           { yPercent: 100 },
-          { yPercent: -220, duration: ACTION * 1, ease: "power2.inOut" }, 
+          { yPercent: -220, duration: ACTION * 1 },
           "sec10InnerScroll"
         )
 
@@ -356,30 +362,30 @@ export default function HomeMobile() {
 
       // ── SECTION 7 SLIDE UP ──
       tl.addLabel("sec7Start", ">")
-        .set(".section-7", { visibility: "visible" }, "sec7Start")
-        .fromTo(".section-7", { yPercent: 100 }, { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec7Start")
-        .to(".s7-bg-img", { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec7Start")
-        .to(".s7-mob-bg", { scale: 1, duration: ACTION, ease: "power2.inOut" }, "sec7Start")
+        .to(".section-7", { yPercent: 0, duration: ACTION }, "sec7Start")
+        .to(".section-10", { yPercent: -15, duration: ACTION }, "sec7Start")
+        .to(".s7-bg-img", { yPercent: 0, duration: ACTION }, "sec7Start")
+        .to(".s7-mob-bg", { scale: 1, duration: ACTION }, "sec7Start")
 
         .to({}, { duration: DEAD_SCROLL });
 
       // ── APPSECTION SLIDE UP ──
       tl.addLabel("appSecStart", ">")
-        .set(".section-appsec", { visibility: "visible" }, "appSecStart")
-        .fromTo(".section-appsec", { yPercent: 100 }, { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "appSecStart")
-        .to(".section-7", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "appSecStart") 
+        .to(".section-appsec", { yPercent: 0, duration: ACTION }, "appSecStart")
+        .to(".section-7", { yPercent: -15, duration: ACTION }, "appSecStart")
 
-        .to({}, { duration: DEAD_SCROLL }); 
+        .to({}, { duration: DEAD_SCROLL });
 
       // ── SECTION 9 SLIDE UP ──
       tl.addLabel("sec9Start", ">")
-        .set(".section-9", { visibility: "visible" }, "sec9Start")
-        .fromTo(".section-9", { yPercent: 100 }, { yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec9Start")
-        .to(".section-appsec", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "sec9Start")
-        .to(".s9-bg-img", { scale: 1, yPercent: 0, duration: ACTION, ease: "power2.inOut" }, "sec9Start")
-        
+        .to(".section-9", { yPercent: 0, duration: ACTION }, "sec9Start")
+        .to(".section-appsec", { yPercent: -15, duration: ACTION }, "sec9Start")
+        .to(".s9-bg-img", { scale: 1, yPercent: 0, duration: ACTION }, "sec9Start")
+
         .to(".s9-title", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.15")
-        .to(".s9-para", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.15");
+        .to(".s9-para", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.15")
+
+        .to({}, { duration: DEAD_SCROLL });
 
       // ── CTA REVEAL ──
       tl.addLabel("ctaStart", ">")
@@ -387,31 +393,23 @@ export default function HomeMobile() {
         .fromTo(
           ".section-cta",
           { yPercent: 100 },
-          { yPercent: 0, duration: ACTION, ease: "power2.inOut" },
+          { yPercent: 0, duration: ACTION },
           "ctaStart"
         )
-        .to(".s9-bg-img", { yPercent: -10, duration: ACTION, ease: "power2.inOut" }, "ctaStart")
+        .to(".section-9", { yPercent: 0, duration: ACTION }, "ctaStart")
 
         .to({}, { duration: DEAD_SCROLL });
 
       // ── FOOTER SLIDE UP (Directly over CTA) ──
       tl.addLabel("footerStart", ">")
         .set(".footer", { visibility: "visible" }, "footerStart")
-        .to(
+        .fromTo(
           ".footer",
+          { yPercent: 100 },
           {
             yPercent: 0,
             duration: ACTION,
-            ease: "power2.inOut",
-          },
-          "footerStart"
-        )
-        .to(
-          ".s9-bg-img",
-          {
-            yPercent: -20,
-            duration: ACTION,
-            ease: "power2.inOut",
+            ease: "power1.out",
           },
           "footerStart"
         );
@@ -422,7 +420,7 @@ export default function HomeMobile() {
 
     return () => {
       ctx.revert();
-      if (ScrollTrigger.isTouch) {
+      if (!isAndroid) {
         ScrollTrigger.normalizeScroll(false);
       }
     };
@@ -438,50 +436,53 @@ export default function HomeMobile() {
         }
       `}</style>
 
-      <div className="home-pin-master pin-all-home relative w-full overflow-hidden">
-        
+      <div
+        className="home-pin-master pin-all-home relative w-full overflow-hidden h-[100dvh]"
+        style={{ visibility: "visible" }}
+      >
+
         {/* Layer 1: Hero Component */}
-        <div className="hero gpu-accelerated absolute inset-0 w-full h-full" style={{ pointerEvents: "auto" }}>
+        <div className="hero gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 90, pointerEvents: "auto" }}>
           <Hero />
         </div>
 
         {/* Layer 2: Section Two */}
-        <div className="section-2 gpu-accelerated absolute inset-0 h-full w-full" style={{ visibility: "hidden" }}>
+        <div className="section-2 gpu-accelerated absolute inset-0 h-full w-full" style={{ zIndex: 95, visibility: "hidden" }}>
           <SectionTwo />
         </div>
 
         {/* Layer 3: Section Eight */}
-        <div className="section-8 gpu-accelerated absolute inset-0 h-full w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        <div className="section-8 gpu-accelerated absolute inset-0 h-full w-full" style={{ zIndex: 100, pointerEvents: "auto", visibility: "hidden" }}>
           <SectionEight />
         </div>
 
         {/* Layer 4: Section Ten */}
-        <div className="section-10 gpu-accelerated absolute inset-0 h-full w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        <div className="section-10 gpu-accelerated absolute inset-0 h-full w-full" style={{ zIndex: 105, pointerEvents: "auto", visibility: "hidden" }}>
           <SectionTen />
         </div>
 
         {/* Layer 5: Section Seven */}
-        <div className="section-7 gpu-accelerated absolute inset-0 h-full w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        <div className="section-7 gpu-accelerated absolute inset-0 h-full w-full" style={{ zIndex: 110, pointerEvents: "auto", visibility: "hidden" }}>
           <SectionSeven />
         </div>
 
         {/* Layer 6: App Section */}
-        <div className="section-appsec gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] bg-black" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        <div className="section-appsec gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] bg-black" style={{ zIndex: 115, pointerEvents: "auto", visibility: "hidden" }}>
           <Appsection />
         </div>
 
         {/* Layer 7: Section Nine */}
-        <div className="section-9 gpu-accelerated absolute inset-0 h-full w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        <div className="section-9 gpu-accelerated absolute inset-0 h-full w-full" style={{ zIndex: 120, pointerEvents: "auto", visibility: "hidden" }}>
           <SectionNine />
         </div>
 
         {/* Layer 8: CTA Section */}
-        <div className="section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh]" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        <div className="section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh]" style={{ zIndex: 125, pointerEvents: "auto", visibility: "hidden" }}>
           <SectionCTA />
         </div>
 
         {/* Layer 9: Footer */}
-        <div className="footer gpu-accelerated absolute left-0 bottom-0 w-full" style={{ pointerEvents: "auto", visibility: "hidden" }}>
+        <div className="footer gpu-accelerated absolute left-0 bottom-0 w-full" style={{ zIndex: 126, pointerEvents: "auto", visibility: "hidden" }}>
           <Footer />
         </div>
 

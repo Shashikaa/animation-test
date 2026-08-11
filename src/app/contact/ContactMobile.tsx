@@ -12,122 +12,110 @@ import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Standardized Metrics aligned with AboutMobile
-const PX_PER_MAIN_PANEL = 850; 
+const PX_PER_MAIN_PANEL = 850;
 const PAUSE_PX = 150;
+const BASELINE_VH = 800;
 
 export default function ContactMobile() {
   const scopeRef = useRef<HTMLDivElement>(null);
 
-  // Single unified utility hook configured for Mobile
   const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.set(".cta-scroll-wrapper", { yPercent: 100 });
-      gsap.set(".section-one-scroll-wrapper", { yPercent: 100 });
-      gsap.set(".faq-scroll-wrapper", { yPercent: 100 });
-      gsap.set(".footer-scroll-wrapper", { yPercent: 100 });
-      
-      gsap.set([".faq-content", ".cta-inner-mobile", ".cta-inner-desktop"], { opacity: 1 });
+      // Step-by-step panel positioning matching the AboutMobile standard
+      gsap.set(".contact-hero-panel", { yPercent: 0, force3D: true });
+      gsap.set(".cta-scroll-wrapper", { yPercent: 100, zIndex: 20, visibility: "visible", force3D: true });
+      gsap.set(".section-one-scroll-wrapper", { yPercent: 100, zIndex: 30, visibility: "visible", force3D: true });
+      gsap.set(".faq-scroll-wrapper", { yPercent: 100, zIndex: 40, visibility: "visible", force3D: true });
+
+      gsap.set(
+        [".cta-scroll-wrapper .cta-inner-mobile", ".cta-scroll-wrapper .cta-inner-desktop"],
+        { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
+      );
+
+      gsap.set(".footer-scroll-wrapper", { yPercent: 100, zIndex: 50, visibility: "hidden", force3D: true });
     }, scopeRef);
 
     return () => ctx.revert();
   }, []);
 
-  // Master Section Transition Scroll Timeline
   useEffect(() => {
     if (!introDone) return;
 
+    const isAndroid = /Android/i.test(navigator.userAgent);
+
     const ctx = gsap.context(() => {
-      const isTouchDevice = ScrollTrigger.isTouch > 0 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-      if (isTouchDevice) {
-        ScrollTrigger.normalizeScroll(true);
+      ScrollTrigger.config({ ignoreMobileResize: true });
+
+      if (!isAndroid) {
+        ScrollTrigger.normalizeScroll({
+          allowNestedScroll: true,
+          lockAxis: true,
+        });
       }
 
       const ACTION = 1.4;
-      const DEAD_SCROLL = 0.2;
+      const DEAD_SCROLL = 0.15;
+      const UNIFIED_EASE = "power1.inOut";
 
       const MAIN_PANELS_COUNT = 4;
       const PAUSES_COUNT = 4;
 
-      const DYNAMIC_SCROLL_TRACK = (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL) + (PAUSES_COUNT * PAUSE_PX);
+      const vh = window.innerHeight || BASELINE_VH;
+      const scaleFactor = vh / BASELINE_VH;
+
+      const DYNAMIC_SCROLL_TRACK =
+        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL + PAUSES_COUNT * PAUSE_PX) * scaleFactor;
 
       const tl = gsap.timeline({
-        defaults: { ease: "none", lazy: true },
+        defaults: { ease: UNIFIED_EASE, lazy: true },
         scrollTrigger: {
           trigger: ".contact-pin-master",
           start: "top top",
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
           pin: true,
           pinType: "fixed",
-          scrub: 0.5,
+          scrub: isAndroid ? 0.2 : 0.6,
           anticipatePin: 1,
           preventOverlaps: true,
           fastScrollEnd: true,
-          invalidateOnRefresh: false,
-        }
+          invalidateOnRefresh: true,
+        },
       });
 
-      tl
-        // 1. HERO EXIT & CTA ENTRANCE
-        .to(".contact-hero-bg", { yPercent: -15, ease: "none", duration: ACTION }, 0)
-        .to(".hero-text-wrap", { opacity: 0, y: -40, ease: "power1.in", duration: ACTION * 0.75 }, 0)
-        .fromTo(
-          ".cta-scroll-wrapper", 
-          { yPercent: 100 }, 
-          { yPercent: 0, ease: "power2.inOut", duration: ACTION }, 
-          0
-        )
+      // --- TRANSITION 1: Hero -> CTA ---
+      tl.to(".cta-scroll-wrapper", { yPercent: 0, duration: ACTION })
+        .to(".contact-hero-bg", { scale: 1.0, yPercent: -15, duration: ACTION }, "<");
 
-        .to({}, { duration: DEAD_SCROLL })
+      tl.to({}, { duration: DEAD_SCROLL });
 
-        // 2. SECTION ONE SLIDE UP — Anchored at bottom-0
+      // --- TRANSITION 2: CTA -> Section One ---
+      tl.to(".section-one-scroll-wrapper", { yPercent: 0, duration: ACTION })
+        .to(".cta-scroll-wrapper", { yPercent: -15, duration: ACTION }, "<");
+
+      tl.to({}, { duration: DEAD_SCROLL });
+
+      // --- TRANSITION 3: Section One -> FAQ ---
+      tl.to(".faq-scroll-wrapper", { yPercent: 0, duration: ACTION })
+        .to(".section-one-scroll-wrapper", { yPercent: -15, duration: ACTION }, "<");
+
+      tl.to({}, { duration: DEAD_SCROLL });
+
+      // --- TRANSITION 4: FAQ -> Footer ---
+      tl.addLabel("footerStart", ">")
+        .set(".footer-scroll-wrapper", { visibility: "visible" }, "footerStart")
         .fromTo(
-          ".section-one-scroll-wrapper", 
+          ".footer-scroll-wrapper",
           { yPercent: 100 },
-          { 
-            yPercent: 0, 
-            ease: "power2.inOut", 
-            duration: ACTION * 1.2 
-          }, 
-          ">"
-        )
-
-        .to({}, { duration: DEAD_SCROLL })
-
-        // 3. FAQ SECTION ENTRANCE
-        .fromTo(
-          ".faq-scroll-wrapper", 
-          { yPercent: 100 },
-          { yPercent: 0, ease: "power2.inOut", duration: ACTION }, 
-          ">"
-        )
-
-        .to({}, { duration: DEAD_SCROLL })
-
-
-
-        .to({}, { duration: 0 })
-
-        // 4. FOOTER REVEAL
-        .addLabel("footerStart", ">")
-        .fromTo(
-          ".footer-scroll-wrapper", 
-          { yPercent: 100 },
-          { 
-            yPercent: 0, 
-            ease: "power2.inOut", 
-            duration: ACTION 
-          }, 
+          { yPercent: 0, duration: ACTION, ease: "power1.out" },
           "footerStart"
         );
-
     }, scopeRef);
 
     return () => {
       ctx.revert();
-      if (ScrollTrigger.isTouch) {
+      if (!isAndroid) {
         ScrollTrigger.normalizeScroll(false);
       }
     };
@@ -135,38 +123,46 @@ export default function ContactMobile() {
 
   return (
     <div ref={scopeRef}>
-      <div 
-        className="contact-pin-master pin-all-contact relative w-full overflow-hidden"
+      <div
+        className="contact-pin-master pin-all-contact relative w-full overflow-hidden h-[100dvh]"
         style={{ visibility: "visible" }}
       >
-        
-        {/* Layer 1: Hero Section */}
-        <div className="gpu-accelerated absolute inset-0 w-full h-full z-10">
+        {/* Layer 1: Hero */}
+        <div className="contact-hero-panel gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
           <ContactHero isMobile={true} />
         </div>
 
-        {/* Layer 2: CTA Section */}
-        <div className="cta-scroll-wrapper gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] z-20">
+        {/* Layer 2: CTA */}
+        <div
+          className="cta-scroll-wrapper gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh]"
+          style={{ zIndex: 20 }}
+        >
           <SectionCTA />
         </div>
 
-        {/* Layer 3: Section One (ANCHORED TO BOTTOM-0) */}
-        <div className="section-one-scroll-wrapper gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto z-30">
+        {/* Layer 3: Section One */}
+        <div
+          className="section-one-scroll-wrapper gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto"
+          style={{ zIndex: 30 }}
+        >
           <SectionOne />
         </div>
 
-        {/* Layer 4: FAQ Section */}
-        <div className="faq-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full z-40">
+        {/* Layer 4: FAQ */}
+        <div
+          className="faq-scroll-wrapper gpu-accelerated absolute inset-0 w-full h-full"
+          style={{ zIndex: 40 }}
+        >
           <FAQSection />
         </div>
 
-        {/* Layer 5: Footer Wrapper Frame */}
-        <div className="footer-scroll-wrapper gpu-accelerated absolute left-0 bottom-0 w-full z-50 pointer-events-none">
-          <div className="w-full pointer-events-auto">
-            <Footer />
-          </div>
+        {/* Layer 5: Footer */}
+        <div
+          className="footer-scroll-wrapper gpu-accelerated absolute left-0 bottom-0 w-full"
+          style={{ zIndex: 50, pointerEvents: "auto", visibility: "hidden" }}
+        >
+          <Footer />
         </div>
-
       </div>
     </div>
   );
