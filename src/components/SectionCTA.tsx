@@ -9,7 +9,7 @@ type SectionCTAProps = {
 
 export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
   return (
-    <section className="about-section-cta section-cta h-[100dvh] w-full relative overflow-hidden">
+    <section className="about-section-cta section-cta min-h-[100dvh] h-auto w-full relative">
       {/* Background Canvas & Fallback Image */}
       <div className="absolute inset-0 z-[1] pointer-events-none w-full h-full">
         <div className="hidden lg:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
@@ -34,6 +34,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
           alignItems: "center",
           justifyContent: "space-between",
           gap: 44,
+          minHeight: "100vh",
           height: "100%",
           maxWidth: 1440,
           padding: "40px 48px",
@@ -77,20 +78,9 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
         </div>
       </div>
 
-      {/* Mobile Layout - Vertically Centered (Original Text Alignments Intact) */}
+      {/* Mobile Layout - Dynamic Content Height & Vertically Centered */}
       <div
-        className="flex lg:hidden cta-inner-mobile h-full w-full overflow-y-auto overscroll-contain !py-12"
-        onTouchMove={(e) => {
-          // Allow internal scrolling without bleeding into GSAP page scroll trigger when at boundaries
-          const target = e.currentTarget;
-          const isAtTop = target.scrollTop === 0;
-          const isAtBottom =
-            Math.abs(target.scrollHeight - target.clientHeight - target.scrollTop) < 2;
-
-          if (!isAtTop && !isAtBottom) {
-            e.stopPropagation();
-          }
-        }}
+        className="flex lg:hidden cta-inner-mobile min-h-[100dvh] h-auto w-full !py-12 !pb-16"
         style={{
           position: "relative",
           zIndex: 10,
@@ -100,7 +90,6 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
           paddingLeft: "20px",
           paddingRight: "20px",
           margin: 0,
-          WebkitOverflowScrolling: "touch",
         }}
       >
         <h2
