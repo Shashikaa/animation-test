@@ -33,7 +33,7 @@ export default function AboutMobile() {
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      // Pre-set all panel initial positions & visibilities upfront to prevent mid-scroll layout hits
+      // Pre-set all panel initial positions & visibilities upfront
       gsap.set(".about-hero-panel-left", { yPercent: 0, force3D: true });
       gsap.set(".about-section-one", { yPercent: 100, visibility: "visible", force3D: true });
       gsap.set(".about-section-two", { yPercent: 100, visibility: "visible", force3D: true });
@@ -74,7 +74,7 @@ export default function AboutMobile() {
 
       // Standardized transition metrics matching Hero -> Sec1 smoothness
       const ACTION = 1.4;
-      const DEAD_SCROLL = 0.25;
+      const DEAD_SCROLL = 0.15;
       const SEC5_CARDS_HOLD = 1.2;
       const UNIFIED_EASE = "power1.inOut"; // Silky ease for scrub control
 
@@ -157,16 +157,9 @@ export default function AboutMobile() {
 
       tl.to({}, { duration: DEAD_SCROLL });
 
-      // --- TRANSITION 4: Section Three -> Section Four ---
-      tl.addLabel("sec3to4Transition")
-        .to(".about-section-four", { yPercent: 0, duration: ACTION }, "sec3to4Transition")
-        .to(".about-section-three", { yPercent: -105, duration: ACTION }, "sec3to4Transition")
-        .fromTo(
-          ".about-section-four .s4-img-bg",
-          { yPercent: 15 },
-          { yPercent: 0, duration: ACTION },
-          "sec3to4Transition"
-        );
+      // --- TRANSITION 4: Section Three -> Section Four (Matched with all other transitions) ---
+      tl.to(".about-section-four", { yPercent: 0, duration: ACTION })
+        .to(".about-section-three", { yPercent: -15, duration: ACTION }, "<");
 
       tl.to({}, { duration: DEAD_SCROLL });
 
@@ -204,7 +197,7 @@ export default function AboutMobile() {
           },
           "ctaStart"
         )
-        .to(".about-section-five", { yPercent: -15, duration: ACTION * 1.2, ease: "power1.out" }, "ctaStart");
+        .to(".about-section-five", { yPercent: 0, duration: ACTION * 1.2, ease: "power1.out" }, "ctaStart");
 
       tl.fromTo(
         ".about-section-five .s5-bg",
@@ -216,7 +209,6 @@ export default function AboutMobile() {
       tl.to({}, { duration: DEAD_SCROLL });
 
       // --- TRANSITION 7: CTA -> Footer Wrap ---
-      // Fix: Keep CTA visible while footer slides directly over top
       tl.addLabel("footerStart", ">")
         .set(".about-footer-wrap", { visibility: "visible" }, "footerStart")
         .fromTo(
@@ -253,20 +245,17 @@ export default function AboutMobile() {
           <SectionTwo />
         </div>
 
-        <div
-          className="about-section-three gpu-accelerated absolute inset-0 w-full h-[100dvh]"
-          style={{ zIndex: 40, willChange: "transform" }}
-        >
+        <div className="about-section-three gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 40 }}>
           <SectionThree />
         </div>
 
-        <div className="about-section-four gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 35 }}>
+        <div className="about-section-four gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 50 }}>
           <SectionFour />
         </div>
 
         <div
           className="about-section-five gpu-accelerated absolute inset-0 w-full h-full"
-          style={{ zIndex: 45 }}
+          style={{ zIndex: 60 }}
         >
           <SectionFive isActive={isSectionFiveActive} />
         </div>
