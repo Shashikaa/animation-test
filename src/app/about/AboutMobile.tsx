@@ -12,8 +12,8 @@ import { useState, useRef, useEffect } from "react";
 import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
-// Reduced steps since Footer is now outside the pinned animation sequence
-const TOTAL_SCROLL_STEPS = 9;
+// Increased steps from 9 to 10 to give extra scroll distance for tall CTA content
+const TOTAL_SCROLL_STEPS = 10;
 const easeOutQuad = (t: number) => t * (2 - t);
 
 export default function AboutMobile() {
@@ -30,10 +30,8 @@ export default function AboutMobile() {
   const lastSec5Idx = useRef<number>(-1);
   const { smootherRef } = useSite();
 
-  // Run mobile hero intro sequence
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // ── 1. LOCK SCROLL & LENIS UNTIL INTRO COMPLETES ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -107,14 +105,20 @@ export default function AboutMobile() {
         }
       }
 
-      // ── 2. CTA ENTRANCE LOGIC ──
-      // CTA enters smoothly over Section 5 (steps 7.0 to 8.0) and sits at 0px
-      const rawCtaEnter = Math.min(Math.max((stepProgress - 7.0) / 1.0, 0), 1);
-      const ctaEnterProgress = easeOutQuad(rawCtaEnter);
-      const ctaY = (1 - ctaEnterProgress) * vh;
+      // ── 2. DYNAMIC CTA HEIGHT physics ──
+      const ctaEl = ctaWrapRef.current;
+      const ctaHeight = ctaEl ? ctaEl.offsetHeight : vh;
+      // Calculate extra overflow height beyond viewport
+      const extraCtaScroll = Math.max(0, ctaHeight - vh);
 
-      if (ctaWrapRef.current) {
-        ctaWrapRef.current.style.transform = `translate3d(0, ${ctaY}px, 0)`;
+      const rawCtaProgress = Math.min(Math.max((stepProgress - 7.0) / 2.0, 0), 1);
+      const ctaProgress = easeOutQuad(rawCtaProgress);
+
+      // Translates CTA into view and pushes it up by extraCtaScroll if tall
+      const ctaY = (1 - ctaProgress) * vh - ctaProgress * extraCtaScroll;
+
+      if (ctaEl) {
+        ctaEl.style.transform = `translate3d(0, ${ctaY}px, 0)`;
       }
 
       rafId.current = requestAnimationFrame(updatePhysics);
@@ -129,7 +133,6 @@ export default function AboutMobile() {
 
       if (totalScrollable <= 0) return;
 
-      // Unpins the fixed container when user scrolls past track container bottom
       if (trackRect.top <= 0 && trackRect.bottom >= vh) {
         fixedFrameRef.current.style.position = "fixed";
         fixedFrameRef.current.style.top = "0px";
@@ -173,7 +176,6 @@ export default function AboutMobile() {
 
   return (
     <div ref={scopeRef}>
-      {/* ANIMATED CARDS TRACK CONTAINER */}
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
@@ -231,7 +233,7 @@ export default function AboutMobile() {
           {/* 6: SECTION CTA */}
           <div
             ref={ctaWrapRef}
-            className="about-stack-layer absolute left-0 top-0 w-full min-h-[100svh] z-[70] gpu-accelerated bg-[#162D24]"
+            className="about-stack-layer absolute left-0 top-0 w-full z-[70] gpu-accelerated bg-[#162D24]"
             style={{ transform: "translate3d(0, 100%, 0)" }}
           >
             <SectionCTA />
@@ -239,7 +241,6 @@ export default function AboutMobile() {
         </div>
       </div>
 
-      {/* FOOTER (Normal Document Flow - Native Scrolling) */}
       <footer className="relative z-20 w-full bg-[#162D24]">
         <Footer />
       </footer>
