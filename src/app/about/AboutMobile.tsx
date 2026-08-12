@@ -33,7 +33,7 @@ export default function AboutMobile() {
   const { smootherRef } = useSite();
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // ── 1. GLOBAL FORM & DROPDOWN FOCUS DETECTOR ──
+  // ── 1. FORM FOCUS & KEYBOARD DISMISSAL RE-SYNC ──
   useEffect(() => {
     const isInteractiveElement = (target: HTMLElement | null) => {
       if (!target) return false;
@@ -57,14 +57,28 @@ export default function AboutMobile() {
       }
     };
 
-    const handleFocusOut = (e: FocusEvent) => {
-      // Small timeout allows focus switching between dropdown options without jarring jumps
+    const handleFocusOut = () => {
+      // Wait for soft keyboard slide-down animation on iOS/Android
       setTimeout(() => {
         const active = document.activeElement as HTMLElement;
         if (!isInteractiveElement(active)) {
           isInputFocusedRef.current = false;
+
+          // Re-sync scroll position and purge native keyboard offsets
+          if (trackRef.current) {
+            const vh = vhRef.current || window.innerHeight;
+            const trackRect = trackRef.current.getBoundingClientRect();
+            const currentScroll = Math.max(0, -trackRect.top);
+            const totalScrollable = trackRect.height - vh;
+
+            if (totalScrollable > 0) {
+              const exactProgress = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
+              targetProgress.current = exactProgress;
+              currentProgress.current = exactProgress; // Prevents scroll lock by instant sync
+            }
+          }
         }
-      }, 50);
+      }, 150);
     };
 
     window.addEventListener("focusin", handleFocusIn);
@@ -151,13 +165,7 @@ export default function AboutMobile() {
         return;
       }
 
-      // Freeze transform movements during input or dropdown interaction
-      if (isInputFocusedRef.current) {
-        currentProgress.current = targetProgress.current;
-        rafId.current = requestAnimationFrame(updatePhysics);
-        return;
-      }
-
+      // Smooth progress physics lerp
       const lerpFactor = 0.12;
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
@@ -169,7 +177,8 @@ export default function AboutMobile() {
       const totalSteps = 7.0 + ctaStepLength;
       const requiredTrackHeight = (totalSteps + 1) * vh;
 
-      if (trackRef.current) {
+      // Update track height dynamically when form is idle
+      if (trackRef.current && !isInputFocusedRef.current) {
         if (Math.abs(trackRef.current.offsetHeight - requiredTrackHeight) > 2) {
           trackRef.current.style.height = `${requiredTrackHeight}px`;
         }
@@ -208,7 +217,7 @@ export default function AboutMobile() {
         }
       }
 
-      // Translate CTA + Footer combined layer
+      // Translate CTA + Footer combined layer precisely
       const rawCtaProgress = Math.min(Math.max((stepProgress - 7.0) / ctaStepLength, 0), 1);
       const ctaY = (1 - rawCtaProgress) * vh - rawCtaProgress * extraScroll;
 
@@ -340,12 +349,10 @@ export default function AboutMobile() {
               transition: "opacity 0.3s ease",
             }}
           >
-            {/* CTA Layer placed strictly ABOVE Footer z-index */}
             <div className="relative z-20 w-full">
               <SectionCTA />
             </div>
             
-            {/* Footer Layer placed strictly BELOW CTA z-index */}
             <footer className="relative z-10 w-full bg-[#162D24]">
               <Footer />
             </footer>
