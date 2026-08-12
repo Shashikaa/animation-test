@@ -21,7 +21,7 @@ const slides = [
   },
 ];
 
-const TEXT_DURATION = 0.45;
+const TEXT_DURATION = 0.55;
 
 function splitElementIntoLines(el: HTMLElement) {
   if (el.dataset.originalHtml !== undefined) return;
@@ -32,32 +32,26 @@ function splitElementIntoLines(el: HTMLElement) {
   el.innerHTML = el.innerHTML.replace(/(\S+)/g, '<span class="gs-word">$1</span>');
   const words = Array.from(el.querySelectorAll<HTMLElement>(".gs-word"));
 
-  // Batch read bounding rects in one browser paint cycle to avoid layout thrashing
-  const rects = words.map((w) => ({
-    element: w,
-    top: Math.round(w.getBoundingClientRect().top),
-  }));
-
   const lineMap = new Map<number, HTMLElement[]>();
-  rects.forEach(({ element, top }) => {
+  words.forEach((w) => {
+    const top = Math.round(w.getBoundingClientRect().top);
     if (!lineMap.has(top)) lineMap.set(top, []);
-    lineMap.get(top)!.push(element);
+    lineMap.get(top)!.push(w);
   });
 
   const lines = Array.from(lineMap.values());
   el.innerHTML = "";
 
-  const fragment = document.createDocumentFragment();
   lines.forEach((group) => {
     const lineOuter = document.createElement("span");
     lineOuter.className = "gs-line";
     lineOuter.style.cssText =
-      "display:block; overflow:hidden; padding-bottom:0.15em; margin-bottom:-0.15em;";
+      "display:block; overflow:hidden; padding-bottom:0.25em; margin-bottom:-0.25em;";
 
     const lineInner = document.createElement("span");
     lineInner.className = "gs-line-inner";
     lineInner.style.cssText =
-      "display:block; will-change:transform, opacity; padding-bottom:0.15em;";
+      "display:block; will-change:transform, opacity; padding-bottom:0.25em;";
 
     group.forEach((w, i) => {
       lineInner.appendChild(w);
@@ -67,10 +61,8 @@ function splitElementIntoLines(el: HTMLElement) {
     });
 
     lineOuter.appendChild(lineInner);
-    fragment.appendChild(lineOuter);
+    el.appendChild(lineOuter);
   });
-
-  el.appendChild(fragment);
 }
 
 type SectionFiveProps = {
@@ -82,57 +74,50 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
   const currentRef = useRef<number>(0);
   const [current, setCurrent] = useState(0);
 
-  const animateTextIn = useCallback((index: number) => {
+  function animateTextIn(index: number) {
     if (!containerRef.current) return;
     const targets = containerRef.current.querySelectorAll(
       `.s5-text-group-${index + 1} .gs-line-inner`
     );
-
-    if (targets.length === 0) return;
-
-    gsap.killTweensOf(targets);
-    gsap.fromTo(
-      targets,
-      { y: 20, opacity: 0 },
-      {
-        y: 0,
-        opacity: 1,
-        duration: TEXT_DURATION,
-        ease: "power2.out",
-        stagger: 0.02,
-        force3D: true,
-        overwrite: "auto",
-      }
-    );
-  }, []);
-
-  const goTo = useCallback(
-    (next: number) => {
-      const prev = currentRef.current;
-      if (next === prev || !containerRef.current) return;
-
-      currentRef.current = next;
-      setCurrent(next);
-
-      slides.forEach((_, i) => {
-        const el = containerRef.current?.querySelector(`.s5-text-group-${i + 1}`) as HTMLElement;
-        if (el) {
-          const isNext = i === next;
-          el.style.opacity = isNext ? "1" : "0";
-          el.style.pointerEvents = isNext ? "auto" : "none";
-          el.style.visibility = isNext ? "visible" : "hidden";
+    targets.forEach((inner, idx) => {
+      gsap.killTweensOf(inner);
+      gsap.fromTo(
+        inner,
+        { y: 30, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: TEXT_DURATION,
+          ease: "power2.out",
+          delay: idx * 0.03,
         }
-      });
+      );
+    });
+  }
 
-      animateTextIn(next);
-    },
-    [animateTextIn]
-  );
+  const goTo = useCallback((next: number) => {
+    const prev = currentRef.current;
+    if (next === prev || !containerRef.current) return;
+
+    currentRef.current = next;
+    setCurrent(next);
+
+    slides.forEach((_, i) => {
+      const el = containerRef.current?.querySelector(`.s5-text-group-${i + 1}`) as HTMLElement;
+      if (el) {
+        el.style.opacity = i === next ? "1" : "0";
+        el.style.pointerEvents = i === next ? "auto" : "none";
+        el.style.visibility = i === next ? "visible" : "hidden";
+      }
+    });
+
+    animateTextIn(next);
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const raf = requestAnimationFrame(() => {
+    const timeout = setTimeout(() => {
       if (!containerRef.current) return;
       const splitTargets = containerRef.current.querySelectorAll<HTMLElement>(".s5-split-text-target");
       splitTargets.forEach((el) => splitElementIntoLines(el));
@@ -141,13 +126,13 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
         if (i !== 0) {
           gsap.set(
             containerRef.current!.querySelectorAll(`.s5-text-group-${i + 1} .gs-line-inner`),
-            { y: 20, opacity: 0 }
+            { y: 30, opacity: 0 }
           );
         }
       });
-    });
+    }, 50);
 
-    return () => cancelAnimationFrame(raf);
+    return () => clearTimeout(timeout);
   }, []);
 
   useEffect(() => {
@@ -164,21 +149,14 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
     if (isActive && containerRef.current) {
       animateTextIn(currentRef.current);
     }
-  }, [isActive, animateTextIn]);
+  }, [isActive]);
 
   return (
-    <section ref={containerRef} className="relative w-full h-full overflow-hidden flex flex-col lg:grid lg:grid-cols-2 bg-[#F4EEDF] transform-gpu">
+    <section ref={containerRef} className="relative w-full h-full overflow-hidden flex flex-col lg:grid lg:grid-cols-2 bg-[#F4EEDF]">
       
       {/* TOP / LEFT SIDE */}
       <div className="relative w-full h-[65svh] lg:h-full lg:min-h-screen overflow-hidden bg-[#19211C]">
-        <div 
-          className="s5-bg absolute -top-[0%] left-0 w-full h-[240%] bg-cover bg-center bg-[url('/project-aerial2.webp')]"
-          style={{
-            willChange: "transform",
-            transform: "translate3d(0,0,0)",
-            backfaceVisibility: "hidden",
-          }}
-        />
+        <div className="s5-bg absolute -top-[0%] left-0 w-full h-[240%] bg-cover bg-center will-change-transform bg-[url('/project-aerial2.webp')]" />
         
         <div className="absolute inset-0 bg-black/40 pointer-events-none z-[1]" />
         
@@ -209,8 +187,7 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
                 opacity: current === i ? 1 : 0,
                 pointerEvents: current === i ? "auto" : "none",
                 visibility: current === i ? "visible" : "hidden",
-                transition: "opacity 0.35s ease, visibility 0.35s",
-                willChange: "opacity",
+                transition: "opacity 0.4s ease, visibility 0.4s",
               }}
             >
               <h3 className="s5-split-text-target font-normal text-[#19211C] font-body text-4xl sm:text-5xl lg:text-3xl">

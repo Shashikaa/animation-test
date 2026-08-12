@@ -110,12 +110,12 @@ export default function AboutMobile() {
 
       const isPastTrack = targetProgress.current >= 1.0;
 
+      // Apply frame offset on GPU
       if (fixedFrameRef.current) {
         fixedFrameRef.current.style.transform = `translate3d(0, ${trackBottomOffset.current}px, 0)`;
         fixedFrameRef.current.style.willChange = isPastTrack ? "auto" : "transform";
       }
 
-      // Execute stack transform only while inside track boundaries
       if (!isPastTrack) {
         const totalSteps = 7.0;
         const stepProgress = Math.min(currentProgress.current, 1.0) * totalSteps;
@@ -155,6 +155,13 @@ export default function AboutMobile() {
             triggerSec5Hook(0);
           }
         }
+      } else {
+        // LOCK STACK AT 100% COMPLETION WHEN PAST SECTION 5
+        if (panels[1]) panels[1].style.transform = "translate3d(0, 0%, 0)";
+        if (panels[2]) panels[2].style.transform = "translate3d(0, 0%, 0)";
+        if (panels[3]) panels[3].style.transform = "translate3d(0, 0%, 0)";
+        if (panels[4]) panels[4].style.transform = "translate3d(0, 0%, 0)";
+        if (panels[5]) panels[5].style.transform = "translate3d(0, 0%, 0)";
       }
 
       rafId.current = requestAnimationFrame(updatePhysics);
@@ -178,7 +185,7 @@ export default function AboutMobile() {
       }
 
       const currentScroll = Math.max(0, -trackRect.top);
-      targetProgress.current = currentScroll / totalScrollable;
+      targetProgress.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
     };
 
     rafId.current = requestAnimationFrame(updatePhysics);
@@ -263,10 +270,7 @@ export default function AboutMobile() {
         </div>
       </div>
 
-      <div 
-        className="relative z-[70] w-full bg-[#162D24] touch-auto"
-        style={{ contain: "paint" }}
-      >
+      <div className="relative z-[70] w-full bg-[#162D24] touch-auto">
         <SectionCTA preloaderDone={isReady} />
         <footer className="w-full bg-[#162D24]">
           <Footer />

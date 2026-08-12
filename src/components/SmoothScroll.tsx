@@ -31,11 +31,11 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
         lenisOptions: {
           wrapper: window,
           content: document.documentElement,
-          lerp: 0.12,
-          duration: 1.0,
+          lerp: 0.1,
+          duration: 1.2,
           smoothWheel: true,
-          wheelMultiplier: 1.0,
-          touchMultiplier: 1.2,
+          wheelMultiplier: 1.1,
+          touchMultiplier: 1.0,
           syncTouch: false,
           autoResize: true,
         },
@@ -74,7 +74,9 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   return (
     <div className="flex flex-col min-h-[100dvh] w-full relative">
       <CustomScrollBar />
-      {children}
+      <div className="w-full">
+        {children}
+      </div>
     </div>
   );
 }
