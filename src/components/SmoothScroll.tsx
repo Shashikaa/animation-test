@@ -18,33 +18,29 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    // Lock initial CSS --vh variable so browser chrome/address bar height stays fixed
+    let lastWidth = window.innerWidth;
     const setVh = () => {
-      const actualHeight = window.visualViewport?.height || window.innerHeight;
+      const actualHeight = window.innerHeight;
       document.documentElement.style.setProperty("--vh", `${actualHeight * 0.01}px`);
     };
 
     setVh();
 
-    let windowWidth = window.innerWidth;
     const handleResize = () => {
-      if (window.innerWidth !== windowWidth) {
-        windowWidth = window.innerWidth;
+      // ONLY update on actual width changes (e.g. device rotation), ignoring scroll height changes
+      if (window.innerWidth !== lastWidth) {
+        lastWidth = window.innerWidth;
         setVh();
       }
     };
 
     window.addEventListener("resize", handleResize);
     window.addEventListener("orientationchange", handleResize);
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", setVh);
-    }
 
     return () => {
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", handleResize);
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener("resize", setVh);
-      }
     };
   }, []);
 
@@ -69,8 +65,8 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
           smoothWheel: true,
           wheelMultiplier: 1.1,
           touchMultiplier: 1.5,
-          syncTouch: false, // Prevents touch locking at sticky section limits on mobile
-          autoResize: true,
+          syncTouch: false,
+          autoResize: false, // Prevents Lenis from continuously recalculating document size on scroll
         },
       });
 
@@ -105,7 +101,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   }, [pathname, preloaderDone]);
 
   return (
-    <div className="flex flex-col min-h-[100svh] w-full relative">
+    <div className="flex flex-col min-h-[100vh] w-full relative">
       <CustomScrollBar />
       {children}
     </div>

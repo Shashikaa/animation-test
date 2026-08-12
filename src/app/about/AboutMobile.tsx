@@ -31,27 +31,32 @@ export default function AboutMobile() {
   const { smootherRef } = useSite();
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // ── 1. INITIALIZE VIEWPORT HEIGHT ──
+  // ── 1. INITIALIZE VIEWPORT HEIGHT (LOCKED TO PREVENT ADDRESS BAR TOGGLE) ──
   useEffect(() => {
-    const updateVh = () => {
+    const lockVh = () => {
       const activeTag = document.activeElement?.tagName;
       if (activeTag === "INPUT" || activeTag === "TEXTAREA" || activeTag === "SELECT") return;
 
       const currentWidth = window.innerWidth;
-      const currentHeight = window.innerHeight;
-
+      // Lock viewport height to initial load height. ONLY update on width change (orientation)
       if (vhRef.current === 0 || currentWidth !== lastWidthRef.current) {
-        vhRef.current = currentHeight;
+        vhRef.current = window.innerHeight;
         lastWidthRef.current = currentWidth;
         if (fixedFrameRef.current) {
-          fixedFrameRef.current.style.height = `${currentHeight}px`;
+          fixedFrameRef.current.style.height = `${vhRef.current}px`;
         }
       }
     };
 
-    updateVh();
+    lockVh();
 
-    const handleResize = () => updateVh();
+    // Listen only for true orientation changes/window resize, not vertical scroll shifts
+    const handleResize = () => {
+      if (window.innerWidth !== lastWidthRef.current) {
+        lockVh();
+      }
+    };
+
     window.addEventListener("resize", handleResize);
 
     return () => {
@@ -166,14 +171,12 @@ export default function AboutMobile() {
       if (totalScrollable <= 0) return;
 
       const buffer = 8;
-      const lenis = smootherRef?.current;
 
       if (trackRect.top <= 0 && trackRect.bottom >= vh - buffer) {
         if (fixedFrameRef.current.style.position !== "fixed") {
           fixedFrameRef.current.style.position = "fixed";
           fixedFrameRef.current.style.top = "0px";
           fixedFrameRef.current.style.bottom = "auto";
-          if (lenis && typeof lenis.resize === "function") lenis.resize();
         }
       } else if (trackRect.bottom < vh - buffer) {
         if (
@@ -183,7 +186,6 @@ export default function AboutMobile() {
           fixedFrameRef.current.style.position = "absolute";
           fixedFrameRef.current.style.top = "auto";
           fixedFrameRef.current.style.bottom = "0px";
-          if (lenis && typeof lenis.resize === "function") lenis.resize();
         }
       } else {
         if (
@@ -193,7 +195,6 @@ export default function AboutMobile() {
           fixedFrameRef.current.style.position = "absolute";
           fixedFrameRef.current.style.top = "0px";
           fixedFrameRef.current.style.bottom = "auto";
-          if (lenis && typeof lenis.resize === "function") lenis.resize();
         }
       }
 
