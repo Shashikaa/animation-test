@@ -14,33 +14,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   const { preloaderDone, smootherRef } = useSite();
   const pathname = usePathname();
   const locomotiveRef = useRef<any>(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    let windowWidth = window.innerWidth;
-    const setVh = () => {
-      const actualHeight = window.innerHeight;
-      document.documentElement.style.setProperty("--vh", `${actualHeight * 0.01}px`);
-    };
-
-    setVh();
-
-    const handleResize = () => {
-      if (window.innerWidth !== windowWidth) {
-        windowWidth = window.innerWidth;
-        setVh();
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    window.addEventListener("orientationchange", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("orientationchange", handleResize);
-    };
-  }, []);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -54,15 +28,17 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     const initLocomotive = async () => {
       const LocomotiveScroll = (await import("locomotive-scroll")).default;
 
+      const isMobile = window.innerWidth <= 1024;
+
       instance = new LocomotiveScroll({
         lenisOptions: {
-          wrapper: window,
-          content: document.documentElement,
+          wrapper: isMobile && containerRef.current ? containerRef.current : window,
+          content: isMobile && containerRef.current ? (containerRef.current.firstElementChild as HTMLElement) : document.documentElement,
           lerp: 0.1,
           duration: 1.2,
           smoothWheel: true,
           wheelMultiplier: 1.1,
-          touchMultiplier: 1.2,
+          touchMultiplier: 1.5,
           syncTouch: false,
           autoResize: true,
         },
@@ -99,9 +75,11 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   }, [pathname, preloaderDone]);
 
   return (
-    <div className="flex flex-col min-h-[100vh] w-full relative">
+    <div ref={containerRef} className="scroll-viewport flex flex-col w-full relative">
       <CustomScrollBar />
-      {children}
+      <div className="w-full">
+        {children}
+      </div>
     </div>
   );
 }

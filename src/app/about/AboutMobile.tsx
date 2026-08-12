@@ -24,65 +24,27 @@ export default function AboutMobile() {
   const currentProgress = useRef(0);
   const rafId = useRef<number | null>(null);
 
-  const vhRef = useRef<number>(0);
-  const lastWidthRef = useRef<number>(0);
   const lastSec5Idx = useRef<number>(-1);
 
   const { smootherRef } = useSite();
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // ── 1. INITIALIZE VIEWPORT HEIGHT (LOCKED TO PREVENT ADDRESS BAR SHIFTS) ──
-  useEffect(() => {
-    const updateVh = () => {
-      const activeTag = document.activeElement?.tagName;
-      if (activeTag === "INPUT" || activeTag === "TEXTAREA" || activeTag === "SELECT") return;
-
-      const currentWidth = window.innerWidth;
-      const currentHeight = window.innerHeight;
-
-      if (vhRef.current === 0 || currentWidth !== lastWidthRef.current) {
-        vhRef.current = currentHeight;
-        lastWidthRef.current = currentWidth;
-        if (fixedFrameRef.current) {
-          fixedFrameRef.current.style.height = `${currentHeight}px`;
-        }
-      }
-    };
-
-    updateVh();
-
-    const handleResize = () => updateVh();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  // ── 2. INTRO UNLOCK & LENIS RESUME ──
+  // ── 1. INTRO UNLOCK & LENIS RESUME ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
     if (!preloaderDone || !introDone) {
       if (lenis && typeof lenis.stop === "function") lenis.stop();
-      window.scrollTo(0, 0);
       targetProgress.current = 0;
       currentProgress.current = 0;
     } else {
       if (lenis && typeof lenis.start === "function") {
         lenis.start();
       }
-      window.dispatchEvent(new Event("scroll"));
     }
-
-    return () => {
-      if (lenis && typeof lenis.start === "function") {
-        lenis.start();
-      }
-    };
   }, [preloaderDone, introDone, smootherRef]);
 
-  // ── 3. SECTION 5 TRIGGER HOOK ──
+  // ── 2. SECTION 5 TRIGGER HOOK ──
   const triggerSec5Hook = useCallback((nextIdx: number) => {
     if (nextIdx !== lastSec5Idx.current) {
       lastSec5Idx.current = nextIdx;
@@ -92,7 +54,7 @@ export default function AboutMobile() {
     }
   }, []);
 
-  // ── 4. ORIGINAL STACK ANIMATION LOOP ──
+  // ── 3. STACK ANIMATION & FIXED FRAME POSITIONING ──
   useEffect(() => {
     if (!preloaderDone || !introDone) return;
 
@@ -100,12 +62,6 @@ export default function AboutMobile() {
     if (!panels || panels.length === 0) return;
 
     const updatePhysics = () => {
-      const vh = vhRef.current || window.innerHeight;
-      if (!vh) {
-        rafId.current = requestAnimationFrame(updatePhysics);
-        return;
-      }
-
       const lerpFactor = 0.12;
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
@@ -155,49 +111,30 @@ export default function AboutMobile() {
       rafId.current = requestAnimationFrame(updatePhysics);
     };
 
-    const handleScroll = () => {
+    const handleScroll = (e?: any) => {
       if (!trackRef.current || !fixedFrameRef.current) return;
 
-      const trackRect = trackRef.current.getBoundingClientRect();
-      const vh = vhRef.current || window.innerHeight;
-      const totalScrollable = trackRect.height - vh;
+      const trackTop = trackRef.current.offsetTop;
+      const trackHeight = trackRef.current.offsetHeight;
+      const vh = window.innerHeight;
+      const totalScrollable = trackHeight - vh;
 
-      if (totalScrollable <= 0) return;
+      // Extract scroll position from Lenis or DOM event
+      const scrollY = e?.scroll !== undefined ? e.scroll : (e?.target?.scrollTop || window.scrollY);
 
-      const buffer = 8;
-      const lenis = smootherRef?.current;
-
-      // Restored position switching + added lenis.resize() to prevent footer jam
-      if (trackRect.top <= 0 && trackRect.bottom >= vh - buffer) {
-        if (fixedFrameRef.current.style.position !== "fixed") {
-          fixedFrameRef.current.style.position = "fixed";
-          fixedFrameRef.current.style.top = "0px";
-          fixedFrameRef.current.style.bottom = "auto";
-        }
-      } else if (trackRect.bottom < vh - buffer) {
-        if (
-          fixedFrameRef.current.style.position !== "absolute" ||
-          fixedFrameRef.current.style.bottom !== "0px"
-        ) {
-          fixedFrameRef.current.style.position = "absolute";
-          fixedFrameRef.current.style.top = "auto";
-          fixedFrameRef.current.style.bottom = "0px";
-          // FIX FOR FOOTER JAM: tell Lenis to recalculate height when stack finishes
-          if (lenis && typeof lenis.resize === "function") lenis.resize();
-        }
+      // Lock fixed position from the very start (scrollY = 0) until track completion
+      if (scrollY < trackTop + totalScrollable) {
+        fixedFrameRef.current.style.position = "fixed";
+        fixedFrameRef.current.style.top = "0px";
+        fixedFrameRef.current.style.bottom = "auto";
       } else {
-        if (
-          fixedFrameRef.current.style.position !== "absolute" ||
-          fixedFrameRef.current.style.top !== "0px"
-        ) {
-          fixedFrameRef.current.style.position = "absolute";
-          fixedFrameRef.current.style.top = "0px";
-          fixedFrameRef.current.style.bottom = "auto";
-          if (lenis && typeof lenis.resize === "function") lenis.resize();
-        }
+        // Switch to absolute at bottom of track to allow smooth transition into CTA and Footer
+        fixedFrameRef.current.style.position = "absolute";
+        fixedFrameRef.current.style.top = "auto";
+        fixedFrameRef.current.style.bottom = "0px";
       }
 
-      const currentScroll = Math.max(0, -trackRect.top);
+      const currentScroll = Math.max(0, scrollY - trackTop);
       targetProgress.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
     };
 
@@ -206,18 +143,15 @@ export default function AboutMobile() {
     const lenis = smootherRef?.current;
     if (lenis && typeof lenis.on === "function") {
       lenis.on("scroll", handleScroll);
-    } else {
-      window.addEventListener("scroll", handleScroll, { passive: true });
     }
 
+    // Call handleScroll once immediately on mount to establish position 0 lock
     handleScroll();
 
     return () => {
       if (rafId.current) cancelAnimationFrame(rafId.current);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
-      } else {
-        window.removeEventListener("scroll", handleScroll);
       }
 
       if (typeof window !== "undefined") {
@@ -237,43 +171,42 @@ export default function AboutMobile() {
       >
         <div
           ref={fixedFrameRef}
-          className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10"
-          style={{ height: vhRef.current ? `${vhRef.current}px` : "100vh" }}
+          className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-[100dvh]"
         >
-          <div className="about-stack-layer absolute inset-0 w-full h-full z-10 gpu-accelerated">
+          <div className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-10 gpu-accelerated">
             <Hero isMobile={true} />
           </div>
 
           <div
-            className="about-stack-layer absolute inset-0 w-full h-full z-20 gpu-accelerated"
+            className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-20 gpu-accelerated"
             style={{ transform: "translate3d(0, 100%, 0)" }}
           >
             <SectionOne />
           </div>
 
           <div
-            className="about-stack-layer absolute inset-0 w-full h-full z-30 gpu-accelerated"
+            className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-30 gpu-accelerated"
             style={{ transform: "translate3d(0, 100%, 0)" }}
           >
             <SectionTwo />
           </div>
 
           <div
-            className="about-stack-layer absolute inset-0 w-full h-full z-40 gpu-accelerated"
+            className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-40 gpu-accelerated"
             style={{ transform: "translate3d(0, 100%, 0)" }}
           >
             <SectionThree />
           </div>
 
           <div
-            className="about-stack-layer absolute inset-0 w-full h-full z-50 gpu-accelerated"
+            className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-50 gpu-accelerated"
             style={{ transform: "translate3d(0, 100%, 0)" }}
           >
             <SectionFour />
           </div>
 
           <div
-            className="about-stack-layer absolute inset-0 w-full h-full z-[60] gpu-accelerated"
+            className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-[60] gpu-accelerated"
             style={{ transform: "translate3d(0, 100%, 0)" }}
           >
             <SectionFive isActive={isSectionFiveActive} />
