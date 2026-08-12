@@ -26,12 +26,13 @@ export default function AboutMobile() {
   const rafId = useRef<number | null>(null);
 
   const vhRef = useRef<number>(0);
+  const lastWidthRef = useRef<number>(0);
   const lastSec5Idx = useRef<number>(-1);
   const { smootherRef } = useSite();
 
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // ── 1. LOCKED PIXEL VIEWPORT HEIGHT (PREVENTS KEYBOARD REFLOW GAP) ──
+  // ── 1. STABLE STICKY VIEWPORT HEIGHT (PREVENTS iOS KEYBOARD RESIZE JUMPS) ──
   useEffect(() => {
     const updateVh = () => {
       const active = document.activeElement;
@@ -41,21 +42,36 @@ export default function AboutMobile() {
           active.tagName === "TEXTAREA" ||
           active.getAttribute("role") === "combobox");
 
-      if (!isInputFocused && window.innerHeight > 0) {
-        vhRef.current = window.innerHeight;
+      const currentWidth = window.innerWidth;
+      const currentHeight = window.innerHeight;
+
+      // On iOS, keyboard toggles change innerHeight but keep innerWidth identical.
+      // We only update viewport height if width changed (orientation) or not focused.
+      if (
+        !isInputFocused &&
+        (vhRef.current === 0 || currentWidth !== lastWidthRef.current)
+      ) {
+        vhRef.current = currentHeight;
+        lastWidthRef.current = currentWidth;
         if (fixedFrameRef.current) {
-          fixedFrameRef.current.style.height = `${window.innerHeight}px`;
+          fixedFrameRef.current.style.height = `${currentHeight}px`;
         }
       }
     };
 
     updateVh();
-    window.addEventListener("resize", updateVh);
-    window.addEventListener("orientationchange", updateVh);
+
+    const handleResize = () => updateVh();
+    const handleOrientation = () => {
+      setTimeout(updateVh, 250);
+    };
+
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleOrientation);
 
     return () => {
-      window.removeEventListener("resize", updateVh);
-      window.removeEventListener("orientationchange", updateVh);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleOrientation);
     };
   }, []);
 
@@ -96,6 +112,13 @@ export default function AboutMobile() {
     };
 
     const updatePhysics = () => {
+      const vh = vhRef.current || window.innerHeight;
+      if (!vh) {
+        rafId.current = requestAnimationFrame(updatePhysics);
+        return;
+      }
+
+      // Check active input status
       const activeEl = document.activeElement;
       const isFormFocused =
         activeEl &&
@@ -103,35 +126,27 @@ export default function AboutMobile() {
           activeEl.tagName === "TEXTAREA" ||
           activeEl.getAttribute("role") === "combobox");
 
-      if (isFormFocused) {
-        rafId.current = requestAnimationFrame(updatePhysics);
-        return;
-      }
-
-      const vh = vhRef.current || window.innerHeight;
-      if (!vh) {
-        rafId.current = requestAnimationFrame(updatePhysics);
-        return;
-      }
-
+      // Smooth progress lerp
       const lerpFactor = 0.12;
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
+      // CTA Height & Steps calculation
       const ctaEl = ctaWrapRef.current;
-      const ctaHeight = ctaEl ? ctaEl.offsetHeight : vh;
+      const ctaHeight = ctaEl ? ctaEl.getBoundingClientRect().height : vh;
       const extraCtaScroll = Math.max(0, ctaHeight - vh);
       const ctaStepLength = 1 + extraCtaScroll / vh;
 
-      const totalScrollSteps = 7.0 + ctaStepLength;
-      const requiredTrackHeight = (totalScrollSteps + 1) * vh;
+      const totalSteps = 7.0 + ctaStepLength;
+      const requiredTrackHeight = (totalSteps + 1) * vh;
 
-      if (trackRef.current) {
+      // Only adjust track height DOM element when input is NOT focused to prevent iOS gap shifts
+      if (trackRef.current && !isFormFocused) {
         if (Math.abs(trackRef.current.offsetHeight - requiredTrackHeight) > 2) {
           trackRef.current.style.height = `${requiredTrackHeight}px`;
         }
       }
 
-      const stepProgress = currentProgress.current * totalScrollSteps;
+      const stepProgress = currentProgress.current * totalSteps;
 
       // Card Stacking Progress (Sections 1-5)
       const s1Progress = easeOutQuad(Math.min(Math.max(stepProgress - 0, 0), 1));
@@ -164,7 +179,7 @@ export default function AboutMobile() {
         }
       }
 
-      // ── CTA TRANSLATION (SEAMLESS TO FOOTER) ──
+      // ── CTA TRANSLATION (SEAMLESS FOOTER TOUCHING) ──
       const rawCtaProgress = Math.min(Math.max((stepProgress - 7.0) / ctaStepLength, 0), 1);
       const ctaY = (1 - rawCtaProgress) * vh - rawCtaProgress * extraCtaScroll;
 
@@ -184,6 +199,7 @@ export default function AboutMobile() {
 
       if (totalScrollable <= 0) return;
 
+      // Unpinning transition logic
       if (trackRect.top <= 0 && trackRect.bottom >= vh) {
         fixedFrameRef.current.style.position = "fixed";
         fixedFrameRef.current.style.top = "0px";
@@ -229,7 +245,7 @@ export default function AboutMobile() {
 
   return (
     <div ref={scopeRef}>
-      {/* ANIMATED CARDS TRACK CONTAINER - Default height prevents initial render flash */}
+      {/* ANIMATED CARDS TRACK CONTAINER */}
       <div
         ref={trackRef}
         className="about-track-container relative w-full min-h-[800vh]"
@@ -296,7 +312,7 @@ export default function AboutMobile() {
         </div>
       </div>
 
-      {/* FOOTER - Hidden until preloader & intro complete */}
+      {/* FOOTER */}
       <footer
         className="relative z-20 w-full bg-[#162D24] transition-opacity duration-300"
         style={{
