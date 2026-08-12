@@ -28,26 +28,62 @@ export default function AboutMobile() {
   const vhRef = useRef<number>(0);
   const lastWidthRef = useRef<number>(0);
   const lastSec5Idx = useRef<number>(-1);
-  const { smootherRef } = useSite();
+  const isInputFocusedRef = useRef<boolean>(false);
 
+  const { smootherRef } = useSite();
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // ── 1. STABLE VIEWPORT HEIGHT (PREVENTS iOS KEYBOARD JUMP / RESIZE SHIFTS) ──
+  // ── 1. GLOBAL FORM & DROPDOWN FOCUS DETECTOR ──
+  useEffect(() => {
+    const isInteractiveElement = (target: HTMLElement | null) => {
+      if (!target) return false;
+      const tag = target.tagName;
+      const role = target.getAttribute("role");
+      return (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        role === "combobox" ||
+        role === "listbox" ||
+        role === "option" ||
+        target.isContentEditable ||
+        target.closest(".custom-dropdown") !== null
+      );
+    };
+
+    const handleFocusIn = (e: FocusEvent) => {
+      if (isInteractiveElement(e.target as HTMLElement)) {
+        isInputFocusedRef.current = true;
+      }
+    };
+
+    const handleFocusOut = (e: FocusEvent) => {
+      // Small timeout allows focus switching between dropdown options without jarring jumps
+      setTimeout(() => {
+        const active = document.activeElement as HTMLElement;
+        if (!isInteractiveElement(active)) {
+          isInputFocusedRef.current = false;
+        }
+      }, 50);
+    };
+
+    window.addEventListener("focusin", handleFocusIn);
+    window.addEventListener("focusout", handleFocusOut);
+
+    return () => {
+      window.removeEventListener("focusin", handleFocusIn);
+      window.removeEventListener("focusout", handleFocusOut);
+    };
+  }, []);
+
+  // ── 2. STABLE VIEWPORT HEIGHT ──
   useEffect(() => {
     const updateVh = () => {
-      const active = document.activeElement;
-      const isInputFocused =
-        active &&
-        (active.tagName === "INPUT" ||
-          active.tagName === "TEXTAREA" ||
-          active.getAttribute("role") === "combobox");
-
       const currentWidth = window.innerWidth;
       const currentHeight = window.innerHeight;
 
-      // Lock height on mobile typing so keyboard open/close doesn't shift track height
       if (
-        !isInputFocused &&
+        !isInputFocusedRef.current &&
         (vhRef.current === 0 || currentWidth !== lastWidthRef.current)
       ) {
         vhRef.current = currentHeight;
@@ -72,7 +108,7 @@ export default function AboutMobile() {
     };
   }, []);
 
-  // ── 2. LOCK SCROLL UNTIL INTRO COMPLETES ──
+  // ── 3. LOCK SCROLL UNTIL INTRO COMPLETES ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -92,7 +128,7 @@ export default function AboutMobile() {
     }
   }, [preloaderDone, introDone, smootherRef]);
 
-  // ── 3. SCROLL & ANIMATION ENGINE ──
+  // ── 4. SCROLL & ANIMATION ENGINE ──
   useEffect(() => {
     if (!preloaderDone || !introDone) return;
 
@@ -115,18 +151,16 @@ export default function AboutMobile() {
         return;
       }
 
-      const activeEl = document.activeElement;
-      const isFormFocused =
-        activeEl &&
-        (activeEl.tagName === "INPUT" ||
-          activeEl.tagName === "TEXTAREA" ||
-          activeEl.getAttribute("role") === "combobox");
+      // Freeze transform movements during input or dropdown interaction
+      if (isInputFocusedRef.current) {
+        currentProgress.current = targetProgress.current;
+        rafId.current = requestAnimationFrame(updatePhysics);
+        return;
+      }
 
-      // Smooth progress physics lerp
       const lerpFactor = 0.12;
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
-      // Calculate COMBINED height of CTA + FOOTER together
       const ctaWrapEl = ctaWrapRef.current;
       const combinedHeight = ctaWrapEl ? ctaWrapEl.offsetHeight : vh;
       const extraScroll = Math.max(0, combinedHeight - vh);
@@ -135,8 +169,7 @@ export default function AboutMobile() {
       const totalSteps = 7.0 + ctaStepLength;
       const requiredTrackHeight = (totalSteps + 1) * vh;
 
-      // Update scroll track height seamlessly
-      if (trackRef.current && !isFormFocused) {
+      if (trackRef.current) {
         if (Math.abs(trackRef.current.offsetHeight - requiredTrackHeight) > 2) {
           trackRef.current.style.height = `${requiredTrackHeight}px`;
         }
@@ -175,7 +208,7 @@ export default function AboutMobile() {
         }
       }
 
-      // ── TRANSLATE CTA & FOOTER TOGETHER AS ONE CONTIGUOUS BLOCK ──
+      // Translate CTA + Footer combined layer
       const rawCtaProgress = Math.min(Math.max((stepProgress - 7.0) / ctaStepLength, 0), 1);
       const ctaY = (1 - rawCtaProgress) * vh - rawCtaProgress * extraScroll;
 
@@ -187,6 +220,7 @@ export default function AboutMobile() {
     };
 
     const handleScroll = () => {
+      if (isInputFocusedRef.current) return;
       if (!trackRef.current || !fixedFrameRef.current) return;
 
       const trackRect = trackRef.current.getBoundingClientRect();
@@ -306,8 +340,13 @@ export default function AboutMobile() {
               transition: "opacity 0.3s ease",
             }}
           >
-            <SectionCTA />
-            <footer className="w-full bg-[#162D24]">
+            {/* CTA Layer placed strictly ABOVE Footer z-index */}
+            <div className="relative z-20 w-full">
+              <SectionCTA />
+            </div>
+            
+            {/* Footer Layer placed strictly BELOW CTA z-index */}
+            <footer className="relative z-10 w-full bg-[#162D24]">
               <Footer />
             </footer>
           </div>
