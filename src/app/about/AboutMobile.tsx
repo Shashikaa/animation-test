@@ -11,8 +11,10 @@ import Footer from "@/src/components/Footer";
 import { useState, useRef, useEffect } from "react";
 import { useSite } from "@/src/app/context/SiteContext";
 
-// Allocated 11 steps to provide enough room for Section 5 steps, tall CTA scroll, and Footer reveal
-const TOTAL_SCROLL_STEPS = 11; 
+const TOTAL_SCROLL_STEPS = 11;
+
+// Easing function for smooth acceleration/deceleration curve (Ease-Out Quad)
+const easeOutQuad = (t: number) => t * (2 - t);
 
 export default function AboutMobile() {
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
@@ -20,6 +22,12 @@ export default function AboutMobile() {
   const fixedFrameRef = useRef<HTMLDivElement>(null);
   const ctaWrapRef = useRef<HTMLDivElement>(null);
   const footerWrapRef = useRef<HTMLDivElement>(null);
+
+  // Targets and interpolated values for smooth LERP
+  const targetProgress = useRef(0);
+  const currentProgress = useRef(0);
+  const rafId = useRef<number | null>(null);
+
   const lastSec5Idx = useRef<number>(-1);
   const { smootherRef } = useSite();
 
@@ -36,43 +44,23 @@ export default function AboutMobile() {
       }
     };
 
-    const handleScroll = () => {
-      if (!trackRef.current || !fixedFrameRef.current) return;
+    // Render loop running via requestAnimationFrame for smooth 60/120fps physics interpolation
+    const updatePhysics = () => {
+      // Linear Interpolation (LERP) factor (0.08 = ultra smooth fluid momentum)
+      const lerpFactor = 0.08;
+      currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
-      const trackRect = trackRef.current.getBoundingClientRect();
+      const progress = currentProgress.current;
+      const stepProgress = progress * (TOTAL_SCROLL_STEPS - 1);
+
       const vh = window.innerHeight;
-      const totalScrollable = trackRect.height - vh;
 
-      if (totalScrollable <= 0) return;
-
-      // 1. PINNING MANAGEMENT
-      if (trackRect.top <= 0 && trackRect.bottom >= vh) {
-        fixedFrameRef.current.style.position = "fixed";
-        fixedFrameRef.current.style.top = "0px";
-        fixedFrameRef.current.style.bottom = "auto";
-      } else if (trackRect.bottom < vh) {
-        fixedFrameRef.current.style.position = "absolute";
-        fixedFrameRef.current.style.top = "auto";
-        fixedFrameRef.current.style.bottom = "0px";
-      } else {
-        fixedFrameRef.current.style.position = "absolute";
-        fixedFrameRef.current.style.top = "0px";
-        fixedFrameRef.current.style.bottom = "auto";
-      }
-
-      // 2. SCRUBBING & STEP CALCULATIONS
-      const currentScroll = Math.max(0, -trackRect.top);
-      const overallProgress = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
-
-      // Map overall progress across 11 steps
-      const stepProgress = overallProgress * (TOTAL_SCROLL_STEPS - 1);
-
-      // --- SECTION SLIDE-UP PROGRESS (Hero -> Section 5) ---
-      const s1Progress = Math.min(Math.max(stepProgress - 0, 0), 1);
-      const s2Progress = Math.min(Math.max(stepProgress - 1, 0), 1);
-      const s3Progress = Math.min(Math.max(stepProgress - 2, 0), 1);
-      const s4Progress = Math.min(Math.max(stepProgress - 3, 0), 1);
-      const s5Progress = Math.min(Math.max(stepProgress - 4, 0), 1);
+      // --- SECTION SLIDE-UP PROGRESS WITH EASING CURVES ---
+      const s1Progress = easeOutQuad(Math.min(Math.max(stepProgress - 0, 0), 1));
+      const s2Progress = easeOutQuad(Math.min(Math.max(stepProgress - 1, 0), 1));
+      const s3Progress = easeOutQuad(Math.min(Math.max(stepProgress - 2, 0), 1));
+      const s4Progress = easeOutQuad(Math.min(Math.max(stepProgress - 3, 0), 1));
+      const s5Progress = easeOutQuad(Math.min(Math.max(stepProgress - 4, 0), 1));
 
       panels[1].style.transform = `translate3d(0, ${(1 - s1Progress) * 100}%, 0)`;
       panels[2].style.transform = `translate3d(0, ${(1 - s2Progress) * 100}%, 0)`;
@@ -99,28 +87,61 @@ export default function AboutMobile() {
         }
       }
 
-      // --- TALL SECTION CTA FULL SLIDE-UP & EXTENDED TRAVEL (Steps 7.0 -> 8.5) ---
+      // --- SECTION CTA SLIDE-UP & EXTENDED TRAVEL (Steps 7.0 -> 8.5) ---
       const ctaEl = ctaWrapRef.current;
       const ctaHeight = ctaEl ? ctaEl.offsetHeight : vh;
-      // Calculate how much extra scroll height CTA needs if it exceeds screen height
       const extraCtaScroll = Math.max(0, ctaHeight - vh);
 
-      const ctaProgress = Math.min(Math.max((stepProgress - 7.0) / 1.5, 0), 1);
-      
-      // First slide CTA into view (100% -> 0%), then scroll through any excess height if ctaHeight > vh
-      const ctaY = (1 - ctaProgress) * vh - (ctaProgress * extraCtaScroll);
+      const rawCtaProgress = Math.min(Math.max((stepProgress - 7.0) / 1.5, 0), 1);
+      const ctaProgress = easeOutQuad(rawCtaProgress);
+      const ctaY = (1 - ctaProgress) * vh - ctaProgress * extraCtaScroll;
       panels[6].style.transform = `translate3d(0, ${ctaY}px, 0)`;
 
       // --- FOOTER FULL REVEAL SLIDE-UP (Steps 8.5 -> 9.8) ---
-      // Footer stays 100% hidden until CTA has finished its full scroll travel
       const footerEl = footerWrapRef.current;
       const footerHeight = footerEl ? footerEl.offsetHeight : vh;
-      
-      const footerProgress = Math.min(Math.max((stepProgress - 8.5) / 1.3, 0), 1);
+
+      const rawFooterProgress = Math.min(Math.max((stepProgress - 8.5) / 1.3, 0), 1);
+      const footerProgress = easeOutQuad(rawFooterProgress);
       const footerY = (1 - footerProgress) * footerHeight;
 
       panels[7].style.transform = `translate3d(0, ${footerY}px, 0)`;
+
+      // Keep animation frame running smoothly
+      rafId.current = requestAnimationFrame(updatePhysics);
     };
+
+    const handleScroll = () => {
+      if (!trackRef.current || !fixedFrameRef.current) return;
+
+      const trackRect = trackRef.current.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const totalScrollable = trackRect.height - vh;
+
+      if (totalScrollable <= 0) return;
+
+      // Pinning Management
+      if (trackRect.top <= 0 && trackRect.bottom >= vh) {
+        fixedFrameRef.current.style.position = "fixed";
+        fixedFrameRef.current.style.top = "0px";
+        fixedFrameRef.current.style.bottom = "auto";
+      } else if (trackRect.bottom < vh) {
+        fixedFrameRef.current.style.position = "absolute";
+        fixedFrameRef.current.style.top = "auto";
+        fixedFrameRef.current.style.bottom = "0px";
+      } else {
+        fixedFrameRef.current.style.position = "absolute";
+        fixedFrameRef.current.style.top = "0px";
+        fixedFrameRef.current.style.bottom = "auto";
+      }
+
+      // Update target progress for LERP loop
+      const currentScroll = Math.max(0, -trackRect.top);
+      targetProgress.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
+    };
+
+    // Start RAF loop
+    rafId.current = requestAnimationFrame(updatePhysics);
 
     const lenis = smootherRef?.current;
     if (lenis) {
@@ -132,6 +153,9 @@ export default function AboutMobile() {
     handleScroll();
 
     return () => {
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+      }
       if (lenis) {
         lenis.off("scroll", handleScroll);
       } else {
@@ -141,12 +165,12 @@ export default function AboutMobile() {
   }, [smootherRef]);
 
   return (
-    <div 
-      ref={trackRef} 
-      className="about-track-container relative w-full" 
+    <div
+      ref={trackRef}
+      className="about-track-container relative w-full"
       style={{ height: `${TOTAL_SCROLL_STEPS * 100}vh` }}
     >
-      <div 
+      <div
         ref={fixedFrameRef}
         className="absolute top-0 left-0 h-[100svh] w-full overflow-hidden bg-[#162D24] z-10"
       >
@@ -156,7 +180,7 @@ export default function AboutMobile() {
         </div>
 
         {/* 1: SECTION ONE */}
-        <div 
+        <div
           className="about-stack-layer absolute inset-0 w-full h-full z-20 gpu-accelerated"
           style={{ transform: "translate3d(0, 100%, 0)" }}
         >
@@ -164,7 +188,7 @@ export default function AboutMobile() {
         </div>
 
         {/* 2: SECTION TWO */}
-        <div 
+        <div
           className="about-stack-layer absolute inset-0 w-full h-full z-30 gpu-accelerated"
           style={{ transform: "translate3d(0, 100%, 0)" }}
         >
@@ -172,7 +196,7 @@ export default function AboutMobile() {
         </div>
 
         {/* 3: SECTION THREE */}
-        <div 
+        <div
           className="about-stack-layer absolute inset-0 w-full h-full z-40 gpu-accelerated"
           style={{ transform: "translate3d(0, 100%, 0)" }}
         >
@@ -180,7 +204,7 @@ export default function AboutMobile() {
         </div>
 
         {/* 4: SECTION FOUR */}
-        <div 
+        <div
           className="about-stack-layer absolute inset-0 w-full h-full z-50 gpu-accelerated"
           style={{ transform: "translate3d(0, 100%, 0)" }}
         >
@@ -188,15 +212,15 @@ export default function AboutMobile() {
         </div>
 
         {/* 5: SECTION FIVE */}
-        <div 
+        <div
           className="about-stack-layer absolute inset-0 w-full h-full z-[60] gpu-accelerated"
           style={{ transform: "translate3d(0, 100%, 0)" }}
         >
           <SectionFive isActive={isSectionFiveActive} />
         </div>
 
-        {/* 6: SECTION CTA (Allows natural height + dynamic Y translation) */}
-        <div 
+        {/* 6: SECTION CTA */}
+        <div
           ref={ctaWrapRef}
           className="about-stack-layer absolute left-0 top-0 w-full min-h-[100svh] z-[150] gpu-accelerated bg-[#162D24]"
           style={{ transform: "translate3d(0, 100%, 0)" }}
@@ -204,8 +228,8 @@ export default function AboutMobile() {
           <SectionCTA />
         </div>
 
-        {/* 7: FOOTER WRAP (Anchored at bottom-0, triggers strictly after CTA completion) */}
-        <div 
+        {/* 7: FOOTER WRAP */}
+        <div
           ref={footerWrapRef}
           className="about-stack-layer absolute inset-x-0 bottom-0 w-full z-[160] gpu-accelerated"
           style={{ transform: "translate3d(0, 100%, 0)" }}
