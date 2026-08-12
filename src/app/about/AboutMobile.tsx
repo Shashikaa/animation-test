@@ -12,7 +12,8 @@ import { useState, useRef, useEffect } from "react";
 import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
-const TOTAL_SCROLL_STEPS = 11;
+// Reduced steps since Footer is now outside the pinned animation sequence
+const TOTAL_SCROLL_STEPS = 9;
 const easeOutQuad = (t: number) => t * (2 - t);
 
 export default function AboutMobile() {
@@ -21,7 +22,6 @@ export default function AboutMobile() {
   const trackRef = useRef<HTMLDivElement>(null);
   const fixedFrameRef = useRef<HTMLDivElement>(null);
   const ctaWrapRef = useRef<HTMLDivElement>(null);
-  const footerWrapRef = useRef<HTMLDivElement>(null);
 
   const targetProgress = useRef(0);
   const currentProgress = useRef(0);
@@ -107,31 +107,14 @@ export default function AboutMobile() {
         }
       }
 
-      // ── 2. CTA & FOOTER REVEAL LOGIC ──
-      const ctaEl = ctaWrapRef.current;
-      const footerEl = footerWrapRef.current;
-      const footerHeight = footerEl ? footerEl.offsetHeight : vh;
-
-      // Phase 1: CTA enters over Section 5 (steps 7.0 to 8.5)
-      const rawCtaEnter = Math.min(Math.max((stepProgress - 7.0) / 1.5, 0), 1);
+      // ── 2. CTA ENTRANCE LOGIC ──
+      // CTA enters smoothly over Section 5 (steps 7.0 to 8.0) and sits at 0px
+      const rawCtaEnter = Math.min(Math.max((stepProgress - 7.0) / 1.0, 0), 1);
       const ctaEnterProgress = easeOutQuad(rawCtaEnter);
+      const ctaY = (1 - ctaEnterProgress) * vh;
 
-      // Phase 2: CTA lifts up to reveal Footer underneath (steps 8.5 to 10.0)
-      const rawFooterReveal = Math.min(Math.max((stepProgress - 8.5) / 1.5, 0), 1);
-      const footerRevealProgress = easeOutQuad(rawFooterReveal);
-
-      // CTA Y position: starts at 100vh down, enters to 0px, then shifts up by footerHeight
-      const ctaY = (1 - ctaEnterProgress) * vh - footerRevealProgress * footerHeight;
-
-      // Footer Y position: stays pushed off-screen until CTA covers viewport, then rests at 0px
-      const footerY = (1 - ctaEnterProgress) * footerHeight;
-
-      if (ctaEl) {
-        ctaEl.style.transform = `translate3d(0, ${ctaY}px, 0)`;
-      }
-
-      if (footerEl) {
-        footerEl.style.transform = `translate3d(0, ${footerY}px, 0)`;
+      if (ctaWrapRef.current) {
+        ctaWrapRef.current.style.transform = `translate3d(0, ${ctaY}px, 0)`;
       }
 
       rafId.current = requestAnimationFrame(updatePhysics);
@@ -146,6 +129,7 @@ export default function AboutMobile() {
 
       if (totalScrollable <= 0) return;
 
+      // Unpins the fixed container when user scrolls past track container bottom
       if (trackRect.top <= 0 && trackRect.bottom >= vh) {
         fixedFrameRef.current.style.position = "fixed";
         fixedFrameRef.current.style.top = "0px";
@@ -189,6 +173,7 @@ export default function AboutMobile() {
 
   return (
     <div ref={scopeRef}>
+      {/* ANIMATED CARDS TRACK CONTAINER */}
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
@@ -243,25 +228,21 @@ export default function AboutMobile() {
             <SectionFive isActive={isSectionFiveActive} />
           </div>
 
-          {/* 6: SECTION CTA (z-[160] sits on top of Footer) */}
+          {/* 6: SECTION CTA */}
           <div
             ref={ctaWrapRef}
-            className="about-stack-layer absolute left-0 top-0 w-full min-h-[100svh] z-[160] gpu-accelerated bg-[#162D24]"
+            className="about-stack-layer absolute left-0 top-0 w-full min-h-[100svh] z-[70] gpu-accelerated bg-[#162D24]"
             style={{ transform: "translate3d(0, 100%, 0)" }}
           >
             <SectionCTA />
           </div>
-
-          {/* 7: FOOTER WRAP (z-[150] rests behind CTA) */}
-          <div
-            ref={footerWrapRef}
-            className="about-stack-layer absolute inset-x-0 bottom-0 w-full z-[150] gpu-accelerated"
-            style={{ transform: "translate3d(0, 100%, 0)" }}
-          >
-            <Footer />
-          </div>
         </div>
       </div>
+
+      {/* FOOTER (Normal Document Flow - Native Scrolling) */}
+      <footer className="relative z-20 w-full bg-[#162D24]">
+        <Footer />
+      </footer>
     </div>
   );
 }
