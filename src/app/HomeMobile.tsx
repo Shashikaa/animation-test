@@ -1,15 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect, useLayoutEffect } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useSite } from "./context/SiteContext";
+import { useRef, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
-
 import Hero from "../components/Home/Hero";
 import SectionTwo from "../components/Home/SectionTwo";
 import SectionCTA from "../components/SectionCTA";
 import Footer from "../components/Footer";
+import { useSite } from "./context/SiteContext";
+import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
 const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { ssr: false });
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
@@ -17,22 +15,18 @@ const SectionNine = dynamic(() => import("../components/Home/SectionNine"), { ss
 const SectionTen = dynamic(() => import("../components/Home/SectionTen"), { ssr: false });
 const Appsection = dynamic(() => import("../components/Appsection"), { ssr: false });
 
-gsap.registerPlugin(ScrollTrigger);
-
-const PX_PER_MAIN_PANEL = 850;
-const PX_PER_SUB_STEP = 350;
-const PAUSE_PX = 150;
-const BASELINE_VH = 800;
+const easeOutQuad = (t: number) => t * (2 - t);
 
 function executeInlineSplitting(selector: string) {
+  if (typeof document === "undefined") return;
   const element = document.querySelector(selector) as HTMLElement;
   if (!element || element.dataset.splitComplete === "true") return;
 
   const rawText = element.textContent || "";
-  const linesArray = rawText.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+  const linesArray = rawText.split("\n").map((line) => line.trim()).filter((line) => line.length > 0);
 
   element.innerHTML = "";
-  linesArray.forEach(lineText => {
+  linesArray.forEach((lineText) => {
     const wrapper = document.createElement("span");
     wrapper.className = "custom-line-wrap";
     wrapper.style.display = "block";
@@ -42,7 +36,6 @@ function executeInlineSplitting(selector: string) {
     const inner = document.createElement("span");
     inner.className = "custom-line-inner";
     inner.style.display = "block";
-    inner.style.opacity = "1";
     inner.textContent = lineText;
 
     wrapper.appendChild(inner);
@@ -53,439 +46,561 @@ function executeInlineSplitting(selector: string) {
 }
 
 export default function HomeMobile() {
-  const contextValues = useSite() as any;
-  const preloaderDone = contextValues?.preloaderDone ?? false;
-  const onScrollReady = contextValues?.onScrollReady ?? (() => {});
-
-  const [introDone, setIntroDone] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const fixedFrameRef = useRef<HTMLDivElement>(null);
 
+  const heroPanelRef = useRef<HTMLDivElement>(null);
+  const sec2Ref = useRef<HTMLDivElement>(null);
+  const sec8Ref = useRef<HTMLDivElement>(null);
+  const sec10Ref = useRef<HTMLDivElement>(null);
+  const sec7Ref = useRef<HTMLDivElement>(null);
+  const appSecRef = useRef<HTMLDivElement>(null);
+  const sec9Ref = useRef<HTMLDivElement>(null);
+  const ctaLayerRef = useRef<HTMLDivElement>(null);
+  const footerLayerRef = useRef<HTMLDivElement>(null);
+
+  const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
+  const targetProgress = useRef(0);
+  const rafId = useRef<number | null>(null);
+
+  const domCache = useRef<Record<string, HTMLElement | NodeListOf<HTMLElement> | null>>({});
+
+  const { smootherRef } = useSite();
+  const { preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
+    isMobile: true,
+    introDurationMs: 2800,
+    unlockScrollEarlyMs: 1800,
+  });
+
+  // 1. UNLOCK LENIS & INITIALIZE
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if ("scrollRestoration" in window.history) {
-      window.history.scrollRestoration = "manual";
+    const lenis = smootherRef?.current;
+
+    if (!preloaderDone || !shouldLoadRest) {
+      if (lenis && typeof lenis.stop === "function") lenis.stop();
+      targetProgress.current = 0;
+    } else {
+      document.body.classList.remove("preloading");
+      document.documentElement.classList.remove("preloading");
+
+      if (lenis) {
+        if (typeof lenis.resize === "function") lenis.resize();
+        if (typeof lenis.start === "function") lenis.start();
+      }
+
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event("scroll"));
+      });
+    }
+  }, [preloaderDone, shouldLoadRest, smootherRef]);
+
+  // Execute line splitting after mounts and force initial hidden states
+  useEffect(() => {
+    if (!shouldLoadRest) return;
+    executeInlineSplitting(".hero-title");
+    executeInlineSplitting(".hero-right-text");
+    executeInlineSplitting(".hero-secondary-para");
+
+    if (scopeRef.current) {
+      const heroRightWrap = scopeRef.current.querySelector(".hero-right-text-wrap") as HTMLElement;
+      const heroSecWrap = scopeRef.current.querySelector(".hero-secondary-text-wrap") as HTMLElement;
+
+      if (heroRightWrap) {
+        heroRightWrap.style.visibility = "hidden";
+        heroRightWrap.style.opacity = "0";
+      }
+      if (heroSecWrap) {
+        heroSecWrap.style.visibility = "hidden";
+        heroSecWrap.style.opacity = "0";
+      }
+    }
+  }, [shouldLoadRest]);
+
+  // 2. CACHE METRICS TO PREVENT LAYOUT THRASHING
+  const updateMetrics = useCallback(() => {
+    if (!trackRef.current) return;
+    const rect = trackRef.current.getBoundingClientRect();
+    const vh = window.innerHeight;
+    scrollMetricsRef.current = {
+      totalScrollable: rect.height - vh,
+      vh,
+      trackTopOffset: window.scrollY + rect.top,
+    };
+
+    if (scopeRef.current) {
+      domCache.current = {
+        heroBg: scopeRef.current.querySelector(".hero-bg"),
+        progressFill: scopeRef.current.querySelector(".hero-progress-bar-fill"),
+        heroLeftInitial: scopeRef.current.querySelector(".hero-left-initial"),
+        heroTitleInners: scopeRef.current.querySelectorAll(".hero-title .custom-line-inner"),
+        heroRightWrap: scopeRef.current.querySelector(".hero-right-text-wrap"),
+        heroRightInners: scopeRef.current.querySelectorAll(".hero-right-text .custom-line-inner"),
+        heroSecWrap: scopeRef.current.querySelector(".hero-secondary-text-wrap"),
+        heroSecInners: scopeRef.current.querySelectorAll(".hero-secondary-para .custom-line-inner"),
+        heroControls: scopeRef.current.querySelectorAll(".hero-contact-btn, .hero-scroll-indicator, .hero-progress-wrapper"),
+        s2Titles: scopeRef.current.querySelectorAll(".s2-title-main, .s2-title-sub, .s2-body"),
+        s2ScrollWrap: scopeRef.current.querySelector(".s2-mob-scroll-wrapper"),
+        s2Clip1: scopeRef.current.querySelector(".s2-mob-clip-bg-1"),
+        s2Clip2: scopeRef.current.querySelector(".s2-mob-clip-bg-2"),
+        s2Clip3: scopeRef.current.querySelector(".s2-mob-clip-bg-3"),
+        s8BgImg: scopeRef.current.querySelector(".s8-bg-img"),
+        s8MobBg: scopeRef.current.querySelector(".s8-mob-bg"),
+        s10HeaderEls: scopeRef.current.querySelectorAll(".s10-title, .s10-title-sub, .s10-para-top"),
+        s10ScrollContainer: scopeRef.current.querySelector(".s10-scrollable-container"),
+        s7BgImg: scopeRef.current.querySelector(".s7-bg-img"),
+        s7MobBg: scopeRef.current.querySelector(".s7-mob-bg"),
+        s9BgImg: scopeRef.current.querySelector(".s9-bg-img"),
+      };
     }
   }, []);
 
   useEffect(() => {
-    const locked = !preloaderDone;
-    document.body.style.overflow = locked ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [preloaderDone]);
+    if (!shouldLoadRest) return;
+    updateMetrics();
+    window.addEventListener("resize", updateMetrics, { passive: true });
+    return () => window.removeEventListener("resize", updateMetrics);
+  }, [shouldLoadRest, updateMetrics]);
 
+  // 3. GPU-ACCELERATED STEP RENDER LOOP
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!shouldLoadRest) return;
 
-    let lastWidth = window.innerWidth;
+    const render = () => {
+      const currentProg = targetProgress.current;
+      const totalSteps = 12.0;
+      const stepProgress = currentProg * totalSteps;
+      const { vh } = scrollMetricsRef.current;
+      const cache = domCache.current;
 
-    const handleResize = () => {
-      const currentWidth = window.innerWidth;
-      if (currentWidth !== lastWidth) {
-        lastWidth = currentWidth;
-        ScrollTrigger.refresh();
-      }
-    };
+      // ── 1. HERO ANIMATIONS ──
+      const h1Prog = Math.min(Math.max(stepProgress / 1.0, 0), 1);
+      const progressFill = cache.progressFill as HTMLElement;
+      const heroBg = cache.heroBg as HTMLElement;
+      const heroLeftInitial = cache.heroLeftInitial as HTMLElement;
+      const heroTitleInners = cache.heroTitleInners as NodeListOf<HTMLElement>;
+      const heroRightWrap = cache.heroRightWrap as HTMLElement;
+      const heroRightInners = cache.heroRightInners as NodeListOf<HTMLElement>;
+      const heroSecWrap = cache.heroSecWrap as HTMLElement;
+      const heroSecInners = cache.heroSecInners as NodeListOf<HTMLElement>;
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+      if (heroBg) heroBg.style.transform = `scale(${1.0 + h1Prog * 0.08})`;
+      if (progressFill) progressFill.style.transform = `scaleY(${Math.min(0.33, h1Prog * 0.33)})`;
 
-  useLayoutEffect(() => {
-    if (!preloaderDone) return;
-
-    const ctx = gsap.context(() => {
-      executeInlineSplitting(".hero-title");
-      executeInlineSplitting(".hero-right-text");
-      executeInlineSplitting(".hero-secondary-para");
-
-      gsap.set([
-        ".hero-bg-wrapper", ".hero-bg", ".section-10",
-        ".s10-img-right-wrap", ".s10-scrollable-container", ".s10-title", ".s10-title-sub", ".s10-para-top",
-        ".section-7", ".s7-bg-img", ".s7-mob-bg", ".section-8", ".s8-bg-img",
-        ".s8-mob-bg", ".section-9", ".s9-bg-img", ".section-cta", ".footer", ".section-appsec"
-      ], { force3D: true });
-
-      gsap.set(".hero", { yPercent: 0, zIndex: 90, display: "block", opacity: 1, force3D: true });
-      gsap.set(".hero-bg-wrapper", { opacity: 1, visibility: "visible", clipPath: "none" });
-      gsap.set(".hero-gradient-bg", { opacity: 1, visibility: "visible" });
-
-      gsap.set([".hero-contact-btn", ".hero-scroll-indicator"], { opacity: 1, y: 0 });
-      gsap.set(".hero-progress-wrapper", { opacity: 1, visibility: "visible" });
-      gsap.set(".hero-progress-bar-fill", { scaleY: 0, transformOrigin: "top center", force3D: true });
-
-      gsap.set(".hero-left-initial", { visibility: "visible", opacity: 1 });
-      gsap.set(".hero-title .custom-line-inner", { opacity: 1, yPercent: 0 });
-
-      gsap.set(".hero-right-text-wrap", { opacity: 0, visibility: "hidden" });
-      gsap.set(".hero-right-text .custom-line-inner", { opacity: 0, yPercent: 100 });
-
-      gsap.set(".hero-secondary-text-wrap", { opacity: 0, visibility: "hidden" });
-      gsap.set(".hero-secondary-para .custom-line-inner", { opacity: 0, yPercent: 100 });
-
-      gsap.set(".section-2", { display: "block", clipPath: "none", zIndex: 95, yPercent: 100, opacity: 1, visibility: "visible", force3D: true });
-      gsap.set(".s2-mob-scroll-wrapper", { opacity: 0, yPercent: 100, y: 0 });
-      gsap.set([".s2-title-main", ".s2-title-sub", ".s2-body"], { opacity: 1, y: 0, visibility: "visible" });
-
-      gsap.set([".s2-mob-clip-bg-1", ".s2-mob-clip-bg-2", ".s2-mob-clip-bg-3"], {
-        opacity: 0,
-        force3D: true
-      });
-
-      gsap.set(".section-8", { visibility: "visible", yPercent: 100, zIndex: 100, force3D: true });
-      gsap.set(".s8-bg-img", { yPercent: 20, force3D: true });
-      gsap.set(".s8-mob-bg", { scale: 1.35, transformOrigin: "center center", force3D: true });
-
-      // Baseline positioning for Section 10
-      gsap.set(".section-10", { visibility: "visible", yPercent: 100, zIndex: 105, force3D: true });
-      gsap.set(".s10-scrollable-container", { yPercent: 0, force3D: true });
-      gsap.set([".s10-title", ".s10-title-sub", ".s10-para-top"], { yPercent: 0, opacity: 1, force3D: true });
-
-      gsap.set(".section-7", { visibility: "visible", yPercent: 100, zIndex: 110, force3D: true });
-      gsap.set(".s7-bg-img", { yPercent: 20, force3D: true });
-      gsap.set(".s7-mob-bg", { scale: 1.35, transformOrigin: "center center", force3D: true });
-
-      gsap.set(".section-appsec", { visibility: "visible", yPercent: 100, zIndex: 115, force3D: true });
-
-      gsap.set(".section-9", { visibility: "visible", yPercent: 100, zIndex: 120, force3D: true });
-      gsap.set(".s9-bg-img", { yPercent: 20, scale: 1.35, transformOrigin: "center center", force3D: true });
-      gsap.set(".s9-title", { opacity: 1 });
-      gsap.set(".s9-para", { opacity: 1 });
-
-      gsap.set(".section-cta", { yPercent: 100, zIndex: 125, visibility: "hidden", force3D: true });
-      gsap.set(
-        [".section-cta .cta-inner-mobile", ".section-cta .cta-inner-desktop"],
-        { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
-      );
-      gsap.set(".footer", { yPercent: 100, zIndex: 126, visibility: "hidden", force3D: true });
-
-      gsap.set(".hero-bg", { scale: 1.0, transformOrigin: "center center", force3D: true });
-
-      setIntroDone(true);
-    }, scopeRef);
-
-    return () => ctx.revert();
-  }, [preloaderDone]);
-
-  useEffect(() => {
-    if (!preloaderDone || !introDone) return;
-
-    const isAndroid = /Android/i.test(navigator.userAgent);
-
-    const ctx = gsap.context(() => {
-      ScrollTrigger.config({ ignoreMobileResize: true });
-
-      if (!isAndroid) {
-        ScrollTrigger.normalizeScroll({
-          allowNestedScroll: true,
-          lockAxis: true,
+      const titleFadeOutProg = Math.min(1, h1Prog / 0.4);
+      if (heroTitleInners) {
+        heroTitleInners.forEach((el) => {
+          el.style.opacity = `${1 - titleFadeOutProg}`;
+          el.style.transform = `translate3d(0, ${-20 * titleFadeOutProg}px, 0)`;
         });
       }
 
-      const ACTION = 1.4;
-      const DEAD_SCROLL = 0.15;
-      const UNIFIED_EASE = "power1.inOut";
+      if (heroLeftInitial) heroLeftInitial.style.visibility = h1Prog >= 0.4 ? "hidden" : "visible";
 
-      const MAIN_PANELS_COUNT = 8;
-      const SUB_STEPS_COUNT = 5;
-      const PAUSES_COUNT = 8;
+      const rightTextInProg = Math.min(1, Math.max(0, (h1Prog - 0.3) / 0.7));
+      if (heroRightWrap) {
+        if (stepProgress < 1.0) {
+          heroRightWrap.style.visibility = rightTextInProg > 0 ? "visible" : "hidden";
+          heroRightWrap.style.opacity = `${rightTextInProg}`;
+          heroRightWrap.style.transform = `translate3d(0, ${(1 - rightTextInProg) * 40}px, 0)`;
+        }
+      }
 
-      const vh = window.innerHeight || BASELINE_VH;
-      const scaleFactor = vh / BASELINE_VH;
+      if (heroRightInners && stepProgress < 1.0) {
+        heroRightInners.forEach((el) => {
+          el.style.opacity = `${rightTextInProg}`;
+          el.style.transform = `translate3d(0, ${(1 - rightTextInProg) * 100}%, 0)`;
+        });
+      }
 
-      const DYNAMIC_SCROLL_TRACK =
-        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL +
-          SUB_STEPS_COUNT * PX_PER_SUB_STEP +
-          PAUSES_COUNT * PAUSE_PX) *
-        scaleFactor;
+      const h2Prog = Math.min(Math.max((stepProgress - 1.0) / 1.0, 0), 1);
+      if (progressFill && stepProgress >= 1.0 && stepProgress < 2.0) {
+        progressFill.style.transform = `scaleY(${0.33 + h2Prog * 0.33})`;
+      }
 
-      const tl = gsap.timeline({
-        defaults: { ease: UNIFIED_EASE, lazy: true },
-        scrollTrigger: {
-          trigger: ".home-pin-master",
-          start: "top top",
-          end: `+=${DYNAMIC_SCROLL_TRACK}`,
-          pin: true,
-          pinType: "fixed",
-          scrub: isAndroid ? 0.2 : 0.6,
-          anticipatePin: 1,
-          preventOverlaps: true,
-          fastScrollEnd: true,
-          invalidateOnRefresh: true,
-        },
-      });
+      if (heroRightInners && stepProgress >= 1.0) {
+        heroRightInners.forEach((el) => {
+          el.style.opacity = `${1 - h2Prog}`;
+          el.style.transform = `translate3d(0, ${-20 * h2Prog}px, 0)`;
+        });
+      }
 
-      // ── HERO TIMELINE SEQUENCE ──
-      tl.addLabel("heroStart", 0)
-        .fromTo(".hero-progress-bar-fill",
-          { scaleY: 0 },
-          { scaleY: 0.33, duration: ACTION, ease: "none" },
-          "heroStart"
-        )
-        .fromTo(".hero-bg",
-          { scale: 1.0 },
-          { scale: 1.15, duration: ACTION * 2.0, ease: "power1.out" },
-          "heroStart"
-        )
+      if (heroRightWrap && stepProgress >= 1.0) {
+        heroRightWrap.style.visibility = h2Prog >= 1 ? "hidden" : "visible";
+      }
 
-        .to(".hero-title .custom-line-inner", {
-          opacity: 0,
-          y: -20,
-          stagger: 0.03,
-          duration: ACTION * 0.4,
-          ease: "power2.in"
-        }, "heroStart")
-        .set(".hero-left-initial", { visibility: "hidden" })
+      if (heroSecWrap) {
+        if (stepProgress < 1.0) {
+          heroSecWrap.style.visibility = "hidden";
+          heroSecWrap.style.opacity = "0";
+        } else if (stepProgress >= 1.0 && stepProgress < 2.0) {
+          heroSecWrap.style.visibility = "visible";
+          heroSecWrap.style.opacity = `${Math.min(1, h2Prog * 1.5)}`;
+        }
+      }
 
-        .set(".hero-right-text-wrap", { visibility: "visible", opacity: 1 }, "heroStart+=0.1")
-        .to(".hero-right-text .custom-line-inner", {
-          opacity: 1,
-          yPercent: 0,
-          stagger: 0.04,
-          duration: ACTION * 0.4,
-          ease: "power2.out"
-        }, "heroStart+=0.1")
+      if (heroSecInners) {
+        if (stepProgress < 1.0) {
+          heroSecInners.forEach((el) => {
+            el.style.opacity = "0";
+            el.style.transform = "translate3d(0, 100%, 0)";
+          });
+        } else if (stepProgress >= 1.0 && stepProgress < 2.0) {
+          heroSecInners.forEach((el) => {
+            el.style.opacity = `${h2Prog}`;
+            el.style.transform = `translate3d(0, ${(1 - h2Prog) * 100}%, 0)`;
+          });
+        }
+      }
 
-        .to({}, { duration: DEAD_SCROLL })
+      const s2Prog = easeOutQuad(Math.min(Math.max(stepProgress - 2.0, 0), 1));
+      if (progressFill && stepProgress >= 2.0) progressFill.style.transform = `scaleY(${0.66 + s2Prog * 0.34})`;
 
-        .addLabel("heroStep2", `heroStart+=${ACTION * 0.6 + DEAD_SCROLL}`)
-        .to(".hero-progress-bar-fill", { scaleY: 0.66, duration: ACTION * 0.5, ease: "none" }, "heroStep2")
+      if (heroSecInners && stepProgress >= 2.0) {
+        heroSecInners.forEach((el) => {
+          el.style.opacity = `${1 - s2Prog}`;
+          el.style.transform = `translate3d(0, ${-20 * s2Prog}px, 0)`;
+        });
+      }
 
-        .to(".hero-right-text .custom-line-inner", {
-          opacity: 0,
-          y: -20,
-          stagger: 0.03,
-          duration: ACTION * 0.3,
-          ease: "power1.in"
-        }, "heroStep2")
-        .set(".hero-right-text-wrap", { visibility: "hidden" })
+      if (heroSecWrap && stepProgress >= 2.0) heroSecWrap.style.opacity = `${1 - s2Prog}`;
 
-        .set(".hero-secondary-text-wrap", { visibility: "visible", opacity: 1 }, "heroStep2+=0.1")
-        .to(".hero-secondary-para .custom-line-inner", {
-          opacity: 1,
-          yPercent: 0,
-          stagger: 0.04,
-          duration: ACTION * 0.4,
-          ease: "power2.out"
-        }, "heroStep2+=0.1")
+      const heroControls = cache.heroControls as NodeListOf<HTMLElement>;
+      if (heroControls && stepProgress >= 2.0) {
+        heroControls.forEach((el) => { el.style.opacity = `${1 - s2Prog}`; });
+      }
 
-        .to({}, { duration: DEAD_SCROLL })
+      if (sec2Ref.current) sec2Ref.current.style.transform = `translate3d(0, ${(1 - s2Prog) * 100}%, 0)`;
+      if (heroPanelRef.current && s2Prog > 0) heroPanelRef.current.style.transform = `translate3d(0, ${-s2Prog * 15}%, 0)`;
 
-        .addLabel("heroExit", `heroStep2+=${ACTION * 0.6 + DEAD_SCROLL}`)
-        .to(".hero-progress-bar-fill", { scaleY: 1, duration: ACTION * 0.5, ease: "none" }, "heroExit")
+      // ── 2. SECTION TWO INNER ANIMATIONS ──
+      const s2InnerProg = Math.min(Math.max((stepProgress - 3.0) / 2.0, 0), 1);
+      const s2Titles = cache.s2Titles as NodeListOf<HTMLElement>;
+      const s2ScrollWrap = cache.s2ScrollWrap as HTMLElement;
+      const s2Clip1 = cache.s2Clip1 as HTMLElement;
+      const s2Clip2 = cache.s2Clip2 as HTMLElement;
+      const s2Clip3 = cache.s2Clip3 as HTMLElement;
 
-        .to(".hero-secondary-para .custom-line-inner", {
-          opacity: 0,
-          y: -20,
-          stagger: 0.03,
-          duration: ACTION * 0.3,
-          ease: "power1.in"
-        }, "heroExit")
+      const titleFadeOut = Math.min(1, s2InnerProg / 0.20);
+      if (s2Titles) {
+        s2Titles.forEach((el) => {
+          el.style.opacity = `${1 - titleFadeOut}`;
+          el.style.transform = `translate3d(0, ${-30 * titleFadeOut}px, 0)`;
+        });
+      }
 
-        .to([".hero-contact-btn", ".hero-scroll-indicator", ".hero-progress-wrapper"], {
-          opacity: 0,
-          duration: ACTION * 0.3,
-          ease: "power1.inOut"
-        }, "heroExit")
+      const scrollInProg = Math.min(1, Math.max(0, (s2InnerProg - 0.15) / 0.85));
+      if (s2ScrollWrap) {
+        s2ScrollWrap.style.opacity = `${Math.min(1, scrollInProg * 2.5)}`;
+        s2ScrollWrap.style.transform = `translate3d(0, ${80 - s2InnerProg * 160}%, 0)`;
+        s2ScrollWrap.style.pointerEvents = scrollInProg > 0.1 ? "auto" : "none";
+      }
 
-        .fromTo(".section-2",
-          { yPercent: 100 },
-          { yPercent: 0, duration: ACTION },
-          "heroExit"
-        )
-        .to(".hero", { yPercent: -15, duration: ACTION }, "heroExit")
-        .addLabel("textLanding", `heroExit+=${ACTION}`);
+      const clip1Prog = Math.min(1, Math.max(0, (s2InnerProg - 0.25) / 0.35));
+      const clip2Prog = Math.min(1, Math.max(0, (s2InnerProg - 0.45) / 0.35));
+      const clip3Prog = Math.min(1, Math.max(0, (s2InnerProg - 0.65) / 0.35));
 
-      // ── SECTION 2 INNER ANIMATIONS ──
-      tl.addLabel("s2TextDismissal", "textLanding")
-        .to([".s2-title-main", ".s2-title-sub", ".s2-body"], {
-          opacity: 0,
-          y: -40,
-          duration: ACTION * 0.8,
-          ease: "power2.in"
-        }, "s2TextDismissal")
+      if (s2Clip1) s2Clip1.style.opacity = `${clip1Prog}`;
+      if (s2Clip2) s2Clip2.style.opacity = `${clip2Prog}`;
+      if (s2Clip3) s2Clip3.style.opacity = `${clip3Prog}`;
 
-        .addLabel("s2MobileScrollStart", "s2TextDismissal+=" + (ACTION * 0.4))
-        .to(".s2-mob-scroll-wrapper", { opacity: 1, duration: ACTION * 0.3 }, "s2MobileScrollStart")
-        .fromTo(".s2-mob-scroll-wrapper",
-          { yPercent: 100 },
-          { yPercent: -70, duration: ACTION * 2.5 },
-          "s2MobileScrollStart"
-        )
+      // ── 3. SECTION EIGHT ──
+      const s8Prog = easeOutQuad(Math.min(Math.max(stepProgress - 5.0, 0), 1));
+      if (sec8Ref.current) {
+        sec8Ref.current.style.transform = `translate3d(0, ${(1 - s8Prog) * 100}%, 0)`;
+        sec8Ref.current.style.opacity = `${s8Prog > 0 ? 1 : 0}`;
+        sec8Ref.current.style.visibility = s8Prog > 0 ? "visible" : "hidden";
+      }
 
-        .to(".s2-mob-clip-bg-1", {
-          opacity: 1,
-          duration: ACTION * 0.7,
-        }, "s2MobileScrollStart+=" + (ACTION * 0.3))
+      if (sec2Ref.current && s8Prog > 0) {
+        sec2Ref.current.style.transform = `translate3d(0, ${-s8Prog * 15}%, 0)`;
+      }
 
-        .to(".s2-mob-clip-bg-2", {
-          opacity: 1,
-          duration: ACTION * 0.7,
-        }, "s2MobileScrollStart+=" + (ACTION * 0.9))
+      const s8BgImg = cache.s8BgImg as HTMLElement;
+      const s8MobBg = cache.s8MobBg as HTMLElement;
+      if (s8BgImg) s8BgImg.style.transform = `translate3d(0, ${(1 - s8Prog) * 20}%, 0)`;
+      if (s8MobBg) s8MobBg.style.transform = `scale(${1.35 - s8Prog * 0.35})`;
 
-        .to(".s2-mob-clip-bg-3", {
-          opacity: 1,
-          duration: ACTION * 0.7,
-        }, "s2MobileScrollStart+=" + (ACTION * 1.5))
+      // ── 4. SECTION TEN ──
+      let s10HeaderEls = cache.s10HeaderEls as NodeListOf<HTMLElement>;
+      let s10ScrollContainer = cache.s10ScrollContainer as HTMLElement;
 
-        .to({}, { duration: DEAD_SCROLL });
+      if ((!s10HeaderEls || s10HeaderEls.length === 0) && sec10Ref.current) {
+        s10HeaderEls = sec10Ref.current.querySelectorAll(".s10-title, .s10-title-sub, .s10-para-top");
+        cache.s10HeaderEls = s10HeaderEls;
+      }
+      if (!s10ScrollContainer && sec10Ref.current) {
+        s10ScrollContainer = sec10Ref.current.querySelector(".s10-scrollable-container") as HTMLElement;
+        cache.s10ScrollContainer = s10ScrollContainer;
+      }
 
-      // ── SECTION 8 SLIDE UP ──
-      tl.addLabel("sec8Start", ">")
-        .to(".section-8", { yPercent: 0, duration: ACTION }, "sec8Start")
-        .to(".section-2", { yPercent: -15, duration: ACTION }, "sec8Start")
-        .to(".s8-bg-img", { yPercent: 0, duration: ACTION }, "sec8Start")
-        .to(".s8-mob-bg", { scale: 1, duration: ACTION }, "sec8Start")
+      const s10SlideProg = easeOutQuad(Math.min(Math.max((stepProgress - 6.0) / 0.6, 0), 1));
 
-        .to({}, { duration: DEAD_SCROLL });
+      if (sec10Ref.current) {
+        sec10Ref.current.style.transform = `translate3d(0, ${(1 - s10SlideProg) * 100}%, 0)`;
+        sec10Ref.current.style.opacity = `${s10SlideProg > 0 ? 1 : 0}`;
+        sec10Ref.current.style.visibility = s10SlideProg > 0 ? "visible" : "hidden";
+      }
 
-      // ── SECTION 10 SLIDE UP & TEXT INNER SLIDE UP FROM BELOW ──
-      tl.addLabel("sec10Start", ">")
-        .to(".section-10", { yPercent: 0, duration: ACTION }, "sec10Start")
-        .to(".section-8", { yPercent: -15, duration: ACTION }, "sec10Start");
+      if (sec8Ref.current && s10SlideProg > 0) {
+        sec8Ref.current.style.transform = `translate3d(0, ${-s10SlideProg * 15}%, 0)`;
+      }
 
-      tl.addLabel("sec10InnerScroll", ">")
-        .to([".s10-title", ".s10-title-sub", ".s10-para-top"], {
-          y: -300,
-          opacity: 1,
-          duration: ACTION * 0.5,
-          ease: "power2.in"
-        }, "sec10InnerScroll")
-        .fromTo(".s10-scrollable-container",
-          { yPercent: 100 },
-          { yPercent: -220, duration: ACTION * 1 },
-          "sec10InnerScroll"
-        )
+      const s10InnerProg = Math.min(Math.max((stepProgress - 6.6) / 0.9, 0), 1);
 
-        .to({}, { duration: DEAD_SCROLL });
+      if (s10HeaderEls) {
+        s10HeaderEls.forEach((el) => {
+          el.style.transform = `translate3d(0, ${-300 * s10InnerProg}px, 0)`;
+        });
+      }
 
-      // ── SECTION 7 SLIDE UP ──
-      tl.addLabel("sec7Start", ">")
-        .to(".section-7", { yPercent: 0, duration: ACTION }, "sec7Start")
-        .to(".section-10", { yPercent: -15, duration: ACTION }, "sec7Start")
-        .to(".s7-bg-img", { yPercent: 0, duration: ACTION }, "sec7Start")
-        .to(".s7-mob-bg", { scale: 1, duration: ACTION }, "sec7Start")
+      if (s10ScrollContainer) {
+        const containerY = 100 - s10InnerProg * 320;
+        s10ScrollContainer.style.transform = `translate3d(0, ${containerY}%, 0)`;
+      }
 
-        .to({}, { duration: DEAD_SCROLL });
+      // ── 5. SECTION SEVEN ──
+      const s7Prog = easeOutQuad(Math.min(Math.max(stepProgress - 7.5, 0), 1));
 
-      // ── APPSECTION SLIDE UP ──
-      tl.addLabel("appSecStart", ">")
-        .to(".section-appsec", { yPercent: 0, duration: ACTION }, "appSecStart")
-        .to(".section-7", { yPercent: -15, duration: ACTION }, "appSecStart")
+      if (sec7Ref.current) {
+        sec7Ref.current.style.transform = `translate3d(0, ${(1 - s7Prog) * 100}%, 0)`;
+        sec7Ref.current.style.opacity = `${s7Prog > 0 ? 1 : 0}`;
+        sec7Ref.current.style.visibility = s7Prog > 0 ? "visible" : "hidden";
+      }
 
-        .to({}, { duration: DEAD_SCROLL });
+      if (sec10Ref.current && s7Prog > 0) {
+        sec10Ref.current.style.transform = `translate3d(0, ${-s7Prog * 15}%, 0)`;
+      }
 
-      // ── SECTION 9 SLIDE UP ──
-      tl.addLabel("sec9Start", ">")
-        .to(".section-9", { yPercent: 0, duration: ACTION }, "sec9Start")
-        .to(".section-appsec", { yPercent: -15, duration: ACTION }, "sec9Start")
-        .to(".s9-bg-img", { scale: 1, yPercent: 0, duration: ACTION }, "sec9Start")
+      let s7BgImg = cache.s7BgImg as HTMLElement;
+      let s7MobBg = cache.s7MobBg as HTMLElement;
+      if (!s7BgImg && sec7Ref.current) cache.s7BgImg = s7BgImg = sec7Ref.current.querySelector(".s7-bg-img") as HTMLElement;
+      if (!s7MobBg && sec7Ref.current) cache.s7MobBg = s7MobBg = sec7Ref.current.querySelector(".s7-mob-bg") as HTMLElement;
 
-        .to(".s9-title", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.15")
-        .to(".s9-para", { opacity: 1, duration: ACTION * 0.5 }, "sec9Start+=0.15")
+      if (s7BgImg) s7BgImg.style.transform = `translate3d(0, ${(1 - s7Prog) * 20}%, 0)`;
+      if (s7MobBg) s7MobBg.style.transform = `scale(${1.35 - s7Prog * 0.35})`;
 
-        .to({}, { duration: DEAD_SCROLL });
+      // ── 6. APP SECTION (Auto-Height recalculation like CTA) ──
+      const appProg = easeOutQuad(Math.min(Math.max(stepProgress - 8.5, 0), 1));
 
-      // ── CTA REVEAL ──
-      tl.addLabel("ctaStart", ">")
-        .set(".section-cta", { visibility: "visible" }, "ctaStart")
-        .fromTo(
-          ".section-cta",
-          { yPercent: 100 },
-          { yPercent: 0, duration: ACTION },
-          "ctaStart"
-        )
-        .to(".section-9", { yPercent: 0, duration: ACTION }, "ctaStart")
+      if (appSecRef.current) {
+        const appHeight = appSecRef.current.offsetHeight || vh;
+        const startY = vh;
+        const endY = -(appHeight - vh);
+        const currentY = startY + (endY - startY) * appProg;
+        appSecRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
+        appSecRef.current.style.opacity = `${appProg > 0 ? 1 : 0}`;
+        appSecRef.current.style.visibility = appProg > 0 ? "visible" : "hidden";
+      }
 
-        .to({}, { duration: DEAD_SCROLL });
+      if (sec7Ref.current && appProg > 0) {
+        sec7Ref.current.style.transform = `translate3d(0, ${-appProg * 15}%, 0)`;
+      }
 
-      // ── FOOTER SLIDE UP (Directly over CTA) ──
-      tl.addLabel("footerStart", ">")
-        .set(".footer", { visibility: "visible" }, "footerStart")
-        .fromTo(
-          ".footer",
-          { yPercent: 100 },
-          {
-            yPercent: 0,
-            duration: ACTION,
-            ease: "power1.out",
-          },
-          "footerStart"
-        );
+      // ── 7. SECTION NINE ──
+      const s9Prog = easeOutQuad(Math.min(Math.max(stepProgress - 9.5, 0), 1));
 
-      onScrollReady();
+      if (sec9Ref.current) {
+        sec9Ref.current.style.transform = `translate3d(0, ${(1 - s9Prog) * 100}%, 0)`;
+        sec9Ref.current.style.opacity = `${s9Prog > 0 ? 1 : 0}`;
+        sec9Ref.current.style.visibility = s9Prog > 0 ? "visible" : "hidden";
+      }
 
-    }, scopeRef);
+      let s9BgImg = cache.s9BgImg as HTMLElement;
+      if (!s9BgImg && sec9Ref.current) cache.s9BgImg = s9BgImg = sec9Ref.current.querySelector(".s9-bg-img") as HTMLElement;
+      if (s9BgImg) {
+        s9BgImg.style.transform = `scale(${1.35 - s9Prog * 0.35}) translate3d(0, ${(1 - s9Prog) * 20}%, 0)`;
+      }
 
-    return () => {
-      ctx.revert();
-      if (!isAndroid) {
-        ScrollTrigger.normalizeScroll(false);
+      // ── 8. SECTION CTA ──
+      const ctaProgress = easeOutQuad(Math.min(Math.max((stepProgress - 10.2) / 1.0, 0), 1));
+
+      if (ctaLayerRef.current) {
+        const ctaHeight = ctaLayerRef.current.offsetHeight || vh;
+        const startY = vh;
+        const endY = -(ctaHeight - vh);
+        const currentY = startY + (endY - startY) * ctaProgress;
+        ctaLayerRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
+        ctaLayerRef.current.style.opacity = `${ctaProgress > 0 ? 1 : 0}`;
+        ctaLayerRef.current.style.visibility = ctaProgress > 0 ? "visible" : "hidden";
+      }
+
+      // ── 9. FOOTER (FULL REVEAL FIX) ──
+      const footerProgress = easeOutQuad(Math.min(Math.max((stepProgress - 11.2) / 0.8, 0), 1));
+
+      if (footerLayerRef.current) {
+        const footerHeight = footerLayerRef.current.offsetHeight || vh;
+        const startY = vh;
+        const endY = vh - footerHeight;
+        const translateY = startY + (endY - startY) * footerProgress;
+        footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
+        footerLayerRef.current.style.opacity = `${footerProgress > 0 ? 1 : 0}`;
+        footerLayerRef.current.style.visibility = footerProgress > 0 ? "visible" : "hidden";
       }
     };
-  }, [preloaderDone, introDone]);
+
+    const handleScroll = (e?: any) => {
+      const scrollY = e?.scroll !== undefined ? e.scroll : window.scrollY;
+      const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
+
+      if (totalScrollable <= 0) return;
+
+      const relativeScroll = scrollY - trackTopOffset;
+      const trackBottom = relativeScroll + totalScrollable;
+
+      if (fixedFrameRef.current) {
+        if (relativeScroll >= 0 && trackBottom >= 0) {
+          fixedFrameRef.current.style.position = "fixed";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        } else if (trackBottom < 0) {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "auto";
+          fixedFrameRef.current.style.bottom = "0px";
+        } else {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        }
+      }
+
+      targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
+
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+      rafId.current = requestAnimationFrame(render);
+    };
+
+    const lenis = smootherRef?.current;
+    if (lenis && typeof lenis.on === "function") {
+      lenis.on("scroll", handleScroll);
+    } else {
+      window.addEventListener("scroll", handleScroll, { passive: true });
+    }
+
+    handleScroll();
+    render();
+
+    return () => {
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+      if (lenis && typeof lenis.off === "function") {
+        lenis.off("scroll", handleScroll);
+      } else {
+        window.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, [shouldLoadRest, smootherRef]);
 
   return (
-    <div ref={scopeRef} className="min-h-[100dvh] w-full bg-black text-white overflow-hidden">
+    <div ref={scopeRef} className="relative w-full bg-black text-white">
       <style jsx global>{`
         .hero-right-text:not([data-split-complete="true"]),
-        .hero-secondary-para:not([data-split-complete="true"]) {
+        .hero-secondary-para:not([data-split-complete="true"]),
+        .hero-right-text-wrap,
+        .hero-secondary-text-wrap {
           opacity: 0;
           visibility: hidden;
         }
+        .hero-right-text .custom-line-inner,
+        .hero-secondary-para .custom-line-inner {
+          opacity: 0;
+          transform: translate3d(0, 100%, 0);
+        }
       `}</style>
 
+      {/* Expanded Track Container Height to 1400vh for complete footer reveal */}
       <div
-        className="home-pin-master pin-all-home relative w-full overflow-hidden h-[100dvh]"
-        style={{ visibility: "visible" }}
+        ref={trackRef}
+        className="home-track-container relative w-full"
+        style={{ height: "1400vh" }}
       >
+        <div
+          ref={fixedFrameRef}
+          className="fixed top-0 left-0 w-full overflow-hidden bg-black z-10 h-[100dvh]"
+        >
+          {/* Layer 1: Hero Component */}
+          <div
+            ref={heroPanelRef}
+            className="hero absolute inset-0 w-full h-[100dvh] z-10 gpu-accelerated transform-gpu will-change-transform"
+          >
+            <Hero />
+          </div>
 
-        {/* Layer 1: Hero Component */}
-        <div className="hero gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 90, pointerEvents: "auto" }}>
-          <Hero />
+          {shouldLoadRest && (
+            <>
+              {/* Layer 2: Section Two */}
+              <div
+                ref={sec2Ref}
+                className="section-2 about-stack-layer absolute inset-0 w-full h-[100dvh] z-20 gpu-accelerated will-change-transform"
+                style={{ transform: "translate3d(0, 100%, 0)" }}
+              >
+                <SectionTwo />
+              </div>
+
+              {/* Layer 3: Section Eight */}
+              <div
+                ref={sec8Ref}
+                className="section-8 about-stack-layer absolute inset-0 w-full h-[100dvh] z-30 gpu-accelerated will-change-transform"
+                style={{ transform: "translate3d(0, 100%, 0)" }}
+              >
+                <SectionEight />
+              </div>
+
+              {/* Layer 4: Section Ten */}
+              <div
+                ref={sec10Ref}
+                className="section-10 about-stack-layer absolute inset-0 w-full h-[100dvh] z-40 gpu-accelerated will-change-transform"
+                style={{ transform: "translate3d(0, 100%, 0)", opacity: 0, visibility: "hidden" }}
+              >
+                <SectionTen />
+              </div>
+
+              {/* Layer 5: Section Seven */}
+              <div
+                ref={sec7Ref}
+                className="section-7 about-stack-layer absolute inset-0 w-full h-[100dvh] z-50 gpu-accelerated will-change-transform"
+                style={{ transform: "translate3d(0, 100%, 0)", opacity: 0, visibility: "hidden" }}
+              >
+                <SectionSeven />
+              </div>
+
+              {/* Layer 6: App Section */}
+              <div
+                ref={appSecRef}
+                className="section-appsec layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[60] will-change-transform"
+                style={{ transform: "translate3d(0, 100vh, 0)", opacity: 0, visibility: "hidden" }}
+              >
+                <Appsection />
+              </div>
+
+              {/* Layer 7: Section Nine */}
+              <div
+                ref={sec9Ref}
+                className="section-9 about-stack-layer absolute inset-0 w-full h-[100dvh] z-[70] gpu-accelerated will-change-transform"
+                style={{ transform: "translate3d(0, 100%, 0)", opacity: 0, visibility: "hidden" }}
+              >
+                <SectionNine />
+              </div>
+
+              {/* Layer 8: CTA Section */}
+              <div
+                ref={ctaLayerRef}
+                className="section-cta layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[125] will-change-transform"
+                style={{ transform: "translate3d(0, 100vh, 0)", opacity: 0, visibility: "hidden" }}
+              >
+                <SectionCTA />
+              </div>
+
+              {/* Layer 9: Footer */}
+              <div
+                ref={footerLayerRef}
+                className="footer layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[126] will-change-transform"
+                style={{ transform: "translate3d(0, 100vh, 0)", opacity: 0, visibility: "hidden" }}
+              >
+                <Footer />
+              </div>
+            </>
+          )}
         </div>
-
-        {/* Layer 2: Section Two */}
-        <div className="section-2 gpu-accelerated absolute inset-0 h-full w-full" style={{ zIndex: 95, visibility: "hidden" }}>
-          <SectionTwo />
-        </div>
-
-        {/* Layer 3: Section Eight */}
-        <div className="section-8 gpu-accelerated absolute inset-0 h-full w-full" style={{ zIndex: 100, pointerEvents: "auto", visibility: "hidden" }}>
-          <SectionEight />
-        </div>
-
-        {/* Layer 4: Section Ten */}
-        <div className="section-10 gpu-accelerated absolute inset-0 h-full w-full" style={{ zIndex: 105, pointerEvents: "auto", visibility: "hidden" }}>
-          <SectionTen />
-        </div>
-
-        {/* Layer 5: Section Seven */}
-        <div className="section-7 gpu-accelerated absolute inset-0 h-full w-full" style={{ zIndex: 110, pointerEvents: "auto", visibility: "hidden" }}>
-          <SectionSeven />
-        </div>
-
-        {/* Layer 6: App Section */}
-        <div className="section-appsec gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] bg-black" style={{ zIndex: 115, pointerEvents: "auto", visibility: "hidden" }}>
-          <Appsection />
-        </div>
-
-        {/* Layer 7: Section Nine */}
-        <div className="section-9 gpu-accelerated absolute inset-0 h-full w-full" style={{ zIndex: 120, pointerEvents: "auto", visibility: "hidden" }}>
-          <SectionNine />
-        </div>
-
-        {/* Layer 8: CTA Section */}
-        <div className="section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh]" style={{ zIndex: 125, pointerEvents: "auto", visibility: "hidden" }}>
-          <SectionCTA />
-        </div>
-
-        {/* Layer 9: Footer */}
-        <div className="footer gpu-accelerated absolute left-0 bottom-0 w-full" style={{ zIndex: 126, pointerEvents: "auto", visibility: "hidden" }}>
-          <Footer />
-        </div>
-
       </div>
     </div>
   );

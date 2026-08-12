@@ -30,9 +30,9 @@ export default function FAQSection() {
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
 
   return (
-    <div className="w-full h-full relative overflow-hidden !bg-black flex items-stretch justify-center">
+    <div className="w-full min-h-screen relative overflow-hidden !bg-black flex items-center justify-center py-12 lg:py-0">
       
-      {/* POSTER THUMBNAIL OVERLAY (Shown until video loads) */}
+      {/* POSTER THUMBNAIL OVERLAY */}
       <div 
         className={`absolute inset-0 z-[1] transition-opacity duration-700 ease-in-out pointer-events-none ${
           isVideoLoaded ? "opacity-0" : "opacity-100"
@@ -58,7 +58,7 @@ export default function FAQSection() {
         <source src="/videos/Grand-Pools-Hero-Video.mp4" type="video/mp4" />
       </video>
 
-      {/* FIGMA-MATCHED LINEAR GRADIENT & BLUR OVERLAY */}
+      {/* GRADIENT OVERLAY */}
       <div 
         className="absolute top-0 left-0 w-full h-full backdrop-blur-md z-10" 
         style={{
@@ -66,11 +66,11 @@ export default function FAQSection() {
         }}
       />
       
-      {/* Main Container */}
-      <div className="faq-content section-container relative z-20 w-full h-full flex flex-col lg:flex-row justify-center lg:justify-between gap-16 md:gap-8">
+      {/* Main Container - Explicit height & centering */}
+      <div className="faq-content section-container relative z-20 w-full min-h-screen lg:min-h-0 lg:h-auto flex flex-col lg:flex-row justify-center lg:justify-between items-start lg:items-center gap-12 lg:gap-8">
         
-        {/* LEFT SIDE — Title offset upwards matching Figma view */}
-        <div className="flex flex-col select-none justify-start pt-12 md:!pt-24 lg:!pt-32">
+        {/* LEFT SIDE — Title */}
+        <div className="flex flex-col select-none justify-center w-full lg:w-auto">
           <h2
             className="!text-[#F4EEDF] font-display !font-[100]"
             style={{ fontFamily: "var(--font-display)" }}
@@ -79,8 +79,8 @@ export default function FAQSection() {
           </h2>
         </div>
 
-        {/* RIGHT SIDE — Centered Vertically */}
-        <div className="w-full md:max-w-full lg:!max-w-[650px] flex flex-col justify-start lg:justify-center lg:self-center py-2 md:py-6">
+        {/* RIGHT SIDE — Accordion */}
+        <div className="w-full lg:max-w-[650px] flex flex-col justify-center">
           <FAQAccordion items={FAQ_ITEMS} />
         </div>
 

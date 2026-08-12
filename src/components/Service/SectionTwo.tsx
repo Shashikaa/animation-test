@@ -21,8 +21,8 @@ const slides = [
   },
 ];
 
-const CLIP_DURATION = 0.5;
-const TEXT_DURATION = 0.45;
+const CLIP_DURATION = 0.65;
+const TEXT_DURATION = 0.55;
 
 type SectionTwoProps = {
   isActive: boolean;
@@ -75,18 +75,31 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
   const currentRef = useRef<number>(0);
   const [current, setCurrent] = useState(0);
 
-  // Directly resets and animates text in for a given slide
-  const animateTextIn = useCallback((index: number, immediate = false) => {
+  const animateTextIn = useCallback((index: number) => {
     if (!containerRef.current) return;
 
-    // First ensure container elements for target slide are visible
     slides.forEach((_, i) => {
       const groupEl = containerRef.current?.querySelector(`.s3-text-group-${i + 1}`) as HTMLElement;
       if (groupEl) {
         const isTarget = i === index;
-        groupEl.style.opacity = isTarget ? "1" : "0";
-        groupEl.style.pointerEvents = isTarget ? "auto" : "none";
-        groupEl.style.visibility = isTarget ? "visible" : "hidden";
+        gsap.to(groupEl, {
+          opacity: isTarget ? 1 : 0,
+          duration: TEXT_DURATION * 0.8,
+          ease: "power2.out",
+          overwrite: "auto",
+          onStart: () => {
+            if (isTarget) {
+              groupEl.style.visibility = "visible";
+              groupEl.style.pointerEvents = "auto";
+            }
+          },
+          onComplete: () => {
+            if (!isTarget) {
+              groupEl.style.visibility = "hidden";
+              groupEl.style.pointerEvents = "none";
+            }
+          },
+        });
       }
     });
 
@@ -95,64 +108,79 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
     );
 
     gsap.killTweensOf(targets);
-
-    if (immediate) {
-      gsap.set(targets, { y: 0, opacity: 1 });
-    } else {
-      gsap.fromTo(
-        targets,
-        { y: 25, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: TEXT_DURATION,
-          ease: "power2.out",
-          stagger: 0.03,
-          overwrite: "auto",
-        }
-      );
-    }
+    gsap.fromTo(
+      targets,
+      { y: 25, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        duration: TEXT_DURATION,
+        ease: "power2.out",
+        stagger: 0.04,
+        overwrite: "auto",
+      }
+    );
   }, []);
 
-  const goTo = useCallback((next: number, direction: "next" | "prev") => {
+  const goTo = useCallback((next: number) => {
     const prev = currentRef.current;
     if (next === prev || !containerRef.current) return;
 
-    const isRapidJump = Math.abs(next - prev) > 1;
     currentRef.current = next;
     setCurrent(next);
 
     const targetPanels = [".s2-desktop-section", ".s3-mobile-section"];
 
     targetPanels.forEach((panel) => {
-      const allBgs = containerRef.current!.querySelectorAll(`${panel} .s3-bg`);
-      gsap.killTweensOf(allBgs);
-
-      // Handle Background layers synchronously if rapid jump
       slides.forEach((_, i) => {
-        const bgEl = containerRef.current!.querySelector(`${panel} .s3-bg-${i + 1}`);
-        if (bgEl) {
-          if (i === next) {
-            gsap.set(bgEl, { zIndex: 2, clipPath: "inset(0% 0 0 0)" });
-          } else {
-            gsap.set(bgEl, { zIndex: 0, clipPath: "inset(100% 0 0 0)" });
-          }
+        const bgEl = containerRef.current!.querySelector(`${panel} .s3-bg-${i + 1}`) as HTMLElement;
+        if (!bgEl) return;
+
+        gsap.killTweensOf(bgEl);
+
+        if (i === next) {
+          bgEl.style.zIndex = "2";
+          bgEl.style.visibility = "visible";
+
+          gsap.fromTo(
+            bgEl,
+            { clipPath: "inset(100% 0 0 0)" },
+            {
+              clipPath: "inset(0% 0 0 0)",
+              duration: CLIP_DURATION,
+              ease: "power2.inOut",
+            }
+          );
+        } else if (i === prev) {
+          bgEl.style.zIndex = "1";
+          gsap.to(bgEl, {
+            duration: CLIP_DURATION,
+            ease: "power2.inOut",
+            onComplete: () => {
+              bgEl.style.zIndex = "0";
+              bgEl.style.visibility = "hidden";
+            },
+          });
+        } else {
+          bgEl.style.zIndex = "0";
+          bgEl.style.visibility = "hidden";
+          bgEl.style.clipPath = "inset(100% 0 0 0)";
         }
       });
     });
 
-    // Animate text directly without relying on asynchronous complete callbacks
-    slides.forEach((_, i) => {
-      if (i !== next) {
-        const outTargets = containerRef.current?.querySelectorAll(`.s3-text-group-${i + 1} .gs-line-inner`);
-        if (outTargets) {
-          gsap.killTweensOf(outTargets);
-          gsap.set(outTargets, { y: -15, opacity: 0 });
-        }
-      }
-    });
+    const prevTargets = containerRef.current.querySelectorAll(`.s3-text-group-${prev + 1} .gs-line-inner`);
+    if (prevTargets) {
+      gsap.killTweensOf(prevTargets);
+      gsap.to(prevTargets, {
+        y: -20,
+        opacity: 0,
+        duration: TEXT_DURATION * 0.6,
+        ease: "power2.in",
+      });
+    }
 
-    animateTextIn(next, isRapidJump);
+    animateTextIn(next);
   }, [animateTextIn]);
 
   useEffect(() => {
@@ -163,7 +191,6 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
       const splitTargets = containerRef.current.querySelectorAll<HTMLElement>(".split-text-target");
       splitTargets.forEach((el) => splitElementIntoLines(el));
 
-      // Set initial state for all slides
       slides.forEach((_, i) => {
         const targets = containerRef.current!.querySelectorAll(`.s3-text-group-${i + 1} .gs-line-inner`);
         if (i === 0) {
@@ -180,8 +207,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
   useEffect(() => {
     (window as any)._sec2GoTo = (targetIdx: number) => {
       if (targetIdx === currentRef.current) return;
-      const dir = targetIdx > currentRef.current ? "next" : "prev";
-      goTo(targetIdx, dir);
+      goTo(targetIdx);
     };
     return () => {
       delete (window as any)._sec2GoTo;
@@ -190,7 +216,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
 
   useEffect(() => {
     if (isActive && containerRef.current) {
-      animateTextIn(currentRef.current, false);
+      animateTextIn(currentRef.current);
     }
   }, [isActive, animateTextIn]);
 
@@ -210,14 +236,11 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
             visibility: current === i ? "visible" : "hidden",
           }}
         >
-          {/* Title with Split Text */}
-          <h2 className="split-text-target font-display text-[#F4EEDF] text-3xl md:text-5xl lg:text-[70px]  !leading-[1] font-light">
+          <h2 className="split-text-target font-display text-[#F4EEDF] text-3xl md:text-5xl lg:text-[70px] !leading-[1] font-light">
             {slide.label}
           </h2>
 
-          {/* Indicators and Description */}
           <div className="flex flex-row items-stretch gap-4 md:gap-6">
-            {/* 3 Vertical Bars Indicator */}
             <div className="flex flex-col gap-[4px] py-1 justify-center">
               {slides.map((_, barIdx) => (
                 <div
@@ -229,7 +252,6 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               ))}
             </div>
 
-            {/* Description Paragraph with Split Text */}
             <div className="flex-1">
               <p className="split-text-target font-body text-[#F4EEDF]/80 text-[13px] md:text-[16px] leading-relaxed max-w-[420px]">
                 {slide.desc}
@@ -244,14 +266,23 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
   return (
     <div ref={containerRef} className="w-full h-full">
       {/* DESKTOP LAYOUT */}
-      <section className="s2-desktop-section hidden md:block w-full h-screen relative overflow-hidden bg-transparent">
+      <section
+        className="s2-desktop-section hidden md:block w-full h-screen relative overflow-hidden bg-transparent"
+        style={{ visibility: "hidden" }}
+      >
         <div className="absolute inset-0 z-10 flex flex-row w-full h-full pointer-events-none">
-          <div className="s2-left-panel absolute left-0 top-0 w-1/2 h-full overflow-hidden bg-black" style={{ willChange: "transform" }}>
+          <div
+            className="s2-left-panel absolute left-0 top-0 w-1/2 h-full overflow-hidden bg-black"
+            style={{ willChange: "transform" }}
+          >
             <img src={slides[0].img} alt="" aria-hidden className="absolute inset-0 w-[200%] h-full object-cover max-w-none" style={{ left: "0%" }} />
             <div className="absolute top-0 h-full z-[2] w-[200%]" style={{ left: "0%", background: "linear-gradient(2.13deg, #19211C 3.01%, rgba(21, 40, 31, 0) 59.11%)" }} />
           </div>
           
-          <div className="s2-right-panel absolute right-0 top-0 w-1/2 h-full overflow-hidden bg-black" style={{ willChange: "transform" }}>
+          <div
+            className="s2-right-panel absolute right-0 top-0 w-1/2 h-full overflow-hidden bg-black"
+            style={{ willChange: "transform" }}
+          >
             <img src={slides[0].img} alt="" aria-hidden className="absolute inset-0 w-[200%] h-full object-cover max-w-none" style={{ left: "-100%" }} />
             <div className="absolute top-0 h-full z-[2] w-[200%]" style={{ left: "-100%", background: "linear-gradient(2.13deg, #19211C 3.01%, rgba(21, 40, 31, 0) 59.11%)" }} />
           </div>
@@ -265,7 +296,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               style={{ 
                 zIndex: i === 0 ? 1 : 0, 
                 clipPath: i === 0 ? "inset(0 0 0 0)" : "inset(100% 0 0 0)",
-                visibility: i === 0 ? "hidden" : "visible"
+                visibility: i === 0 ? "visible" : "hidden"
               }} 
             >
               <img src={slide.img} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover" />
@@ -274,7 +305,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
           ))}
         </div>
 
-        <div className="s2-inner-fade-target absolute inset-0 z-30 w-full h-full pointer-events-none">
+        <div className="s2-inner-fade-target absolute inset-0 z-30 w-full h-full pointer-events-none" style={{ opacity: 1 }}>
           {renderTextContent()}
         </div>
       </section>
@@ -288,7 +319,8 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               className={`s3-bg s3-bg-${i + 1} absolute inset-0 w-full h-full`}
               style={{ 
                 zIndex: i === 0 ? 1 : 0, 
-                clipPath: i === 0 ? "inset(0 0 0 0)" : "inset(100% 0 0 0)" 
+                clipPath: i === 0 ? "inset(0 0 0 0)" : "inset(100% 0 0 0)",
+                visibility: i === 0 ? "visible" : "hidden"
               }}
             >
               <img src={slide.img} alt="" className="w-full h-full object-cover" />
@@ -296,7 +328,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
             </div>
           ))}
         </div>
-        <div className="s2-inner-fade-target absolute inset-0 z-10 w-full h-full pointer-events-none">
+        <div className="s2-inner-fade-target absolute inset-0 z-10 w-full h-full pointer-events-none" style={{ opacity: 1 }}>
           {renderTextContent()}
         </div>
       </section>

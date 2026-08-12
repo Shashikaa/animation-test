@@ -24,9 +24,9 @@ export default function SectionOne() {
         
         {/* TOP CONTENT */}
         <div className="flex flex-col md:!mt-24 w-[450px]">
-          <h2 className="s1-reveal-top font-display text-[#F4EEDF] leading-[1.2] !font-[100] reveal-text w-sm lg:w-lg">
+          <h2 className="s1-reveal-top font-display text-[#F4EEDF] leading-[1.2] !font-[100] reveal-text  !pr-18">
             Tailored Pool Solutions
-          </h2>
+          </h2> 
           <p className="s1-reveal-top font-body text-[#F4EEDF] text-sm md:text-base !mt-4 lg:!mt-8 reveal-text">
             For Every Need
           </p>

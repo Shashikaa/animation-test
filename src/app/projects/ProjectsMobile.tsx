@@ -1,22 +1,18 @@
 "use client";
 
-import { useRef, useEffect, useState, useLayoutEffect } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import dynamic from "next/dynamic";
+import { useState, useRef, useEffect, useCallback } from "react";
 import ProjectsHero from "../../components/Projects/ProjectsHero";
-import { restoreTextReveal } from "@/src/app/utils/useTextReveal";
-import SectionOne from "@/src/components/Projects/SectionOne";
-import SectionTwo from "@/src/components/Projects/SectionTwo";
-import SectionCTA from "@/src/components/SectionCTA";
-import Footer from "@/src/components/Footer";
+import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
+import { restoreTextReveal } from "@/src/app/utils/useTextReveal";
 
-gsap.registerPlugin(ScrollTrigger);
+const SectionOne = dynamic(() => import("@/src/components/Projects/SectionOne"));
+const SectionTwo = dynamic(() => import("@/src/components/Projects/SectionTwo"));
+const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
+const Footer = dynamic(() => import("@/src/components/Footer"));
 
-const PX_PER_MAIN_PANEL = 850;
-const PX_PER_SUB_STEP = 350;
-const PAUSE_PX = 150;
-const BASELINE_VH = 800;
+const easeOutQuad = (t: number) => t * (2 - t);
 
 function executeMobileSplitting(selector: string) {
   const elements = document.querySelectorAll(selector);
@@ -52,232 +48,266 @@ function executeMobileSplitting(selector: string) {
 }
 
 export default function ProjectsMobile() {
-  const scopeRef = useRef<HTMLDivElement>(null);
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
+  const scopeRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const fixedFrameRef = useRef<HTMLDivElement>(null);
 
-  const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
+  const heroPanelRef = useRef<HTMLDivElement>(null);
+  const sectionOneRef = useRef<HTMLDivElement>(null);
+  const sectionTwoRef = useRef<HTMLDivElement>(null);
+  const ctaLayerRef = useRef<HTMLDivElement>(null);
+  const footerLayerRef = useRef<HTMLDivElement>(null);
 
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.set(".projects-hero-master", { yPercent: 0, force3D: true });
-      gsap.set(".scroll-para-1", { opacity: 1, visibility: "hidden", force3D: true });
+  const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
+  const targetProgress = useRef(0);
+  const rafId = useRef<number | null>(null);
 
-      gsap.set(".section-one-wrapper", { yPercent: 100, zIndex: 20, visibility: "visible", force3D: true });
-      gsap.set(".section-two-wrapper", { yPercent: 100, zIndex: 30, visibility: "visible", force3D: true });
-      gsap.set(".parallax-img-asset", { yPercent: -20, force3D: true });
+  const { smootherRef } = useSite();
+  const { introDone, preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
+    isMobile: true,
+    introDurationMs: 2800,
+    unlockScrollEarlyMs: 1800,
+  });
 
-      gsap.set(".projects-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden", force3D: true });
-      gsap.set(
-        [".projects-section-cta .cta-inner-mobile", ".projects-section-cta .cta-inner-desktop"],
-        { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
-      );
-      gsap.set(".projects-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden", force3D: true });
-    }, scopeRef);
-
-    return () => ctx.revert();
-  }, []);
-
+  // Prepare text splitting after hero intro unlocks
   useEffect(() => {
-    if (!introDone) return;
-
+    if (!shouldLoadRest) return;
     executeMobileSplitting(".scroll-para-1");
 
-    const isAndroid = /Android/i.test(navigator.userAgent);
-
-    const ctx = gsap.context(() => {
-      ScrollTrigger.config({ ignoreMobileResize: true });
-
-      if (!isAndroid) {
-        ScrollTrigger.normalizeScroll({
-          allowNestedScroll: true,
-          lockAxis: true,
-        });
-      }
-
-      const ACTION = 1.4;
-      const DEAD_SCROLL = 0.15;
-      const UNIFIED_EASE = "power1.inOut";
-
-      const MAIN_PANELS_COUNT = 4;
-      const SUB_STEPS_COUNT = 1;
-      const PAUSES_COUNT = 5;
-
-      // Use visualViewport height or fallback to small viewport calculation
-      const vh = window.visualViewport?.height || window.innerHeight || BASELINE_VH;
-      const scaleFactor = vh / BASELINE_VH;
-
-      const DYNAMIC_SCROLL_TRACK =
-        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL +
-          SUB_STEPS_COUNT * PX_PER_SUB_STEP +
-          PAUSES_COUNT * PAUSE_PX) *
-        scaleFactor;
-
-      const tl = gsap.timeline({
-        defaults: { ease: UNIFIED_EASE, lazy: true },
-        scrollTrigger: {
-          trigger: ".master-viewport",
-          start: "top top",
-          end: `+=${DYNAMIC_SCROLL_TRACK}`,
-          pin: true,
-          pinType: "fixed",
-          scrub: isAndroid ? 0.2 : 0.6,
-          anticipatePin: 1,
-          preventOverlaps: true,
-          fastScrollEnd: true,
-          invalidateOnRefresh: true,
-        },
-      });
-
-      // --- TRANSITION 1: Hero Text Out -> Text Reveal Para In/Out ---
-      tl.set(".scroll-para-1 .custom-line-inner", { opacity: 0, yPercent: 100 }, 0);
-
-      tl.to(".hero-text-wrap", { opacity: 0, y: -30, ease: "power2.in", duration: ACTION * 0.5 }, 0);
-      tl.set(".hero-text-wrap", { visibility: "hidden" }, ACTION * 0.5);
-
-      tl.set(".scroll-para-1", { visibility: "visible" }, ACTION * 0.5);
-      tl.to(
-        ".scroll-para-1 .custom-line-inner",
-        {
-          opacity: 1,
-          yPercent: 0,
-          stagger: 0.05,
-          duration: ACTION * 0.8,
-          ease: "power2.out",
-        },
-        ACTION * 0.5
-      );
-
-      tl.to(
-        ".scroll-para-1 .custom-line-inner",
-        { opacity: 0, y: -30, ease: "power1.in", duration: ACTION * 0.5 },
-        "+=0.2"
-      );
-      tl.set(".scroll-para-1", { visibility: "hidden" });
-
-      tl.fromTo(
-        [".projects-hero-bg", ".about-hero-bg", ".hero-bg-anim"],
-        { yPercent: 0 },
-        { yPercent: -9, ease: "none", duration: tl.duration() },
-        0
-      );
-
-      tl.to({}, { duration: DEAD_SCROLL });
-
-      // --- TRANSITION 2: Section One Slide Up ---
-      tl.to(".section-one-wrapper", {
-        yPercent: 0,
-        duration: ACTION * 1.5,
-      }, ">");
-
-      tl.to(
-        ".projects-hero-master",
-        { yPercent: -15, duration: ACTION * 1.5 },
-        "<"
-      );
-
-      tl.to(
-        ".parallax-img-asset",
-        {
-          yPercent: 20,
-          ease: "none",
-          duration: ACTION * 1.5,
-        },
-        "<"
-      );
-
-      tl.to({}, { duration: DEAD_SCROLL });
-
-      // --- TRANSITION 3: Section Two Slide Up ---
-      tl.to(".section-two-wrapper", {
-        yPercent: 0,
-        duration: ACTION,
-        onStart: () => setIsSectionTwoActive(true),
-        onReverseComplete: () => setIsSectionTwoActive(false),
-      })
-        .to(".section-one-wrapper", { yPercent: -15, duration: ACTION }, "<");
-
-      tl.to({}, { duration: DEAD_SCROLL });
-
-      // --- TRANSITION 4: CTA Slide Up ---
-      tl.addLabel("ctaStart", ">")
-        .set(".projects-section-cta", { visibility: "visible" }, "ctaStart")
-        .fromTo(
-          ".projects-section-cta",
-          { yPercent: 100 },
-          { yPercent: 0, duration: ACTION },
-          "ctaStart"
-        )
-        .to(".section-two-wrapper", { yPercent: -15, duration: ACTION }, "ctaStart");
-
-      tl.to({}, { duration: DEAD_SCROLL });
-
-      // --- TRANSITION 5: Footer Reveal ---
-      tl.addLabel("footerStart", ">")
-        .set(".projects-footer-wrap", { visibility: "visible" }, "footerStart")
-        .fromTo(
-          ".projects-footer-wrap",
-          { yPercent: 100 },
-          {
-            yPercent: 0,
-            duration: ACTION,
-            ease: "power1.out",
-          },
-          "footerStart"
-        );
-    }, scopeRef);
-
     return () => {
-      ctx.revert();
-      if (!isAndroid) {
-        ScrollTrigger.normalizeScroll(false);
-      }
       if (scopeRef.current) {
         restoreTextReveal(scopeRef.current, ".scroll-para-1");
       }
     };
-  }, [introDone]);
+  }, [shouldLoadRest]);
+
+  // 1. UNLOCK LENIS & INITIALIZE INSTANTLY
+  useEffect(() => {
+    const lenis = smootherRef?.current;
+
+    if (!preloaderDone || !shouldLoadRest) {
+      if (lenis && typeof lenis.stop === "function") lenis.stop();
+      targetProgress.current = 0;
+    } else {
+      document.body.classList.remove("preloading");
+      document.documentElement.classList.remove("preloading");
+
+      if (lenis) {
+        if (typeof lenis.resize === "function") lenis.resize();
+        if (typeof lenis.start === "function") lenis.start();
+      }
+
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event("scroll"));
+      });
+    }
+  }, [preloaderDone, shouldLoadRest, smootherRef]);
+
+  // 2. CACHE METRICS
+  const updateMetrics = useCallback(() => {
+    if (!trackRef.current) return;
+    const rect = trackRef.current.getBoundingClientRect();
+    const vh = window.innerHeight;
+    scrollMetricsRef.current = {
+      totalScrollable: rect.height - vh,
+      vh,
+      trackTopOffset: window.scrollY + rect.top,
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!shouldLoadRest) return;
+    updateMetrics();
+    window.addEventListener("resize", updateMetrics, { passive: true });
+    return () => window.removeEventListener("resize", updateMetrics);
+  }, [shouldLoadRest, updateMetrics]);
+
+  // 3. GPU-ACCELERATED RENDER LOOP
+  useEffect(() => {
+    if (!shouldLoadRest) return;
+
+    const render = () => {
+      const currentProg = targetProgress.current;
+      const totalSteps = 5;
+      const stepProgress = currentProg * totalSteps;
+
+      const { vh } = scrollMetricsRef.current;
+
+      // Hero Text Crossfade / Reveal (0.0 -> 1.0)
+      const heroTextWrap = scopeRef.current?.querySelector<HTMLElement>(".hero-text-wrap");
+      const scrollPara1 = scopeRef.current?.querySelector<HTMLElement>(".scroll-para-1");
+      const paraLines = scopeRef.current?.querySelectorAll<HTMLElement>(".scroll-para-1 .custom-line-inner");
+
+      const heroTextFade = Math.min(Math.max(stepProgress / 0.4, 0), 1);
+      if (heroTextWrap) {
+        heroTextWrap.style.opacity = `${1 - heroTextFade}`;
+        heroTextWrap.style.transform = `translate3d(0, ${-30 * heroTextFade}px, 0)`;
+        heroTextWrap.style.visibility = heroTextFade >= 1 ? "hidden" : "visible";
+      }
+
+      if (scrollPara1 && paraLines) {
+        const paraProgress = Math.min(Math.max((stepProgress - 0.3) / 0.5, 0), 1);
+        scrollPara1.style.visibility = paraProgress > 0 ? "visible" : "hidden";
+
+        paraLines.forEach((line, idx) => {
+          const lineStaggerProg = Math.min(Math.max((paraProgress - idx * 0.1) / 0.6, 0), 1);
+          line.style.opacity = `${lineStaggerProg}`;
+          line.style.transform = `translate3d(0, ${(1 - lineStaggerProg) * 100}%, 0)`;
+        });
+      }
+
+      // Step 1: Section One Reveal & Hero Parallax Push (1.0 -> 2.0)
+      const s1Prog = easeOutQuad(Math.min(Math.max(stepProgress - 1.0, 0), 1));
+      if (heroPanelRef.current) {
+        heroPanelRef.current.style.transform = `translate3d(0, ${-s1Prog * 15}%, 0)`;
+      }
+      if (sectionOneRef.current) {
+        sectionOneRef.current.style.transform = `translate3d(0, ${(1 - s1Prog) * 100}%, 0)`;
+      }
+
+      // Step 2: Section Two Reveal (2.0 -> 3.0)
+      const s2Prog = easeOutQuad(Math.min(Math.max(stepProgress - 2.0, 0), 1));
+      if (sectionTwoRef.current) {
+        sectionTwoRef.current.style.transform = `translate3d(0, ${(1 - s2Prog) * 100}%, 0)`;
+      }
+
+      if (stepProgress >= 2.2 && stepProgress < 3.5) {
+        setIsSectionTwoActive(true);
+      } else {
+        setIsSectionTwoActive(false);
+      }
+
+      // Step 3: CTA Reveal (3.0 -> 4.0)
+      const ctaProgress = easeOutQuad(Math.min(Math.max(stepProgress - 3.0, 0), 1));
+      if (ctaLayerRef.current) {
+        const ctaHeight = ctaLayerRef.current.offsetHeight || vh;
+        const startY = vh;
+        const endY = -(ctaHeight - vh);
+        const currentY = startY + (endY - startY) * ctaProgress;
+        ctaLayerRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
+      }
+
+      // Step 4: Footer Reveal (4.0 -> 5.0)
+      const footerProgress = easeOutQuad(Math.min(Math.max(stepProgress - 4.0, 0), 1));
+      if (footerLayerRef.current) {
+        const footerHeight = footerLayerRef.current.offsetHeight || vh;
+        const startY = vh;
+        const endY = vh - footerHeight;
+        const translateY = startY + (endY - startY) * footerProgress;
+        footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
+      }
+    };
+
+    const handleScroll = (e?: any) => {
+      const scrollY = e?.scroll !== undefined ? e.scroll : window.scrollY;
+      const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
+
+      if (totalScrollable <= 0) return;
+
+      const relativeScroll = scrollY - trackTopOffset;
+      const trackBottom = relativeScroll + totalScrollable;
+
+      if (fixedFrameRef.current) {
+        if (relativeScroll >= 0 && trackBottom >= 0) {
+          fixedFrameRef.current.style.position = "fixed";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        } else if (trackBottom < 0) {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "auto";
+          fixedFrameRef.current.style.bottom = "0px";
+        } else {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        }
+      }
+
+      targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
+
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+      rafId.current = requestAnimationFrame(render);
+    };
+
+    const lenis = smootherRef?.current;
+    if (lenis && typeof lenis.on === "function") {
+      lenis.on("scroll", handleScroll);
+    } else {
+      window.addEventListener("scroll", handleScroll, { passive: true });
+    }
+
+    handleScroll();
+    render();
+
+    return () => {
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+      if (lenis && typeof lenis.off === "function") {
+        lenis.off("scroll", handleScroll);
+      } else {
+        window.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, [shouldLoadRest, smootherRef]);
 
   return (
-    <div ref={scopeRef} className="w-full relative min-h-[100svh] overflow-hidden text-white">
+    <div ref={scopeRef} className="w-full bg-[#162D24]">
       <div
-        className="master-viewport pin-all-projects relative w-full h-[100svh] overflow-hidden"
-        style={{ visibility: "visible" }}
+        ref={trackRef}
+        className="projects-track-container relative w-full"
+        style={{ height: "600vh" }}
       >
-        {/* Layer 1: Hero Section */}
-        <div className="projects-hero-master gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
-          <ProjectsHero />
-        </div>
-
-        {/* Layer 2: Section One */}
         <div
-          className="section-one-wrapper gpu-accelerated absolute inset-0 w-full h-full"
-          style={{ zIndex: 20 }}
+          ref={fixedFrameRef}
+          className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-[100dvh]"
         >
-          <SectionOne />
-        </div>
+          {/* Layer 1: Hero (Always mounted so keyframe intro animates on load) */}
+          <div
+            ref={heroPanelRef}
+            className="projects-hero-master absolute inset-0 w-full h-[100dvh] z-10 gpu-accelerated transform-gpu will-change-transform"
+          >
+            <ProjectsHero isMobile={true} />
+          </div>
 
-        {/* Layer 3: Section Two */}
-        <div
-          className="section-two-wrapper gpu-accelerated absolute inset-0 w-full h-full"
-          style={{ zIndex: 30 }}
-        >
-          <SectionTwo isActive={isSectionTwoActive} />
-        </div>
+          {shouldLoadRest && (
+            <>
+              {/* Layer 2: Section One */}
+              <div
+                ref={sectionOneRef}
+                className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-20 gpu-accelerated will-change-transform"
+                style={{ transform: "translate3d(0, 100%, 0)" }}
+              >
+                <SectionOne />
+              </div>
 
-        {/* Layer 4: Section CTA */}
-        <div
-          className="projects-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100svh]"
-          style={{ zIndex: 150, pointerEvents: "auto", visibility: "hidden" }}
-        >
-          <SectionCTA />
-        </div>
+              {/* Layer 3: Section Two */}
+              <div
+                ref={sectionTwoRef}
+                className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-30 gpu-accelerated will-change-transform"
+                style={{ transform: "translate3d(0, 100%, 0)" }}
+              >
+                <SectionTwo isActive={isSectionTwoActive} />
+              </div>
 
-        {/* Layer 5: Footer */}
-        <div
-          className="projects-footer-wrap gpu-accelerated absolute left-0 bottom-0 w-full"
-          style={{ zIndex: 151, pointerEvents: "auto", visibility: "hidden" }}
-        >
-          <Footer />
+              {/* Layer 4: CTA */}
+              <div
+                ref={ctaLayerRef}
+                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[150] will-change-transform"
+                style={{ transform: "translate3d(0, 100vh, 0)" }}
+              >
+                <SectionCTA />
+              </div>
+
+              {/* Layer 5: Footer */}
+              <div
+                ref={footerLayerRef}
+                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[151] will-change-transform"
+                style={{ transform: "translate3d(0, 100vh, 0)" }}
+              >
+                <Footer />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

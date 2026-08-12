@@ -27,7 +27,7 @@ export default function ProjectScrollHero({
           }}
         >
           <div
-            className="hero-image-inner hero-bg-anim w-full h-full bg-cover bg-center will-change-transform"
+            className="hero-image-inner hero-bg-anim hero-bg-target w-full h-full bg-cover bg-center will-change-transform"
             style={{
               backgroundImage: `url(${src})`,
               transformOrigin: "center center",
@@ -43,15 +43,15 @@ export default function ProjectScrollHero({
       />
 
       {/* Typography Container */}
-      <div className="relative max-w-3xl w-full z-[101] pointer-events-none hero-text-wrap flex flex-col gap-4 lg:gap-8 pb-4">
+      <div className="hero-text-wrap relative max-w-3xl w-full z-[101] pointer-events-none flex flex-col gap-4 lg:gap-8 pb-4 will-change-[opacity,transform]">
         {/* Title */}
-        <h1 className="text-white font-display hero-title text-4xl md:text-6xl font-bold tracking-tight">
+        <h1 className="hero-title hero-text-target hero-title-target text-white font-display text-4xl md:text-6xl font-bold tracking-tight">
           {title}
         </h1>
 
         {/* Description right under title */}
         {description && (
-          <p className="text-white/85 text-base md:text-xl font-normal leading-relaxed hero-description max-w-sm">
+          <p className="hero-description hero-text-target hero-desc-target text-white/85 text-base md:text-xl font-normal leading-relaxed max-w-sm">
             {description}
           </p>
         )}

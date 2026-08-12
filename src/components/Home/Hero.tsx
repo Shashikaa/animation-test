@@ -67,10 +67,13 @@ export default function Hero({ onReady }: HeroProps) {
             </p>
           </div>
 
-          {/* 3. FRAME 3: Bottom-Left Paragraph (Above Lower Pool Deck on Mobile) */}
-          <div className="hero-secondary-text-wrap max-lg:fixed max-lg:bottom-[22vh] max-lg:left-6 max-lg:right-6 absolute bottom-12 left-0 lg:fixed lg:top-[100vh] lg:bottom-auto lg:left-24 w-full max-w-[300px] sm:max-w-[340px] z-30 overflow-visible pointer-events-none">
+          {/* 3. FRAME 3: Bottom-Left Paragraph (Visible on load with opacity/visibility reset) */}
+          <div 
+            className="hero-secondary-text-wrap max-lg:fixed max-lg:bottom-[22vh] max-lg:left-6 max-lg:right-6 absolute bottom-12 left-0 lg:fixed lg:top-[100vh] lg:bottom-auto lg:left-24 w-full max-w-[300px] sm:max-w-[340px] z-30 overflow-visible pointer-events-none"
+            style={{ opacity: 1, visibility: "visible" }}
+          >
             <p className="hero-secondary-para font-body text-[#F4EEDF] text-left text-sm sm:text-base leading-relaxed m-0 p-0">
-{`Expert craftsmanship and attention to detail bring your vision to life, delivering seamless pool solutions from concept to completion.`}
+              Expert craftsmanship and attention to detail bring your vision to life, delivering seamless pool solutions from concept to completion.
             </p>
           </div>
         </div>
@@ -81,7 +84,7 @@ export default function Hero({ onReady }: HeroProps) {
           {/* 2. FRAME 2: Center Paragraph (Over the Pool Area on Mobile) */}
           <div className="hero-right-text-wrap max-lg:fixed max-lg:top-1/2 max-lg:-translate-y-1/2 max-lg:left-6 max-lg:right-6 relative w-full max-w-[340px] md:max-w-[390px] lg:max-w-[400px] overflow-hidden text-left lg:text-right">
             <p className="hero-right-text font-body text-[#F4EEDF] text-left lg:text-right text-sm sm:text-base leading-relaxed m-0 p-0">
-{`At Grand Pools, we create custom swimming pools that blend style, function, and quality. Every pool is designed to complement your outdoor space, adding value and elegance to your home or business.`}
+              At Grand Pools, we create custom swimming pools that blend style, function, and quality. Every pool is designed to complement your outdoor space, adding value and elegance to your home or business.
             </p>
           </div>
 

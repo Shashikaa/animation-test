@@ -6,13 +6,14 @@ import { useSite } from "@/src/app/context/SiteContext";
 interface UseHeroIntroOptions {
   isMobile?: boolean;
   introDurationMs?: number;
+  unlockScrollEarlyMs?: number;
 }
 
 export function useHeroIntro(
   scopeRef: RefObject<HTMLElement | null>,
   options: UseHeroIntroOptions = {}
 ) {
-  const { introDurationMs = 2800 } = options;
+  const { introDurationMs = 2800, unlockScrollEarlyMs = 1800 } = options;
   const { preloaderDone, smootherRef } = useSite();
   const [introDone, setIntroDone] = useState(false);
   const [shouldLoadRest, setShouldLoadRest] = useState(false);
@@ -26,54 +27,76 @@ export function useHeroIntro(
   }, []);
 
   useEffect(() => {
-    if (!preloaderDone || !scopeRef.current) return;
+    const isReady = preloaderDone !== undefined ? preloaderDone : true;
+    if (!isReady) return;
 
     const lenis = smootherRef?.current;
-    const scope = scopeRef.current;
 
-    // Lock initial scroll
     if (lenis && typeof lenis.stop === "function") {
       lenis.stop();
     }
-    window.scrollTo(0, 0);
 
-    // 1. Activate GPU animation layer synchronously
-    scope.classList.add("hero-animate-active");
+    let rafOne: number;
+    let rafTwo: number;
 
-    // 2. Schedule downstream DOM mounting during idle time
-    const deferMountTime = Math.max(800, introDurationMs - 1200);
+    const startAnimation = () => {
+      const scope = scopeRef.current;
+      if (!scope) return false;
+
+      rafOne = requestAnimationFrame(() => {
+        rafTwo = requestAnimationFrame(() => {
+          scope.classList.add("hero-animate-active");
+        });
+      });
+      return true;
+    };
+
+    if (!startAnimation()) {
+      const retryInterval = setInterval(() => {
+        if (startAnimation()) clearInterval(retryInterval);
+      }, 30);
+      setTimeout(() => clearInterval(retryInterval), 1500);
+    }
+
+    // 1. Mount downstream components during main zoom
     const mountTimer = setTimeout(() => {
-      if ("requestIdleCallback" in window) {
-        window.requestIdleCallback(() => setShouldLoadRest(true), { timeout: 300 });
-      } else {
-        setShouldLoadRest(true);
-      }
-    }, deferMountTime);
+      setShouldLoadRest(true);
+    }, 900);
 
-    // 3. WAKE UP LENIS EARLY (250ms before completion)
-    // This allows Lenis to warm up its internal virtual scroll listener so inputs register on Frame 1
-    const wakeLenisTimer = setTimeout(() => {
-      if (lenis) {
-        if (typeof lenis.resize === "function") lenis.resize();
-        if (typeof lenis.start === "function") lenis.start();
+    // 2. Smoothly enable Lenis scroll listening
+    const unlockScrollTimer = setTimeout(() => {
+      if (lenis && typeof lenis.start === "function") {
+        lenis.start();
       }
-    }, Math.max(0, introDurationMs - 250));
+      window.dispatchEvent(new Event("scroll"));
+    }, unlockScrollEarlyMs);
 
-    // 4. Complete intro phase
+    // 3. Mark keyframe sequence finished & replace with static styles
     const completeTimer = setTimeout(() => {
       setIntroDone(true);
-      scope.classList.add("hero-animate-done");
+      if (scopeRef.current) {
+        scopeRef.current.classList.remove("hero-animate-active");
+        scopeRef.current.classList.add("hero-animate-done");
+      }
       
-      // Force immediate DOM scroll sync
-      window.dispatchEvent(new Event("scroll"));
-    }, introDurationMs);
+      // Idle-schedule Lenis resize so it doesn't cause main thread drop
+      if (lenis && typeof lenis.resize === "function") {
+        if ("requestIdleCallback" in window) {
+          window.requestIdleCallback(() => lenis.resize(), { timeout: 400 });
+        } else {
+          requestAnimationFrame(() => lenis.resize());
+        }
+      }
+    }, introDurationMs + 100);
 
     return () => {
+      if (rafOne) cancelAnimationFrame(rafOne);
+      if (rafTwo) cancelAnimationFrame(rafTwo);
       clearTimeout(mountTimer);
-      clearTimeout(wakeLenisTimer);
+      clearTimeout(unlockScrollTimer);
       clearTimeout(completeTimer);
     };
-  }, [preloaderDone, scopeRef, smootherRef, introDurationMs]);
+  }, [preloaderDone, scopeRef, smootherRef, introDurationMs, unlockScrollEarlyMs]);
 
   return { introDone, preloaderDone, shouldLoadRest };
 }

@@ -19,7 +19,7 @@ export default function Appsection() {
               Pool Care +
             </span>
             <h2 
-              className="text-[#F4EEDF] !font-[100] text-3xl md:text-5xl lg:text-6xl max-w-[320px] sm:max-w-none !mb-4"
+              className="text-[#F4EEDF] !font-[100] text-3xl md:text-5xl lg:text-6xl !max-w-[520px] sm:max-w-none !mb-4"
               style={{ fontFamily: "var(--font-display)" }}
             >
               Stay Updated at Every Stage
@@ -27,7 +27,7 @@ export default function Appsection() {
           </div>
 
           <div className="hidden lg:flex flex-col items-center w-full gap-6">
-            <p className="font-body text-[#F4EEDF] text-sm md:text-base  self-start">
+            <p className="font-body text-[#F4EEDF] text-sm md:text-base  self-start !max-w-[520px]">
               Pool Care+ keeps you informed and involved from start to finish. Track progress, receive live updates, and follow each stage of your pool project — all in one place.
             </p>
           </div>

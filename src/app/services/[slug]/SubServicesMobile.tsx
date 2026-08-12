@@ -1,306 +1,349 @@
 "use client";
 
-import { useRef, useEffect, useLayoutEffect } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import dynamic from "next/dynamic";
+import { useRef, useEffect, useCallback } from "react";
+import SubServiceHero from "@/src/components/Service/SubServiceHero";
+import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import { restoreTextReveal } from "@/src/app/utils/useTextReveal";
-import SubServiceHero from "@/src/components/Service/SubServiceHero";
-import SubServiceSectionOne from "@/src/components/Service/SubServiceSectionOne";
-import SubServiceFAQSection from "@/src/components/Service/SubServiceFAQSection";
-import SectionCTA from "@/src/components/SectionCTA";
-import Footer from "@/src/components/Footer";
 import { FullServiceData } from "./data";
 
-gsap.registerPlugin(ScrollTrigger);
+const SubServiceSectionOne = dynamic(() => import("@/src/components/Service/SubServiceSectionOne"));
+const SubServiceFAQSection = dynamic(() => import("@/src/components/Service/SubServiceFAQSection"));
+const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
+const Footer = dynamic(() => import("@/src/components/Footer"));
+
+const easeOutQuad = (t: number) => t * (2 - t);
 
 type SubServicesMobileProps = {
   pageData: FullServiceData;
 };
 
-// Standardized Metrics aligned with AboutMobile
-const PX_PER_MAIN_PANEL = 850;
-const PX_PER_SUB_STEP = 350;
-const PAUSE_PX = 150;
-const BASELINE_VH = 800;
-
 export default function SubServicesMobile({ pageData }: SubServicesMobileProps) {
   const scopeRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const fixedFrameRef = useRef<HTMLDivElement>(null);
 
-  // Single unified utility hook configured for Mobile
-  const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
+  const heroPanelRef = useRef<HTMLDivElement>(null);
+  const sectionOneRef = useRef<HTMLDivElement>(null);
+  const faqSectionRef = useRef<HTMLDivElement>(null);
+  const ctaLayerRef = useRef<HTMLDivElement>(null);
+  const footerLayerRef = useRef<HTMLDivElement>(null);
 
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.set(".subservice-hero-panel", { yPercent: 0, force3D: true });
-      gsap.set(".services-hero-top-layer", { width: "100%", xPercent: 0, force3D: true });
+  const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
+  const targetProgress = useRef(0);
+  const rafId = useRef<number | null>(null);
 
-      // Panel layouts matching the standard initial state setup
-      gsap.set(".section-one-wrap", { yPercent: 100, zIndex: 20, visibility: "visible", force3D: true });
-
-      gsap.set(".s10-seq-container", { y: 0, force3D: true });
-      gsap.set(".s10-seq-p", { opacity: 1 });
-
-      gsap.set(".s1-glass-card", { x: 40, opacity: 0, force3D: true });
-      gsap.set([".s1-static-title", ".s1-static-desc"], { opacity: 0, y: 30, force3D: true });
-      gsap.set([".s1-reveal-top", ".s1-reveal-bottom"], { opacity: 0, y: 40, force3D: true });
-
-      gsap.set(".services-faq-wrap", { yPercent: 100, zIndex: 30, visibility: "visible", force3D: true });
-      gsap.set(".faq-content", { opacity: 1, y: 0 });
-
-      gsap.set(".services-section-cta", { yPercent: 100, zIndex: 95, visibility: "hidden", force3D: true });
-      gsap.set(
-        [".services-section-cta .cta-inner-desktop", ".services-section-cta .cta-inner-mobile"],
-        { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
-      );
-      gsap.set(".services-footer-wrap", { yPercent: 100, zIndex: 96, visibility: "hidden", force3D: true });
-    }, scopeRef);
-
-    return () => ctx.revert();
-  }, []);
+  const { smootherRef } = useSite();
+  const { introDone, preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
+    isMobile: true,
+    introDurationMs: 2800,
+    unlockScrollEarlyMs: 1800,
+  });
 
   useEffect(() => {
     if (!introDone) return;
-
-    const isAndroid = /Android/i.test(navigator.userAgent);
-
-    const ctx = gsap.context(() => {
-      ScrollTrigger.config({ ignoreMobileResize: true });
-
-      if (!isAndroid) {
-        ScrollTrigger.normalizeScroll({
-          allowNestedScroll: true,
-          lockAxis: true,
-        });
-      }
-
-      const ACTION = 1.4;
-      const DEAD_SCROLL = 0.15;
-      const UNIFIED_EASE = "power1.inOut";
-
-      const MAIN_PANELS_COUNT = 5;
-      const SUB_STEPS_COUNT = 3;
-      const PAUSES_COUNT = 7;
-
-      const vh = window.innerHeight || BASELINE_VH;
-      const scaleFactor = vh / BASELINE_VH;
-
-      const DYNAMIC_SCROLL_TRACK =
-        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL +
-          SUB_STEPS_COUNT * PX_PER_SUB_STEP +
-          PAUSES_COUNT * PAUSE_PX) *
-        scaleFactor;
-
-      const tl = gsap.timeline({
-        defaults: { ease: UNIFIED_EASE, lazy: true },
-        scrollTrigger: {
-          trigger: ".services-hero-master",
-          start: "top top",
-          end: `+=${DYNAMIC_SCROLL_TRACK}`,
-          pin: true,
-          pinType: "fixed",
-          scrub: isAndroid ? 0.2 : 0.6,
-          anticipatePin: 1,
-          preventOverlaps: true,
-          fastScrollEnd: true,
-          invalidateOnRefresh: true,
-        },
-      });
-
-      // --- PHASE 1: HERO INNER ANIMATIONS (TEXT & BG TRANSITION) ---
-      tl.addLabel("phase1")
-        .to(
-          ".hero-text-wrap",
-          {
-            opacity: 0,
-            y: -30,
-            duration: ACTION * 0.25,
-            ease: "power2.in",
-          },
-          "phase1"
-        )
-        .to(
-          ".services-hero-top-layer",
-          {
-            width: "0%",
-            xPercent: -100,
-            duration: ACTION,
-          },
-          "phase1"
-        )
-        .to(
-          ".service-hero-bg",
-          {
-            scale: 1.0,
-            duration: ACTION,
-          },
-          "phase1"
-        );
-
-      tl.to({}, { duration: DEAD_SCROLL });
-
-      // --- PHASE 2: SECTION ONE SLIDES UP OVER HERO ---
-      tl.addLabel("phase2")
-        .to(
-          ".section-one-wrap",
-          {
-            yPercent: 0,
-            duration: ACTION,
-          },
-          "phase2"
-        )
-        .to(".subservice-hero-panel", { yPercent: -15, duration: ACTION }, "phase2")
-        .to(
-          ".service-hero-bg",
-          {
-            scale: 1.05,
-            duration: ACTION,
-          },
-          "phase2"
-        );
-
-      tl.to({}, { duration: DEAD_SCROLL });
-
-      // --- PHASE 2.5: EXPAND IMAGE CONTAINER ---
-      tl.addLabel("phase2_expanded")
-        .to(
-          [".s10-para-top", ".s10-title"],
-          {
-            opacity: 0,
-            y: -35,
-            duration: ACTION * 0.4,
-            ease: "power2.in",
-          },
-          "phase2_expanded"
-        )
-        .to(
-          ".s10-img-absolute-container",
-          {
-            width: "100vw",
-            height: "100dvh",
-            right: "0px",
-            bottom: "0px",
-            borderRadius: "0px",
-            duration: ACTION,
-          },
-          "phase2_expanded"
-        )
-        .to(
-          ".s10-img-element",
-          {
-            scale: 1.06,
-            duration: ACTION,
-          },
-          "phase2_expanded"
-        );
-
-      tl.to({}, { duration: DEAD_SCROLL });
-
-      // --- SEQUENTIAL PARAGRAPHS ROLL UP ---
-      tl.addLabel("text1")
-        .to(".s10-seq-container", { y: -380, duration: ACTION })
-        .addLabel("text2")
-        .to(".s10-seq-container", { y: -760, duration: ACTION })
-        .addLabel("text3")
-        .to(".s10-seq-container", { y: -1240, duration: ACTION })
-        .addLabel("text4");
-
-      tl.to({}, { duration: DEAD_SCROLL });
-
-      // --- PHASE 2.6: FAQ SECTION SLIDE UP ---
-      tl.addLabel("faq", "text4")
-        .to(
-          ".services-faq-wrap",
-          {
-            yPercent: 0,
-            duration: ACTION,
-          },
-          "faq"
-        )
-        .to(".section-one-wrap", { yPercent: -15, duration: ACTION }, "faq");
-
-      tl.to({}, { duration: DEAD_SCROLL });
-
-      // --- CTA REVEAL TRACK ---
-      tl.addLabel("ctaStart", ">")
-        .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
-        .fromTo(
-          ".services-section-cta",
-          { yPercent: 100 },
-          { yPercent: 0, duration: ACTION },
-          "ctaStart"
-        )
-        .to(".services-faq-wrap", { yPercent: -15, duration: ACTION }, "ctaStart");
-
-      tl.to({}, { duration: DEAD_SCROLL });
-
-      // --- FOOTER REVEAL TRACK ---
-      tl.addLabel("footerStart", ">")
-        .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
-        .fromTo(
-          ".services-footer-wrap",
-          { yPercent: 100 },
-          {
-            yPercent: 0,
-            duration: ACTION,
-            ease: "power1.out",
-          },
-          "footerStart"
-        );
-    }, scopeRef);
-
     return () => {
-      ctx.revert();
-      if (!isAndroid) {
-        ScrollTrigger.normalizeScroll(false);
-      }
       if (scopeRef.current) {
         restoreTextReveal(scopeRef.current, ".s2-reveal-text");
       }
     };
   }, [introDone]);
 
+  // 1. UNLOCK LENIS & INITIALIZE
+  useEffect(() => {
+    const lenis = smootherRef?.current;
+
+    if (!preloaderDone || !shouldLoadRest) {
+      if (lenis && typeof lenis.stop === "function") lenis.stop();
+      targetProgress.current = 0;
+    } else {
+      document.body.classList.remove("preloading");
+      document.documentElement.classList.remove("preloading");
+
+      if (lenis) {
+        if (typeof lenis.resize === "function") lenis.resize();
+        if (typeof lenis.start === "function") lenis.start();
+      }
+
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event("scroll"));
+      });
+    }
+  }, [preloaderDone, shouldLoadRest, smootherRef]);
+
+  // 2. CACHE METRICS
+  const updateMetrics = useCallback(() => {
+    if (!trackRef.current) return;
+    const rect = trackRef.current.getBoundingClientRect();
+    const vh = window.innerHeight;
+    scrollMetricsRef.current = {
+      totalScrollable: rect.height - vh,
+      vh,
+      trackTopOffset: window.scrollY + rect.top,
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!shouldLoadRest) return;
+    updateMetrics();
+    window.addEventListener("resize", updateMetrics, { passive: true });
+    return () => window.removeEventListener("resize", updateMetrics);
+  }, [shouldLoadRest, updateMetrics]);
+
+  // 3. GPU-ACCELERATED RENDER LOOP (FAQ MATOHES CTA DYNAMIC HEIGHT TRANSLATION)
+  useEffect(() => {
+    if (!shouldLoadRest) return;
+
+    const render = () => {
+      const currentProg = targetProgress.current;
+      const totalSteps = 8.0;
+      const stepProgress = currentProg * totalSteps;
+
+      const { vh } = scrollMetricsRef.current;
+
+      // --- STEP 1: HERO TOP LAYER CLIP / TEXT FADE (0.0 -> 1.0) ---
+      const heroTextWrap = scopeRef.current?.querySelector<HTMLElement>(".hero-text-wrap");
+      const heroTopLayer = scopeRef.current?.querySelector<HTMLElement>(".services-hero-top-layer");
+      const heroBg = scopeRef.current?.querySelector<HTMLElement>(".service-hero-bg");
+
+      const heroPhase1Prog = Math.min(Math.max(stepProgress / 1.0, 0), 1);
+      if (heroTextWrap) {
+        heroTextWrap.style.opacity = `${1 - heroPhase1Prog}`;
+        heroTextWrap.style.transform = `translate3d(0, ${-30 * heroPhase1Prog}px, 0)`;
+        heroTextWrap.style.visibility = heroPhase1Prog >= 1 ? "hidden" : "visible";
+      }
+
+      if (heroTopLayer) {
+        const layerWidthProg = (1 - heroPhase1Prog) * 100;
+        heroTopLayer.style.clipPath = `inset(0% 0% 0% ${100 - layerWidthProg}%)`;
+      }
+
+      if (heroBg) {
+        const bgScale = 1.1 - heroPhase1Prog * 0.1;
+        heroBg.style.transform = `scale(${bgScale})`;
+      }
+
+      // --- STEP 2: SECTION ONE SLIDES UP OVER HERO (1.0 -> 2.0) ---
+      const s1Prog = easeOutQuad(Math.min(Math.max(stepProgress - 1.0, 0), 1));
+      if (sectionOneRef.current) {
+        sectionOneRef.current.style.transform = `translate3d(0, ${(1 - s1Prog) * 100}%, 0)`;
+      }
+
+      if (heroPanelRef.current && s1Prog > 0) {
+        heroPanelRef.current.style.transform = `translate3d(0, ${-s1Prog * 15}%, 0)`;
+      }
+
+      // --- STEP 3: SECTION ONE EXPANSION & INNER ANIMATIONS (2.0 -> 5.0) ---
+      const s10ParaTop = scopeRef.current?.querySelector<HTMLElement>(".s10-para-top");
+      const s10Title = scopeRef.current?.querySelector<HTMLElement>(".s10-title");
+      const s10ImgContainer = scopeRef.current?.querySelector<HTMLElement>(".s10-img-absolute-container");
+      const s10ImgElement = scopeRef.current?.querySelector<HTMLElement>(".s10-img-element");
+      const seqContainer = scopeRef.current?.querySelector<HTMLElement>(".s10-seq-container");
+
+      if (stepProgress < 2.0) {
+        if (s10ParaTop) {
+          s10ParaTop.style.opacity = "1";
+          s10ParaTop.style.transform = "translate3d(0, 0px, 0)";
+        }
+        if (s10Title) {
+          s10Title.style.opacity = "1";
+          s10Title.style.transform = "translate3d(0, 0px, 0)";
+        }
+        if (s10ImgContainer) {
+          s10ImgContainer.style.width = "";
+          s10ImgContainer.style.height = "";
+          s10ImgContainer.style.right = "";
+          s10ImgContainer.style.bottom = "";
+          s10ImgContainer.style.borderRadius = "0px";
+        }
+        if (s10ImgElement) {
+          s10ImgElement.style.transform = "scale(1.0)";
+        }
+        if (seqContainer) {
+          seqContainer.style.transform = "translate3d(0, 0px, 0)";
+        }
+      } else {
+        const expandProg = Math.min(Math.max((stepProgress - 2.0) / 1.0, 0), 1);
+
+        if (s10ParaTop) {
+          s10ParaTop.style.opacity = `${1 - expandProg}`;
+          s10ParaTop.style.transform = `translate3d(0, ${-35 * expandProg}px, 0)`;
+        }
+        if (s10Title) {
+          s10Title.style.opacity = `${1 - expandProg}`;
+          s10Title.style.transform = `translate3d(0, ${-35 * expandProg}px, 0)`;
+        }
+        if (s10ImgContainer) {
+          const initialWidth = window.innerWidth * 0.92;
+          const initialHeight = 220;
+          const currentWidth = initialWidth + (window.innerWidth - initialWidth) * expandProg;
+          const currentHeight = initialHeight + (vh - initialHeight) * expandProg;
+          const currentRight = (1 - expandProg) * (window.innerWidth * 0.04);
+          const currentBottom = (1 - expandProg) * (vh * 0.1);
+
+          s10ImgContainer.style.width = `${currentWidth}px`;
+          s10ImgContainer.style.height = `${currentHeight}px`;
+          s10ImgContainer.style.right = `${currentRight}px`;
+          s10ImgContainer.style.bottom = `${currentBottom}px`;
+          s10ImgContainer.style.borderRadius = "0px";
+        }
+
+        if (s10ImgElement) {
+          s10ImgElement.style.transform = `scale(${1.0 + expandProg * 0.06})`;
+        }
+
+        if (seqContainer) {
+          const textProg = Math.min(Math.max((stepProgress - 3.0) / 2.0, 0), 1);
+          const seqY = -textProg * 1240;
+          seqContainer.style.transform = `translate3d(0, ${seqY}px, 0)`;
+        }
+      }
+
+      // --- STEP 4: FAQ SECTION REVEAL (IDENTICAL TRANSFORM MATH TO CTA) (5.0 -> 6.0) ---
+      const faqProg = easeOutQuad(Math.min(Math.max(stepProgress - 5.0, 0), 1));
+      if (faqSectionRef.current) {
+        const faqHeight = faqSectionRef.current.offsetHeight || vh;
+        const startY = vh;
+        const endY = -(faqHeight - vh);
+        const currentY = startY + (endY - startY) * faqProg;
+        faqSectionRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
+      }
+
+      if (sectionOneRef.current && faqProg > 0) {
+        sectionOneRef.current.style.transform = `translate3d(0, ${-faqProg * 15}%, 0)`;
+      }
+
+      // --- STEP 5: CTA REVEAL (6.0 -> 7.0) ---
+      const ctaProg = easeOutQuad(Math.min(Math.max(stepProgress - 6.0, 0), 1));
+      if (ctaLayerRef.current) {
+        const ctaHeight = ctaLayerRef.current.offsetHeight || vh;
+        const startY = vh;
+        const endY = -(ctaHeight - vh);
+        const currentY = startY + (endY - startY) * ctaProg;
+        ctaLayerRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
+      }
+
+      // --- STEP 6: FOOTER REVEAL (7.0 -> 8.0) ---
+      const footerProg = easeOutQuad(Math.min(Math.max(stepProgress - 7.0, 0), 1));
+      if (footerLayerRef.current) {
+        const footerHeight = footerLayerRef.current.offsetHeight || vh;
+        const startY = vh;
+        const endY = vh - footerHeight;
+        const translateY = startY + (endY - startY) * footerProg;
+        footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
+      }
+    };
+
+    const handleScroll = (e?: any) => {
+      const scrollY = e?.scroll !== undefined ? e.scroll : window.scrollY;
+      const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
+
+      if (totalScrollable <= 0) return;
+
+      const relativeScroll = scrollY - trackTopOffset;
+      const trackBottom = relativeScroll + totalScrollable;
+
+      if (fixedFrameRef.current) {
+        if (relativeScroll >= 0 && trackBottom >= 0) {
+          fixedFrameRef.current.style.position = "fixed";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        } else if (trackBottom < 0) {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "auto";
+          fixedFrameRef.current.style.bottom = "0px";
+        } else {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        }
+      }
+
+      targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
+
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+      rafId.current = requestAnimationFrame(render);
+    };
+
+    const lenis = smootherRef?.current;
+    if (lenis && typeof lenis.on === "function") {
+      lenis.on("scroll", handleScroll);
+    } else {
+      window.addEventListener("scroll", handleScroll, { passive: true });
+    }
+
+    handleScroll();
+    render();
+
+    return () => {
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+      if (lenis && typeof lenis.off === "function") {
+        lenis.off("scroll", handleScroll);
+      } else {
+        window.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, [shouldLoadRest, smootherRef]);
+
   return (
-    <div ref={scopeRef} className="w-full relative min-h-[100dvh] bg-black text-white overflow-hidden">
+    <div ref={scopeRef} className="w-full bg-[#162D24]">
       <div
-        className="services-hero-master pin-all-subservices relative w-full h-[100dvh] overflow-hidden z-10"
-        style={{ visibility: "visible" }}
+        ref={trackRef}
+        className="services-track-container relative w-full"
+        style={{ height: "800vh" }}
       >
-        {/* Layer 1: Hero */}
-        <div className="subservice-hero-panel gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
-          <SubServiceHero data={pageData.hero} />
-        </div>
-
-        {/* Layer 2: Section One */}
         <div
-          className="section-one-wrap gpu-accelerated absolute inset-0 w-full h-full overflow-hidden"
-          style={{ zIndex: 20 }}
+          ref={fixedFrameRef}
+          className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-[100dvh]"
         >
-          <SubServiceSectionOne data={pageData.sectionOne} />
-        </div>
+          {/* Layer 1: Hero */}
+          <div
+            ref={heroPanelRef}
+            className="subservice-hero-panel absolute inset-0 w-full h-[100dvh] z-10 gpu-accelerated transform-gpu will-change-transform"
+          >
+            <SubServiceHero data={pageData.hero} isMobile={true} />
+          </div>
 
-        {/* Layer 3: FAQ */}
-        <div
-          className="services-faq-wrap gpu-accelerated absolute inset-0 w-full h-full overflow-hidden"
-          style={{ zIndex: 30 }}
-        >
-          <SubServiceFAQSection data={pageData.sectionTwo} />
-        </div>
+          {shouldLoadRest && (
+            <>
+              {/* Layer 2: Section One */}
+              <div
+                ref={sectionOneRef}
+                className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-20 gpu-accelerated will-change-transform"
+                style={{ transform: "translate3d(0, 100%, 0)" }}
+              >
+                <SubServiceSectionOne data={pageData.sectionOne} />
+              </div>
 
-        {/* Layer 4: Section CTA */}
-        <div
-          className="services-section-cta gpu-accelerated absolute bottom-0 left-0 w-full min-h-[100dvh] bg-black"
-          style={{ zIndex: 95, pointerEvents: "auto", visibility: "hidden" }}
-        >
-          <SectionCTA />
-        </div>
+              {/* Layer 3: Dynamic Height FAQ Section */}
+              <div
+                ref={faqSectionRef}
+                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-30 will-change-transform"
+                style={{ transform: "translate3d(0, 100vh, 0)" }}
+              >
+                <SubServiceFAQSection data={pageData.sectionTwo} />
+              </div>
 
-        {/* Layer 5: Footer */}
-        <div
-          className="services-footer-wrap gpu-accelerated absolute left-0 bottom-0 w-full"
-          style={{ zIndex: 96, pointerEvents: "auto", visibility: "hidden" }}
-        >
-          <Footer />
+              {/* Layer 4: Section CTA */}
+              <div
+                ref={ctaLayerRef}
+                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[95] will-change-transform"
+                style={{ transform: "translate3d(0, 100vh, 0)" }}
+              >
+                <SectionCTA />
+              </div>
+
+              {/* Layer 5: Footer */}
+              <div
+                ref={footerLayerRef}
+                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[96] will-change-transform"
+                style={{ transform: "translate3d(0, 100vh, 0)" }}
+              >
+                <Footer />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

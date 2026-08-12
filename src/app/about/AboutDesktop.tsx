@@ -7,7 +7,6 @@ import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal";
 
-// Dynamically import heavy sections to isolate execution during hero intro
 const SectionOne = dynamic(() => import("@/src/components/About/SectionOne"));
 const SectionTwo = dynamic(() => import("@/src/components/About/SectionTwo"));
 const SectionThree = dynamic(() => import("@/src/components/About/SectionThree"));
@@ -16,7 +15,6 @@ const SectionFive = dynamic(() => import("@/src/components/About/SectionFive"));
 const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
-// Bumped to 13 to give full scroll track room for the footer reveal
 const TOTAL_SCROLL_STEPS = 13;
 
 export default function AboutDesktop() {
@@ -28,9 +26,7 @@ export default function AboutDesktop() {
   const layer6Ref = useRef<HTMLDivElement>(null);
   const layer7Ref = useRef<HTMLDivElement>(null);
 
-  // Cached layout measurements
   const dimensionsRef = useRef({ ctaHeight: 0, footerHeight: 0, vh: 0 });
-
   const progressRef = useRef(0);
   const revealedSections = useRef<Set<string>>(new Set());
   const lastSec5Idx = useRef<number>(-1);
@@ -39,15 +35,16 @@ export default function AboutDesktop() {
   const { introDone, preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
     isMobile: false,
     introDurationMs: 2800,
+    unlockScrollEarlyMs: 1800,
   });
 
   // ── 1. UNLOCK LENIS & FORCE INSTANT SCROLL RESPONSIVENESS ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
-    if (!preloaderDone || !introDone) {
+    if (!preloaderDone || !shouldLoadRest) {
       if (lenis && typeof lenis.stop === "function") lenis.stop();
-      if (progressRef?.current !== undefined) progressRef.current = 0;
+      progressRef.current = 0;
     } else {
       document.body.classList.remove("preloading");
       document.documentElement.classList.remove("preloading");
@@ -57,14 +54,13 @@ export default function AboutDesktop() {
         if (typeof lenis.start === "function") lenis.start();
       }
 
-      // Instantly trigger scroll loop calculation on next frame
       requestAnimationFrame(() => {
         window.dispatchEvent(new Event("scroll"));
       });
     }
-  }, [preloaderDone, introDone, smootherRef]);
+  }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // ── 2. CACHE ELEMENT DIMENSIONS ON RESIZE & DYNAMIC ITEM MOUNT ──
+  // ── 2. CACHE ELEMENT DIMENSIONS ──
   useEffect(() => {
     if (!shouldLoadRest) return;
 
@@ -78,7 +74,6 @@ export default function AboutDesktop() {
 
     measure();
 
-    // ResizeObserver guarantees measurement updates after next/dynamic chunk loads
     const resizeObserver = new ResizeObserver(() => measure());
     if (layer6Ref.current) resizeObserver.observe(layer6Ref.current);
     if (layer7Ref.current) resizeObserver.observe(layer7Ref.current);
@@ -128,7 +123,7 @@ export default function AboutDesktop() {
   };
 
   useEffect(() => {
-    if (!preloaderDone || !introDone || !scopeRef.current) return;
+    if (!shouldLoadRest || !scopeRef.current) return;
 
     useTextReveal(scopeRef, ".about-section-one .reveal-text");
     useTextReveal(scopeRef, ".about-section-two .reveal-text");
@@ -148,11 +143,11 @@ export default function AboutDesktop() {
         );
       }
     };
-  }, [introDone, preloaderDone]);
+  }, [shouldLoadRest]);
 
   // ── 4. DIRECT GPU SCROLL RENDERING ──
   useEffect(() => {
-    if (!preloaderDone || !introDone || !scopeRef.current) return;
+    if (!shouldLoadRest || !scopeRef.current) return;
 
     const scope = scopeRef.current;
     const heroLeft = scope.querySelector<HTMLElement>(".about-hero-panel-left");
@@ -172,11 +167,16 @@ export default function AboutDesktop() {
       // 1. HERO CURTAIN SPLIT (STEPS 0 -> 1)
       const s1Prog = Math.min(Math.max(stepProgress, 0), 1);
       if (heroLeft && heroRight) {
-        const clipVal = s1Prog * 100;
-        heroLeft.style.clipPath = `inset(0% 50% ${clipVal}% 0%)`;
-        heroRight.style.clipPath = `inset(${clipVal}% 0% 0% 50%)`;
+        const clipVal = (s1Prog * 100).toFixed(2);
+        // Set both standard clipPath and WebkitClipPath with !important priority
+        heroLeft.style.setProperty("clip-path", `inset(0% 50% ${clipVal}% 0%)`, "important");
+        heroLeft.style.setProperty("-webkit-clip-path", `inset(0% 50% ${clipVal}% 0%)`, "important");
+
+        heroRight.style.setProperty("clip-path", `inset(${clipVal}% 0% 0% 50%)`, "important");
+        heroRight.style.setProperty("-webkit-clip-path", `inset(${clipVal}% 0% 0% 50%)`, "important");
       }
-      if (heroBgs) {
+
+      if (heroBgs && heroBgs.length > 0) {
         const scaleVal = (1.15 - s1Prog * 0.15).toFixed(4);
         heroBgs.forEach((bg) => {
           bg.style.transform = `translate3d(0,0,0) scale3d(${scaleVal}, ${scaleVal}, 1)`;
@@ -303,7 +303,7 @@ export default function AboutDesktop() {
         delete (window as any)._sec5GoTo;
       }
     };
-  }, [introDone, preloaderDone, smootherRef, triggerSec5Hook]);
+  }, [shouldLoadRest, smootherRef, triggerSec5Hook]);
 
   const isReady = preloaderDone && introDone;
 

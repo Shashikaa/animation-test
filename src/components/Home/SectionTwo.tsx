@@ -66,8 +66,9 @@ export default function SectionTwo() {
       <div
         className="s2-mob-clip-bg-1 lg:hidden absolute inset-0 z-[1] overflow-hidden pointer-events-none"
         style={{
-          opacity: 0,
-          willChange: "opacity, transform",
+          opacity: 1,
+          clipPath: "inset(0 0 100% 0)",
+          willChange: "clip-path",
         }}
       >
         <img
@@ -82,8 +83,9 @@ export default function SectionTwo() {
       <div
         className="s2-mob-clip-bg-2 lg:hidden absolute inset-0 z-[2] overflow-hidden pointer-events-none"
         style={{
-          opacity: 0,
-          willChange: "opacity, transform",
+          opacity: 1,
+          clipPath: "inset(0 0 100% 0)",
+          willChange: "clip-path",
         }}
       >
         <img
@@ -98,8 +100,9 @@ export default function SectionTwo() {
       <div
         className="s2-mob-clip-bg-3 lg:hidden absolute inset-0 z-[3] overflow-hidden pointer-events-none"
         style={{
-          opacity: 0,
-          willChange: "opacity, transform",
+          opacity: 1,
+          clipPath: "inset(0 0 100% 0)",
+          willChange: "clip-path",
         }}
       >
         <img

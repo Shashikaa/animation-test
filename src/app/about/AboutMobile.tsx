@@ -33,15 +33,17 @@ export default function AboutMobile() {
   const { smootherRef } = useSite();
   const { introDone, preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
     isMobile: true,
-    introDurationMs: 3000,
+    introDurationMs: 2800,
+    unlockScrollEarlyMs: 1800,
   });
 
-  // 1. UNLOCK LENIS & INITIALIZE
+  // 1. UNLOCK LENIS & INITIALIZE INSTANTLY
   useEffect(() => {
     const lenis = smootherRef?.current;
 
-    if (!preloaderDone || !introDone) {
+    if (!preloaderDone || !shouldLoadRest) {
       if (lenis && typeof lenis.stop === "function") lenis.stop();
+      targetProgress.current = 0;
     } else {
       document.body.classList.remove("preloading");
       document.documentElement.classList.remove("preloading");
@@ -51,11 +53,12 @@ export default function AboutMobile() {
         if (typeof lenis.start === "function") lenis.start();
       }
 
+      // Trigger scroll event on next tick for immediate alignment
       requestAnimationFrame(() => {
         window.dispatchEvent(new Event("scroll"));
       });
     }
-  }, [preloaderDone, introDone, smootherRef]);
+  }, [preloaderDone, shouldLoadRest, smootherRef]);
 
   // 2. CACHE METRICS TO PREVENT LAYOUT THRASHING
   const updateMetrics = useCallback(() => {
@@ -86,9 +89,9 @@ export default function AboutMobile() {
     }
   }, []);
 
-  // 4. GPU-ACCELERATED RENDER LOOP
+  // 4. GPU-ACCELERATED RENDER LOOP (Runs as soon as downstream components mount!)
   useEffect(() => {
-    if (!preloaderDone || !introDone || !shouldLoadRest) return;
+    if (!shouldLoadRest) return;
 
     const panels = trackRef.current?.querySelectorAll<HTMLElement>(".about-stack-layer");
     const s5Bg = scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
@@ -151,7 +154,7 @@ export default function AboutMobile() {
 
     const handleScroll = (e?: any) => {
       const scrollY = e?.scroll !== undefined ? e.scroll : window.scrollY;
-      const { totalScrollable, vh, trackTopOffset } = scrollMetricsRef.current;
+      const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
 
       if (totalScrollable <= 0) return;
 
@@ -175,6 +178,7 @@ export default function AboutMobile() {
       }
 
       targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
+
       if (rafId.current) cancelAnimationFrame(rafId.current);
       rafId.current = requestAnimationFrame(render);
     };
@@ -187,6 +191,7 @@ export default function AboutMobile() {
     }
 
     handleScroll();
+    render();
 
     return () => {
       if (rafId.current) cancelAnimationFrame(rafId.current);
@@ -197,7 +202,7 @@ export default function AboutMobile() {
       }
       if (typeof window !== "undefined") delete (window as any)._sec5GoTo;
     };
-  }, [introDone, preloaderDone, shouldLoadRest, smootherRef, triggerSec5Hook]);
+  }, [shouldLoadRest, smootherRef, triggerSec5Hook]);
 
   const isReady = preloaderDone && introDone;
 

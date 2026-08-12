@@ -1,331 +1,316 @@
 "use client";
 
-import { useRef, useEffect, useLayoutEffect, useState } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
+import dynamic from "next/dynamic";
+import { useRef, useEffect, useState, useCallback } from "react";
 import Hero from "@/src/components/Service/Hero";
-import SectionOne from "@/src/components/Service/SectionOne";
-import SectionTwo from "@/src/components/Service/SectionTwo";
-import Appsection from "@/src/components/Appsection";
-import SectionCTA from "@/src/components/SectionCTA";
-import Footer from "@/src/components/Footer";
+import { useSite } from "@/src/app/context/SiteContext";
+import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
-gsap.registerPlugin(ScrollTrigger);
+const SectionOne = dynamic(() => import("@/src/components/Service/SectionOne"));
+const SectionTwo = dynamic(() => import("@/src/components/Service/SectionTwo"));
+const Appsection = dynamic(() => import("@/src/components/Appsection"));
+const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
+const Footer = dynamic(() => import("@/src/components/Footer"));
 
-// Standardized Metrics matching AboutMobile, ContactMobile, ProjectsMobile & SubServicesMobile
-const PX_PER_MAIN_PANEL = 850;
-const PX_PER_SUB_STEP = 350;
-const PAUSE_PX = 150;
-const BASELINE_VH = 800;
+const easeOutQuad = (t: number) => t * (2 - t);
 
 export default function ServicesMobile() {
   const scopeRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const fixedFrameRef = useRef<HTMLDivElement>(null);
+
+  const heroPanelRef = useRef<HTMLDivElement>(null);
+  const sectionOneRef = useRef<HTMLDivElement>(null);
+  const sectionTwoRef = useRef<HTMLDivElement>(null);
+  const appSecRef = useRef<HTMLDivElement>(null);
+  const ctaLayerRef = useRef<HTMLDivElement>(null);
+  const footerLayerRef = useRef<HTMLDivElement>(null);
+
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
+
+  const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
+  const targetProgress = useRef(0);
+  const rafId = useRef<number | null>(null);
   const lastSec2Idx = useRef<number>(-1);
 
-  // Single unified utility hook configured for Mobile
-  const { introDone } = useHeroIntro(scopeRef, { isMobile: true });
+  const { smootherRef } = useSite();
+  const { preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
+    isMobile: true,
+    introDurationMs: 2800,
+    unlockScrollEarlyMs: 1800,
+  });
 
-  // Set up safe baseline states before scroll timeline runs
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.set(".services-hero-panel", { yPercent: 0, force3D: true });
-      gsap.set(".services-hero-top-layer", {
-        clipPath: "inset(0px 0px 0px 0px)",
-        WebkitClipPath: "inset(0px 0px 0px 0px)",
-        force3D: true,
-      });
-
-      // Initialize Section One with bottom-to-top mask hide
-      gsap.set(".services-section-one-wrap", {
-        visibility: "visible",
-        clipPath: "inset(100% 0% 0% 0%)",
-        WebkitClipPath: "inset(100% 0% 0% 0%)",
-        force3D: true,
-      });
-
-      // Section Two initial state
-      gsap.set(".services-section-two-wrap", {
-        visibility: "visible",
-        yPercent: 100,
-        force3D: true,
-      });
-      gsap.set(".s2-inner-fade-target", { opacity: 0, force3D: true });
-
-      // App Section Initial Baseline
-      gsap.set(".services-appsec-wrap", {
-        visibility: "visible",
-        yPercent: 100,
-        force3D: true,
-      });
-
-      // Initial States for CTA & Footer
-      gsap.set(".services-section-cta", { yPercent: 100, zIndex: 150, visibility: "hidden", force3D: true });
-      gsap.set(
-        [".services-section-cta .cta-inner-mobile", ".services-section-cta .cta-inner-desktop"],
-        { opacity: 1, y: 0, pointerEvents: "auto", visibility: "visible" }
-      );
-      gsap.set(".services-footer-wrap", { yPercent: 100, zIndex: 151, visibility: "hidden", force3D: true });
-    }, scopeRef);
-
-    return () => ctx.revert();
+  const triggerSec2Hook = useCallback((nextIdx: number) => {
+    if (nextIdx !== lastSec2Idx.current) {
+      lastSec2Idx.current = nextIdx;
+      if (typeof window !== "undefined" && typeof (window as any)._sec2GoTo === "function") {
+        (window as any)._sec2GoTo(nextIdx);
+      }
+    }
   }, []);
 
-  // Absolute Panel Stacking Scroll Timeline
+  // 1. UNLOCK LENIS & INITIALIZE
   useEffect(() => {
-    if (!introDone) return;
+    const lenis = smootherRef?.current;
 
-    const isAndroid = /Android/i.test(navigator.userAgent);
+    if (!preloaderDone || !shouldLoadRest) {
+      if (lenis && typeof lenis.stop === "function") lenis.stop();
+      targetProgress.current = 0;
+    } else {
+      document.body.classList.remove("preloading");
+      document.documentElement.classList.remove("preloading");
 
-    const ctx = gsap.context(() => {
-      ScrollTrigger.config({ ignoreMobileResize: true });
-
-      if (!isAndroid) {
-        ScrollTrigger.normalizeScroll({
-          allowNestedScroll: true,
-          lockAxis: true,
-        });
+      if (lenis) {
+        if (typeof lenis.resize === "function") lenis.resize();
+        if (typeof lenis.start === "function") lenis.start();
       }
 
-      const ACTION = 1.4;
-      const DEAD_SCROLL = 0.15;
-      const UNIFIED_EASE = "power1.inOut";
-
-      const MAIN_PANELS_COUNT = 6;
-      const SUB_STEPS_COUNT = 3;
-      const PAUSES_COUNT = 7;
-
-      const vh = window.innerHeight || BASELINE_VH;
-      const scaleFactor = vh / BASELINE_VH;
-
-      const DYNAMIC_SCROLL_TRACK =
-        (MAIN_PANELS_COUNT * PX_PER_MAIN_PANEL +
-          SUB_STEPS_COUNT * PX_PER_SUB_STEP +
-          PAUSES_COUNT * PAUSE_PX) *
-        scaleFactor;
-
-      const triggerSec2Hook = (nextIdx: number) => {
-        if (nextIdx !== lastSec2Idx.current) {
-          lastSec2Idx.current = nextIdx;
-          if (typeof (window as any)._sec2GoTo === "function") {
-            (window as any)._sec2GoTo(nextIdx);
-          }
-          gsap.set(".s2-inner-fade-target", { opacity: 1 });
-        }
-      };
-
-      const tl = gsap.timeline({
-        defaults: { ease: UNIFIED_EASE, lazy: true },
-        scrollTrigger: {
-          trigger: ".services-pin-master",
-          start: "top top",
-          end: `+=${DYNAMIC_SCROLL_TRACK}`,
-          pin: true,
-          pinType: "fixed",
-          scrub: isAndroid ? 0.2 : 0.6,
-          anticipatePin: 1,
-          preventOverlaps: true,
-          fastScrollEnd: true,
-          invalidateOnRefresh: true,
-        },
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event("scroll"));
       });
+    }
+  }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-      // --- STEP A: Compress Hero ---
-      tl.to(
-        [".hero-text-wrap", ".hero-btn"],
-        {
-          y: "-=380px",
-          duration: ACTION,
-        },
-        0
-      )
-        .to(
-          ".services-hero-top-layer",
-          {
-            clipPath: "inset(0px 0px 400px 0px)",
-            WebkitClipPath: "inset(0px 0px 320px 0px)",
-            duration: ACTION,
-          },
-          0
-        )
-        .to(
-          ".service-hero-bg",
-          {
-            y: "-=80px",
-            duration: ACTION,
-          },
-          0
-        );
+  // 2. CACHE METRICS
+  const updateMetrics = useCallback(() => {
+    if (!trackRef.current) return;
+    const rect = trackRef.current.getBoundingClientRect();
+    const vh = window.innerHeight;
+    scrollMetricsRef.current = {
+      totalScrollable: rect.height - vh,
+      vh,
+      trackTopOffset: window.scrollY + rect.top,
+    };
+  }, []);
 
-      tl.to({}, { duration: DEAD_SCROLL });
+  useEffect(() => {
+    if (!shouldLoadRest) return;
+    updateMetrics();
+    window.addEventListener("resize", updateMetrics, { passive: true });
+    return () => window.removeEventListener("resize", updateMetrics);
+  }, [shouldLoadRest, updateMetrics]);
 
-      // --- STEP B: Section One un-clips OVER Hero ---
-      tl.to(".services-section-one-wrap", {
-        clipPath: "inset(0% 0% 0% 0%)",
-        WebkitClipPath: "inset(0% 0% 0% 0%)",
-        duration: ACTION,
-      })
-        .to(".services-hero-panel", { yPercent: -15, duration: ACTION }, "<");
+  // 3. GPU-ACCELERATED STEP RENDER LOOP
+  useEffect(() => {
+    if (!shouldLoadRest) return;
 
-      tl.to({}, { duration: DEAD_SCROLL });
+    const render = () => {
+      const currentProg = targetProgress.current;
+      const totalSteps = 8.0;
+      const stepProgress = currentProg * totalSteps;
 
-      // --- STEP C: Section Two Slides Up ---
-      tl.to(".services-section-two-wrap", {
-        yPercent: 0,
-        duration: ACTION,
-        onStart: () => setIsSectionTwoActive(true),
-        onReverseComplete: () => {
-          setIsSectionTwoActive(false);
+      const { vh } = scrollMetricsRef.current;
+
+      // --- STEP 1: COMPRESS HERO TOP LAYER TO REVEAL 100% OF UNDERNEATH LAYER (0.0 -> 1.0) ---
+      const heroTextWrap = scopeRef.current?.querySelector<HTMLElement>(".hero-text-wrap");
+      const heroBtn = scopeRef.current?.querySelector<HTMLElement>(".hero-btn");
+      const heroTopLayer = scopeRef.current?.querySelector<HTMLElement>(".services-hero-top-layer");
+      const serviceHeroBg = scopeRef.current?.querySelector<HTMLElement>(".service-hero-bg");
+
+      const step1Prog = Math.min(Math.max(stepProgress / 1.0, 0), 1);
+
+      if (heroTextWrap) {
+        heroTextWrap.style.transform = `translate3d(0, ${-vh * step1Prog}px, 0)`;
+        heroTextWrap.style.opacity = `${1 - step1Prog}`;
+      }
+      if (heroBtn) {
+        heroBtn.style.transform = `translate3d(0, ${-vh * step1Prog}px, 0)`;
+        heroBtn.style.opacity = `${1 - step1Prog}`;
+      }
+      if (heroTopLayer) {
+        // Fully wipe the top layer from bottom to top to reveal the complete underneath text
+        const bottomInset = step1Prog * 60;
+        heroTopLayer.style.clipPath = `inset(0px 0px ${bottomInset}% 0px)`;
+      }
+      if (serviceHeroBg) {
+        serviceHeroBg.style.transform = `translate3d(0, ${-120 * step1Prog}px, 0)`;
+      }
+
+      // --- STEP 2: SECTION ONE SLIDES UP DIRECTLY OVER HERO (1.0 -> 2.0) ---
+      const step2Prog = easeOutQuad(Math.min(Math.max(stepProgress - 1.0, 0), 1));
+      if (sectionOneRef.current) {
+        sectionOneRef.current.style.transform = `translate3d(0, ${(1 - step2Prog) * 100}%, 0)`;
+      }
+      if (heroPanelRef.current && step2Prog > 0) {
+        heroPanelRef.current.style.transform = `translate3d(0, ${-step2Prog * 15}%, 0)`;
+      }
+
+      // --- STEP 3: SECTION TWO SLIDES UP OVER SECTION ONE & DISCRETE STEPPERS (2.0 -> 5.0) ---
+      const step3Prog = easeOutQuad(Math.min(Math.max(stepProgress - 2.0, 0), 1));
+      if (sectionTwoRef.current) {
+        sectionTwoRef.current.style.transform = `translate3d(0, ${(1 - step3Prog) * 100}%, 0)`;
+      }
+      if (sectionOneRef.current && step3Prog > 0) {
+        sectionOneRef.current.style.transform = `translate3d(0, ${-step3Prog * 15}%, 0)`;
+      }
+
+      if (stepProgress >= 2.0 && stepProgress < 5.0) {
+        setIsSectionTwoActive(true);
+        if (stepProgress < 3.0) {
           triggerSec2Hook(0);
-        },
-      })
-        .to(".services-section-one-wrap", { yPercent: -15, duration: ACTION }, "<")
-        .to(
-          ".s2-inner-fade-target",
-          {
-            opacity: 1,
-            duration: ACTION,
-          },
-          "<"
-        );
+        } else if (stepProgress < 4.0) {
+          triggerSec2Hook(1);
+        } else {
+          triggerSec2Hook(2);
+        }
+      } else if (stepProgress < 2.0) {
+        setIsSectionTwoActive(false);
+        triggerSec2Hook(0);
+      }
 
-      // --- STEP D: DISCRETE STEPPER SLIDE TRACK (3 SLIDES) ---
-      const stepDuration = ACTION * 0.5;
+      // --- STEP 4: APP SECTION SLIDES UP OVER SECTION TWO (5.0 -> 6.0) ---
+      const appProg = easeOutQuad(Math.min(Math.max(stepProgress - 5.0, 0), 1));
+      if (appSecRef.current) {
+        const appHeight = appSecRef.current.offsetHeight || vh;
+        const startY = vh;
+        const endY = -(appHeight - vh);
+        const currentY = startY + (endY - startY) * appProg;
+        appSecRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
+      }
+      if (sectionTwoRef.current && appProg > 0) {
+        sectionTwoRef.current.style.transform = `translate3d(0, ${-appProg * 15}%, 0)`;
+      }
 
-      tl.call(() => triggerSec2Hook(0), [], ">")
-        .to(".s2-inner-fade-target", { opacity: 1, duration: stepDuration });
+      // --- STEP 5: CTA SLIDES UP OVER APP SECTION (6.0 -> 7.0) ---
+      const ctaProg = easeOutQuad(Math.min(Math.max(stepProgress - 6.0, 0), 1));
+      if (ctaLayerRef.current) {
+        const ctaHeight = ctaLayerRef.current.offsetHeight || vh;
+        const startY = vh;
+        const endY = -(ctaHeight - vh);
+        const currentY = startY + (endY - startY) * ctaProg;
+        ctaLayerRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
+      }
 
-      tl.call(() => triggerSec2Hook(1), [], ">")
-        .to(".s2-inner-fade-target", { opacity: 1, duration: stepDuration });
-
-      tl.call(() => triggerSec2Hook(2), [], ">")
-        .to(".s2-inner-fade-target", { opacity: 1, duration: stepDuration });
-
-      tl.to({}, { duration: DEAD_SCROLL });
-
-      // --- STEP E: App Section slides up over Section Two ---
-      tl.addLabel("appsecStart", ">")
-        .to(".s2-inner-fade-target", { opacity: 1, duration: ACTION * 0.5 }, "appsecStart")
-        .to(
-          ".services-appsec-wrap",
-          {
-            yPercent: 0,
-            duration: ACTION,
-            onStart: () => triggerSec2Hook(2),
-            onReverseComplete: () => triggerSec2Hook(2),
-          },
-          "appsecStart"
-        )
-        .to(".services-section-two-wrap", { yPercent: -15, duration: ACTION }, "appsecStart");
-
-      tl.to({}, { duration: DEAD_SCROLL });
-
-      // --- STEP F: APP SECTION -> CTA ---
-      tl.addLabel("ctaStart", ">")
-        .set(".services-section-cta", { visibility: "visible" }, "ctaStart")
-        .fromTo(
-          ".services-section-cta",
-          { yPercent: 100 },
-          { yPercent: 0, duration: ACTION },
-          "ctaStart"
-        )
-        .to(".services-appsec-wrap", { yPercent: -15, duration: ACTION }, "ctaStart");
-
-      tl.to({}, { duration: DEAD_SCROLL });
-
-      // --- STEP G: CTA -> FOOTER ---
-      tl.addLabel("footerStart", ">")
-        .set(".services-footer-wrap", { visibility: "visible" }, "footerStart")
-        .fromTo(
-          ".services-footer-wrap",
-          { yPercent: 100 },
-          {
-            yPercent: 0,
-            duration: ACTION,
-            ease: "power1.out",
-          },
-          "footerStart"
-        );
-    }, scopeRef);
-
-    return () => {
-      ctx.revert();
-      if (!isAndroid) {
-        ScrollTrigger.normalizeScroll(false);
+      // --- STEP 6: FOOTER REVEAL (7.0 -> 8.0) ---
+      const footerProg = easeOutQuad(Math.min(Math.max(stepProgress - 7.0, 0), 1));
+      if (footerLayerRef.current) {
+        const footerHeight = footerLayerRef.current.offsetHeight || vh;
+        const startY = vh;
+        const endY = vh - footerHeight;
+        const translateY = startY + (endY - startY) * footerProg;
+        footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
       }
     };
-  }, [introDone]);
+
+    const handleScroll = (e?: any) => {
+      const scrollY = e?.scroll !== undefined ? e.scroll : window.scrollY;
+      const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
+
+      if (totalScrollable <= 0) return;
+
+      const relativeScroll = scrollY - trackTopOffset;
+      const trackBottom = relativeScroll + totalScrollable;
+
+      if (fixedFrameRef.current) {
+        if (relativeScroll >= 0 && trackBottom >= 0) {
+          fixedFrameRef.current.style.position = "fixed";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        } else if (trackBottom < 0) {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "auto";
+          fixedFrameRef.current.style.bottom = "0px";
+        } else {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        }
+      }
+
+      targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
+
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+      rafId.current = requestAnimationFrame(render);
+    };
+
+    const lenis = smootherRef?.current;
+    if (lenis && typeof lenis.on === "function") {
+      lenis.on("scroll", handleScroll);
+    } else {
+      window.addEventListener("scroll", handleScroll, { passive: true });
+    }
+
+    handleScroll();
+    render();
+
+    return () => {
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+      if (lenis && typeof lenis.off === "function") {
+        lenis.off("scroll", handleScroll);
+      } else {
+        window.removeEventListener("scroll", handleScroll);
+      }
+      if (typeof window !== "undefined") delete (window as any)._sec2GoTo;
+    };
+  }, [shouldLoadRest, smootherRef, triggerSec2Hook]);
 
   return (
-    <div ref={scopeRef}>
+    <div ref={scopeRef} className="w-full bg-[#162D24]">
       <div
-        className="services-pin-master pin-all-services relative w-full overflow-hidden h-[100dvh]"
-        style={{ visibility: "visible" }}
+        ref={trackRef}
+        className="services-track-container relative w-full"
+        style={{ height: "800vh" }}
       >
-        {/* Layer 1: Hero Block */}
-        <div className="services-hero-panel gpu-accelerated absolute inset-0 w-full h-full" style={{ zIndex: 10 }}>
-          <Hero isMobile={true} />
-        </div>
-
-        {/* Layer 2: Section One */}
         <div
-          className="services-section-one-wrap gpu-accelerated absolute inset-0 w-full h-full"
-          style={{
-            zIndex: 20,
-            clipPath: "inset(100% 0% 0% 0%)",
-            WebkitClipPath: "inset(100% 0% 0% 0%)",
-            visibility: "visible",
-          }}
+          ref={fixedFrameRef}
+          className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-[100dvh]"
         >
-          <SectionOne />
-        </div>
+          {/* Layer 1: Hero Block */}
+          <div
+            ref={heroPanelRef}
+            className="services-hero-panel absolute inset-0 w-full h-[100dvh] z-10 gpu-accelerated transform-gpu will-change-transform"
+          >
+            <Hero isMobile={true} />
+          </div>
 
-        {/* Layer 3: Section Two Context */}
-        <div
-          className="services-section-two-wrap gpu-accelerated absolute inset-0 w-full h-full"
-          style={{
-            zIndex: 30,
-            visibility: "visible",
-          }}
-        >
-          <SectionTwo isActive={isSectionTwoActive} />
-        </div>
+          {shouldLoadRest && (
+            <>
+              {/* Layer 2: Section One */}
+              <div
+                ref={sectionOneRef}
+                className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-20 gpu-accelerated will-change-transform"
+                style={{ transform: "translate3d(0, 100%, 0)" }}
+              >
+                <SectionOne />
+              </div>
 
-        {/* Layer 4: App Section Slide Up Wrapper */}
-        <div
-          className="services-appsec-wrap gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh] overflow-x-hidden bg-black"
-          style={{
-            zIndex: 35,
-            pointerEvents: "auto",
-            visibility: "visible",
-          }}
-        >
-          <Appsection />
-        </div>
+              {/* Layer 3: Section Two Context */}
+              <div
+                ref={sectionTwoRef}
+                className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-30 gpu-accelerated will-change-transform"
+                style={{ transform: "translate3d(0, 100%, 0)" }}
+              >
+                <SectionTwo isActive={isSectionTwoActive} />
+              </div>
 
-        {/* Layer 5: Section CTA Block */}
-        <div
-          className="services-section-cta gpu-accelerated absolute inset-x-0 bottom-0 w-full h-auto min-h-[100dvh]"
-          style={{
-            zIndex: 150,
-            pointerEvents: "auto",
-            visibility: "hidden",
-          }}
-        >
-          <SectionCTA />
-        </div>
+              {/* Layer 4: App Section Wrapper */}
+              <div
+                ref={appSecRef}
+                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[35] will-change-transform"
+                style={{ transform: "translate3d(0, 100vh, 0)" }}
+              >
+                <Appsection />
+              </div>
 
-        {/* Layer 6: Footer Wrapper Frame */}
-        <div
-          className="services-footer-wrap gpu-accelerated absolute left-0 bottom-0 w-full"
-          style={{
-            zIndex: 151,
-            pointerEvents: "auto",
-            visibility: "hidden",
-          }}
-        >
-          <Footer />
+              {/* Layer 5: Section CTA Block */}
+              <div
+                ref={ctaLayerRef}
+                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[150] will-change-transform"
+                style={{ transform: "translate3d(0, 100vh, 0)" }}
+              >
+                <SectionCTA />
+              </div>
+
+              {/* Layer 6: Footer Wrapper Frame */}
+              <div
+                ref={footerLayerRef}
+                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[151] will-change-transform"
+                style={{ transform: "translate3d(0, 100vh, 0)" }}
+              >
+                <Footer />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

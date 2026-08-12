@@ -27,10 +27,10 @@ export default function SubServiceFAQSection({ data }: FAQSectionProps) {
       />
       
       {/* Main Container */}
-      <div className="faq-content section-container relative z-20 w-full h-full flex flex-col lg:flex-row justify-start lg:justify-between gap-4 md:gap-8 pb-16 lg:pb-24">
+      <div className="faq-content section-container relative z-20 w-full min-h-screen h-full flex flex-col lg:flex-row justify-start lg:justify-between gap-4 md:gap-8 pb-16 lg:pb-24">
         
         {/* LEFT SIDE */}
-        <div className="flex flex-col select-none justify-start pt-2 md:!pt-24 lg:!pt-32">
+        <div className="flex flex-col select-none justify-center pt-2 md:!pt-24 lg:!pt-32">
           <h2
             className="!text-[#F4EEDF] font-display !font-[100] max-w-[650px]"
             style={{ fontFamily: "var(--font-display)" }}

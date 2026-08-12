@@ -19,6 +19,7 @@ export interface SubServiceHeroData {
 interface HeroProps {
   data: SubServiceHeroData;
   hideText?: boolean;
+  isMobile?: boolean;
 }
 
 export default function SubServiceHero({ data, hideText = false }: HeroProps) {
@@ -72,7 +73,7 @@ export default function SubServiceHero({ data, hideText = false }: HeroProps) {
         </div>
       </div>
 
-      {/* TOP LAYER: Set pointer-events-none here to prevent blocking native mobile scroll dragging */}
+      {/* TOP LAYER */}
       <div
         className="services-hero-top-layer absolute inset-0 w-full h-full overflow-hidden z-10 pointer-events-none will-change-[clip-path]"
         style={{
@@ -81,10 +82,10 @@ export default function SubServiceHero({ data, hideText = false }: HeroProps) {
         }}
       >
         <section className="relative w-full h-full bg-[#111]">
-          {/* BACKGROUND IMAGE CONTAINER WITH OPTIMIZED NEXT.JS IMAGE */}
+          {/* BACKGROUND IMAGE CONTAINER */}
           <div className="absolute inset-0 overflow-hidden" style={{ zIndex: 1 }}>
             <div
-              className="service-hero-bg hero-bg-anim absolute left-0 right-0"
+              className="service-hero-bg hero-bg-anim hero-bg-target absolute left-0 right-0"
               style={{
                 top: "-10%",
                 bottom: "-10%",
@@ -107,24 +108,23 @@ export default function SubServiceHero({ data, hideText = false }: HeroProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 z-[1]" />
 
           {!hideText && (
-            /* Explicitly added pointer-events-auto to link block elements to preserve button usability */
             <div className="hero-text-wrap section-container relative z-10 h-full flex flex-col justify-end pb-20 md:pb-22 pointer-events-auto will-change-[opacity,transform]">
               <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 leading-normal w-full">
                 {/* Title and Subtitle Block */}
                 <div className="flex flex-col gap-2 lg:gap-6">
                   <h1
-                    className="hero-title text-[#F4EEDF] font-light max-w-[700px] !font-[100]"
+                    className="hero-title hero-text-target hero-title-target text-[#F4EEDF] font-light max-w-[700px] !font-[100]"
                     style={{ fontFamily: "var(--font-display)" }}
                   >
                     {data.title}
                   </h1>
-                  <p className="hero-desc text-[#F4EEDF] mt-1 max-w-[300px]">
+                  <p className="hero-desc hero-text-target hero-desc-target text-[#F4EEDF] mt-1 max-w-[300px]">
                     {data.subtitle}
                   </p>
                 </div>
 
                 {/* Contact Us Button */}
-                <a href="/contact" className="btn-underline hero-btn lg:ml-10">
+                <a href="/contact" className="btn-underline   hero-btn lg:ml-10">
                   CONTACT US
                 </a>
               </div>

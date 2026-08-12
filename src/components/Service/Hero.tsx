@@ -15,11 +15,9 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
 
   return (
     <div className="relative w-full h-full bg-[#12322D]">
-      
       {/* UNDERNEATH LAYER: Exact Figma Positioning */}
       <div className="absolute inset-y-0 right-0 w-full lg:w-[57.5%] z-0 text-[#F4EEDF]">
         <div className="relative w-full h-full p-6 md:p-12 lg:p-16">
-          
           {/* Paragraph 1: High/Center-Left Position */}
           <div className="absolute bottom-[260px] md:bottom-[280px] lg:top-[35%] left-6 md:left-12 lg:!left-87 max-w-[290px] md:max-w-[310px]">
             <p className="text-[14px] md:text-[16px] leading-relaxed font-light">
@@ -27,7 +25,7 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
               we deliver tailored solutions with precision and care.
             </p>
           </div>
-          
+
           {/* Paragraph 2: Bottom-Right Position */}
           <div className="absolute bottom-18 right-6 lg:bottom-12 md:right-12 lg:bottom-16 lg:right-16 max-w-[280px] md:max-w-[300px] text-left">
             <p className="text-[14px] md:text-[16px] leading-relaxed font-light">
@@ -35,7 +33,6 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
               our expert team ensures a seamless process and exceptional results.
             </p>
           </div>
-
         </div>
       </div>
 
@@ -46,7 +43,7 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
       >
         <section className="relative w-full h-full bg-[#111]">
           <div
-            className="service-hero-bg hero-bg-anim absolute left-0 right-0"
+            className="service-hero-bg hero-bg-anim hero-bg-target absolute left-0 right-0"
             style={{
               top: "-10%",
               bottom: "-10%",
@@ -65,17 +62,17 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
             />
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 z-[1]" />
-          
+
           {!hideText && (
             <div className="section-container relative z-10 h-full flex flex-col justify-end !pb-24 lg:!pb-42">
               <div className="hero-text-wrap flex flex-col !gap-4 lg:!gap-8 leading-normal will-change-[opacity,transform]">
                 <h1
-                  className="hero-title text-[#F4EEDF] !font-[100]"
+                  className="hero-title hero-text-target hero-title-target text-[#F4EEDF] !font-[100]"
                   style={{ fontFamily: "var(--font-display)" }}
                 >
-                  Expert Pool Solutions  
+                  Expert Pool Solutions
                 </h1>
-                <p className="hero-desc text-[#F4EEDF] w-[320px]">
+                <p className="hero-desc hero-text-target hero-desc-target text-[#F4EEDF] w-[320px]">
                   Custom-designed pools crafted for relaxing, hosting, and elevated outdoor living.
                 </p>
               </div>
@@ -86,16 +83,15 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
 
       {/* BUTTON LAYER: Left on mobile/tablet, Right on desktop */}
       {!hideText && (
-        <div className="hero-btn absolute z-50 pointer-events-auto block left-[20px] bottom-12 md:left-[30px] lg:!left-auto lg:!right-[60px] lg:bottom-[90px] transform-gpu">
+        <div className="hero-btn  absolute z-50 pointer-events-auto block left-[20px] bottom-12 md:left-[30px] lg:!left-auto lg:!right-[60px] lg:bottom-[90px] transform-gpu">
           <a
             href="/contact"
-            className="group btn-underline font-body"
+            className="group btn-underline font-body "
           >
             CONTACT US
           </a>
         </div>
       )}
-
     </div>
   );
 }
