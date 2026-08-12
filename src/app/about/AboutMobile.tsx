@@ -32,7 +32,7 @@ export default function AboutMobile() {
 
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // ── 1. STABLE STICKY VIEWPORT HEIGHT (PREVENTS iOS KEYBOARD RESIZE JUMPS) ──
+  // ── 1. STABLE VIEWPORT HEIGHT (PREVENTS iOS KEYBOARD JUMP / RESIZE SHIFTS) ──
   useEffect(() => {
     const updateVh = () => {
       const active = document.activeElement;
@@ -45,8 +45,7 @@ export default function AboutMobile() {
       const currentWidth = window.innerWidth;
       const currentHeight = window.innerHeight;
 
-      // On iOS, keyboard toggles change innerHeight but keep innerWidth identical.
-      // We only update viewport height if width changed (orientation) or not focused.
+      // Lock height on mobile typing so keyboard open/close doesn't shift track height
       if (
         !isInputFocused &&
         (vhRef.current === 0 || currentWidth !== lastWidthRef.current)
@@ -62,9 +61,7 @@ export default function AboutMobile() {
     updateVh();
 
     const handleResize = () => updateVh();
-    const handleOrientation = () => {
-      setTimeout(updateVh, 250);
-    };
+    const handleOrientation = () => setTimeout(updateVh, 250);
 
     window.addEventListener("resize", handleResize);
     window.addEventListener("orientationchange", handleOrientation);
@@ -118,7 +115,6 @@ export default function AboutMobile() {
         return;
       }
 
-      // Check active input status
       const activeEl = document.activeElement;
       const isFormFocused =
         activeEl &&
@@ -126,20 +122,20 @@ export default function AboutMobile() {
           activeEl.tagName === "TEXTAREA" ||
           activeEl.getAttribute("role") === "combobox");
 
-      // Smooth progress lerp
+      // Smooth progress physics lerp
       const lerpFactor = 0.12;
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
-      // CTA Height & Steps calculation
-      const ctaEl = ctaWrapRef.current;
-      const ctaHeight = ctaEl ? ctaEl.getBoundingClientRect().height : vh;
-      const extraCtaScroll = Math.max(0, ctaHeight - vh);
-      const ctaStepLength = 1 + extraCtaScroll / vh;
+      // Calculate COMBINED height of CTA + FOOTER together
+      const ctaWrapEl = ctaWrapRef.current;
+      const combinedHeight = ctaWrapEl ? ctaWrapEl.offsetHeight : vh;
+      const extraScroll = Math.max(0, combinedHeight - vh);
+      const ctaStepLength = extraScroll > 0 ? 1 + extraScroll / vh : 1;
 
       const totalSteps = 7.0 + ctaStepLength;
       const requiredTrackHeight = (totalSteps + 1) * vh;
 
-      // Only adjust track height DOM element when input is NOT focused to prevent iOS gap shifts
+      // Update scroll track height seamlessly
       if (trackRef.current && !isFormFocused) {
         if (Math.abs(trackRef.current.offsetHeight - requiredTrackHeight) > 2) {
           trackRef.current.style.height = `${requiredTrackHeight}px`;
@@ -179,12 +175,12 @@ export default function AboutMobile() {
         }
       }
 
-      // ── CTA TRANSLATION (SEAMLESS FOOTER TOUCHING) ──
+      // ── TRANSLATE CTA & FOOTER TOGETHER AS ONE CONTIGUOUS BLOCK ──
       const rawCtaProgress = Math.min(Math.max((stepProgress - 7.0) / ctaStepLength, 0), 1);
-      const ctaY = (1 - rawCtaProgress) * vh - rawCtaProgress * extraCtaScroll;
+      const ctaY = (1 - rawCtaProgress) * vh - rawCtaProgress * extraScroll;
 
-      if (ctaEl) {
-        ctaEl.style.transform = `translate3d(0, ${ctaY}px, 0)`;
+      if (ctaWrapEl) {
+        ctaWrapEl.style.transform = `translate3d(0, ${ctaY}px, 0)`;
       }
 
       rafId.current = requestAnimationFrame(updatePhysics);
@@ -199,7 +195,6 @@ export default function AboutMobile() {
 
       if (totalScrollable <= 0) return;
 
-      // Unpinning transition logic
       if (trackRect.top <= 0 && trackRect.bottom >= vh) {
         fixedFrameRef.current.style.position = "fixed";
         fixedFrameRef.current.style.top = "0px";
@@ -301,27 +296,23 @@ export default function AboutMobile() {
             <SectionFive isActive={isSectionFiveActive} />
           </div>
 
-          {/* 6: SECTION CTA */}
+          {/* 6: SECTION CTA + FOOTER WRAPPER */}
           <div
             ref={ctaWrapRef}
             className="about-stack-layer absolute left-0 top-0 w-full z-[70] gpu-accelerated bg-[#162D24]"
-            style={{ transform: "translate3d(0, 100%, 0)" }}
+            style={{
+              transform: "translate3d(0, 100%, 0)",
+              opacity: isReady ? 1 : 0,
+              transition: "opacity 0.3s ease",
+            }}
           >
             <SectionCTA />
+            <footer className="w-full bg-[#162D24]">
+              <Footer />
+            </footer>
           </div>
         </div>
       </div>
-
-      {/* FOOTER */}
-      <footer
-        className="relative z-20 w-full bg-[#162D24] transition-opacity duration-300"
-        style={{
-          opacity: isReady ? 1 : 0,
-          pointerEvents: isReady ? "auto" : "none",
-        }}
-      >
-        <Footer />
-      </footer>
     </div>
   );
 }
