@@ -85,7 +85,7 @@ export default function AboutMobile() {
     }
   }, []);
 
-  // ── 4. STACK ANIMATION & SCROLL SYNC ──
+  // ── 4. STACK ANIMATION & SMOOTH PINNING SYNC ──
   useEffect(() => {
     if (!preloaderDone || !introDone) return;
 
@@ -99,9 +99,10 @@ export default function AboutMobile() {
         return;
       }
 
-      currentProgress.current += (targetProgress.current - currentProgress.current) * 0.18;
+      // Smooth lerp factor matching Lenis wheel velocity curves
+      const lerpFactor = 0.12;
+      currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
-      // Restored 7.0 total steps so Section 5 has full scroll distance for sub-animations
       const totalSteps = 7.0;
       const stepProgress = currentProgress.current * totalSteps;
 
@@ -117,7 +118,7 @@ export default function AboutMobile() {
       if (panels[4]) panels[4].style.transform = `translate3d(0, ${(1 - s4Progress) * 100}%, 0)`;
       if (panels[5]) panels[5].style.transform = `translate3d(0, ${(1 - s5Progress) * 100}%, 0)`;
 
-      // Restored original Section 5 internal steps logic (0, 1, 2)
+      // Handle Section 5 internal steps smoothly
       if (stepProgress >= 4.5 && stepProgress < 7.0) {
         setIsSectionFiveActive(true);
         const sec5SubProgress = (stepProgress - 4.5) / 2.5;
@@ -148,18 +149,27 @@ export default function AboutMobile() {
 
       if (totalScrollable <= 0) return;
 
-      if (trackRect.top <= 0 && trackRect.bottom >= vh) {
-        fixedFrameRef.current.style.position = "fixed";
-        fixedFrameRef.current.style.top = "0px";
-        fixedFrameRef.current.style.bottom = "auto";
-      } else if (trackRect.bottom < vh) {
-        fixedFrameRef.current.style.position = "absolute";
-        fixedFrameRef.current.style.top = "auto";
-        fixedFrameRef.current.style.bottom = "0px";
+      // Hysteresis buffer to eliminate pin/unpin layout snapping when scrolling back
+      const buffer = 8;
+
+      if (trackRect.top <= 0 && trackRect.bottom >= (vh - buffer)) {
+        if (fixedFrameRef.current.style.position !== "fixed") {
+          fixedFrameRef.current.style.position = "fixed";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        }
+      } else if (trackRect.bottom < (vh - buffer)) {
+        if (fixedFrameRef.current.style.position !== "absolute" || fixedFrameRef.current.style.bottom !== "0px") {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "auto";
+          fixedFrameRef.current.style.bottom = "0px";
+        }
       } else {
-        fixedFrameRef.current.style.position = "absolute";
-        fixedFrameRef.current.style.top = "0px";
-        fixedFrameRef.current.style.bottom = "auto";
+        if (fixedFrameRef.current.style.position !== "absolute" || fixedFrameRef.current.style.top !== "0px") {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        }
       }
 
       const currentScroll = Math.max(0, -trackRect.top);
@@ -191,7 +201,7 @@ export default function AboutMobile() {
 
   return (
     <div ref={scopeRef} className="w-full bg-[#162D24]">
-      {/* Track container set to 800vh to accommodate full Sec 5 internal animations */}
+      {/* Track container */}
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
