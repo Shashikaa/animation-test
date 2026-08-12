@@ -2,7 +2,7 @@
 
 /* ================================================================
    TAILWIND v4 THEME
-   ================================================================ */
+================================================================ */
 
 @theme {
   --font-display: var(--font-display), Georgia, serif;
@@ -12,10 +12,9 @@
   --breakpoint-lg: 1025px;
 }
 
-
 /* ================================================================
    DESIGN TOKENS
-   ================================================================ */
+================================================================ */
 
 :root {
   --background: #ffffff;
@@ -59,12 +58,24 @@
   --duration-fast: 150ms;
   --duration-base: 300ms;
   --duration-slow: 600ms;
-}
 
+  /* ==============================================================
+     STABLE VIEWPORT
+     
+     svh = Small Viewport Height.
+     
+     This is intentional.
+     It prevents sections from changing height when the mobile
+     browser address bar appears/disappears.
+  ============================================================== */
+
+  --stable-vh: 100svh;
+  --stable-vw: 100vw;
+}
 
 /* ================================================================
    DARK MODE
-   ================================================================ */
+================================================================ */
 
 @media (prefers-color-scheme: dark) {
   :root {
@@ -77,10 +88,9 @@
   }
 }
 
-
 /* ================================================================
-   RESET & BASE
-   ================================================================ */
+   RESET
+================================================================ */
 
 *,
 *::before,
@@ -92,16 +102,17 @@
 
 html {
   min-height: 100%;
+
   scroll-behavior: auto !important;
 
   /*
-   * Keep the browser from adding unexpected scrollbar width
-   * changes while desktop scrollbars are hidden.
-   */
+    Reserve scrollbar space so the layout does not shift.
+  */
   scrollbar-gutter: stable;
 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
   text-rendering: optimizeLegibility;
 }
 
@@ -116,27 +127,80 @@ body {
   line-height: var(--leading-body);
 
   overflow-x: hidden;
-
-  /*
-   * Important:
-   * Do NOT use overflow: hidden here.
-   * Lenis and ScrollTrigger need the document to remain scrollable.
-   */
   overflow-y: auto;
 
+  /*
+    IMPORTANT:
+    Do not use overflow:hidden globally.
+    Lenis / GSAP / ScrollTrigger need the document to scroll.
+  */
+
   -webkit-overflow-scrolling: touch;
+
+  /*
+    Prevent mobile browser overscroll from producing unwanted
+    horizontal movement.
+  */
+  overscroll-behavior-x: none;
 }
 
+/* ================================================================
+   MOBILE STABLE VIEWPORT
+================================================================ */
+
+/*
+  IMPORTANT:
+
+  100dvh changes when the mobile browser toolbar/address bar
+  expands or collapses.
+
+  100svh remains stable.
+
+  Therefore the main cinematic panels use 100svh.
+*/
+
+html,
+body {
+  min-height: 100%;
+}
+
+@supports (height: 100svh) {
+  .stable-screen {
+    height: 100svh;
+    min-height: 100svh;
+  }
+
+  .stable-screen-min {
+    min-height: 100svh;
+  }
+
+  .pin-all,
+  .pin-all-home,
+  .pin-all-contact,
+  .pin-all-projects,
+  .pin-all-services,
+  .pin-all-subservices,
+  .pin-all-single-project {
+    height: 100svh;
+    min-height: 100svh;
+  }
+
+  /* 
+    Allow auto-height reveals like footers to slide cleanly 
+    without being forcibly flattened by 100svh hard-locks
+  */
+  .about-pin {
+    min-height: 100svh;
+  }
+
+  .about-pin > .absolute {
+    height: 100% !important;
+  }
+}
 
 /* ================================================================
    LENIS
-   ================================================================ */
-
-/*
- * Lenis changes the html element while running.
- * These rules make sure native browser smooth scrolling does
- * not fight Lenis.
- */
+================================================================ */
 
 html.lenis,
 html.lenis body {
@@ -163,26 +227,15 @@ html.lenis body {
   overflow: hidden;
 }
 
-
 /* ================================================================
    PRELOADER
-   ================================================================ */
-
-/*
- * During the preloader we completely lock the document.
- *
- * This prevents:
- * - accidental finger scrolling
- * - hero drift
- * - layout movement before the intro finishes
- */
+================================================================ */
 
 html.preloading,
 body.preloading {
   overflow: hidden !important;
 
-  height: 100vh !important;
-  height: 100dvh !important;
+  height: 100% !important;
 
   position: fixed !important;
 
@@ -201,10 +254,9 @@ body.preloading {
   background-color: #162d24 !important;
 }
 
-
 /* ================================================================
    PRELOADER — HARD PIN CONTENT
-   ================================================================ */
+================================================================ */
 
 html.preloading .about-pin,
 html.preloading .contact-pin-master,
@@ -226,15 +278,15 @@ body.preloading .services-pin-master {
 
   width: 100% !important;
 
-  height: 100dvh !important;
+  height: 100svh !important;
+  min-height: 100svh !important;
 
   transform: translate3d(0, 0, 0) !important;
 }
 
-
 /* ================================================================
    PRELOADER — HIDE SITE ROOT
-   ================================================================ */
+================================================================ */
 
 html.preloading .site-root,
 body.preloading .site-root,
@@ -245,10 +297,9 @@ body.preloading header {
   pointer-events: none !important;
 }
 
-
 /* ================================================================
    SITE ROOT
-   ================================================================ */
+================================================================ */
 
 .site-root {
   position: relative;
@@ -264,25 +315,18 @@ body.preloading header {
     opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-
 /* ================================================================
    SCROLL CONTAINER
-   ================================================================ */
+================================================================ */
 
 .scroll-container {
   position: relative;
   width: 100%;
 }
 
-
 /* ================================================================
    FULL HEIGHT CINEMATIC PANELS
-   ================================================================ */
-
-/*
- * 100dvh is important for mobile browsers because it accounts
- * for the dynamic browser toolbar/address bar.
- */
+================================================================ */
 
 .pin-all,
 .pin-all-home,
@@ -295,44 +339,34 @@ body.preloading header {
 
   width: 100%;
 
-  height: 100dvh;
-  min-height: 100dvh;
+  /*
+    Stable viewport.
+    DO NOT change this to 100dvh.
+  */
+  height: 100svh;
+  min-height: 100svh;
 
   overflow: hidden;
 }
 
+/* ================================================================
+   ABOUT PIN
+================================================================ */
 
-/*
- * IMPORTANT:
- *
- * Do NOT force .pin-spacer height.
- *
- * GSAP ScrollTrigger creates and controls the pin spacer.
- *
- * The old rules:
- *
- * .pin-spacer {
- *   min-height: 100dvh !important;
- * }
- *
- * .pin-spacer > div {
- *   height: 100dvh !important;
- * }
- *
- * have intentionally been removed.
- */
+.about-pin {
+  position: relative;
 
+  width: 100%;
+
+  height: 100svh;
+  min-height: 100svh;
+
+  overflow: hidden;
+}
 
 /* ================================================================
    GPU ACCELERATION
-   ================================================================ */
-
-/*
- * Use this only on elements that actually participate in
- * large transform animations.
- *
- * Avoid applying will-change globally to every section.
- */
+================================================================ */
 
 .gpu-accelerated,
 .structural-layer {
@@ -342,10 +376,9 @@ body.preloading header {
   backface-visibility: hidden;
 }
 
-
-/*
- * Useful for large image layers.
- */
+/* ================================================================
+   ANIMATED IMAGE LAYERS
+================================================================ */
 
 .info-img-layer {
   -webkit-backface-visibility: hidden;
@@ -365,20 +398,18 @@ body.preloading header {
   will-change: transform;
 }
 
-
 /* ================================================================
    SECTION WRAPPERS
-   ================================================================ */
+================================================================ */
 
 .section-six-wrapper,
 .section-nine-wrapper {
   overflow: hidden;
 }
 
-
 /* ================================================================
    TYPOGRAPHY
-   ================================================================ */
+================================================================ */
 
 .font-display {
   font-family: var(--font-display);
@@ -395,10 +426,9 @@ body.preloading header {
   font-weight: 400;
 }
 
-
 /* ================================================================
    DISPLAY TEXT
-   ================================================================ */
+================================================================ */
 
 .text-display {
   font-family: var(--font-display);
@@ -410,10 +440,9 @@ body.preloading header {
   letter-spacing: 0;
 }
 
-
 /* ================================================================
    CORMORANT TEXT
-   ================================================================ */
+================================================================ */
 
 .text-cormorant {
   font-family: var(--font-cormorant);
@@ -457,10 +486,9 @@ body.preloading header {
   font-style: italic;
 }
 
-
 /* ================================================================
    BODY TEXT
-   ================================================================ */
+================================================================ */
 
 .text-body {
   font-family: var(--font-body);
@@ -478,10 +506,9 @@ body.preloading header {
   color: var(--muted);
 }
 
-
 /* ================================================================
    GLOBAL HEADINGS
-   ================================================================ */
+================================================================ */
 
 h1,
 h2 {
@@ -494,10 +521,9 @@ p {
   line-height: var(--leading-body);
 }
 
-
 /* ================================================================
    CONTAINER
-   ================================================================ */
+================================================================ */
 
 .container {
   width: 100%;
@@ -509,19 +535,17 @@ p {
   padding-inline: var(--container-pad);
 }
 
-
 /* ================================================================
    SECTION
-   ================================================================ */
+================================================================ */
 
 .section {
   padding-block: var(--section-py);
 }
 
-
 /* ================================================================
    FLEX UTILITIES
-   ================================================================ */
+================================================================ */
 
 .row {
   display: flex;
@@ -533,10 +557,9 @@ p {
   flex-direction: column;
 }
 
-
 /* ================================================================
    SECTION CONTAINER
-   ================================================================ */
+================================================================ */
 
 .section-container {
   width: 100%;
@@ -547,10 +570,9 @@ p {
   padding-block: 85px;
 }
 
-
 /* ================================================================
    TABLET
-   ================================================================ */
+================================================================ */
 
 @media (max-width: 1025px) {
   .section-container {
@@ -559,10 +581,9 @@ p {
   }
 }
 
-
 /* ================================================================
    MOBILE
-   ================================================================ */
+================================================================ */
 
 @media (max-width: 767px) {
   .section-container {
@@ -571,10 +592,9 @@ p {
   }
 }
 
-
 /* ================================================================
    TABLET TYPOGRAPHY
-   ================================================================ */
+================================================================ */
 
 @media (max-width: 1024px) {
   h1,
@@ -588,10 +608,9 @@ p {
   }
 }
 
-
 /* ================================================================
    MOBILE TYPOGRAPHY
-   ================================================================ */
+================================================================ */
 
 @media (max-width: 767px) {
   h1,
@@ -605,10 +624,9 @@ p {
   }
 }
 
-
 /* ================================================================
    BORDERS
-   ================================================================ */
+================================================================ */
 
 .border {
   border: 1px solid var(--border);
@@ -622,10 +640,9 @@ p {
   border-bottom: 1px solid var(--border);
 }
 
-
 /* ================================================================
    BORDER RADIUS
-   ================================================================ */
+================================================================ */
 
 .rounded-sm {
   border-radius: var(--radius-sm);
@@ -643,10 +660,9 @@ p {
   border-radius: var(--radius-full);
 }
 
-
 /* ================================================================
    GENERAL TRANSITIONS
-   ================================================================ */
+================================================================ */
 
 .transition {
   transition:
@@ -658,24 +674,15 @@ p {
     all var(--duration-fast) var(--ease-out);
 }
 
-
 /* ================================================================
-   TEXT REVEAL SYSTEM
-   ================================================================ */
+   TEXT REVEAL
+================================================================ */
 
 .reveal-text {
   perspective: 1000px;
 
   backface-visibility: hidden;
 }
-
-
-/*
- * Desktop text reveal starts hidden.
- *
- * Mobile keeps text visible so content doesn't disappear if
- * JavaScript/GSAP hasn't initialized yet.
- */
 
 @media screen and (min-width: 1025px) {
   .reveal-text {
@@ -684,10 +691,9 @@ p {
   }
 }
 
-
 /* ================================================================
    GSAP LINE REVEAL
-   ================================================================ */
+================================================================ */
 
 .gs-line {
   display: block;
@@ -711,10 +717,9 @@ p {
   backface-visibility: hidden;
 }
 
-
 /* ================================================================
    GSAP WORD REVEAL
-   ================================================================ */
+================================================================ */
 
 .gs-word-wrapper {
   display: inline-block;
@@ -730,10 +735,9 @@ p {
   will-change: transform;
 }
 
-
 /* ================================================================
    404 PRELOADER SUPPRESSION
-   ================================================================ */
+================================================================ */
 
 body:has(#not-found-page) #brand-preloader-root,
 body:has(#not-found-page) #fade-preloader-root,
@@ -748,10 +752,9 @@ html.page-404 #fade-preloader-root {
   pointer-events: none !important;
 }
 
-
 /* ================================================================
    UNDERLINE BUTTON
-   ================================================================ */
+================================================================ */
 
 a.btn-underline,
 button.btn-underline,
@@ -789,112 +792,193 @@ button.btn-underline:hover,
 a.btn-underline::after,
 button.btn-underline::after,
 .btn-underline::after {
-  content: "" !important;
+  content: "";
 
-  position: absolute !important;
+  position: absolute;
 
-  left: 0 !important;
-  right: 0 !important;
+  left: 0;
+  right: 0;
 
-  bottom: 0 !important;
+  bottom: 0;
 
-  height: 1px !important;
+  height: 1px;
 
-  background-color: #f4eedf !important;
+  background-color: #f4eedf;
 
   transform-origin: left center;
 
   transition:
-    transform 0.2s ease !important;
+    transform 0.2s ease;
 }
 
 a.btn-underline:hover::after,
 button.btn-underline:hover::after,
 .btn-underline:hover::after {
-  transform: translateY(-2px) !important;
+  transform: translateY(-2px);
 }
-
 
 /* ================================================================
    REDUCED MOTION
-   ================================================================ */
+================================================================ */
 
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
-
     animation-iteration-count: 1 !important;
-
     transition-duration: 0.01ms !important;
-
     scroll-behavior: auto !important;
   }
 }
 
-
 /* ================================================================
-   MOBILE TOUCH BEHAVIOR
-   ================================================================ */
-
-/*
- * Don't disable touch scrolling globally.
- *
- * This is important for the natural mobile feel.
- */
+   MOBILE TOUCH
+================================================================ */
 
 @media (max-width: 1024px) {
   html,
   body {
     touch-action: pan-y;
   }
+
+  /*
+    Prevent the browser from adding horizontal overscroll.
+    Keep vertical native scrolling available.
+  */
+  body {
+    overscroll-behavior-x: none;
+  }
 }
 
-
-/*
- * Interactive elements that contain their own scroll areas can
- * opt out of the page scroll using data-lenis-prevent.
- */
+/* ================================================================
+   LENIS PREVENT AREAS
+================================================================ */
 
 [data-lenis-prevent] {
   overscroll-behavior: contain;
 }
 
-
 /* ================================================================
    SAFE IMAGE RENDERING
-   ================================================================ */
+================================================================ */
 
 img,
 video {
   max-width: 100%;
 }
 
-
-/*
- * Prevent accidental inline image gaps in animated layouts.
- */
-
 img {
   display: block;
 }
 
-
 /* ================================================================
    MOBILE SAFETY
-   ================================================================ */
+================================================================ */
 
 @media (max-width: 767px) {
-  /*
-   * Avoid accidental horizontal overflow from animated elements.
-   */
   body {
     overflow-x: hidden;
   }
 }
 
+/* ================================================================
+   CUSTOM LUXURY SCROLLBAR
+   Inspired by minimal editorial / luxury websites.
+
+   IMPORTANT:
+   The scrollbar is intentionally NOT hidden anymore.
+================================================================ */
+
+/* Chrome / Safari / Edge */
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: rgba(42, 76, 63, 0.85);
+
+  border-radius: 999px;
+
+  border: 0;
+
+  min-height: 60px;
+
+  transition:
+    background-color 0.25s ease,
+    width 0.25s ease;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background: rgba(62, 109, 91, 1);
+}
+
+html::-webkit-scrollbar-corner,
+body::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox */
+
+html,
+body {
+  scrollbar-width: thin;
+
+  scrollbar-color:
+    rgba(42, 76, 63, 0.85)
+    transparent;
+}
+
+/* ================================================================
+   DESKTOP SCROLLBAR
+================================================================ */
+
+@media screen and (min-width: 1025px) {
+  html,
+  body {
+    scrollbar-width: thin;
+    -ms-overflow-style: auto;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: block !important;
+    width: 5px !important;
+    height: 5px !important;
+  }
+}
+
+/* ================================================================
+   MOBILE
+================================================================ */
+
+/*
+  Mobile browsers generally do not expose a persistent custom
+  scrollbar. Do not try to force one.
+*/
+
+@media screen and (max-width: 1024px) {
+  html,
+  body {
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
+  }
+}
 
 /* ================================================================
    END
-   ================================================================ */
+================================================================ */

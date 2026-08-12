@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
+
 import Lenis from "lenis";
+
 import gsap from "gsap";
+
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+
 gsap.registerPlugin(ScrollTrigger);
+
 
 export default function SmoothScroll({
   children,
@@ -14,46 +19,65 @@ export default function SmoothScroll({
 }) {
   useEffect(() => {
     const lenis = new Lenis({
-      duration: 1.1,
+      duration: 1.2,
 
-      // Smooth but still responsive.
-      easing: (t) => 1 - Math.pow(1 - t, 4),
+      easing: (t) =>
+        Math.min(
+          1,
+          1.001 - Math.pow(2, -10 * t)
+        ),
 
-      // Desktop wheel.
+      /*
+       * Desktop wheel.
+       */
       smoothWheel: true,
 
-      // Keep touch responsive.
+      /*
+       * Keep touch relatively close to native.
+       *
+       * Do NOT make this excessively high.
+       */
       touchMultiplier: 1,
+
+      /*
+       * Prevent Lenis from trying to fight native touch
+       * momentum.
+       */
+      syncTouch: false,
     });
 
-    const onScroll = () => {
-      ScrollTrigger.update();
-    };
 
-    lenis.on("scroll", onScroll);
+    /*
+     * Every Lenis scroll update tells ScrollTrigger to update.
+     */
+    lenis.on("scroll", ScrollTrigger.update);
 
-    const raf = (time: number) => {
+
+    /*
+     * GSAP drives Lenis.
+     */
+    const updateTicker = (time: number) => {
       lenis.raf(time * 1000);
     };
 
-    gsap.ticker.add(raf);
 
-    // Prevent GSAP from applying its own lag smoothing
-    // on top of Lenis.
+    gsap.ticker.add(updateTicker);
+
+
+    /*
+     * Prevent GSAP from compensating for frame drops by
+     * artificially adjusting time.
+     */
     gsap.ticker.lagSmoothing(0);
 
-    // Make sure ScrollTrigger knows about the initial layout.
-    ScrollTrigger.refresh();
 
     return () => {
-      lenis.off("scroll", onScroll);
-      gsap.ticker.remove(raf);
+      gsap.ticker.remove(updateTicker);
 
       lenis.destroy();
-
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     };
   }, []);
+
 
   return <>{children}</>;
 }
