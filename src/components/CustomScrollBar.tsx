@@ -58,6 +58,7 @@ export default function CustomScrollBar() {
     };
   }, [smootherRef]);
 
+  // Direct click or touch drag handling
   const handlePointerAction = useCallback(
     (clientY: number) => {
       const instance = smootherRef?.current;
@@ -86,13 +87,13 @@ export default function CustomScrollBar() {
     [smootherRef]
   );
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.PointerEvent) => {
     setIsDragging(true);
     handlePointerAction(e.clientY);
   };
 
   useEffect(() => {
-    const handlePointerMove = (e: MouseEvent) => {
+    const handlePointerMove = (e: PointerEvent) => {
       if (!isDragging) return;
       handlePointerAction(e.clientY);
     };
@@ -102,22 +103,22 @@ export default function CustomScrollBar() {
     };
 
     if (isDragging) {
-      window.addEventListener("mousemove", handlePointerMove);
-      window.addEventListener("mouseup", handlePointerUp);
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
     }
 
     return () => {
-      window.removeEventListener("mousemove", handlePointerMove);
-      window.removeEventListener("mouseup", handlePointerUp);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
     };
   }, [isDragging, handlePointerAction]);
 
   return (
     <div
       ref={trackRef}
-      onMouseDown={handleMouseDown}
-      /* z-[9999] guarantees it stays above header, nav menus, and overlays */
-      className="hidden lg:block fixed top-0 right-0 bottom-0 w-3 z-[9999] cursor-pointer select-none group"
+      onPointerDown={handlePointerDown}
+      /* Displayed on mobile + desktop with top layer z-index */
+      className="block fixed top-0 right-0 bottom-0 w-3 z-[9999] cursor-pointer select-none group touch-none"
     >
       {/* Track background line */}
       <div className="absolute top-0 right-0 bottom-0 w-[1px] bg-white/15 group-hover:bg-white/30 transition-colors" />

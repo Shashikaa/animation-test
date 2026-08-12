@@ -84,19 +84,17 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* ─── Hide scrollbar ONLY on desktop screens ─────────────────── */
-@media screen and (min-width: 1024px) {
-  html, body {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
+/* ─── Hide native scrollbar on all screens ─────────────────── */
+html, body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
 
-  html::-webkit-scrollbar,
-  body::-webkit-scrollbar { 
-    display: none !important; 
-    width: 0 !important; 
-    height: 0 !important; 
-  }
+html::-webkit-scrollbar,
+body::-webkit-scrollbar { 
+  display: none !important; 
+  width: 0 !important; 
+  height: 0 !important; 
 }
 
 body {
