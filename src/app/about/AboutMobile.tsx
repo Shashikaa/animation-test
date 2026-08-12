@@ -12,7 +12,6 @@ import { useState, useRef, useEffect } from "react";
 import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
-// Increased steps from 9 to 10 to give extra scroll distance for tall CTA content
 const TOTAL_SCROLL_STEPS = 10;
 const easeOutQuad = (t: number) => t * (2 - t);
 
@@ -67,7 +66,20 @@ export default function AboutMobile() {
     };
 
     const updatePhysics = () => {
-      const lerpFactor = 0.06;
+      // Pause transform calculations while typing to prevent mobile keyboard jumps
+      const activeEl = document.activeElement;
+      const isFormFocused =
+        activeEl &&
+        (activeEl.tagName === "INPUT" ||
+          activeEl.tagName === "TEXTAREA" ||
+          activeEl.getAttribute("role") === "combobox");
+
+      if (isFormFocused) {
+        rafId.current = requestAnimationFrame(updatePhysics);
+        return;
+      }
+
+      const lerpFactor = 0.12; // Tuned for rapid, natural touch response
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
       const progress = currentProgress.current;
@@ -105,17 +117,16 @@ export default function AboutMobile() {
         }
       }
 
-      // ── 2. DYNAMIC CTA HEIGHT physics ──
+      // ── CTA PROPORTIONAL SCROLL SPEED FIX ──
       const ctaEl = ctaWrapRef.current;
       const ctaHeight = ctaEl ? ctaEl.offsetHeight : vh;
-      // Calculate extra overflow height beyond viewport
       const extraCtaScroll = Math.max(0, ctaHeight - vh);
 
-      const rawCtaProgress = Math.min(Math.max((stepProgress - 7.0) / 2.0, 0), 1);
-      const ctaProgress = easeOutQuad(rawCtaProgress);
-
-      // Translates CTA into view and pushes it up by extraCtaScroll if tall
-      const ctaY = (1 - ctaProgress) * vh - ctaProgress * extraCtaScroll;
+      // Calculate step length proportionally based on actual height ratio
+      const ctaStepLength = 1 + extraCtaScroll / vh;
+      const rawCtaProgress = Math.min(Math.max((stepProgress - 7.0) / ctaStepLength, 0), 1);
+      
+      const ctaY = (1 - rawCtaProgress) * vh - rawCtaProgress * extraCtaScroll;
 
       if (ctaEl) {
         ctaEl.style.transform = `translate3d(0, ${ctaY}px, 0)`;

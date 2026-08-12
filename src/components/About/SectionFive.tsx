@@ -5,7 +5,7 @@ import gsap from "gsap";
 
 const slides = [
   {
-    stat: "25+ years ",
+    stat: "25+ Years ",
     label: "Industry Experience",
     desc: "Decades of knowledge in pool design and construction.",
   },

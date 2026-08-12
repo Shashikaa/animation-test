@@ -133,7 +133,7 @@ export default function CtaForm({
       <div
         className={
           isMobile
-            ? "flex flex-col gap-4 w-full max-w-[500px] md:max-w-[100%] mt-4 md:!mt-34 mx-auto pb-6"
+            ? "flex flex-col gap-4 w-full max-w-[500px] md:max-w-[100%] mt-4 mx-auto pb-6"
             : "flex flex-col gap-4 max-w-[560px] w-full"
         }
       >
@@ -260,10 +260,22 @@ function CtaInput({
   isMobile?: boolean;
   error?: string;
 }) {
+  const inputRef = useRef<HTMLInputElement>(null);
   const borderOpacity = isMobile ? "1" : "0.35";
   const defaultBorder = `1px solid ${
     error ? "#feb2b2" : `rgba(244, 238, 223, ${borderOpacity})`
   }`;
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.style.borderColor = error ? "#feb2b2" : "rgba(244,238,223,0.75)";
+    
+    // Prevents mobile browser keyboard viewport jump issues
+    if (isMobile && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 300);
+    }
+  };
 
   return (
     <div className="w-full flex flex-col">
@@ -284,6 +296,7 @@ function CtaInput({
         }}
       />
       <input
+        ref={inputRef}
         type={type}
         name={name}
         placeholder={placeholder}
@@ -294,7 +307,7 @@ function CtaInput({
           border: "none",
           borderBottom: defaultBorder,
           color: "#F4EEDF",
-          fontSize: 16,
+          fontSize: 16, // Fixed at 16px to prevent iOS auto-zoom
           padding: "10px 10px 10px 0",
           outline: "none",
           width: "100%",
@@ -302,11 +315,7 @@ function CtaInput({
           letterSpacing: "0.02em",
           transition: "border-color 0.25s",
         }}
-        onFocus={(e) => {
-          (e.target as HTMLInputElement).style.borderColor = error
-            ? "#feb2b2"
-            : "rgba(244,238,223,0.75)";
-        }}
+        onFocus={handleFocus}
         onBlur={(e) => {
           (e.target as HTMLInputElement).style.borderColor = error
             ? "#feb2b2"
