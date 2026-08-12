@@ -66,10 +66,10 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
           lerp: 0.1,
           duration: 1.2,
           smoothWheel: true,
-          wheelMultiplier: 1.0,
-          touchMultiplier: 1.4,
+          wheelMultiplier: 1.3,
+          touchMultiplier: 1.5,
           syncTouch: true,
-          syncTouchLerp: 0.08,
+          syncTouchLerp: 0.1,
         },
       });
 

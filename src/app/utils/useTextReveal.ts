@@ -1,19 +1,12 @@
 "use client";
 
-import gsap from "gsap";
 import { RefObject } from "react";
 
 export interface TextRevealOptions {
-  yPercent?: number;       // Distance to start from (percentage)
-  stagger?: number;        // Stagger delay between lines
-  ease?: string;           // Easing curve
-  duration?: number;       // Animation duration
-  rotation?: number;       // Subtle tilt/skew during entrance
-  tl?: gsap.core.Timeline; // Timeline to append to
-  position?: gsap.Position;
-  static?: boolean;
-  immediate?: boolean;
-  scrollTrigger?: gsap.DOMTarget | ScrollTrigger.Vars;
+  yPercent?: number;
+  stagger?: number;
+  duration?: number;
+  rotation?: number;
 }
 
 /**
@@ -27,10 +20,9 @@ function splitIntoLines(el: HTMLElement): HTMLElement[] {
   el.dataset.originalHtml = el.innerHTML;
   el.style.transform = "none";
 
-  // Wrap words cleanly using standard DOM text nodes
   const textContent = el.textContent || "";
   const words = textContent.trim().split(/\s+/);
-  
+
   el.innerHTML = words
     .map((word) => `<span class="gs-word-wrapper inline-block overflow-hidden vertical-top"><span class="gs-word inline-block">${word}</span></span>`)
     .join(" ");
@@ -38,7 +30,6 @@ function splitIntoLines(el: HTMLElement): HTMLElement[] {
   const wordNodes = Array.from(el.querySelectorAll<HTMLElement>(".gs-word"));
   const lineMap = new Map<number, HTMLElement[]>();
 
-  // Efficient line detection via Range API (prevents expensive reflows)
   wordNodes.forEach((word) => {
     const range = document.createRange();
     range.selectNode(word);
@@ -54,7 +45,6 @@ function splitIntoLines(el: HTMLElement): HTMLElement[] {
 
   lineMap.forEach((group) => {
     const lineOuter = document.createElement("span");
-    // ADDED: gs-line-outer class for clean exit targeting
     lineOuter.className = "gs-line gs-line-outer block overflow-hidden py-[0.1em] -my-[0.1em] will-change-transform";
 
     const lineInner = document.createElement("span");
@@ -92,21 +82,8 @@ export function restoreTextReveal(scope: HTMLElement, selector: string) {
 export function useTextReveal(
   scopeRef: RefObject<HTMLElement | null>,
   selector: string,
-  options: TextRevealOptions = {}
+  _options: TextRevealOptions = {}
 ) {
-  const {
-    yPercent = 100,       // Distance to start from
-    stagger = 0.03,       // Snappier gap between lines
-    ease = "power3.out",  // Faster start curve
-    duration = 0.6,       // Reduced duration for high speed
-    rotation = 2,         // Subtle tilt
-    tl,
-    position = ">",
-    static: isStatic = false,
-    immediate = false,
-    scrollTrigger,
-  } = options;
-
   const scope = scopeRef.current;
   if (!scope) return;
 
@@ -114,64 +91,16 @@ export function useTextReveal(
   if (!elements.length) return;
 
   elements.forEach((el) => {
-    if (isStatic) {
-      el.style.visibility = "hidden";
-      if (tl) {
-        tl.set(el, { visibility: "visible" }, position);
-      } else {
-        el.style.visibility = "visible";
-      }
-      return;
-    }
-
-    el.style.visibility = "hidden";
+    el.style.visibility = "visible";
+    el.style.opacity = "1";
+    
+    // Split DOM into .gs-line-outer and .gs-line-inner wrappers
     const lineInners = splitIntoLines(el);
 
-    // Initial transforms optimized for swift entrance
-    const initialProps = {
-      yPercent: yPercent,
-      rotateX: -10,
-      rotateZ: rotation,
-      scaleY: 1.1,
-      transformOrigin: "0% 100%",
-      opacity: 0,
-      force3D: true,
-    };
-
-    const targetProps = {
-      yPercent: 0,
-      rotateX: 0,
-      rotateZ: 0,
-      scaleY: 1,
-      opacity: 1,
-      stagger: stagger,
-      duration: duration,
-      ease: ease,
-    };
-
-    if (!tl) {
-      gsap.set(lineInners, initialProps);
-    }
-
-    if (tl) {
-      tl.set(el, { visibility: "visible" }, position)
-        .set(lineInners, initialProps, position)
-        .to(lineInners, targetProps, position);
-    } else if (immediate) {
-      gsap.to(lineInners, {
-        ...targetProps,
-        onStart: () => { el.style.visibility = "visible"; }
-      });
-    } else {
-      gsap.to(lineInners, {
-        ...targetProps,
-        onStart: () => { el.style.visibility = "visible"; },
-        scrollTrigger: scrollTrigger || {
-          trigger: el,
-          start: "top 90%",
-          once: true,
-        },
-      });
-    }
+    // Default hidden position for lines (awaiting JS animation)
+    lineInners.forEach((line) => {
+      line.style.transform = "translate3d(0, 105%, 0) rotateZ(2deg)";
+      line.style.opacity = "0";
+    });
   });
 }

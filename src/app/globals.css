@@ -303,13 +303,8 @@ p {
 .reveal-text {
   perspective: 1000px;
   backface-visibility: hidden;
-}
-
-@media screen and (min-width: 1025px) {
-  .reveal-text {
-    opacity: 0;
-    visibility: hidden;
-  }
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .gs-line {

@@ -10,20 +10,19 @@ import SectionCTA from "@/src/components/SectionCTA";
 import Footer from "@/src/components/Footer";
 import { useState, useRef, useEffect } from "react";
 import { useSite } from "@/src/app/context/SiteContext";
+import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
 const TOTAL_SCROLL_STEPS = 11;
-
-// Easing function for smooth acceleration/deceleration curve (Ease-Out Quad)
 const easeOutQuad = (t: number) => t * (2 - t);
 
 export default function AboutMobile() {
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
+  const scopeRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const fixedFrameRef = useRef<HTMLDivElement>(null);
   const ctaWrapRef = useRef<HTMLDivElement>(null);
   const footerWrapRef = useRef<HTMLDivElement>(null);
 
-  // Targets and interpolated values for smooth LERP
   const targetProgress = useRef(0);
   const currentProgress = useRef(0);
   const rafId = useRef<number | null>(null);
@@ -31,7 +30,34 @@ export default function AboutMobile() {
   const lastSec5Idx = useRef<number>(-1);
   const { smootherRef } = useSite();
 
+  // Run mobile hero intro sequence
+  const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
+
+  // ── 1. LOCK SCROLL & LENIS UNTIL INTRO COMPLETES ──
   useEffect(() => {
+    const lenis = smootherRef?.current;
+
+    if (!preloaderDone || !introDone) {
+      if (lenis) lenis.stop();
+      window.scrollTo(0, 0);
+      targetProgress.current = 0;
+      currentProgress.current = 0;
+
+      // Force pinned fixed state during preloader and hero intro
+      if (fixedFrameRef.current) {
+        fixedFrameRef.current.style.position = "fixed";
+        fixedFrameRef.current.style.top = "0px";
+        fixedFrameRef.current.style.bottom = "auto";
+      }
+    } else {
+      if (lenis) lenis.start();
+    }
+  }, [preloaderDone, introDone, smootherRef]);
+
+  useEffect(() => {
+    // STRICT GUARD: Wait until preloader AND intro sequence are completely done
+    if (!preloaderDone || !introDone) return;
+
     const panels = trackRef.current?.querySelectorAll<HTMLElement>(".about-stack-layer");
     if (!panels || panels.length === 0) return;
 
@@ -44,18 +70,14 @@ export default function AboutMobile() {
       }
     };
 
-    // Render loop running via requestAnimationFrame for smooth 60/120fps physics interpolation
     const updatePhysics = () => {
-      // Linear Interpolation (LERP) factor (0.08 = ultra smooth fluid momentum)
-      const lerpFactor = 0.08;
+      const lerpFactor = 0.06; // Softened slightly for silkier touch scrolling
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
       const progress = currentProgress.current;
       const stepProgress = progress * (TOTAL_SCROLL_STEPS - 1);
-
       const vh = window.innerHeight;
 
-      // --- SECTION SLIDE-UP PROGRESS WITH EASING CURVES ---
       const s1Progress = easeOutQuad(Math.min(Math.max(stepProgress - 0, 0), 1));
       const s2Progress = easeOutQuad(Math.min(Math.max(stepProgress - 1, 0), 1));
       const s3Progress = easeOutQuad(Math.min(Math.max(stepProgress - 2, 0), 1));
@@ -68,7 +90,6 @@ export default function AboutMobile() {
       panels[4].style.transform = `translate3d(0, ${(1 - s4Progress) * 100}%, 0)`;
       panels[5].style.transform = `translate3d(0, ${(1 - s5Progress) * 100}%, 0)`;
 
-      // --- SECTION 5 INNER CARD STEPPING (Steps 4.5 -> 7.0) ---
       if (stepProgress >= 4.5 && stepProgress < 7.0) {
         setIsSectionFiveActive(true);
         const sec5SubProgress = (stepProgress - 4.5) / 2.5;
@@ -87,7 +108,6 @@ export default function AboutMobile() {
         }
       }
 
-      // --- SECTION CTA SLIDE-UP & EXTENDED TRAVEL (Steps 7.0 -> 8.5) ---
       const ctaEl = ctaWrapRef.current;
       const ctaHeight = ctaEl ? ctaEl.offsetHeight : vh;
       const extraCtaScroll = Math.max(0, ctaHeight - vh);
@@ -97,7 +117,6 @@ export default function AboutMobile() {
       const ctaY = (1 - ctaProgress) * vh - ctaProgress * extraCtaScroll;
       panels[6].style.transform = `translate3d(0, ${ctaY}px, 0)`;
 
-      // --- FOOTER FULL REVEAL SLIDE-UP (Steps 8.5 -> 9.8) ---
       const footerEl = footerWrapRef.current;
       const footerHeight = footerEl ? footerEl.offsetHeight : vh;
 
@@ -107,7 +126,6 @@ export default function AboutMobile() {
 
       panels[7].style.transform = `translate3d(0, ${footerY}px, 0)`;
 
-      // Keep animation frame running smoothly
       rafId.current = requestAnimationFrame(updatePhysics);
     };
 
@@ -120,7 +138,6 @@ export default function AboutMobile() {
 
       if (totalScrollable <= 0) return;
 
-      // Pinning Management
       if (trackRect.top <= 0 && trackRect.bottom >= vh) {
         fixedFrameRef.current.style.position = "fixed";
         fixedFrameRef.current.style.top = "0px";
@@ -135,12 +152,10 @@ export default function AboutMobile() {
         fixedFrameRef.current.style.bottom = "auto";
       }
 
-      // Update target progress for LERP loop
       const currentScroll = Math.max(0, -trackRect.top);
       targetProgress.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
     };
 
-    // Start RAF loop
     rafId.current = requestAnimationFrame(updatePhysics);
 
     const lenis = smootherRef?.current;
@@ -162,79 +177,82 @@ export default function AboutMobile() {
         window.removeEventListener("scroll", handleScroll);
       }
     };
-  }, [smootherRef]);
+  }, [introDone, preloaderDone, smootherRef]);
 
   return (
-    <div
-      ref={trackRef}
-      className="about-track-container relative w-full"
-      style={{ height: `${TOTAL_SCROLL_STEPS * 100}vh` }}
-    >
+    <div ref={scopeRef}>
       <div
-        ref={fixedFrameRef}
-        className="absolute top-0 left-0 h-[100svh] w-full overflow-hidden bg-[#162D24] z-10"
+        ref={trackRef}
+        className="about-track-container relative w-full"
+        style={{ height: `${TOTAL_SCROLL_STEPS * 100}vh` }}
       >
-        {/* 0: HERO PANEL */}
-        <div className="about-stack-layer absolute inset-0 w-full h-full z-10 gpu-accelerated">
-          <Hero isMobile={true} />
-        </div>
-
-        {/* 1: SECTION ONE */}
+        {/* CHANGED DEFAULT CLASS FROM 'absolute' TO 'fixed' */}
         <div
-          className="about-stack-layer absolute inset-0 w-full h-full z-20 gpu-accelerated"
-          style={{ transform: "translate3d(0, 100%, 0)" }}
+          ref={fixedFrameRef}
+          className="fixed top-0 left-0 h-[100svh] w-full overflow-hidden bg-[#162D24] z-10"
         >
-          <SectionOne />
-        </div>
+          {/* 0: HERO PANEL */}
+          <div className="about-stack-layer absolute inset-0 w-full h-full z-10 gpu-accelerated">
+            <Hero isMobile={true} />
+          </div>
 
-        {/* 2: SECTION TWO */}
-        <div
-          className="about-stack-layer absolute inset-0 w-full h-full z-30 gpu-accelerated"
-          style={{ transform: "translate3d(0, 100%, 0)" }}
-        >
-          <SectionTwo />
-        </div>
+          {/* 1: SECTION ONE */}
+          <div
+            className="about-stack-layer absolute inset-0 w-full h-full z-20 gpu-accelerated"
+            style={{ transform: "translate3d(0, 100%, 0)" }}
+          >
+            <SectionOne />
+          </div>
 
-        {/* 3: SECTION THREE */}
-        <div
-          className="about-stack-layer absolute inset-0 w-full h-full z-40 gpu-accelerated"
-          style={{ transform: "translate3d(0, 100%, 0)" }}
-        >
-          <SectionThree />
-        </div>
+          {/* 2: SECTION TWO */}
+          <div
+            className="about-stack-layer absolute inset-0 w-full h-full z-30 gpu-accelerated"
+            style={{ transform: "translate3d(0, 100%, 0)" }}
+          >
+            <SectionTwo />
+          </div>
 
-        {/* 4: SECTION FOUR */}
-        <div
-          className="about-stack-layer absolute inset-0 w-full h-full z-50 gpu-accelerated"
-          style={{ transform: "translate3d(0, 100%, 0)" }}
-        >
-          <SectionFour />
-        </div>
+          {/* 3: SECTION THREE */}
+          <div
+            className="about-stack-layer absolute inset-0 w-full h-full z-40 gpu-accelerated"
+            style={{ transform: "translate3d(0, 100%, 0)" }}
+          >
+            <SectionThree />
+          </div>
 
-        {/* 5: SECTION FIVE */}
-        <div
-          className="about-stack-layer absolute inset-0 w-full h-full z-[60] gpu-accelerated"
-          style={{ transform: "translate3d(0, 100%, 0)" }}
-        >
-          <SectionFive isActive={isSectionFiveActive} />
-        </div>
+          {/* 4: SECTION FOUR */}
+          <div
+            className="about-stack-layer absolute inset-0 w-full h-full z-50 gpu-accelerated"
+            style={{ transform: "translate3d(0, 100%, 0)" }}
+          >
+            <SectionFour />
+          </div>
 
-        {/* 6: SECTION CTA */}
-        <div
-          ref={ctaWrapRef}
-          className="about-stack-layer absolute left-0 top-0 w-full min-h-[100svh] z-[150] gpu-accelerated bg-[#162D24]"
-          style={{ transform: "translate3d(0, 100%, 0)" }}
-        >
-          <SectionCTA />
-        </div>
+          {/* 5: SECTION FIVE */}
+          <div
+            className="about-stack-layer absolute inset-0 w-full h-full z-[60] gpu-accelerated"
+            style={{ transform: "translate3d(0, 100%, 0)" }}
+          >
+            <SectionFive isActive={isSectionFiveActive} />
+          </div>
 
-        {/* 7: FOOTER WRAP */}
-        <div
-          ref={footerWrapRef}
-          className="about-stack-layer absolute inset-x-0 bottom-0 w-full z-[160] gpu-accelerated"
-          style={{ transform: "translate3d(0, 100%, 0)" }}
-        >
-          <Footer />
+          {/* 6: SECTION CTA */}
+          <div
+            ref={ctaWrapRef}
+            className="about-stack-layer absolute left-0 top-0 w-full min-h-[100svh] z-[150] gpu-accelerated bg-[#162D24]"
+            style={{ transform: "translate3d(0, 100%, 0)" }}
+          >
+            <SectionCTA />
+          </div>
+
+          {/* 7: FOOTER WRAP */}
+          <div
+            ref={footerWrapRef}
+            className="about-stack-layer absolute inset-x-0 bottom-0 w-full z-[160] gpu-accelerated"
+            style={{ transform: "translate3d(0, 100%, 0)" }}
+          >
+            <Footer />
+          </div>
         </div>
       </div>
     </div>
