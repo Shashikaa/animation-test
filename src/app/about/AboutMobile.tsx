@@ -31,32 +31,27 @@ export default function AboutMobile() {
   const { smootherRef } = useSite();
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // ── 1. INITIALIZE VIEWPORT HEIGHT (LOCKED TO PREVENT ADDRESS BAR TOGGLE) ──
+  // ── 1. INITIALIZE VIEWPORT HEIGHT (LOCKED TO PREVENT ADDRESS BAR SHIFTS) ──
   useEffect(() => {
-    const lockVh = () => {
+    const updateVh = () => {
       const activeTag = document.activeElement?.tagName;
       if (activeTag === "INPUT" || activeTag === "TEXTAREA" || activeTag === "SELECT") return;
 
       const currentWidth = window.innerWidth;
-      // Lock viewport height to initial load height. ONLY update on width change (orientation)
+      const currentHeight = window.innerHeight;
+
       if (vhRef.current === 0 || currentWidth !== lastWidthRef.current) {
-        vhRef.current = window.innerHeight;
+        vhRef.current = currentHeight;
         lastWidthRef.current = currentWidth;
         if (fixedFrameRef.current) {
-          fixedFrameRef.current.style.height = `${vhRef.current}px`;
+          fixedFrameRef.current.style.height = `${currentHeight}px`;
         }
       }
     };
 
-    lockVh();
+    updateVh();
 
-    // Listen only for true orientation changes/window resize, not vertical scroll shifts
-    const handleResize = () => {
-      if (window.innerWidth !== lastWidthRef.current) {
-        lockVh();
-      }
-    };
-
+    const handleResize = () => updateVh();
     window.addEventListener("resize", handleResize);
 
     return () => {
@@ -97,7 +92,7 @@ export default function AboutMobile() {
     }
   }, []);
 
-  // ── 4. STACK ANIMATION LOOP ──
+  // ── 4. ORIGINAL STACK ANIMATION LOOP ──
   useEffect(() => {
     if (!preloaderDone || !introDone) return;
 
@@ -114,7 +109,6 @@ export default function AboutMobile() {
       const lerpFactor = 0.12;
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
-      // Snap precision to prevent boundary lag
       if (Math.abs(targetProgress.current - currentProgress.current) < 0.0001) {
         currentProgress.current = targetProgress.current;
       }
@@ -171,7 +165,9 @@ export default function AboutMobile() {
       if (totalScrollable <= 0) return;
 
       const buffer = 8;
+      const lenis = smootherRef?.current;
 
+      // Restored position switching + added lenis.resize() to prevent footer jam
       if (trackRect.top <= 0 && trackRect.bottom >= vh - buffer) {
         if (fixedFrameRef.current.style.position !== "fixed") {
           fixedFrameRef.current.style.position = "fixed";
@@ -186,6 +182,8 @@ export default function AboutMobile() {
           fixedFrameRef.current.style.position = "absolute";
           fixedFrameRef.current.style.top = "auto";
           fixedFrameRef.current.style.bottom = "0px";
+          // FIX FOR FOOTER JAM: tell Lenis to recalculate height when stack finishes
+          if (lenis && typeof lenis.resize === "function") lenis.resize();
         }
       } else {
         if (
@@ -195,6 +193,7 @@ export default function AboutMobile() {
           fixedFrameRef.current.style.position = "absolute";
           fixedFrameRef.current.style.top = "0px";
           fixedFrameRef.current.style.bottom = "auto";
+          if (lenis && typeof lenis.resize === "function") lenis.resize();
         }
       }
 
@@ -230,7 +229,7 @@ export default function AboutMobile() {
   const isReady = preloaderDone && introDone;
 
   return (
-    <div ref={scopeRef} className="w-full bg-[#162D24] relative">
+    <div ref={scopeRef} className="w-full bg-[#162D24]">
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
@@ -282,7 +281,7 @@ export default function AboutMobile() {
         </div>
       </div>
 
-      <div className="relative z-[70] w-full bg-[#162D24] touch-auto">
+      <div className="relative z-[70] w-full bg-[#162D24]">
         <SectionCTA preloaderDone={isReady} />
         <footer className="w-full bg-[#162D24]">
           <Footer />

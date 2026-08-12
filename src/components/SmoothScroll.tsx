@@ -14,7 +14,33 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   const { preloaderDone, smootherRef } = useSite();
   const pathname = usePathname();
   const locomotiveRef = useRef<any>(null);
-  const scrollWrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let windowWidth = window.innerWidth;
+    const setVh = () => {
+      const actualHeight = window.innerHeight;
+      document.documentElement.style.setProperty("--vh", `${actualHeight * 0.01}px`);
+    };
+
+    setVh();
+
+    const handleResize = () => {
+      if (window.innerWidth !== windowWidth) {
+        windowWidth = window.innerWidth;
+        setVh();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -28,19 +54,17 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     const initLocomotive = async () => {
       const LocomotiveScroll = (await import("locomotive-scroll")).default;
 
-      const isMobile = window.innerWidth <= 1024;
-
       instance = new LocomotiveScroll({
         lenisOptions: {
-          wrapper: isMobile && scrollWrapperRef.current ? scrollWrapperRef.current : window,
-          content: isMobile && scrollWrapperRef.current ? (scrollWrapperRef.current.firstElementChild as HTMLElement) : document.documentElement,
+          wrapper: window,
+          content: document.documentElement,
           lerp: 0.1,
           duration: 1.2,
           smoothWheel: true,
           wheelMultiplier: 1.1,
-          touchMultiplier: 1.5,
-          syncTouch: true,
-          autoResize: false,
+          touchMultiplier: 1.2,
+          syncTouch: false,
+          autoResize: true,
         },
       });
 
@@ -75,11 +99,9 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   }, [pathname, preloaderDone]);
 
   return (
-    <div ref={scrollWrapperRef} className="scroll-wrapper-mobile flex flex-col min-h-[100vh] w-full relative">
+    <div className="flex flex-col min-h-[100vh] w-full relative">
       <CustomScrollBar />
-      <div>
-        {children}
-      </div>
+      {children}
     </div>
   );
 }
