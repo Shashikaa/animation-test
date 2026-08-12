@@ -31,7 +31,7 @@ export default function AboutMobile() {
   const { smootherRef } = useSite();
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // ── 1. INITIALIZE STABLE VIEWPORT HEIGHT ──
+  // ── 1. INITIALIZE & CLEANUP VIEWPORT HEIGHT ──
   useEffect(() => {
     const updateVh = () => {
       const activeTag = document.activeElement?.tagName;
@@ -59,7 +59,7 @@ export default function AboutMobile() {
     };
   }, []);
 
-  // ── 2. INTRO LOCK ──
+  // ── 2. INTRO LOCK WITH CLEANUP GUARANTEE ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -73,6 +73,12 @@ export default function AboutMobile() {
         lenis.start();
       }
     }
+
+    return () => {
+      if (lenis && typeof lenis.start === "function") {
+        lenis.start();
+      }
+    };
   }, [preloaderDone, introDone, smootherRef]);
 
   // ── 3. SECTION 5 TRIGGER HOOK ──
@@ -85,7 +91,7 @@ export default function AboutMobile() {
     }
   }, []);
 
-  // ── 4. STACK ANIMATION & SMOOTH PINNING SYNC ──
+  // ── 4. STACK ANIMATION & ISOLATED SCROLL LOOP ──
   useEffect(() => {
     if (!preloaderDone || !introDone) return;
 
@@ -99,7 +105,6 @@ export default function AboutMobile() {
         return;
       }
 
-      // Smooth lerp factor matching Lenis wheel velocity curves
       const lerpFactor = 0.12;
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
@@ -118,7 +123,15 @@ export default function AboutMobile() {
       if (panels[4]) panels[4].style.transform = `translate3d(0, ${(1 - s4Progress) * 100}%, 0)`;
       if (panels[5]) panels[5].style.transform = `translate3d(0, ${(1 - s5Progress) * 100}%, 0)`;
 
-      // Handle Section 5 internal steps smoothly
+      // ── SECTION 5 BACKGROUND PARALLAX TRANSLATE ──
+      const s5Bg = scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
+      if (s5Bg) {
+        // Normalizing the progress across Section 5's active scroll range (step 4.0 to 7.0)
+        const parallaxProg = Math.min(Math.max((stepProgress - 4.0) / 3.0, 0), 1);
+        s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
+      }
+
+      // ── SECTION 5 INNER STEP TRIGGERING ──
       if (stepProgress >= 4.5 && stepProgress < 7.0) {
         setIsSectionFiveActive(true);
         const sec5SubProgress = (stepProgress - 4.5) / 2.5;
@@ -149,23 +162,28 @@ export default function AboutMobile() {
 
       if (totalScrollable <= 0) return;
 
-      // Hysteresis buffer to eliminate pin/unpin layout snapping when scrolling back
       const buffer = 8;
 
-      if (trackRect.top <= 0 && trackRect.bottom >= (vh - buffer)) {
+      if (trackRect.top <= 0 && trackRect.bottom >= vh - buffer) {
         if (fixedFrameRef.current.style.position !== "fixed") {
           fixedFrameRef.current.style.position = "fixed";
           fixedFrameRef.current.style.top = "0px";
           fixedFrameRef.current.style.bottom = "auto";
         }
-      } else if (trackRect.bottom < (vh - buffer)) {
-        if (fixedFrameRef.current.style.position !== "absolute" || fixedFrameRef.current.style.bottom !== "0px") {
+      } else if (trackRect.bottom < vh - buffer) {
+        if (
+          fixedFrameRef.current.style.position !== "absolute" ||
+          fixedFrameRef.current.style.bottom !== "0px"
+        ) {
           fixedFrameRef.current.style.position = "absolute";
           fixedFrameRef.current.style.top = "auto";
           fixedFrameRef.current.style.bottom = "0px";
         }
       } else {
-        if (fixedFrameRef.current.style.position !== "absolute" || fixedFrameRef.current.style.top !== "0px") {
+        if (
+          fixedFrameRef.current.style.position !== "absolute" ||
+          fixedFrameRef.current.style.top !== "0px"
+        ) {
           fixedFrameRef.current.style.position = "absolute";
           fixedFrameRef.current.style.top = "0px";
           fixedFrameRef.current.style.bottom = "auto";
@@ -194,6 +212,10 @@ export default function AboutMobile() {
       } else {
         window.removeEventListener("scroll", handleScroll);
       }
+
+      if (typeof window !== "undefined") {
+        delete (window as any)._sec5GoTo;
+      }
     };
   }, [introDone, preloaderDone, smootherRef, triggerSec5Hook]);
 
@@ -201,7 +223,6 @@ export default function AboutMobile() {
 
   return (
     <div ref={scopeRef} className="w-full bg-[#162D24]">
-      {/* Track container */}
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
@@ -212,12 +233,10 @@ export default function AboutMobile() {
           className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10"
           style={{ height: vhRef.current ? `${vhRef.current}px` : "100vh" }}
         >
-          {/* 0: HERO PANEL */}
           <div className="about-stack-layer absolute inset-0 w-full h-full z-10 gpu-accelerated">
             <Hero isMobile={true} />
           </div>
 
-          {/* 1: SECTION ONE */}
           <div
             className="about-stack-layer absolute inset-0 w-full h-full z-20 gpu-accelerated"
             style={{ transform: "translate3d(0, 100%, 0)" }}
@@ -225,7 +244,6 @@ export default function AboutMobile() {
             <SectionOne />
           </div>
 
-          {/* 2: SECTION TWO */}
           <div
             className="about-stack-layer absolute inset-0 w-full h-full z-30 gpu-accelerated"
             style={{ transform: "translate3d(0, 100%, 0)" }}
@@ -233,7 +251,6 @@ export default function AboutMobile() {
             <SectionTwo />
           </div>
 
-          {/* 3: SECTION THREE */}
           <div
             className="about-stack-layer absolute inset-0 w-full h-full z-40 gpu-accelerated"
             style={{ transform: "translate3d(0, 100%, 0)" }}
@@ -241,7 +258,6 @@ export default function AboutMobile() {
             <SectionThree />
           </div>
 
-          {/* 4: SECTION FOUR */}
           <div
             className="about-stack-layer absolute inset-0 w-full h-full z-50 gpu-accelerated"
             style={{ transform: "translate3d(0, 100%, 0)" }}
@@ -249,7 +265,6 @@ export default function AboutMobile() {
             <SectionFour />
           </div>
 
-          {/* 5: SECTION FIVE */}
           <div
             className="about-stack-layer absolute inset-0 w-full h-full z-[60] gpu-accelerated"
             style={{ transform: "translate3d(0, 100%, 0)" }}
@@ -259,7 +274,6 @@ export default function AboutMobile() {
         </div>
       </div>
 
-      {/* Standard Flow CTA + Footer */}
       <div className="relative z-[70] w-full bg-[#162D24]">
         <SectionCTA preloaderDone={isReady} />
         <footer className="w-full bg-[#162D24]">

@@ -2,6 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 const WP_BASE_URL =
   process.env.NEXT_PUBLIC_WP_URL || "https://grandpools.live.tactik.com.au";
@@ -127,7 +133,7 @@ export default function CtaForm({
       <div
         className={
           isMobile
-            ? "flex flex-col gap-4 w-full max-w-[500px] md:max-w-[100%] mt-4 mx-auto pb-6"
+            ? "flex flex-col gap-4 w-full max-w-[500px] md:max-w-[100%] mt-4 md:!mt-34 mx-auto pb-6"
             : "flex flex-col gap-4 max-w-[560px] w-full"
         }
       >
@@ -203,13 +209,7 @@ export default function CtaForm({
           style={{ marginTop: isMobile ? 24 : 18 }}
           className={isMobile ? "self-center md:!self-start" : undefined}
         >
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-underline cursor-pointer font-body !pb-2 text-[16px]"
-          >
-            {loading ? "Submitting..." : "Submit Now"}
-          </button>
+          <SubmitButton loading={loading} />
         </div>
 
         {globalError && (
@@ -223,6 +223,7 @@ export default function CtaForm({
               border: "1px solid #feb2b2",
               color: "#feb2b2",
               fontSize: 14,
+              fontFamily: "inherit",
               lineHeight: "1.4",
             }}
           >
@@ -231,6 +232,18 @@ export default function CtaForm({
         )}
       </div>
     </form>
+  );
+}
+
+function SubmitButton({ loading }: { loading: boolean }) {
+  return (
+    <button
+      type="submit"
+      disabled={loading}
+      className="btn-underline cursor-pointer font-body !pb-2 text-[16px]"
+    >
+      {loading ? "Submitting..." : "Submit Now"}
+    </button>
   );
 }
 
@@ -254,6 +267,22 @@ function CtaInput({
 
   return (
     <div className="w-full flex flex-col">
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        .cta-input-field::placeholder {
+          color: rgba(244, 238, 223, 0.4);
+          opacity: 1;
+          font-size: 16px;
+        }
+        .cta-input-field-mobile::placeholder {
+          color: #F4EEDF !important;
+          opacity: 1;
+          font-size: 16px;
+        }
+      `,
+        }}
+      />
       <input
         type={type}
         name={name}
@@ -274,10 +303,12 @@ function CtaInput({
           transition: "border-color 0.25s",
         }}
         onFocus={(e) => {
-          e.target.style.borderColor = error ? "#feb2b2" : "rgba(244,238,223,0.75)";
+          (e.target as HTMLInputElement).style.borderColor = error
+            ? "#feb2b2"
+            : "rgba(244,238,223,0.75)";
         }}
         onBlur={(e) => {
-          e.target.style.borderColor = error
+          (e.target as HTMLInputElement).style.borderColor = error
             ? "#feb2b2"
             : `rgba(244, 238, 223, ${borderOpacity})`;
         }}
@@ -289,6 +320,7 @@ function CtaInput({
             fontSize: "12px",
             marginTop: "6px",
             lineHeight: "1.2",
+            fontFamily: "inherit",
           }}
         >
           {error}
@@ -313,6 +345,7 @@ function CtaSelect({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState("");
+  const [openUpward, setOpenUpward] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -328,8 +361,36 @@ function CtaSelect({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleToggle = (e: React.SyntheticEvent) => {
+    e.preventDefault();
+
+    if (!isOpen && dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const dropdownMaxHeight = 180;
+      const spaceBelow = viewportHeight - rect.bottom;
+
+      if (spaceBelow < dropdownMaxHeight && rect.top > dropdownMaxHeight) {
+        setOpenUpward(true);
+      } else {
+        setOpenUpward(false);
+      }
+    }
+
+    setIsOpen((prev) => !prev);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      handleToggle(e);
+    } else if (e.key === "Escape") {
+      setIsOpen(false);
+    }
+  };
+
   const borderOpacity = isMobile ? "1" : "0.35";
   const placeholderColor = isMobile ? "#F4EEDF" : "rgba(244, 238, 223, 0.4)";
+  const arrowOpacity = isMobile ? 0.9 : isOpen ? 0.9 : 0.5;
 
   const defaultBorder = error
     ? "1px solid #feb2b2"
@@ -340,7 +401,8 @@ function CtaSelect({
   return (
     <div
       ref={dropdownRef}
-      className="flex flex-col relative w-full z-20"
+      className="flex flex-col"
+      style={{ position: "relative", width: "100%", zIndex: isOpen ? 9999 : 1 }}
     >
       <input type="hidden" name={name} value={selectedValue} />
 
@@ -350,17 +412,15 @@ function CtaSelect({
         aria-haspopup="listbox"
         aria-invalid={!!error}
         tabIndex={0}
-        onClick={() => setIsOpen((prev) => !prev)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") setIsOpen((prev) => !prev);
-          if (e.key === "Escape") setIsOpen(false);
-        }}
+        onClick={handleToggle}
+        onKeyDown={handleKeyDown}
         style={{
           background: "transparent",
           borderBottom: defaultBorder,
           fontSize: 16,
           padding: "10px 10px 10px 0",
           width: "100%",
+          fontFamily: "inherit",
           cursor: "pointer",
           color: selectedValue ? "#F4EEDF" : placeholderColor,
           display: "flex",
@@ -368,14 +428,17 @@ function CtaSelect({
           alignItems: "center",
           userSelect: "none",
           outline: "none",
+          transition: "border-color 0.25s",
         }}
       >
-        <span>{selectedValue || placeholder}</span>
+        <span style={{ flexGrow: 1 }}>{selectedValue || placeholder}</span>
 
         <svg
           style={{
             transform: `rotate(${isOpen ? "180deg" : "0deg"})`,
-            transition: "transform 0.25s ease",
+            opacity: arrowOpacity,
+            transition:
+              "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s",
           }}
           width="11"
           height="7"
@@ -395,22 +458,53 @@ function CtaSelect({
       {isOpen && (
         <div
           role="listbox"
-          className="absolute top-full left-0 right-0 mt-1 bg-[#162D24] border border-[rgba(244,238,223,0.2)] shadow-2xl z-50 max-h-[180px] overflow-y-auto"
+          style={{
+            position: "absolute",
+            top: openUpward ? "auto" : "100%",
+            bottom: openUpward ? "100%" : "auto",
+            left: 0,
+            right: 0,
+            marginTop: openUpward ? "0px" : "6px",
+            marginBottom: openUpward ? "6px" : "0px",
+            background: "linear-gradient(135deg, #162D24 0%, #094146 100%)",
+            boxShadow: "0 12px 40px rgba(0,0,0,0.8)",
+            zIndex: 9999,
+            maxHeight: "180px",
+            overflowY: "auto",
+            WebkitOverflowScrolling: "touch",
+            overscrollBehavior: "contain",
+          }}
         >
           {options.map((option) => (
             <div
               key={option}
               role="option"
               aria-selected={selectedValue === option}
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
                 setSelectedValue(option);
                 setIsOpen(false);
               }}
-              className={`p-3 text-[16px] cursor-pointer transition-colors ${
-                selectedValue === option
-                  ? "bg-[#F4EEDF] text-[#162D24]"
-                  : "text-[#F4EEDF] hover:bg-[rgba(244,238,223,0.1)]"
-              }`}
+              style={{
+                padding: "12px 16px",
+                color: selectedValue === option ? "#162D24" : "#F4EEDF",
+                background:
+                  selectedValue === option ? "#F4EEDF" : "transparent",
+                fontSize: 16,
+                cursor: "pointer",
+                transition: "background 0.15s ease, color 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                if (selectedValue !== option) {
+                  e.currentTarget.style.background =
+                    "rgba(244, 238, 223, 0.08)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (selectedValue !== option) {
+                  e.currentTarget.style.background = "transparent";
+                }
+              }}
             >
               {option}
             </div>
@@ -419,7 +513,15 @@ function CtaSelect({
       )}
 
       {error && (
-        <span style={{ color: "#feb2b2", fontSize: "12px", marginTop: "6px" }}>
+        <span
+          style={{
+            color: "#feb2b2",
+            fontSize: "12px",
+            marginTop: "6px",
+            lineHeight: "1.2",
+            fontFamily: "inherit",
+          }}
+        >
           {error}
         </span>
       )}
