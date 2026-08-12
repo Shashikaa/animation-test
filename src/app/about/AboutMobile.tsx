@@ -33,6 +33,28 @@ export default function AboutMobile() {
   const { smootherRef } = useSite();
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
 
+  // ── 0. LOCK NATIVE TOUCH SCROLLING TO KEEP ADDRESS BAR STABLE ──
+  useEffect(() => {
+    // Lock document touch bounce without using GSAP
+    const preventAddressBarCollapse = (e: TouchEvent) => {
+      // Allow scrolling inside input fields or select dropdowns
+      const target = e.target as HTMLElement | null;
+      if (
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.closest("[role='listbox']") !== null
+      ) {
+        return;
+      }
+    };
+
+    document.addEventListener("touchmove", preventAddressBarCollapse, { passive: true });
+
+    return () => {
+      document.removeEventListener("touchmove", preventAddressBarCollapse);
+    };
+  }, []);
+
   // ── 1. HARD KEYBOARD DISMISSAL RE-ALIGNMENT & SCROLL UNLOCK ──
   useEffect(() => {
     const isInteractiveElement = (target: HTMLElement | null) => {
@@ -58,7 +80,6 @@ export default function AboutMobile() {
     };
 
     const handleFocusOut = () => {
-      // Triggered when keyboard collapses
       setTimeout(() => {
         const active = document.activeElement as HTMLElement;
         if (!isInteractiveElement(active)) {
@@ -66,7 +87,6 @@ export default function AboutMobile() {
 
           const lenis = smootherRef?.current;
 
-          // Force page to re-calculate clean bounding box
           if (trackRef.current) {
             const vh = vhRef.current || window.innerHeight;
             const trackRect = trackRef.current.getBoundingClientRect();
@@ -76,13 +96,11 @@ export default function AboutMobile() {
               const currentScroll = Math.max(0, -trackRect.top);
               const exactProgress = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
 
-              // Force hard sync to prevent position drift and lock
               targetProgress.current = exactProgress;
               currentProgress.current = exactProgress;
             }
           }
 
-          // Restart smooth scroll engine if it stalled during input focus
           if (lenis) {
             if (typeof lenis.resize === "function") lenis.resize();
             if (typeof lenis.start === "function") lenis.start();
@@ -100,7 +118,7 @@ export default function AboutMobile() {
     };
   }, [smootherRef]);
 
-  // ── 2. VIEWPORT HEIGHT LOCK (Restored original code) ──
+  // ── 2. VIEWPORT HEIGHT LOCK ──
   useEffect(() => {
     const updateVh = () => {
       const currentWidth = window.innerWidth;
@@ -175,7 +193,6 @@ export default function AboutMobile() {
         return;
       }
 
-      // Smooth progress physics lerp
       const lerpFactor = 0.15;
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
@@ -187,7 +204,6 @@ export default function AboutMobile() {
       const totalSteps = 7.0 + ctaStepLength;
       const requiredTrackHeight = (totalSteps + 1) * vh;
 
-      // Adjust height when input is idle
       if (trackRef.current && !isInputFocusedRef.current) {
         if (Math.abs(trackRef.current.offsetHeight - requiredTrackHeight) > 2) {
           trackRef.current.style.height = `${requiredTrackHeight}px`;
@@ -196,7 +212,6 @@ export default function AboutMobile() {
 
       const stepProgress = currentProgress.current * totalSteps;
 
-      // Card Stacking Progress (Sections 1-5)
       const s1Progress = easeOutQuad(Math.min(Math.max(stepProgress - 0, 0), 1));
       const s2Progress = easeOutQuad(Math.min(Math.max(stepProgress - 1, 0), 1));
       const s3Progress = easeOutQuad(Math.min(Math.max(stepProgress - 2, 0), 1));
@@ -227,7 +242,6 @@ export default function AboutMobile() {
         }
       }
 
-      // Translate CTA + Footer combined layer precisely
       const rawCtaProgress = Math.min(Math.max((stepProgress - 7.0) / ctaStepLength, 0), 1);
       const ctaY = (1 - rawCtaProgress) * vh - rawCtaProgress * extraScroll;
 
@@ -239,7 +253,6 @@ export default function AboutMobile() {
     };
 
     const handleScroll = () => {
-      // Sync track positions continuously when keyboard is closed
       if (isInputFocusedRef.current) return;
       if (!trackRef.current || !fixedFrameRef.current) return;
 
@@ -294,7 +307,6 @@ export default function AboutMobile() {
 
   return (
     <div ref={scopeRef}>
-      {/* ANIMATED CARDS TRACK CONTAINER */}
       <div
         ref={trackRef}
         className="about-track-container relative w-full min-h-[800vh]"
