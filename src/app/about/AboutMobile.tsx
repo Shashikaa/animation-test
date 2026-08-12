@@ -113,13 +113,8 @@ export default function AboutMobile() {
       );
 
       /*
-       * IMPORTANT:
-       *
-       * Footer is NOT 100dvh.
-       *
-       * It keeps its natural/content height and starts below
-       * the viewport. GSAP slides it upward until its bottom
-       * meets the viewport bottom.
+       * Footer keeps its natural/content height and starts below
+       * the viewport.
        */
       gsap.set(".about-footer-wrap", {
         yPercent: 100,
@@ -141,20 +136,18 @@ export default function AboutMobile() {
   useEffect(() => {
     if (!introDone) return;
 
+    // Prevent mobile address bar dynamic height adjustments from messing with GSAP triggers
+    ScrollTrigger.config({
+      ignoreMobileResize: true,
+    });
+
+    // Normalize touch scroll behavior to stabilize the address bar
+    ScrollTrigger.normalizeScroll(true);
+
     const ctx = gsap.context(() => {
-      ScrollTrigger.config({
-        ignoreMobileResize: true,
-      });
-
-      /*
-       * Lenis remains responsible for smooth scrolling.
-       */
       const ACTION = 1.4;
-
       const DEAD_SCROLL = 0.08;
-
       const SEC5_CARDS_HOLD = 1.0;
-
       const UNIFIED_EASE = "none";
 
       const MAIN_PANELS_COUNT = 7;
@@ -204,17 +197,11 @@ export default function AboutMobile() {
 
         scrollTrigger: {
           trigger: ".about-pin",
-
           start: "top top",
-
           end: `+=${DYNAMIC_SCROLL_TRACK}`,
-
           pin: true,
-
           anticipatePin: 1,
-
           scrub: true,
-
           invalidateOnRefresh: true,
 
           onRefresh: () => {
@@ -223,7 +210,6 @@ export default function AboutMobile() {
 
           onUpdate: () => {
             const sec5Time = tl.labels["sec5FullyRevealed"];
-
             const ctaTime = tl.labels["ctaStart"];
 
             if (
@@ -234,10 +220,6 @@ export default function AboutMobile() {
             }
 
             const currentTime = tl.time();
-
-            /*
-             * Section Five card progress.
-             */
 
             if (
               currentTime >= sec5Time &&
@@ -254,26 +236,14 @@ export default function AboutMobile() {
               } else {
                 triggerSec5Hook(2);
               }
-            }
-
-            /*
-             * Reverse back above Section Five.
-             */
-
-            else if (currentTime < sec5Time) {
+            } else if (currentTime < sec5Time) {
               triggerSec5Hook(0);
             }
           },
         },
       });
 
-      /*
-       * ========================================================
-       * TRANSITION 1
-       * HERO → SECTION ONE
-       * ========================================================
-       */
-
+      /* TRANSITION 1: HERO → SECTION ONE */
       tl.to(".about-section-one", {
         yPercent: 0,
         duration: ACTION,
@@ -287,20 +257,9 @@ export default function AboutMobile() {
         "<"
       );
 
-      tl.to(
-        {},
-        {
-          duration: DEAD_SCROLL,
-        }
-      );
+      tl.to({}, { duration: DEAD_SCROLL });
 
-      /*
-       * ========================================================
-       * TRANSITION 2
-       * SECTION ONE → SECTION TWO
-       * ========================================================
-       */
-
+      /* TRANSITION 2: SECTION ONE → SECTION TWO */
       tl.to(".about-section-two", {
         yPercent: 0,
         duration: ACTION,
@@ -313,20 +272,9 @@ export default function AboutMobile() {
         "<"
       );
 
-      tl.to(
-        {},
-        {
-          duration: DEAD_SCROLL,
-        }
-      );
+      tl.to({}, { duration: DEAD_SCROLL });
 
-      /*
-       * ========================================================
-       * TRANSITION 3
-       * SECTION TWO → SECTION THREE
-       * ========================================================
-       */
-
+      /* TRANSITION 3: SECTION TWO → SECTION THREE */
       tl.to(".about-section-three", {
         yPercent: 0,
         duration: ACTION,
@@ -339,20 +287,9 @@ export default function AboutMobile() {
         "<"
       );
 
-      tl.to(
-        {},
-        {
-          duration: DEAD_SCROLL,
-        }
-      );
+      tl.to({}, { duration: DEAD_SCROLL });
 
-      /*
-       * ========================================================
-       * TRANSITION 4
-       * SECTION THREE → SECTION FOUR
-       * ========================================================
-       */
-
+      /* TRANSITION 4: SECTION THREE → SECTION FOUR */
       tl.to(".about-section-four", {
         yPercent: 0,
         duration: ACTION,
@@ -365,20 +302,9 @@ export default function AboutMobile() {
         "<"
       );
 
-      tl.to(
-        {},
-        {
-          duration: DEAD_SCROLL,
-        }
-      );
+      tl.to({}, { duration: DEAD_SCROLL });
 
-      /*
-       * ========================================================
-       * TRANSITION 5
-       * SECTION FOUR → SECTION FIVE
-       * ========================================================
-       */
-
+      /* TRANSITION 5: SECTION FOUR → SECTION FIVE */
       tl.addLabel("sec5Start");
 
       tl.to(
@@ -408,33 +334,14 @@ export default function AboutMobile() {
         "sec5Start"
       );
 
-      /*
-       * Section Five fully visible.
-       */
-
       tl.addLabel(
         "sec5FullyRevealed",
         `sec5Start+=${ACTION}`
       );
 
-      /*
-       * Small hold.
-       */
+      tl.to({}, { duration: SEC5_CARDS_HOLD });
 
-      tl.to(
-        {},
-        {
-          duration: SEC5_CARDS_HOLD,
-        }
-      );
-
-      /*
-       * ========================================================
-       * TRANSITION 6
-       * SECTION FIVE → CTA
-       * ========================================================
-       */
-
+      /* TRANSITION 6: SECTION FIVE → CTA */
       tl.addLabel("ctaStart", ">");
 
       tl.set(
@@ -468,10 +375,6 @@ export default function AboutMobile() {
         "ctaStart"
       );
 
-      /*
-       * Section Five background movement.
-       */
-
       tl.fromTo(
         ".about-section-five .s5-bg",
         {
@@ -487,38 +390,9 @@ export default function AboutMobile() {
         "sec5Start"
       );
 
-      tl.to(
-        {},
-        {
-          duration: DEAD_SCROLL,
-        }
-      );
+      tl.to({}, { duration: DEAD_SCROLL });
 
-      /*
-       * ========================================================
-       * TRANSITION 7
-       * CTA → FOOTER
-       * ========================================================
-       *
-       * IMPORTANT:
-       *
-       * Footer does NOT become 100dvh.
-       *
-       * The wrapper stays:
-       *
-       *   position: absolute
-       *   left: 0
-       *   bottom: 0
-       *
-       * and keeps its natural height.
-       *
-       * yPercent: 100 means the entire footer starts below
-       * its own height.
-       *
-       * yPercent: 0 means the footer bottom meets the viewport
-       * bottom exactly.
-       */
-
+      /* TRANSITION 7: CTA → FOOTER */
       tl.addLabel("footerStart", ">");
 
       tl.set(
@@ -542,20 +416,7 @@ export default function AboutMobile() {
         "footerStart"
       );
 
-      /*
-       * Small final hold.
-       */
-
-      tl.to(
-        {},
-        {
-          duration: DEAD_SCROLL,
-        }
-      );
-
-      /*
-       * Initial refresh.
-       */
+      tl.to({}, { duration: DEAD_SCROLL });
 
       requestAnimationFrame(() => {
         ScrollTrigger.refresh();
@@ -563,28 +424,20 @@ export default function AboutMobile() {
     }, scopeRef);
 
     return () => {
+      ScrollTrigger.normalizeScroll(false);
       ctx.revert();
     };
   }, [introDone]);
 
-  /*
-   * ============================================================
-   * RENDER
-   * ============================================================
-   */
-
   return (
     <div ref={scopeRef}>
       <div
-        className="about-pin pin-all relative w-full overflow-hidden h-[100dvh]"
+        className="about-pin pin-all relative w-full overflow-hidden h-[100svh]"
         style={{
           visibility: "visible",
         }}
       >
-        {/* =====================================================
-            HERO
-        ===================================================== */}
-
+        {/* HERO */}
         <div
           className="about-hero-panel-left absolute inset-0 w-full h-full"
           style={{
@@ -596,10 +449,7 @@ export default function AboutMobile() {
           <Hero isMobile={true} />
         </div>
 
-        {/* =====================================================
-            SECTION ONE
-        ===================================================== */}
-
+        {/* SECTION ONE */}
         <div
           className="about-section-one absolute inset-0 w-full h-full"
           style={{
@@ -611,10 +461,7 @@ export default function AboutMobile() {
           <SectionOne />
         </div>
 
-        {/* =====================================================
-            SECTION TWO
-        ===================================================== */}
-
+        {/* SECTION TWO */}
         <div
           className="about-section-two absolute inset-0 w-full h-full"
           style={{
@@ -626,10 +473,7 @@ export default function AboutMobile() {
           <SectionTwo />
         </div>
 
-        {/* =====================================================
-            SECTION THREE
-        ===================================================== */}
-
+        {/* SECTION THREE */}
         <div
           className="about-section-three absolute inset-0 w-full h-full"
           style={{
@@ -641,10 +485,7 @@ export default function AboutMobile() {
           <SectionThree />
         </div>
 
-        {/* =====================================================
-            SECTION FOUR
-        ===================================================== */}
-
+        {/* SECTION FOUR */}
         <div
           className="about-section-four absolute inset-0 w-full h-full"
           style={{
@@ -656,10 +497,7 @@ export default function AboutMobile() {
           <SectionFour />
         </div>
 
-        {/* =====================================================
-            SECTION FIVE
-        ===================================================== */}
-
+        {/* SECTION FIVE */}
         <div
           className="about-section-five absolute inset-0 w-full h-full"
           style={{
@@ -668,18 +506,12 @@ export default function AboutMobile() {
             backfaceVisibility: "hidden",
           }}
         >
-          <SectionFive
-            isActive={isSectionFiveActive}
-          />
+          <SectionFive isActive={isSectionFiveActive} />
         </div>
 
-        {/* =====================================================
-            CTA
-            FULL VIEWPORT HEIGHT — UNCHANGED
-        ===================================================== */}
-
+        {/* CTA */}
         <div
-          className="about-section-cta absolute inset-x-0 bottom-0 w-full min-h-[100dvh] z-[150]"
+          className="about-section-cta absolute inset-x-0 bottom-0 w-full h-[100svh] z-[150]"
           style={{
             pointerEvents: "auto",
             visibility: "hidden",
@@ -690,17 +522,7 @@ export default function AboutMobile() {
           <SectionCTA />
         </div>
 
-        {/* =====================================================
-            FOOTER
-            IMPORTANT:
-            NO h-screen
-            NO min-h-screen
-            NO h-[100dvh]
-            
-            Natural footer height only.
-            Bottom remains locked to viewport bottom.
-        ===================================================== */}
-
+        {/* FOOTER */}
         <div
           className="about-footer-wrap absolute left-0 bottom-0 w-full z-[160]"
           style={{
