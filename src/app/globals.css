@@ -191,7 +191,6 @@ body.preloading header {
   transform: translate3d(0, 0, 0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  will-change: transform;
 }
 
 .section-six-wrapper,

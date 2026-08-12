@@ -101,55 +101,59 @@ export default function AboutMobile() {
     if (!panels || panels.length === 0) return;
 
     const updatePhysics = () => {
-      const lerpFactor = 0.18; // Snappier touch response for Android Chrome
+      const lerpFactor = 0.18;
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
-      // Hard snap when close to boundary to prevent infinite lerp dragging
       if (Math.abs(targetProgress.current - currentProgress.current) < 0.0005) {
         currentProgress.current = targetProgress.current;
       }
 
-      // Apply frame offset on GPU without style layout reflows
+      const isPastTrack = targetProgress.current >= 1.0;
+
       if (fixedFrameRef.current) {
         fixedFrameRef.current.style.transform = `translate3d(0, ${trackBottomOffset.current}px, 0)`;
+        fixedFrameRef.current.style.willChange = isPastTrack ? "auto" : "transform";
       }
 
-      const totalSteps = 7.0;
-      const stepProgress = currentProgress.current * totalSteps;
+      // Execute stack transform only while inside track boundaries
+      if (!isPastTrack) {
+        const totalSteps = 7.0;
+        const stepProgress = Math.min(currentProgress.current, 1.0) * totalSteps;
 
-      const s1Progress = easeOutQuad(Math.min(Math.max(stepProgress - 0, 0), 1));
-      const s2Progress = easeOutQuad(Math.min(Math.max(stepProgress - 1, 0), 1));
-      const s3Progress = easeOutQuad(Math.min(Math.max(stepProgress - 2, 0), 1));
-      const s4Progress = easeOutQuad(Math.min(Math.max(stepProgress - 3, 0), 1));
-      const s5Progress = easeOutQuad(Math.min(Math.max(stepProgress - 4, 0), 1));
+        const s1Progress = easeOutQuad(Math.min(Math.max(stepProgress - 0, 0), 1));
+        const s2Progress = easeOutQuad(Math.min(Math.max(stepProgress - 1, 0), 1));
+        const s3Progress = easeOutQuad(Math.min(Math.max(stepProgress - 2, 0), 1));
+        const s4Progress = easeOutQuad(Math.min(Math.max(stepProgress - 3, 0), 1));
+        const s5Progress = easeOutQuad(Math.min(Math.max(stepProgress - 4, 0), 1));
 
-      if (panels[1]) panels[1].style.transform = `translate3d(0, ${(1 - s1Progress) * 100}%, 0)`;
-      if (panels[2]) panels[2].style.transform = `translate3d(0, ${(1 - s2Progress) * 100}%, 0)`;
-      if (panels[3]) panels[3].style.transform = `translate3d(0, ${(1 - s3Progress) * 100}%, 0)`;
-      if (panels[4]) panels[4].style.transform = `translate3d(0, ${(1 - s4Progress) * 100}%, 0)`;
-      if (panels[5]) panels[5].style.transform = `translate3d(0, ${(1 - s5Progress) * 100}%, 0)`;
+        if (panels[1]) panels[1].style.transform = `translate3d(0, ${(1 - s1Progress) * 100}%, 0)`;
+        if (panels[2]) panels[2].style.transform = `translate3d(0, ${(1 - s2Progress) * 100}%, 0)`;
+        if (panels[3]) panels[3].style.transform = `translate3d(0, ${(1 - s3Progress) * 100}%, 0)`;
+        if (panels[4]) panels[4].style.transform = `translate3d(0, ${(1 - s4Progress) * 100}%, 0)`;
+        if (panels[5]) panels[5].style.transform = `translate3d(0, ${(1 - s5Progress) * 100}%, 0)`;
 
-      const s5Bg = scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
-      if (s5Bg) {
-        const parallaxProg = Math.min(Math.max((stepProgress - 4.0) / 3.0, 0), 1);
-        s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
-      }
-
-      if (stepProgress >= 4.5 && stepProgress < 7.0) {
-        setIsSectionFiveActive(true);
-        const sec5SubProgress = (stepProgress - 4.5) / 2.5;
-
-        if (sec5SubProgress < 0.33) {
-          triggerSec5Hook(0);
-        } else if (sec5SubProgress < 0.66) {
-          triggerSec5Hook(1);
-        } else {
-          triggerSec5Hook(2);
+        const s5Bg = scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
+        if (s5Bg) {
+          const parallaxProg = Math.min(Math.max((stepProgress - 4.0) / 3.0, 0), 1);
+          s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
         }
-      } else {
-        if (stepProgress < 4.5) {
-          setIsSectionFiveActive(false);
-          triggerSec5Hook(0);
+
+        if (stepProgress >= 4.5 && stepProgress < 7.0) {
+          setIsSectionFiveActive(true);
+          const sec5SubProgress = (stepProgress - 4.5) / 2.5;
+
+          if (sec5SubProgress < 0.33) {
+            triggerSec5Hook(0);
+          } else if (sec5SubProgress < 0.66) {
+            triggerSec5Hook(1);
+          } else {
+            triggerSec5Hook(2);
+          }
+        } else {
+          if (stepProgress < 4.5) {
+            setIsSectionFiveActive(false);
+            triggerSec5Hook(0);
+          }
         }
       }
 
@@ -165,7 +169,6 @@ export default function AboutMobile() {
 
       if (totalScrollable <= 0) return;
 
-      // Handle track top/bottom boundaries purely in scroll pass
       if (trackRect.bottom < vh) {
         trackBottomOffset.current = trackRect.bottom - vh;
       } else if (trackRect.top > 0) {
@@ -175,7 +178,7 @@ export default function AboutMobile() {
       }
 
       const currentScroll = Math.max(0, -trackRect.top);
-      targetProgress.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
+      targetProgress.current = currentScroll / totalScrollable;
     };
 
     rafId.current = requestAnimationFrame(updatePhysics);
@@ -216,8 +219,7 @@ export default function AboutMobile() {
           ref={fixedFrameRef}
           className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 gpu-accelerated"
           style={{ 
-            height: vhRef.current ? `${vhRef.current}px` : "100vh",
-            willChange: "transform"
+            height: vhRef.current ? `${vhRef.current}px` : "100vh"
           }}
         >
           <div className="about-stack-layer absolute inset-0 w-full h-full z-10 gpu-accelerated">
@@ -261,7 +263,10 @@ export default function AboutMobile() {
         </div>
       </div>
 
-      <div className="relative z-[70] w-full bg-[#162D24] touch-auto">
+      <div 
+        className="relative z-[70] w-full bg-[#162D24] touch-auto"
+        style={{ contain: "paint" }}
+      >
         <SectionCTA preloaderDone={isReady} />
         <footer className="w-full bg-[#162D24]">
           <Footer />
