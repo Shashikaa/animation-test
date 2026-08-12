@@ -33,7 +33,7 @@ export default function AboutMobile() {
   const { smootherRef } = useSite();
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // ── 1. FORM FOCUS & KEYBOARD DISMISSAL RE-SYNC ──
+  // ── 1. HARD KEYBOARD DISMISSAL RE-ALIGNMENT & SCROLL UNLOCK ──
   useEffect(() => {
     const isInteractiveElement = (target: HTMLElement | null) => {
       if (!target) return false;
@@ -58,27 +58,37 @@ export default function AboutMobile() {
     };
 
     const handleFocusOut = () => {
-      // Wait for soft keyboard slide-down animation on iOS/Android
+      // Triggered when keyboard collapses
       setTimeout(() => {
         const active = document.activeElement as HTMLElement;
         if (!isInteractiveElement(active)) {
           isInputFocusedRef.current = false;
 
-          // Re-sync scroll position and purge native keyboard offsets
+          const lenis = smootherRef?.current;
+
+          // Force page to re-calculate clean bounding box
           if (trackRef.current) {
             const vh = vhRef.current || window.innerHeight;
             const trackRect = trackRef.current.getBoundingClientRect();
-            const currentScroll = Math.max(0, -trackRect.top);
             const totalScrollable = trackRect.height - vh;
 
             if (totalScrollable > 0) {
+              const currentScroll = Math.max(0, -trackRect.top);
               const exactProgress = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
+              
+              // Force hard sync to prevent position drift and lock
               targetProgress.current = exactProgress;
-              currentProgress.current = exactProgress; // Prevents scroll lock by instant sync
+              currentProgress.current = exactProgress;
             }
           }
+
+          // Restart smooth scroll engine if it stalled during input focus
+          if (lenis) {
+            if (typeof lenis.resize === "function") lenis.resize();
+            if (typeof lenis.start === "function") lenis.start();
+          }
         }
-      }, 150);
+      }, 200);
     };
 
     window.addEventListener("focusin", handleFocusIn);
@@ -88,9 +98,9 @@ export default function AboutMobile() {
       window.removeEventListener("focusin", handleFocusIn);
       window.removeEventListener("focusout", handleFocusOut);
     };
-  }, []);
+  }, [smootherRef]);
 
-  // ── 2. STABLE VIEWPORT HEIGHT ──
+  // ── 2. VIEWPORT HEIGHT LOCK ──
   useEffect(() => {
     const updateVh = () => {
       const currentWidth = window.innerWidth;
@@ -122,7 +132,7 @@ export default function AboutMobile() {
     };
   }, []);
 
-  // ── 3. LOCK SCROLL UNTIL INTRO COMPLETES ──
+  // ── 3. INTRO LOCK ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -142,7 +152,7 @@ export default function AboutMobile() {
     }
   }, [preloaderDone, introDone, smootherRef]);
 
-  // ── 4. SCROLL & ANIMATION ENGINE ──
+  // ── 4. MAIN ANIMATION & LAYOUT LOOP ──
   useEffect(() => {
     if (!preloaderDone || !introDone) return;
 
@@ -166,7 +176,7 @@ export default function AboutMobile() {
       }
 
       // Smooth progress physics lerp
-      const lerpFactor = 0.12;
+      const lerpFactor = 0.15;
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
       const ctaWrapEl = ctaWrapRef.current;
@@ -177,7 +187,7 @@ export default function AboutMobile() {
       const totalSteps = 7.0 + ctaStepLength;
       const requiredTrackHeight = (totalSteps + 1) * vh;
 
-      // Update track height dynamically when form is idle
+      // Adjust height when input is idle
       if (trackRef.current && !isInputFocusedRef.current) {
         if (Math.abs(trackRef.current.offsetHeight - requiredTrackHeight) > 2) {
           trackRef.current.style.height = `${requiredTrackHeight}px`;
@@ -229,6 +239,7 @@ export default function AboutMobile() {
     };
 
     const handleScroll = () => {
+      // Sync track positions continuously when keyboard is closed
       if (isInputFocusedRef.current) return;
       if (!trackRef.current || !fixedFrameRef.current) return;
 
@@ -352,7 +363,7 @@ export default function AboutMobile() {
             <div className="relative z-20 w-full">
               <SectionCTA />
             </div>
-            
+
             <footer className="relative z-10 w-full bg-[#162D24]">
               <Footer />
             </footer>
