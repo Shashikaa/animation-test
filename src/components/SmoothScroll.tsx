@@ -68,7 +68,8 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
           smoothWheel: true,
           wheelMultiplier: 1.1,
           touchMultiplier: 1.5,
-          syncTouch: false, // Disabled to prevent mobile keyboard input scroll locks
+          syncTouch: true,
+          syncTouchLerp: 0.1,
         },
       });
 
