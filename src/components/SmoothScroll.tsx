@@ -14,7 +14,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   const { preloaderDone, smootherRef } = useSite();
   const pathname = usePathname();
   const locomotiveRef = useRef<any>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -28,18 +27,16 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     const initLocomotive = async () => {
       const LocomotiveScroll = (await import("locomotive-scroll")).default;
 
-      const isMobile = window.innerWidth <= 1024;
-
       instance = new LocomotiveScroll({
         lenisOptions: {
-          wrapper: isMobile && containerRef.current ? containerRef.current : window,
-          content: isMobile && containerRef.current ? (containerRef.current.firstElementChild as HTMLElement) : document.documentElement,
+          wrapper: window,
+          content: document.documentElement,
           lerp: 0.1,
           duration: 1.2,
           smoothWheel: true,
           wheelMultiplier: 1.1,
           touchMultiplier: 1.5,
-          syncTouch: false,
+          syncTouch: true, // Required for Android Chrome touch response
           autoResize: true,
         },
       });
@@ -75,11 +72,9 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   }, [pathname, preloaderDone]);
 
   return (
-    <div ref={containerRef} className="scroll-viewport flex flex-col w-full relative">
+    <div className="flex flex-col min-h-[100dvh] w-full relative">
       <CustomScrollBar />
-      <div className="w-full">
-        {children}
-      </div>
+      {children}
     </div>
   );
 }

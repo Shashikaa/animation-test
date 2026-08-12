@@ -62,7 +62,7 @@ export default function AboutMobile() {
     if (!panels || panels.length === 0) return;
 
     const updatePhysics = () => {
-      const lerpFactor = 0.12;
+      const lerpFactor = 0.15;
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
       if (Math.abs(targetProgress.current - currentProgress.current) < 0.0001) {
@@ -111,30 +111,44 @@ export default function AboutMobile() {
       rafId.current = requestAnimationFrame(updatePhysics);
     };
 
-    const handleScroll = (e?: any) => {
+    const handleScroll = () => {
       if (!trackRef.current || !fixedFrameRef.current) return;
 
-      const trackTop = trackRef.current.offsetTop;
-      const trackHeight = trackRef.current.offsetHeight;
+      const trackRect = trackRef.current.getBoundingClientRect();
       const vh = window.innerHeight;
-      const totalScrollable = trackHeight - vh;
+      const totalScrollable = trackRect.height - vh;
 
-      // Extract scroll position from Lenis or DOM event
-      const scrollY = e?.scroll !== undefined ? e.scroll : (e?.target?.scrollTop || window.scrollY);
+      if (totalScrollable <= 0) return;
 
-      // Lock fixed position from the very start (scrollY = 0) until track completion
-      if (scrollY < trackTop + totalScrollable) {
-        fixedFrameRef.current.style.position = "fixed";
-        fixedFrameRef.current.style.top = "0px";
-        fixedFrameRef.current.style.bottom = "auto";
+      const buffer = 8;
+
+      if (trackRect.top <= 0 && trackRect.bottom >= vh - buffer) {
+        if (fixedFrameRef.current.style.position !== "fixed") {
+          fixedFrameRef.current.style.position = "fixed";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        }
+      } else if (trackRect.bottom < vh - buffer) {
+        if (
+          fixedFrameRef.current.style.position !== "absolute" ||
+          fixedFrameRef.current.style.bottom !== "0px"
+        ) {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "auto";
+          fixedFrameRef.current.style.bottom = "0px";
+        }
       } else {
-        // Switch to absolute at bottom of track to allow smooth transition into CTA and Footer
-        fixedFrameRef.current.style.position = "absolute";
-        fixedFrameRef.current.style.top = "auto";
-        fixedFrameRef.current.style.bottom = "0px";
+        if (
+          fixedFrameRef.current.style.position !== "absolute" ||
+          fixedFrameRef.current.style.top !== "0px"
+        ) {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        }
       }
 
-      const currentScroll = Math.max(0, scrollY - trackTop);
+      const currentScroll = Math.max(0, -trackRect.top);
       targetProgress.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
     };
 
@@ -143,15 +157,18 @@ export default function AboutMobile() {
     const lenis = smootherRef?.current;
     if (lenis && typeof lenis.on === "function") {
       lenis.on("scroll", handleScroll);
+    } else {
+      window.addEventListener("scroll", handleScroll, { passive: true });
     }
 
-    // Call handleScroll once immediately on mount to establish position 0 lock
     handleScroll();
 
     return () => {
       if (rafId.current) cancelAnimationFrame(rafId.current);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
+      } else {
+        window.removeEventListener("scroll", handleScroll);
       }
 
       if (typeof window !== "undefined") {
@@ -214,7 +231,7 @@ export default function AboutMobile() {
         </div>
       </div>
 
-      <div className="relative z-[70] w-full bg-[#162D24]">
+      <div className="relative z-[70] w-full bg-[#162D24] touch-auto">
         <SectionCTA preloaderDone={isReady} />
         <footer className="w-full bg-[#162D24]">
           <Footer />

@@ -82,6 +82,7 @@ html, body {
   width: 100%;
 
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y !important;
 }
 
 /* ─── Hide native scrollbar on all screens ─────────────────── */
@@ -414,29 +415,6 @@ button.btn-underline:hover::after,
 }
 
 .about-stack-layer {
-  height: 100svh !important;
-  max-height: 100svh !important;
-}
-
-/* Add at the very end of globals.css */
-@media (max-width: 1024px) {
-  html, body {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    overflow: hidden !important;
-  }
-
-  .scroll-viewport {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100dvh !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
+  height: 100dvh !important;
+  max-height: 100dvh !important;
 }
