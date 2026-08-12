@@ -70,9 +70,9 @@ export default function CtaForm({
     }
 
     if (!postCode) {
-      errors[getName("postCode")] = "Post Code is required.";
+      errors[getName("postCode")] = "post code is required.";
     } else if (!AU_POSTCODE_REGEX.test(postCode)) {
-      errors[getName("postCode")] = "Please enter a valid 4-digit Post Code.";
+      errors[getName("postCode")] = "Please enter a valid 4-digit post code.";
     }
 
     if (!budgetType) errors[getName("budgetType")] = "Budget type is required.";
