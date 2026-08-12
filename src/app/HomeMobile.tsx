@@ -130,27 +130,27 @@ export default function HomeMobile() {
 
     if (scopeRef.current) {
       domCache.current = {
-        heroBg: scopeRef.current.querySelector(".hero-bg"),
-        progressFill: scopeRef.current.querySelector(".hero-progress-bar-fill"),
-        heroLeftInitial: scopeRef.current.querySelector(".hero-left-initial"),
-        heroTitleInners: scopeRef.current.querySelectorAll(".hero-title .custom-line-inner"),
-        heroRightWrap: scopeRef.current.querySelector(".hero-right-text-wrap"),
-        heroRightInners: scopeRef.current.querySelectorAll(".hero-right-text .custom-line-inner"),
-        heroSecWrap: scopeRef.current.querySelector(".hero-secondary-text-wrap"),
-        heroSecInners: scopeRef.current.querySelectorAll(".hero-secondary-para .custom-line-inner"),
-        heroControls: scopeRef.current.querySelectorAll(".hero-contact-btn, .hero-scroll-indicator, .hero-progress-wrapper"),
-        s2Titles: scopeRef.current.querySelectorAll(".s2-title-main, .s2-title-sub, .s2-body"),
-        s2ScrollWrap: scopeRef.current.querySelector(".s2-mob-scroll-wrapper"),
-        s2Clip1: scopeRef.current.querySelector(".s2-mob-clip-bg-1"),
-        s2Clip2: scopeRef.current.querySelector(".s2-mob-clip-bg-2"),
-        s2Clip3: scopeRef.current.querySelector(".s2-mob-clip-bg-3"),
-        s8BgImg: scopeRef.current.querySelector(".s8-bg-img"),
-        s8MobBg: scopeRef.current.querySelector(".s8-mob-bg"),
-        s10HeaderEls: scopeRef.current.querySelectorAll(".s10-title, .s10-title-sub, .s10-para-top"),
-        s10ScrollContainer: scopeRef.current.querySelector(".s10-scrollable-container"),
-        s7BgImg: scopeRef.current.querySelector(".s7-bg-img"),
-        s7MobBg: scopeRef.current.querySelector(".s7-mob-bg"),
-        s9BgImg: scopeRef.current.querySelector(".s9-bg-img"),
+        heroBg: scopeRef.current.querySelector(".hero-bg") as HTMLElement,
+        progressFill: scopeRef.current.querySelector(".hero-progress-bar-fill") as HTMLElement,
+        heroLeftInitial: scopeRef.current.querySelector(".hero-left-initial") as HTMLElement,
+        heroTitleInners: scopeRef.current.querySelectorAll<HTMLElement>(".hero-title .custom-line-inner"),
+        heroRightWrap: scopeRef.current.querySelector(".hero-right-text-wrap") as HTMLElement,
+        heroRightInners: scopeRef.current.querySelectorAll<HTMLElement>(".hero-right-text .custom-line-inner"),
+        heroSecWrap: scopeRef.current.querySelector(".hero-secondary-text-wrap") as HTMLElement,
+        heroSecInners: scopeRef.current.querySelectorAll<HTMLElement>(".hero-secondary-para .custom-line-inner"),
+        heroControls: scopeRef.current.querySelectorAll<HTMLElement>(".hero-contact-btn, .hero-scroll-indicator, .hero-progress-wrapper"),
+        s2Titles: scopeRef.current.querySelectorAll<HTMLElement>(".s2-title-main, .s2-title-sub, .s2-body"),
+        s2ScrollWrap: scopeRef.current.querySelector(".s2-mob-scroll-wrapper") as HTMLElement,
+        s2Clip1: scopeRef.current.querySelector(".s2-mob-clip-bg-1") as HTMLElement,
+        s2Clip2: scopeRef.current.querySelector(".s2-mob-clip-bg-2") as HTMLElement,
+        s2Clip3: scopeRef.current.querySelector(".s2-mob-clip-bg-3") as HTMLElement,
+        s8BgImg: scopeRef.current.querySelector(".s8-bg-img") as HTMLElement,
+        s8MobBg: scopeRef.current.querySelector(".s8-mob-bg") as HTMLElement,
+        s10HeaderEls: scopeRef.current.querySelectorAll<HTMLElement>(".s10-title, .s10-title-sub, .s10-para-top"),
+        s10ScrollContainer: scopeRef.current.querySelector(".s10-scrollable-container") as HTMLElement,
+        s7BgImg: scopeRef.current.querySelector(".s7-bg-img") as HTMLElement,
+        s7MobBg: scopeRef.current.querySelector(".s7-mob-bg") as HTMLElement,
+        s9BgImg: scopeRef.current.querySelector(".s9-bg-img") as HTMLElement,
       };
     }
   }, []);
@@ -326,7 +326,7 @@ export default function HomeMobile() {
       let s10ScrollContainer = cache.s10ScrollContainer as HTMLElement;
 
       if ((!s10HeaderEls || s10HeaderEls.length === 0) && sec10Ref.current) {
-        s10HeaderEls = sec10Ref.current.querySelectorAll(".s10-title, .s10-title-sub, .s10-para-top");
+        s10HeaderEls = sec10Ref.current.querySelectorAll<HTMLElement>(".s10-title, .s10-title-sub, .s10-para-top");
         cache.s10HeaderEls = s10HeaderEls;
       }
       if (!s10ScrollContainer && sec10Ref.current) {
