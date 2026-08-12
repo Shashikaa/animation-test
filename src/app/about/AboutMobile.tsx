@@ -22,6 +22,7 @@ export default function AboutMobile() {
 
   const targetProgress = useRef(0);
   const currentProgress = useRef(0);
+  const trackBottomOffset = useRef(0);
   const rafId = useRef<number | null>(null);
 
   const vhRef = useRef<number>(0);
@@ -92,7 +93,7 @@ export default function AboutMobile() {
     }
   }, []);
 
-  // ── 4. STACK ANIMATION & GPU-TRANSFORM PINNING LOOP ──
+  // ── 4. STACK ANIMATION & SMOOTH GPU PINNING LOOP ──
   useEffect(() => {
     if (!preloaderDone || !introDone) return;
 
@@ -100,17 +101,17 @@ export default function AboutMobile() {
     if (!panels || panels.length === 0) return;
 
     const updatePhysics = () => {
-      const vh = vhRef.current || window.innerHeight;
-      if (!vh) {
-        rafId.current = requestAnimationFrame(updatePhysics);
-        return;
-      }
-
-      const lerpFactor = 0.15;
+      const lerpFactor = 0.18; // Snappier touch response for Android Chrome
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
-      if (Math.abs(targetProgress.current - currentProgress.current) < 0.0001) {
+      // Hard snap when close to boundary to prevent infinite lerp dragging
+      if (Math.abs(targetProgress.current - currentProgress.current) < 0.0005) {
         currentProgress.current = targetProgress.current;
+      }
+
+      // Apply frame offset on GPU without style layout reflows
+      if (fixedFrameRef.current) {
+        fixedFrameRef.current.style.transform = `translate3d(0, ${trackBottomOffset.current}px, 0)`;
       }
 
       const totalSteps = 7.0;
@@ -156,7 +157,7 @@ export default function AboutMobile() {
     };
 
     const handleScroll = () => {
-      if (!trackRef.current || !fixedFrameRef.current) return;
+      if (!trackRef.current) return;
 
       const trackRect = trackRef.current.getBoundingClientRect();
       const vh = vhRef.current || window.innerHeight;
@@ -164,15 +165,13 @@ export default function AboutMobile() {
 
       if (totalScrollable <= 0) return;
 
-      // ── SMOOTH GPU PINNING WITHOUT POSITION SWITCHING ──
-      // Keep frame as fixed at top 0, but shift it up with translate3d when track end passes
+      // Handle track top/bottom boundaries purely in scroll pass
       if (trackRect.bottom < vh) {
-        const offset = trackRect.bottom - vh;
-        fixedFrameRef.current.style.transform = `translate3d(0, ${offset}px, 0)`;
+        trackBottomOffset.current = trackRect.bottom - vh;
       } else if (trackRect.top > 0) {
-        fixedFrameRef.current.style.transform = `translate3d(0, ${-trackRect.top}px, 0)`;
+        trackBottomOffset.current = -trackRect.top;
       } else {
-        fixedFrameRef.current.style.transform = `translate3d(0, 0px, 0)`;
+        trackBottomOffset.current = 0;
       }
 
       const currentScroll = Math.max(0, -trackRect.top);
@@ -207,7 +206,7 @@ export default function AboutMobile() {
   const isReady = preloaderDone && introDone;
 
   return (
-    <div ref={scopeRef} className="w-full bg-[#162D24]">
+    <div ref={scopeRef} className="w-full bg-[#162D24] relative">
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
@@ -216,7 +215,10 @@ export default function AboutMobile() {
         <div
           ref={fixedFrameRef}
           className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 gpu-accelerated"
-          style={{ height: vhRef.current ? `${vhRef.current}px` : "100vh" }}
+          style={{ 
+            height: vhRef.current ? `${vhRef.current}px` : "100vh",
+            willChange: "transform"
+          }}
         >
           <div className="about-stack-layer absolute inset-0 w-full h-full z-10 gpu-accelerated">
             <Hero isMobile={true} />
