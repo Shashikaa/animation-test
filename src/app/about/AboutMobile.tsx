@@ -24,27 +24,65 @@ export default function AboutMobile() {
   const currentProgress = useRef(0);
   const rafId = useRef<number | null>(null);
 
+  const vhRef = useRef<number>(0);
+  const lastWidthRef = useRef<number>(0);
   const lastSec5Idx = useRef<number>(-1);
 
   const { smootherRef } = useSite();
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // ── 1. INTRO UNLOCK & LENIS RESUME ──
+  // ── 1. INITIALIZE VIEWPORT HEIGHT ──
+  useEffect(() => {
+    const updateVh = () => {
+      const activeTag = document.activeElement?.tagName;
+      if (activeTag === "INPUT" || activeTag === "TEXTAREA" || activeTag === "SELECT") return;
+
+      const currentWidth = window.innerWidth;
+      const currentHeight = window.innerHeight;
+
+      if (vhRef.current === 0 || currentWidth !== lastWidthRef.current) {
+        vhRef.current = currentHeight;
+        lastWidthRef.current = currentWidth;
+        if (fixedFrameRef.current) {
+          fixedFrameRef.current.style.height = `${currentHeight}px`;
+        }
+      }
+    };
+
+    updateVh();
+
+    const handleResize = () => updateVh();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  // ── 2. INTRO UNLOCK & LENIS RESUME ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
     if (!preloaderDone || !introDone) {
       if (lenis && typeof lenis.stop === "function") lenis.stop();
+      window.scrollTo(0, 0);
       targetProgress.current = 0;
       currentProgress.current = 0;
     } else {
       if (lenis && typeof lenis.start === "function") {
         lenis.start();
       }
+      window.dispatchEvent(new Event("scroll"));
     }
+
+    return () => {
+      if (lenis && typeof lenis.start === "function") {
+        lenis.start();
+      }
+    };
   }, [preloaderDone, introDone, smootherRef]);
 
-  // ── 2. SECTION 5 TRIGGER HOOK ──
+  // ── 3. SECTION 5 TRIGGER HOOK ──
   const triggerSec5Hook = useCallback((nextIdx: number) => {
     if (nextIdx !== lastSec5Idx.current) {
       lastSec5Idx.current = nextIdx;
@@ -54,7 +92,7 @@ export default function AboutMobile() {
     }
   }, []);
 
-  // ── 3. STACK ANIMATION & FIXED FRAME POSITIONING ──
+  // ── 4. STACK ANIMATION & GPU-TRANSFORM PINNING LOOP ──
   useEffect(() => {
     if (!preloaderDone || !introDone) return;
 
@@ -62,6 +100,12 @@ export default function AboutMobile() {
     if (!panels || panels.length === 0) return;
 
     const updatePhysics = () => {
+      const vh = vhRef.current || window.innerHeight;
+      if (!vh) {
+        rafId.current = requestAnimationFrame(updatePhysics);
+        return;
+      }
+
       const lerpFactor = 0.15;
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
@@ -115,37 +159,20 @@ export default function AboutMobile() {
       if (!trackRef.current || !fixedFrameRef.current) return;
 
       const trackRect = trackRef.current.getBoundingClientRect();
-      const vh = window.innerHeight;
+      const vh = vhRef.current || window.innerHeight;
       const totalScrollable = trackRect.height - vh;
 
       if (totalScrollable <= 0) return;
 
-      const buffer = 8;
-
-      if (trackRect.top <= 0 && trackRect.bottom >= vh - buffer) {
-        if (fixedFrameRef.current.style.position !== "fixed") {
-          fixedFrameRef.current.style.position = "fixed";
-          fixedFrameRef.current.style.top = "0px";
-          fixedFrameRef.current.style.bottom = "auto";
-        }
-      } else if (trackRect.bottom < vh - buffer) {
-        if (
-          fixedFrameRef.current.style.position !== "absolute" ||
-          fixedFrameRef.current.style.bottom !== "0px"
-        ) {
-          fixedFrameRef.current.style.position = "absolute";
-          fixedFrameRef.current.style.top = "auto";
-          fixedFrameRef.current.style.bottom = "0px";
-        }
+      // ── SMOOTH GPU PINNING WITHOUT POSITION SWITCHING ──
+      // Keep frame as fixed at top 0, but shift it up with translate3d when track end passes
+      if (trackRect.bottom < vh) {
+        const offset = trackRect.bottom - vh;
+        fixedFrameRef.current.style.transform = `translate3d(0, ${offset}px, 0)`;
+      } else if (trackRect.top > 0) {
+        fixedFrameRef.current.style.transform = `translate3d(0, ${-trackRect.top}px, 0)`;
       } else {
-        if (
-          fixedFrameRef.current.style.position !== "absolute" ||
-          fixedFrameRef.current.style.top !== "0px"
-        ) {
-          fixedFrameRef.current.style.position = "absolute";
-          fixedFrameRef.current.style.top = "0px";
-          fixedFrameRef.current.style.bottom = "auto";
-        }
+        fixedFrameRef.current.style.transform = `translate3d(0, 0px, 0)`;
       }
 
       const currentScroll = Math.max(0, -trackRect.top);
@@ -188,42 +215,43 @@ export default function AboutMobile() {
       >
         <div
           ref={fixedFrameRef}
-          className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-[100dvh]"
+          className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 gpu-accelerated"
+          style={{ height: vhRef.current ? `${vhRef.current}px` : "100vh" }}
         >
-          <div className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-10 gpu-accelerated">
+          <div className="about-stack-layer absolute inset-0 w-full h-full z-10 gpu-accelerated">
             <Hero isMobile={true} />
           </div>
 
           <div
-            className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-20 gpu-accelerated"
+            className="about-stack-layer absolute inset-0 w-full h-full z-20 gpu-accelerated"
             style={{ transform: "translate3d(0, 100%, 0)" }}
           >
             <SectionOne />
           </div>
 
           <div
-            className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-30 gpu-accelerated"
+            className="about-stack-layer absolute inset-0 w-full h-full z-30 gpu-accelerated"
             style={{ transform: "translate3d(0, 100%, 0)" }}
           >
             <SectionTwo />
           </div>
 
           <div
-            className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-40 gpu-accelerated"
+            className="about-stack-layer absolute inset-0 w-full h-full z-40 gpu-accelerated"
             style={{ transform: "translate3d(0, 100%, 0)" }}
           >
             <SectionThree />
           </div>
 
           <div
-            className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-50 gpu-accelerated"
+            className="about-stack-layer absolute inset-0 w-full h-full z-50 gpu-accelerated"
             style={{ transform: "translate3d(0, 100%, 0)" }}
           >
             <SectionFour />
           </div>
 
           <div
-            className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-[60] gpu-accelerated"
+            className="about-stack-layer absolute inset-0 w-full h-full z-[60] gpu-accelerated"
             style={{ transform: "translate3d(0, 100%, 0)" }}
           >
             <SectionFive isActive={isSectionFiveActive} />
