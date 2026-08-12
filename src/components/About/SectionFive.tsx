@@ -9,7 +9,7 @@ const slides = [
     label: "Industry Experience",
     desc: "Decades of knowledge in pool design and construction.",
   },
-    {
+  {
     stat: "100+",
     label: "Completed Projects",
     desc: "Stunning pools crafted for homes and businesses.",
@@ -19,15 +19,10 @@ const slides = [
     label: "Client Satisfaction",
     desc: "Trusted for quality, service, and seamless execution.",
   },
-
 ];
 
 const TEXT_DURATION = 0.55;
 
-/**
- * Wraps target inner words/lines inside .gs-line and .gs-line-inner elements
- * to achieve clean overflow-hidden line reveals matching SectionTwo.
- */
 function splitElementIntoLines(el: HTMLElement) {
   if (el.dataset.originalHtml !== undefined) return;
 
@@ -79,7 +74,6 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
   const currentRef = useRef<number>(0);
   const [current, setCurrent] = useState(0);
 
-  // Animates the split lines into view sequentially
   function animateTextIn(index: number) {
     if (!containerRef.current) return;
     const targets = containerRef.current.querySelectorAll(
@@ -108,7 +102,6 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
     currentRef.current = next;
     setCurrent(next);
 
-    // Synchronously update card states to prevent stale/delayed updates during scrub-back
     slides.forEach((_, i) => {
       const el = containerRef.current?.querySelector(`.s5-text-group-${i + 1}`) as HTMLElement;
       if (el) {
@@ -121,7 +114,6 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
     animateTextIn(next);
   }, []);
 
-  // Initialize line splits on mount
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -143,7 +135,6 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
     return () => clearTimeout(timeout);
   }, []);
 
-  // Expose step controller hook globally for GSAP ScrollTrigger timelines
   useEffect(() => {
     (window as any)._sec5GoTo = (targetIdx: number) => {
       if (targetIdx === currentRef.current) return;
@@ -163,9 +154,8 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
   return (
     <section ref={containerRef} className="relative w-full h-full overflow-hidden flex flex-col lg:grid lg:grid-cols-2 bg-[#F4EEDF]">
       
-      {/* TOP / LEFT SIDE: Image + Title Overlay */}
+      {/* TOP / LEFT SIDE */}
       <div className="relative w-full h-[65svh] lg:h-full lg:min-h-screen overflow-hidden bg-[#19211C]">
-        {/* Main image container with oversized bounds for extended parallax motion */}
         <div className="s5-bg absolute -top-[0%] left-0 w-full h-[240%] bg-cover bg-center will-change-transform bg-[url('/project-aerial2.webp')]" />
         
         <div className="absolute inset-0 bg-black/40 pointer-events-none z-[1]" />
@@ -186,7 +176,7 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
         </div>
       </div>
 
-      {/* BOTTOM / RIGHT SIDE: Animated Card Container Area */}
+      {/* BOTTOM / RIGHT SIDE */}
       <div className="s5-right-panel relative w-full flex-1 lg:h-full lg:min-h-screen bg-[#F4EEDF] flex items-center justify-center px-6 py-8 md:px-12">
         <div className="relative w-full max-w-[320px] h-[180px] sm:h-[220px] lg:h-[250px] bg-[#F4EEDF]">
           {slides.map((slide, i) => (

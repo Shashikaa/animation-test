@@ -81,9 +81,7 @@ html, body {
   scroll-behavior: auto !important; 
   min-height: 100%;
 
-  /* Ensure smooth momentum scrolling on touch surfaces */
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
 }
 
 /* ─── Hide scrollbar ONLY on desktop screens ─────────────────── */
@@ -109,7 +107,8 @@ body {
   overflow-x:   hidden;
 }
 
-/* ─── Preloader Hide & Lock Rules ────────────────────────────── */
+/* ─── Preloader Hide & Lock Rules (Fixes Hero Drift & Pre-scroll) ── */
+
 html.preloading,
 body.preloading {
   overflow: hidden !important;
@@ -122,8 +121,8 @@ body.preloading {
   background-color: #162D24 !important;
 }
 
-html.preloading .about-pin,
-body.preloading .about-pin {
+html.preloading .about-pin, .contact-pin-master, .master-viewport, .pin-all-projects, .services-hero-master, .services-pin-master,
+body.preloading .about-pin, .contact-pin-master, .master-viewport, .pin-all-projects, .services-hero-master, .services-pin-master {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
@@ -154,7 +153,6 @@ body.preloading header {
   width: 100%;
 }
 
-/* ─── Mobile Viewport Pin Wrappers ───────────────────────────── */
 .pin-all,
 .pin-all-home,
 .pin-all-contact,
@@ -162,25 +160,23 @@ body.preloading header {
 .pin-all-services,
 .pin-all-subservices,
 .pin-all-single-project {
-  height: 100svh !important;
-  min-height: 100svh !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
   width: 100%;
   position: relative;
   overflow: hidden;
 }
 
-/* Lock GSAP pin-spacer on mobile screens without dynamic jumps */
 .pin-spacer {
-  min-height: 100svh !important;
+  min-height: 100dvh !important;
   pointer-events: auto !important;
 }
 
 .pin-spacer > div {
-  height: 100svh !important;
+  height: 100dvh !important;
   max-height: none !important;
 }
 
-/* ─── Hardware Layer Acceleration ────────────────────────────── */
 .gpu-accelerated,
 .structural-layer {
   transform: translate3d(0, 0, 0);
@@ -189,7 +185,47 @@ body.preloading header {
   will-change: transform;
 }
 
-/* ─── Layout Utilities ───────────────────────────────────────── */
+.section-six-wrapper,
+.section-nine-wrapper {
+  overflow: hidden;
+}
+
+.font-display   { font-family: var(--font-display);   font-weight: 100; }
+.font-cormorant { font-family: var(--font-cormorant); font-weight: 400; }
+.font-body      { font-family: var(--font-body);      font-weight: 400; }
+
+.text-display {
+  font-family:    var(--font-display);
+  font-size:      var(--text-display);
+  line-height:    var(--leading-display);
+  letter-spacing: 0;
+}
+
+.text-cormorant {
+  font-family:    var(--font-cormorant);
+  font-size:      var(--text-display);
+  line-height:    var(--leading-display);
+  letter-spacing: 0;
+  font-weight:    400;
+}
+
+.text-cormorant-light    { font-family: var(--font-cormorant); font-weight: 300; }
+.text-cormorant-regular  { font-family: var(--font-cormorant); font-weight: 400; }
+.text-cormorant-medium   { font-family: var(--font-cormorant); font-weight: 500; }
+.text-cormorant-semibold { font-family: var(--font-cormorant); font-weight: 600; }
+.text-cormorant-bold     { font-family: var(--font-cormorant); font-weight: 700; }
+.text-cormorant-italic   { font-family: var(--font-cormorant); font-style: italic; }
+
+.text-body {
+  font-family:    var(--font-body);
+  font-size:      var(--text-body);
+  line-height:    var(--leading-body);
+  letter-spacing: 0;
+  font-weight:    400;
+}
+
+.text-muted { color: var(--muted); }
+
 .container {
   width:          100%;
   max-width:      var(--container-max);
@@ -222,37 +258,17 @@ body.preloading header {
   }
 }
 
-/* ─── Typography ─────────────────────────────────────────────── */
-.font-display   { font-family: var(--font-display);   font-weight: 100; }
-.font-cormorant { font-family: var(--font-cormorant); font-weight: 400; }
-.font-body      { font-family: var(--font-body);      font-weight: 400; }
+.border       { border: 1px solid var(--border); }
+.border-t     { border-top: 1px solid var(--border); }
+.border-b     { border-bottom: 1px solid var(--border); }
+.rounded-sm   { border-radius: var(--radius-sm); }
+.rounded-md   { border-radius: var(--radius-md); }
+.rounded-lg   { border-radius: var(--radius-lg); }
+.rounded-full { border-radius: var(--radius-full); }
 
-.text-display {
-  font-family:    var(--font-display);
-  font-size:      var(--text-display);
-  line-height:    var(--leading-display);
-  letter-spacing: 0;
-}
+.transition      { transition: all var(--duration-base) var(--ease-out); }
+.transition-fast { transition: all var(--duration-fast) var(--ease-out); }
 
-.text-cormorant {
-  font-family:    var(--font-cormorant);
-  font-size:      var(--text-display);
-  line-height:    var(--leading-display);
-  letter-spacing: 0;
-  font-weight:    400;
-}
-
-.text-body {
-  font-family:    var(--font-body);
-  font-size:      var(--text-body);
-  line-height:    var(--leading-body);
-  letter-spacing: 0;
-  font-weight:    400;
-}
-
-.text-muted { color: var(--muted); }
-
-/* ─── Responsive Headings ────────────────────────────────────── */
 h2, h1 {
   font-size:   72px;
   line-height: 1.15;
@@ -273,7 +289,65 @@ p {
   p  { font-size: 16px; }
 }
 
-/* ─── Button Utilities ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration:        0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration:       0.01ms !important;
+    scroll-behavior:          auto !important;
+  }
+}
+
+.reveal-text {
+  perspective: 1000px;
+  backface-visibility: hidden;
+}
+
+@media screen and (min-width: 1025px) {
+  .reveal-text {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.gs-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.15em;
+  margin-bottom: -0.15em;
+  perspective: 800px;
+}
+
+.gs-line-inner {
+  display: block !important;
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.gs-word-wrapper {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+}
+
+.gs-word {
+  display: inline-block;
+  will-change: transform;
+}
+
+body:has(#not-found-page) #brand-preloader-root,
+body:has(#not-found-page) #fade-preloader-root,
+html.page-404 #brand-preloader-root,
+html.page-404 #fade-preloader-root {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 a.btn-underline,
 button.btn-underline,
 .btn-underline {
@@ -327,4 +401,17 @@ button.btn-underline:hover::after,
   backface-visibility: hidden;
   transform: translateZ(0);
   will-change: transform;
+}
+
+/* Ensure sticky wrapper pin works on mobile */
+.about-track-container {
+  overflow: visible !important;
+}
+
+/* Force site root layout wrappers not to clip sticky track bounds */
+body, 
+main.site-root, 
+.scroll-container {
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
 }
