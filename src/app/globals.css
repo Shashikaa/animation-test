@@ -45,7 +45,7 @@
   --radius-lg:   16px;
   --radius-full: 9999px;
 
-  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --duration-fast: 150ms;
   --duration-base: 300ms;
@@ -105,7 +105,7 @@ body {
   overflow-x:   hidden;
 }
 
-/* ─── Preloader Hide & Lock Rules (Fixes Hero Drift & Pre-scroll) ── */
+/* ─── Preloader Hide & Lock Rules ── */
 
 html.preloading,
 body.preloading {
@@ -396,15 +396,16 @@ button.btn-underline:hover::after,
   will-change: transform;
 }
 
-/* Ensure sticky wrapper pin works on mobile */
+/* Track container needs natural height flow for fixed boundaries */
 .about-track-container {
   overflow: visible !important;
 }
 
-/* Force site root layout wrappers not to clip sticky track bounds */
+/* Force document containers to allow unconstrained scrolling below sticky sections */
 body, 
 main.site-root, 
 .scroll-container {
   overflow-x: hidden !important;
   overflow-y: visible !important;
+  height: auto !important;
 }

@@ -109,6 +109,11 @@ export default function AboutMobile() {
       const lerpFactor = 0.12;
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
+      // Snap precision to prevent boundary lag
+      if (Math.abs(targetProgress.current - currentProgress.current) < 0.0001) {
+        currentProgress.current = targetProgress.current;
+      }
+
       const totalSteps = 7.0;
       const stepProgress = currentProgress.current * totalSteps;
 
@@ -161,12 +166,14 @@ export default function AboutMobile() {
       if (totalScrollable <= 0) return;
 
       const buffer = 8;
+      const lenis = smootherRef?.current;
 
       if (trackRect.top <= 0 && trackRect.bottom >= vh - buffer) {
         if (fixedFrameRef.current.style.position !== "fixed") {
           fixedFrameRef.current.style.position = "fixed";
           fixedFrameRef.current.style.top = "0px";
           fixedFrameRef.current.style.bottom = "auto";
+          if (lenis && typeof lenis.resize === "function") lenis.resize();
         }
       } else if (trackRect.bottom < vh - buffer) {
         if (
@@ -176,6 +183,7 @@ export default function AboutMobile() {
           fixedFrameRef.current.style.position = "absolute";
           fixedFrameRef.current.style.top = "auto";
           fixedFrameRef.current.style.bottom = "0px";
+          if (lenis && typeof lenis.resize === "function") lenis.resize();
         }
       } else {
         if (
@@ -185,6 +193,7 @@ export default function AboutMobile() {
           fixedFrameRef.current.style.position = "absolute";
           fixedFrameRef.current.style.top = "0px";
           fixedFrameRef.current.style.bottom = "auto";
+          if (lenis && typeof lenis.resize === "function") lenis.resize();
         }
       }
 
@@ -220,7 +229,7 @@ export default function AboutMobile() {
   const isReady = preloaderDone && introDone;
 
   return (
-    <div ref={scopeRef} className="w-full bg-[#162D24]">
+    <div ref={scopeRef} className="w-full bg-[#162D24] relative">
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
@@ -272,7 +281,7 @@ export default function AboutMobile() {
         </div>
       </div>
 
-      <div className="relative z-[70] w-full bg-[#162D24]">
+      <div className="relative z-[70] w-full bg-[#162D24] touch-auto">
         <SectionCTA preloaderDone={isReady} />
         <footer className="w-full bg-[#162D24]">
           <Footer />

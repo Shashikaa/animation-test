@@ -69,8 +69,8 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
           smoothWheel: true,
           wheelMultiplier: 1.1,
           touchMultiplier: 1.5,
-          syncTouch: true,
-          syncTouchLerp: 0.1,
+          syncTouch: false, // Prevents touch locking at sticky section limits on mobile
+          autoResize: true,
         },
       });
 
