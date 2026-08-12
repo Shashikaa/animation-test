@@ -8,7 +8,7 @@ import SectionFour from "@/src/components/About/SectionFour";
 import SectionFive from "@/src/components/About/SectionFive";
 import SectionCTA from "@/src/components/SectionCTA";
 import Footer from "@/src/components/Footer";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
@@ -29,33 +29,42 @@ export default function AboutMobile() {
   const lastWidthRef = useRef<number>(0);
   const lastSec5Idx = useRef<number>(-1);
   const isInputFocusedRef = useRef<boolean>(false);
+  const focusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { smootherRef } = useSite();
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // ── 0. LOCK NATIVE TOUCH SCROLLING TO KEEP ADDRESS BAR STABLE ──
+  // ── 0. VIEWPORT HEIGHT INITIALIZATION ──
   useEffect(() => {
-    // Lock document touch bounce without using GSAP
-    const preventAddressBarCollapse = (e: TouchEvent) => {
-      // Allow scrolling inside input fields or select dropdowns
-      const target = e.target as HTMLElement | null;
-      if (
-        target?.tagName === "INPUT" ||
-        target?.tagName === "TEXTAREA" ||
-        target?.closest("[role='listbox']") !== null
-      ) {
-        return;
+    const updateVh = () => {
+      if (isInputFocusedRef.current) return;
+      const currentWidth = window.innerWidth;
+      const currentHeight = window.visualViewport?.height || window.innerHeight;
+
+      if (vhRef.current === 0 || currentWidth !== lastWidthRef.current) {
+        vhRef.current = currentHeight;
+        lastWidthRef.current = currentWidth;
+        if (fixedFrameRef.current) {
+          fixedFrameRef.current.style.height = `${currentHeight}px`;
+        }
       }
     };
 
-    document.addEventListener("touchmove", preventAddressBarCollapse, { passive: true });
+    updateVh();
+
+    const handleResize = () => updateVh();
+    const handleOrientation = () => setTimeout(updateVh, 250);
+
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleOrientation);
 
     return () => {
-      document.removeEventListener("touchmove", preventAddressBarCollapse);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleOrientation);
     };
   }, []);
 
-  // ── 1. HARD KEYBOARD DISMISSAL RE-ALIGNMENT & SCROLL UNLOCK ──
+  // ── 1. HARD KEYBOARD DISMISSAL & INPUT FOCUS MANAGEMENT ──
   useEffect(() => {
     const isInteractiveElement = (target: HTMLElement | null) => {
       if (!target) return false;
@@ -76,11 +85,20 @@ export default function AboutMobile() {
     const handleFocusIn = (e: FocusEvent) => {
       if (isInteractiveElement(e.target as HTMLElement)) {
         isInputFocusedRef.current = true;
+        if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+
+        // Pause smooth scroll when keyboard opens to prevent section jam
+        const lenis = smootherRef?.current;
+        if (lenis && typeof lenis.stop === "function") {
+          lenis.stop();
+        }
       }
     };
 
     const handleFocusOut = () => {
-      setTimeout(() => {
+      if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+
+      focusTimeoutRef.current = setTimeout(() => {
         const active = document.activeElement as HTMLElement;
         if (!isInteractiveElement(active)) {
           isInputFocusedRef.current = false;
@@ -106,7 +124,7 @@ export default function AboutMobile() {
             if (typeof lenis.start === "function") lenis.start();
           }
         }
-      }, 200);
+      }, 250);
     };
 
     window.addEventListener("focusin", handleFocusIn);
@@ -115,47 +133,16 @@ export default function AboutMobile() {
     return () => {
       window.removeEventListener("focusin", handleFocusIn);
       window.removeEventListener("focusout", handleFocusOut);
+      if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
     };
   }, [smootherRef]);
 
-  // ── 2. VIEWPORT HEIGHT LOCK ──
-  useEffect(() => {
-    const updateVh = () => {
-      const currentWidth = window.innerWidth;
-      const currentHeight = window.innerHeight;
-
-      if (
-        !isInputFocusedRef.current &&
-        (vhRef.current === 0 || currentWidth !== lastWidthRef.current)
-      ) {
-        vhRef.current = currentHeight;
-        lastWidthRef.current = currentWidth;
-        if (fixedFrameRef.current) {
-          fixedFrameRef.current.style.height = `${currentHeight}px`;
-        }
-      }
-    };
-
-    updateVh();
-
-    const handleResize = () => updateVh();
-    const handleOrientation = () => setTimeout(updateVh, 250);
-
-    window.addEventListener("resize", handleResize);
-    window.addEventListener("orientationchange", handleOrientation);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("orientationchange", handleOrientation);
-    };
-  }, []);
-
-  // ── 3. INTRO LOCK ──
+  // ── 2. INTRO SCROLL LOCK ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
     if (!preloaderDone || !introDone) {
-      if (lenis) lenis.stop();
+      if (lenis && typeof lenis.stop === "function") lenis.stop();
       window.scrollTo(0, 0);
       targetProgress.current = 0;
       currentProgress.current = 0;
@@ -166,25 +153,27 @@ export default function AboutMobile() {
         fixedFrameRef.current.style.bottom = "auto";
       }
     } else {
-      if (lenis) lenis.start();
+      if (lenis && typeof lenis.start === "function" && !isInputFocusedRef.current) {
+        lenis.start();
+      }
     }
   }, [preloaderDone, introDone, smootherRef]);
 
-  // ── 4. MAIN ANIMATION & LAYOUT LOOP ──
+  // ── 3. MAIN ANIMATION LOOP ──
+  const triggerSec5Hook = useCallback((nextIdx: number) => {
+    if (nextIdx !== lastSec5Idx.current) {
+      lastSec5Idx.current = nextIdx;
+      if (typeof window !== "undefined" && (window as any)._sec5GoTo) {
+        (window as any)._sec5GoTo(nextIdx);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     if (!preloaderDone || !introDone) return;
 
     const panels = trackRef.current?.querySelectorAll<HTMLElement>(".about-stack-layer");
     if (!panels || panels.length === 0) return;
-
-    const triggerSec5Hook = (nextIdx: number) => {
-      if (nextIdx !== lastSec5Idx.current) {
-        lastSec5Idx.current = nextIdx;
-        if ((window as any)._sec5GoTo) {
-          (window as any)._sec5GoTo(nextIdx);
-        }
-      }
-    };
 
     const updatePhysics = () => {
       const vh = vhRef.current || window.innerHeight;
@@ -193,7 +182,8 @@ export default function AboutMobile() {
         return;
       }
 
-      const lerpFactor = 0.15;
+      // Lerp calculations for stack sections
+      const lerpFactor = 0.18;
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
       const ctaWrapEl = ctaWrapRef.current;
@@ -205,7 +195,7 @@ export default function AboutMobile() {
       const requiredTrackHeight = (totalSteps + 1) * vh;
 
       if (trackRef.current && !isInputFocusedRef.current) {
-        if (Math.abs(trackRef.current.offsetHeight - requiredTrackHeight) > 2) {
+        if (Math.abs(trackRef.current.offsetHeight - requiredTrackHeight) > 4) {
           trackRef.current.style.height = `${requiredTrackHeight}px`;
         }
       }
@@ -284,7 +274,7 @@ export default function AboutMobile() {
 
     const lenis = smootherRef?.current;
     if (lenis) {
-      lenis.on("scroll", handleScroll);
+      if (typeof lenis.on === "function") lenis.on("scroll", handleScroll);
     } else {
       window.addEventListener("scroll", handleScroll, { passive: true });
     }
@@ -292,16 +282,14 @@ export default function AboutMobile() {
     handleScroll();
 
     return () => {
-      if (rafId.current) {
-        cancelAnimationFrame(rafId.current);
-      }
+      if (rafId.current) cancelAnimationFrame(rafId.current);
       if (lenis) {
-        lenis.off("scroll", handleScroll);
+        if (typeof lenis.off === "function") lenis.off("scroll", handleScroll);
       } else {
         window.removeEventListener("scroll", handleScroll);
       }
     };
-  }, [introDone, preloaderDone, smootherRef]);
+  }, [introDone, preloaderDone, smootherRef, triggerSec5Hook]);
 
   const isReady = preloaderDone && introDone;
 
@@ -373,7 +361,7 @@ export default function AboutMobile() {
             }}
           >
             <div className="relative z-20 w-full">
-              <SectionCTA />
+              <SectionCTA preloaderDone={isReady} />
             </div>
 
             <footer className="relative z-10 w-full bg-[#162D24]">
