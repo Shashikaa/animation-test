@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useSite } from "@/src/app/context/SiteContext";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -261,6 +262,7 @@ function CtaInput({
   error?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const { smootherRef } = useSite();
   const borderOpacity = isMobile ? "1" : "0.35";
   const defaultBorder = `1px solid ${
     error ? "#feb2b2" : `rgba(244, 238, 223, ${borderOpacity})`
@@ -268,11 +270,18 @@ function CtaInput({
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     e.target.style.borderColor = error ? "#feb2b2" : "rgba(244,238,223,0.75)";
-    
-    // Prevents mobile browser keyboard viewport jump issues
+
+    // Use Lenis scrollTo instead of native scrollIntoView to prevent layout locks
     if (isMobile && inputRef.current) {
       setTimeout(() => {
-        inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        const lenis = smootherRef?.current;
+        if (lenis && inputRef.current) {
+          lenis.scrollTo(inputRef.current, {
+            offset: -100,
+            duration: 0.8,
+            lock: false,
+          });
+        }
       }, 300);
     }
   };
@@ -307,7 +316,7 @@ function CtaInput({
           border: "none",
           borderBottom: defaultBorder,
           color: "#F4EEDF",
-          fontSize: 16, // Fixed at 16px to prevent iOS auto-zoom
+          fontSize: 16,
           padding: "10px 10px 10px 0",
           outline: "none",
           width: "100%",

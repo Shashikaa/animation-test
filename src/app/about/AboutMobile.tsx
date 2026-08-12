@@ -29,6 +29,7 @@ export default function AboutMobile() {
   const lastWidthRef = useRef<number>(0);
   const lastSec5Idx = useRef<number>(-1);
   const isInputFocusedRef = useRef<boolean>(false);
+  const lastTrackHeightRef = useRef<number>(0);
 
   const { smootherRef } = useSite();
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
@@ -58,7 +59,6 @@ export default function AboutMobile() {
     };
 
     const handleFocusOut = () => {
-      // Triggered when keyboard collapses
       setTimeout(() => {
         const active = document.activeElement as HTMLElement;
         if (!isInteractiveElement(active)) {
@@ -66,7 +66,6 @@ export default function AboutMobile() {
 
           const lenis = smootherRef?.current;
 
-          // Force page to re-calculate clean bounding box
           if (trackRef.current) {
             const vh = vhRef.current || window.innerHeight;
             const trackRect = trackRef.current.getBoundingClientRect();
@@ -76,19 +75,17 @@ export default function AboutMobile() {
               const currentScroll = Math.max(0, -trackRect.top);
               const exactProgress = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
               
-              // Force hard sync to prevent position drift and lock
               targetProgress.current = exactProgress;
               currentProgress.current = exactProgress;
             }
           }
 
-          // Restart smooth scroll engine if it stalled during input focus
           if (lenis) {
             if (typeof lenis.resize === "function") lenis.resize();
             if (typeof lenis.start === "function") lenis.start();
           }
         }
-      }, 200);
+      }, 250);
     };
 
     window.addEventListener("focusin", handleFocusIn);
@@ -187,9 +184,10 @@ export default function AboutMobile() {
       const totalSteps = 7.0 + ctaStepLength;
       const requiredTrackHeight = (totalSteps + 1) * vh;
 
-      // Adjust height when input is idle
+      // Adjust height when input is idle without offsetHeight layout thrashing
       if (trackRef.current && !isInputFocusedRef.current) {
-        if (Math.abs(trackRef.current.offsetHeight - requiredTrackHeight) > 2) {
+        if (Math.abs(lastTrackHeightRef.current - requiredTrackHeight) > 2) {
+          lastTrackHeightRef.current = requiredTrackHeight;
           trackRef.current.style.height = `${requiredTrackHeight}px`;
         }
       }
@@ -239,7 +237,6 @@ export default function AboutMobile() {
     };
 
     const handleScroll = () => {
-      // Sync track positions continuously when keyboard is closed
       if (isInputFocusedRef.current) return;
       if (!trackRef.current || !fixedFrameRef.current) return;
 
