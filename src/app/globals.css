@@ -1,138 +1,241 @@
 @import "tailwindcss";
 
-/* ─── Tailwind v4 Theme ──────────────────────────────────────── */
+/* ================================================================
+   TAILWIND v4 THEME
+   ================================================================ */
+
 @theme {
-  --font-display:   var(--font-display), Georgia, serif;
+  --font-display: var(--font-display), Georgia, serif;
   --font-cormorant: var(--font-cormorant), Georgia, serif;
-  --font-body:      var(--font-body), sans-serif;
+  --font-body: var(--font-body), sans-serif;
+
   --breakpoint-lg: 1025px;
 }
 
-/* ─── Design Tokens ──────────────────────────────────────────── */
+
+/* ================================================================
+   DESIGN TOKENS
+   ================================================================ */
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --muted:      #6b6b6b;
-  --muted-bg:   #f5f5f5;
-  --border:     #e5e5e5;
-  --accent:     #171717;
+  --muted: #6b6b6b;
+  --muted-bg: #f5f5f5;
+  --border: #e5e5e5;
+  --accent: #171717;
 
   --text-display: 40px;
-  --text-body:    16px;
-  --text-sm:      14px;
-  --text-xs:      12px;
+  --text-body: 16px;
+  --text-sm: 14px;
+  --text-xs: 12px;
 
   --leading-display: 1.15;
-  --leading-body:    1.2;
+  --leading-body: 1.2;
 
-  --space-1:  4px;
-  --space-2:  8px;
-  --space-3:  12px;
-  --space-4:  16px;
-  --space-5:  24px;
-  --space-6:  32px;
-  --space-7:  48px;
-  --space-8:  64px;
-  --space-9:  96px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
   --space-10: 128px;
 
   --container-max: 1280px;
   --container-pad: var(--space-6);
-  --section-py:    var(--space-9);
+  --section-py: var(--space-9);
 
-  --radius-sm:   4px;
-  --radius-md:   8px;
-  --radius-lg:   16px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
   --radius-full: 9999px;
 
-  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
   --duration-fast: 150ms;
   --duration-base: 300ms;
   --duration-slow: 600ms;
 }
 
+
+/* ================================================================
+   DARK MODE
+   ================================================================ */
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
-    --muted:      #888888;
-    --muted-bg:   #1a1a1a;
-    --border:     #2a2a2a;
-    --accent:     #ededed;
+    --muted: #888888;
+    --muted-bg: #1a1a1a;
+    --border: #2a2a2a;
+    --accent: #ededed;
   }
 }
 
-/* ─── Reset & Base ───────────────────────────────────────────── */
-*, *::before, *::after {
+
+/* ================================================================
+   RESET & BASE
+   ================================================================ */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
-  margin:     0;
-  padding:    0;
+  margin: 0;
+  padding: 0;
 }
 
-html, body {
-  background-color: #e10000 !important;
+html {
+  min-height: 100%;
+  scroll-behavior: auto !important;
+
+  /*
+   * Keep the browser from adding unexpected scrollbar width
+   * changes while desktop scrollbars are hidden.
+   */
   scrollbar-gutter: stable;
-  color-scheme: dark;
+
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  
-  scroll-behavior: auto !important; 
+}
+
+body {
   min-height: 100%;
+
+  background-color: var(--background);
+  color: var(--foreground);
+
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+
+  overflow-x: hidden;
+
+  /*
+   * Important:
+   * Do NOT use overflow: hidden here.
+   * Lenis and ScrollTrigger need the document to remain scrollable.
+   */
+  overflow-y: auto;
 
   -webkit-overflow-scrolling: touch;
 }
 
-/* ─── Hide scrollbar ONLY on desktop screens ─────────────────── */
-@media screen and (min-width: 1024px) {
-  html, body {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
 
-  html::-webkit-scrollbar,
-  body::-webkit-scrollbar { 
-    display: none !important; 
-    width: 0 !important; 
-    height: 0 !important; 
-  }
+/* ================================================================
+   LENIS
+   ================================================================ */
+
+/*
+ * Lenis changes the html element while running.
+ * These rules make sure native browser smooth scrolling does
+ * not fight Lenis.
+ */
+
+html.lenis,
+html.lenis body {
+  height: auto;
 }
 
-body {
-  color:        var(--foreground);
-  font-family:  var(--font-body);
-  font-size:    var(--text-body);
-  line-height:  var(--leading-body);
-  overflow-x:   hidden;
+html.lenis {
+  scroll-behavior: auto !important;
 }
 
-/* ─── Preloader Hide & Lock Rules (Fixes Hero Drift & Pre-scroll) ── */
+html.lenis body {
+  overflow-x: hidden;
+}
 
-/* Lock scrolling strictly on html and body while preloading */
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+
+/* ================================================================
+   PRELOADER
+   ================================================================ */
+
+/*
+ * During the preloader we completely lock the document.
+ *
+ * This prevents:
+ * - accidental finger scrolling
+ * - hero drift
+ * - layout movement before the intro finishes
+ */
+
 html.preloading,
 body.preloading {
   overflow: hidden !important;
+
   height: 100vh !important;
+  height: 100dvh !important;
+
   position: fixed !important;
+
   width: 100% !important;
+
   touch-action: none !important;
+
   -webkit-overflow-scrolling: auto !important;
-  background: linear-gradient(135deg, #162D24 0%, #094146 100%) !important;
-  background-color: #162D24 !important;
+
+  background: linear-gradient(
+    135deg,
+    #162d24 0%,
+    #094146 100%
+  ) !important;
+
+  background-color: #162d24 !important;
 }
 
-/* Hard pin container on load while preloading to prevent hero movement */
-html.preloading .about-pin, .contact-pin-master, .master-viewport, .pin-all-projects, .services-hero-master, .services-pin-master
-body.preloading .about-pin, .contact-pin-master, .master-viewport, .pin-all-projects, .services-hero-master, .services-pin-master {
+
+/* ================================================================
+   PRELOADER — HARD PIN CONTENT
+   ================================================================ */
+
+html.preloading .about-pin,
+html.preloading .contact-pin-master,
+html.preloading .master-viewport,
+html.preloading .pin-all-projects,
+html.preloading .services-hero-master,
+html.preloading .services-pin-master,
+
+body.preloading .about-pin,
+body.preloading .contact-pin-master,
+body.preloading .master-viewport,
+body.preloading .pin-all-projects,
+body.preloading .services-hero-master,
+body.preloading .services-pin-master {
   position: fixed !important;
+
   top: 0 !important;
   left: 0 !important;
+
   width: 100% !important;
+
+  height: 100dvh !important;
+
   transform: translate3d(0, 0, 0) !important;
 }
 
-/* Strictly hide site-root while preloading to eliminate body flashing */
+
+/* ================================================================
+   PRELOADER — HIDE SITE ROOT
+   ================================================================ */
+
 html.preloading .site-root,
 body.preloading .site-root,
 html.preloading header,
@@ -142,22 +245,45 @@ body.preloading header {
   pointer-events: none !important;
 }
 
-/* Base site-root behavior once preloading is complete */
+
+/* ================================================================
+   SITE ROOT
+   ================================================================ */
+
 .site-root {
-  overflow-x: hidden;
   position: relative;
+
   width: 100%;
+
+  overflow-x: hidden;
+
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+  transition:
+    opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+
+/* ================================================================
+   SCROLL CONTAINER
+   ================================================================ */
 
 .scroll-container {
   position: relative;
   width: 100%;
 }
 
-/* ─── Full-Height Viewport Pin Wrapper (iOS dvh Fix) ─────────────────── */
+
+/* ================================================================
+   FULL HEIGHT CINEMATIC PANELS
+   ================================================================ */
+
+/*
+ * 100dvh is important for mobile browsers because it accounts
+ * for the dynamic browser toolbar/address bar.
+ */
+
 .pin-all,
 .pin-all-home,
 .pin-all-contact,
@@ -165,160 +291,391 @@ body.preloading header {
 .pin-all-services,
 .pin-all-subservices,
 .pin-all-single-project {
-  height: 100dvh !important;
-  min-height: 100dvh !important;
-  width: 100%;
   position: relative;
+
+  width: 100%;
+
+  height: 100dvh;
+  min-height: 100dvh;
+
   overflow: hidden;
 }
 
-/* Lock GSAP pin-spacer on iOS and Android without flickering */
-.pin-spacer {
-  min-height: 100dvh !important;
-  pointer-events: auto !important;
-}
 
-.pin-spacer > div {
-  height: 100dvh !important;
-  max-height: none !important;
-}
+/*
+ * IMPORTANT:
+ *
+ * Do NOT force .pin-spacer height.
+ *
+ * GSAP ScrollTrigger creates and controls the pin spacer.
+ *
+ * The old rules:
+ *
+ * .pin-spacer {
+ *   min-height: 100dvh !important;
+ * }
+ *
+ * .pin-spacer > div {
+ *   height: 100dvh !important;
+ * }
+ *
+ * have intentionally been removed.
+ */
 
-/* ─── GPU Layer Acceleration (Optimized to prevent flickering) ── */
+
+/* ================================================================
+   GPU ACCELERATION
+   ================================================================ */
+
+/*
+ * Use this only on elements that actually participate in
+ * large transform animations.
+ *
+ * Avoid applying will-change globally to every section.
+ */
+
 .gpu-accelerated,
 .structural-layer {
   transform: translate3d(0, 0, 0);
+
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 
-/* ─── Section Wrappers ───────────────────────────────────────── */
+
+/*
+ * Useful for large image layers.
+ */
+
+.info-img-layer {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+
+  transform: translateZ(0);
+
+  will-change: clip-path;
+}
+
+.info-image-inner {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+
+  transform: translateZ(0);
+
+  will-change: transform;
+}
+
+
+/* ================================================================
+   SECTION WRAPPERS
+   ================================================================ */
+
 .section-six-wrapper,
 .section-nine-wrapper {
   overflow: hidden;
 }
 
-/* ─── Typography ─────────────────────────────────────────────── */
-.font-display   { font-family: var(--font-display);   font-weight: 100; }
-.font-cormorant { font-family: var(--font-cormorant); font-weight: 400; }
-.font-body      { font-family: var(--font-body);      font-weight: 400; }
+
+/* ================================================================
+   TYPOGRAPHY
+   ================================================================ */
+
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 100;
+}
+
+.font-cormorant {
+  font-family: var(--font-cormorant);
+  font-weight: 400;
+}
+
+.font-body {
+  font-family: var(--font-body);
+  font-weight: 400;
+}
+
+
+/* ================================================================
+   DISPLAY TEXT
+   ================================================================ */
 
 .text-display {
-  font-family:    var(--font-display);
-  font-size:      var(--text-display);
-  line-height:    var(--leading-display);
+  font-family: var(--font-display);
+
+  font-size: var(--text-display);
+
+  line-height: var(--leading-display);
+
   letter-spacing: 0;
 }
+
+
+/* ================================================================
+   CORMORANT TEXT
+   ================================================================ */
 
 .text-cormorant {
-  font-family:    var(--font-cormorant);
-  font-size:      var(--text-display);
-  line-height:    var(--leading-display);
+  font-family: var(--font-cormorant);
+
+  font-size: var(--text-display);
+
+  line-height: var(--leading-display);
+
   letter-spacing: 0;
-  font-weight:    400;
+
+  font-weight: 400;
 }
 
-.text-cormorant-light    { font-family: var(--font-cormorant); font-weight: 300; }
-.text-cormorant-regular  { font-family: var(--font-cormorant); font-weight: 400; }
-.text-cormorant-medium   { font-family: var(--font-cormorant); font-weight: 500; }
-.text-cormorant-semibold { font-family: var(--font-cormorant); font-weight: 600; }
-.text-cormorant-bold     { font-family: var(--font-cormorant); font-weight: 700; }
-.text-cormorant-italic   { font-family: var(--font-cormorant); font-style: italic; }
+.text-cormorant-light {
+  font-family: var(--font-cormorant);
+  font-weight: 300;
+}
+
+.text-cormorant-regular {
+  font-family: var(--font-cormorant);
+  font-weight: 400;
+}
+
+.text-cormorant-medium {
+  font-family: var(--font-cormorant);
+  font-weight: 500;
+}
+
+.text-cormorant-semibold {
+  font-family: var(--font-cormorant);
+  font-weight: 600;
+}
+
+.text-cormorant-bold {
+  font-family: var(--font-cormorant);
+  font-weight: 700;
+}
+
+.text-cormorant-italic {
+  font-family: var(--font-cormorant);
+  font-style: italic;
+}
+
+
+/* ================================================================
+   BODY TEXT
+   ================================================================ */
 
 .text-body {
-  font-family:    var(--font-body);
-  font-size:      var(--text-body);
-  line-height:    var(--leading-body);
+  font-family: var(--font-body);
+
+  font-size: var(--text-body);
+
+  line-height: var(--leading-body);
+
   letter-spacing: 0;
-  font-weight:    400;
+
+  font-weight: 400;
 }
 
-.text-muted { color: var(--muted); }
-
-/* ─── Layout Utilities ───────────────────────────────────────── */
-.container {
-  width:          100%;
-  max-width:      var(--container-max);
-  margin-inline:  auto;
-  padding-inline: var(--container-pad);
+.text-muted {
+  color: var(--muted);
 }
 
-.section { padding-block: var(--section-py); }
-.row     { display: flex; align-items: center; }
-.stack   { display: flex; flex-direction: column; }
 
-.section-container {
-  width:          100%;
-  margin:         0 auto;
-  padding-inline: 65px;
-  padding-block:  85px;
-}
+/* ================================================================
+   GLOBAL HEADINGS
+   ================================================================ */
 
-@media (max-width: 1025px) {
-  .section-container {
-    padding-inline: 30px;
-    padding-block:  75px;
-  }
-}
-
-@media (max-width: 767px) {
-  .section-container {
-    padding-inline: 20px;
-    padding-block:  65px;
-  }
-}
-
-/* ─── Border & Surface ───────────────────────────────────────── */
-.border       { border: 1px solid var(--border); }
-.border-t     { border-top: 1px solid var(--border); }
-.border-b     { border-bottom: 1px solid var(--border); }
-.rounded-sm   { border-radius: var(--radius-sm); }
-.rounded-md   { border-radius: var(--radius-md); }
-.rounded-lg   { border-radius: var(--radius-lg); }
-.rounded-full { border-radius: var(--radius-full); }
-
-/* ─── Transitions ────────────────────────────────────────────── */
-.transition      { transition: all var(--duration-base) var(--ease-out); }
-.transition-fast { transition: all var(--duration-fast) var(--ease-out); }
-
-/* ─── Responsive Headings & Paragraphs ────────────────────────── */
-h2, h1 {
-  font-size:   72px;
+h1,
+h2 {
+  font-size: 72px;
   line-height: 1.15;
 }
 
 p {
-  font-size:   16px;
+  font-size: 16px;
   line-height: var(--leading-body);
 }
 
-@media (max-width: 1024px) {
-  h2, h1 { font-size: 56px; line-height: 1.3; }
-  p  { font-size: 16px; }
+
+/* ================================================================
+   CONTAINER
+   ================================================================ */
+
+.container {
+  width: 100%;
+
+  max-width: var(--container-max);
+
+  margin-inline: auto;
+
+  padding-inline: var(--container-pad);
 }
 
-@media (max-width: 767px) {
-  h2, h1 { font-size: 42px; line-height: 1.3; }
-  p  { font-size: 16px; }
+
+/* ================================================================
+   SECTION
+   ================================================================ */
+
+.section {
+  padding-block: var(--section-py);
 }
 
-/* ─── Reduced Motion ─────────────────────────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration:        0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration:       0.01ms !important;
-    scroll-behavior:          auto !important;
+
+/* ================================================================
+   FLEX UTILITIES
+   ================================================================ */
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* ================================================================
+   SECTION CONTAINER
+   ================================================================ */
+
+.section-container {
+  width: 100%;
+
+  margin: 0 auto;
+
+  padding-inline: 65px;
+  padding-block: 85px;
+}
+
+
+/* ================================================================
+   TABLET
+   ================================================================ */
+
+@media (max-width: 1025px) {
+  .section-container {
+    padding-inline: 30px;
+    padding-block: 75px;
   }
 }
 
-/* ─── Modern Text Reveal System ─────────────────────────────── */
+
+/* ================================================================
+   MOBILE
+   ================================================================ */
+
+@media (max-width: 767px) {
+  .section-container {
+    padding-inline: 20px;
+    padding-block: 65px;
+  }
+}
+
+
+/* ================================================================
+   TABLET TYPOGRAPHY
+   ================================================================ */
+
+@media (max-width: 1024px) {
+  h1,
+  h2 {
+    font-size: 56px;
+    line-height: 1.3;
+  }
+
+  p {
+    font-size: 16px;
+  }
+}
+
+
+/* ================================================================
+   MOBILE TYPOGRAPHY
+   ================================================================ */
+
+@media (max-width: 767px) {
+  h1,
+  h2 {
+    font-size: 42px;
+    line-height: 1.3;
+  }
+
+  p {
+    font-size: 16px;
+  }
+}
+
+
+/* ================================================================
+   BORDERS
+   ================================================================ */
+
+.border {
+  border: 1px solid var(--border);
+}
+
+.border-t {
+  border-top: 1px solid var(--border);
+}
+
+.border-b {
+  border-bottom: 1px solid var(--border);
+}
+
+
+/* ================================================================
+   BORDER RADIUS
+   ================================================================ */
+
+.rounded-sm {
+  border-radius: var(--radius-sm);
+}
+
+.rounded-md {
+  border-radius: var(--radius-md);
+}
+
+.rounded-lg {
+  border-radius: var(--radius-lg);
+}
+
+.rounded-full {
+  border-radius: var(--radius-full);
+}
+
+
+/* ================================================================
+   GENERAL TRANSITIONS
+   ================================================================ */
+
+.transition {
+  transition:
+    all var(--duration-base) var(--ease-out);
+}
+
+.transition-fast {
+  transition:
+    all var(--duration-fast) var(--ease-out);
+}
+
+
+/* ================================================================
+   TEXT REVEAL SYSTEM
+   ================================================================ */
 
 .reveal-text {
   perspective: 1000px;
+
   backface-visibility: hidden;
 }
+
+
+/*
+ * Desktop text reveal starts hidden.
+ *
+ * Mobile keeps text visible so content doesn't disappear if
+ * JavaScript/GSAP hasn't initialized yet.
+ */
 
 @media screen and (min-width: 1025px) {
   .reveal-text {
@@ -327,58 +684,100 @@ p {
   }
 }
 
+
+/* ================================================================
+   GSAP LINE REVEAL
+   ================================================================ */
+
 .gs-line {
   display: block;
+
   overflow: hidden;
+
   padding-bottom: 0.15em;
+
   margin-bottom: -0.15em;
+
   perspective: 800px;
 }
 
 .gs-line-inner {
   display: block !important;
+
   will-change: transform, opacity;
+
   transform-style: preserve-3d;
+
   backface-visibility: hidden;
 }
 
+
+/* ================================================================
+   GSAP WORD REVEAL
+   ================================================================ */
+
 .gs-word-wrapper {
   display: inline-block;
+
   overflow: hidden;
+
   vertical-align: top;
 }
 
 .gs-word {
   display: inline-block;
+
   will-change: transform;
 }
 
-/* ─── 404 Preloader Suppression ────────────────────────────── */
+
+/* ================================================================
+   404 PRELOADER SUPPRESSION
+   ================================================================ */
+
 body:has(#not-found-page) #brand-preloader-root,
 body:has(#not-found-page) #fade-preloader-root,
 html.page-404 #brand-preloader-root,
 html.page-404 #fade-preloader-root {
   display: none !important;
+
   opacity: 0 !important;
+
   visibility: hidden !important;
+
   pointer-events: none !important;
 }
 
-/* Custom Underline Button */
+
+/* ================================================================
+   UNDERLINE BUTTON
+   ================================================================ */
+
 a.btn-underline,
 button.btn-underline,
 .btn-underline {
   position: relative !important;
+
   display: inline-block !important;
+
   width: fit-content !important;
+
   padding-bottom: 4px !important;
+
   font-size: 14px !important;
+
   font-weight: 500 !important;
+
   text-transform: uppercase !important;
-  color: #F4EEDF !important;
+
+  color: #f4eedf !important;
+
   text-decoration: none !important;
+
   flex-shrink: 0 !important;
-  transition: opacity 0.2s ease !important;
+
+  transition:
+    opacity 0.2s ease !important;
 }
 
 a.btn-underline:hover,
@@ -391,13 +790,22 @@ a.btn-underline::after,
 button.btn-underline::after,
 .btn-underline::after {
   content: "" !important;
+
   position: absolute !important;
+
   left: 0 !important;
   right: 0 !important;
+
   bottom: 0 !important;
+
   height: 1px !important;
-  background-color: #F4EEDF !important;
-  transition: transform 0.2s ease !important;
+
+  background-color: #f4eedf !important;
+
+  transform-origin: left center;
+
+  transition:
+    transform 0.2s ease !important;
 }
 
 a.btn-underline:hover::after,
@@ -406,18 +814,87 @@ button.btn-underline:hover::after,
   transform: translateY(-2px) !important;
 }
 
-/* Add to Design Tokens / GPU section in globals.css */
 
-.info-img-layer {
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  transform: translateZ(0);
-  will-change: clip-path;
+/* ================================================================
+   REDUCED MOTION
+   ================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
+
+    scroll-behavior: auto !important;
+  }
 }
 
-.info-image-inner {
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  transform: translateZ(0);
-  will-change: transform;
+
+/* ================================================================
+   MOBILE TOUCH BEHAVIOR
+   ================================================================ */
+
+/*
+ * Don't disable touch scrolling globally.
+ *
+ * This is important for the natural mobile feel.
+ */
+
+@media (max-width: 1024px) {
+  html,
+  body {
+    touch-action: pan-y;
+  }
 }
+
+
+/*
+ * Interactive elements that contain their own scroll areas can
+ * opt out of the page scroll using data-lenis-prevent.
+ */
+
+[data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+
+/* ================================================================
+   SAFE IMAGE RENDERING
+   ================================================================ */
+
+img,
+video {
+  max-width: 100%;
+}
+
+
+/*
+ * Prevent accidental inline image gaps in animated layouts.
+ */
+
+img {
+  display: block;
+}
+
+
+/* ================================================================
+   MOBILE SAFETY
+   ================================================================ */
+
+@media (max-width: 767px) {
+  /*
+   * Avoid accidental horizontal overflow from animated elements.
+   */
+  body {
+    overflow-x: hidden;
+  }
+}
+
+
+/* ================================================================
+   END
+   ================================================================ */
