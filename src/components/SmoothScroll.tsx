@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useSite } from "../app/context/SiteContext";
+import CustomScrollBar from "./CustomScrollBar";
 
 interface SmoothScrollProps {
   children: React.ReactNode;
@@ -104,7 +105,8 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   }, [pathname, preloaderDone]);
 
   return (
-    <div className="flex flex-col min-h-[100svh] w-full">
+    <div className="flex flex-col min-h-[100svh] w-full relative">
+      <CustomScrollBar />
       {children}
     </div>
   );
