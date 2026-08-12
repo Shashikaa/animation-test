@@ -47,20 +47,21 @@ export default function PreloaderToggle() {
     setLoaderType("none");
   }, [markBrandPreloaderSeen, setPreloaderDone]);
 
-  // Fade Preloader Exit Start
+  // Fade Preloader Exit Start -> TRIGGER HERO ANIMATION AND UNLOCK HERE
   const handleFadeExitStart = useCallback(() => {
     document.documentElement.classList.remove("preloading");
     document.body.classList.remove("preloading");
-  }, []);
-
-  // Fade Preloader Complete Callback (Triggers strictly when opacity hits 0)
-  const handleFadeComplete = useCallback(() => {
-    document.documentElement.classList.remove("show-fade-preloader", "preloading");
-    document.body.classList.remove("preloading");
-    window.scrollTo(0, 0);
-    setPreloaderDone(true);
-    setLoaderType("none");
+    setPreloaderDone(true); // <--- Triggers preloaderDone immediately as the preloader begins fading out
   }, [setPreloaderDone]);
+
+  // Fade Preloader Complete Callback (Unmounts preloader element after opacity reaches 0)
+  const handleFadeComplete = useCallback(() => {
+    document.documentElement.classList.remove("show-fade-preloader");
+    if (typeof window !== "undefined") {
+      window.scrollTo(0, 0);
+    }
+    setLoaderType("none");
+  }, []);
 
   return (
     <>

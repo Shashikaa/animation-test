@@ -34,8 +34,8 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
           lerp: 0.1,
           duration: 1.2,
           smoothWheel: true,
-          wheelMultiplier: 1.1,
-          touchMultiplier: 1.5,
+          wheelMultiplier: 1.0,
+          touchMultiplier: 1.4,
           syncTouch: true, // Required for Android Chrome touch response
           autoResize: true,
         },

@@ -1,65 +1,90 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Hero from "@/src/components/About/Hero";
-import SectionOne from "@/src/components/About/SectionOne";
-import SectionTwo from "@/src/components/About/SectionTwo";
-import SectionThree from "@/src/components/About/SectionThree";
-import SectionFour from "@/src/components/About/SectionFour";
-import SectionFive from "@/src/components/About/SectionFive";
-import SectionCTA from "@/src/components/SectionCTA";
-import Footer from "@/src/components/Footer";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal";
 
+// Dynamically import heavy sections to isolate execution during hero intro
+const SectionOne = dynamic(() => import("@/src/components/About/SectionOne"));
+const SectionTwo = dynamic(() => import("@/src/components/About/SectionTwo"));
+const SectionThree = dynamic(() => import("@/src/components/About/SectionThree"));
+const SectionFour = dynamic(() => import("@/src/components/About/SectionFour"));
+const SectionFive = dynamic(() => import("@/src/components/About/SectionFive"));
+const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
+const Footer = dynamic(() => import("@/src/components/Footer"));
+
 const TOTAL_SCROLL_STEPS = 12;
-const easeOutQuad = (t: number) => t * (2 - t);
-const easeInOutQuad = (t: number) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
 
 export default function AboutDesktop() {
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const fixedFrameRef = useRef<HTMLDivElement>(null);
-  const footerWrapRef = useRef<HTMLDivElement>(null);
 
-  const targetProgress = useRef(0);
-  const currentProgress = useRef(0);
-  const isInitialized = useRef(false);
-  const rafId = useRef<number | null>(null);
+  const layer6Ref = useRef<HTMLDivElement>(null);
+  const layer7Ref = useRef<HTMLDivElement>(null);
 
+  // Cached layout measurements
+  const dimensionsRef = useRef({ ctaHeight: 0, footerHeight: 0, vh: 0 });
+
+  const progressRef = useRef(0);
   const revealedSections = useRef<Set<string>>(new Set());
   const lastSec5Idx = useRef<number>(-1);
 
   const { smootherRef } = useSite();
+  const { introDone, preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
+    isMobile: false,
+    introDurationMs: 2800,
+  });
 
-  // Run desktop intro sequence
-  const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: false });
-
-  // ── 1. UNLOCK SCROLL & LENIS IMMEDIATELY UPON INTRO READY ──
+  // ── 1. UNLOCK LENIS ONLY AFTER INTRO COMPLETES ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
     if (!preloaderDone || !introDone) {
       if (lenis && typeof lenis.stop === "function") lenis.stop();
+      progressRef.current = 0;
       window.scrollTo(0, 0);
-      targetProgress.current = 0;
-      currentProgress.current = 0;
-
-      if (fixedFrameRef.current) {
-        fixedFrameRef.current.style.position = "fixed";
-        fixedFrameRef.current.style.top = "0px";
-        fixedFrameRef.current.style.bottom = "auto";
-      }
     } else {
+      document.body.classList.remove("preloading");
+      document.documentElement.classList.remove("preloading");
+
       if (lenis && typeof lenis.start === "function") {
         lenis.start();
       }
-      // Trigger instant scroll update to prevent first-scroll lag
       window.dispatchEvent(new Event("scroll"));
     }
   }, [preloaderDone, introDone, smootherRef]);
+
+  // ── 2. CACHE ELEMENT DIMENSIONS ON RESIZE ──
+  useEffect(() => {
+    if (!shouldLoadRest) return;
+
+    const measure = () => {
+      dimensionsRef.current = {
+        ctaHeight: layer6Ref.current?.offsetHeight || window.innerHeight,
+        footerHeight: layer7Ref.current?.offsetHeight || window.innerHeight,
+        vh: window.innerHeight,
+      };
+    };
+
+    measure();
+    window.addEventListener("resize", measure, { passive: true });
+    return () => window.removeEventListener("resize", measure);
+  }, [shouldLoadRest]);
+
+  // ── 3. SECTION 5 TRIGGER HOOK ──
+  const triggerSec5Hook = useCallback((nextIdx: number) => {
+    if (nextIdx !== lastSec5Idx.current) {
+      lastSec5Idx.current = nextIdx;
+      if (typeof window !== "undefined" && (window as any)._sec5GoTo) {
+        (window as any)._sec5GoTo(nextIdx);
+      }
+    }
+  }, []);
 
   const triggerPlayOnceTextReveal = (
     containerSelector: string,
@@ -82,7 +107,7 @@ export default function AboutDesktop() {
         el.style.transition = `transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${
           idx * 0.08
         }s, opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.08}s`;
-        el.style.transform = "translate3d(0, 0%, 0) rotateZ(0deg)";
+        el.style.transform = "translate3d(0, 0%, 0)";
         el.style.opacity = "1";
       });
     }
@@ -111,109 +136,62 @@ export default function AboutDesktop() {
     };
   }, [introDone, preloaderDone]);
 
+  // ── 4. DIRECT GPU SCROLL RENDERING ──
   useEffect(() => {
-    if (!preloaderDone || !introDone) return;
+    // Avoid calculating scroll transforms during intro animation
+    if (!preloaderDone || !introDone || !scopeRef.current) return;
 
-    const heroLeft = scopeRef.current?.querySelector<HTMLElement>(".about-hero-panel-left");
-    const heroRight = scopeRef.current?.querySelector<HTMLElement>(".about-hero-panel-right");
-    const heroBgs = scopeRef.current?.querySelectorAll<HTMLElement>(".about-hero-bg");
+    const scope = scopeRef.current;
+    const heroLeft = scope.querySelector<HTMLElement>(".about-hero-panel-left");
+    const heroRight = scope.querySelector<HTMLElement>(".about-hero-panel-right");
+    const heroBgs = scope.querySelectorAll<HTMLElement>(".about-hero-bg");
+    const secTwo = scope.querySelector<HTMLElement>(".about-section-two");
+    const secThree = scope.querySelector<HTMLElement>(".about-section-three");
+    const secFour = scope.querySelector<HTMLElement>(".about-section-four");
+    const s4GlassCard = scope.querySelector<HTMLElement>(".s4-glass-card");
+    const secFive = scope.querySelector<HTMLElement>(".about-section-five");
+    const s5Bg = scope.querySelector<HTMLElement>(".s5-bg");
 
-    // 🔥 PRE-WARM GPU COMPOSITING LAYERS TO PREVENT 1ST-SECOND LAG
-    if (heroLeft) {
-      heroLeft.style.willChange = "clip-path, transform";
-      heroLeft.style.transform = "translate3d(0,0,0)";
-    }
-    if (heroRight) {
-      heroRight.style.willChange = "clip-path, transform";
-      heroRight.style.transform = "translate3d(0,0,0)";
-    }
-    heroBgs?.forEach((bg) => {
-      bg.style.willChange = "transform";
-      bg.style.transform = "translate3d(0,0,0) scale(1.15)";
-    });
+    const renderTransforms = () => {
+      const stepProgress = progressRef.current * (TOTAL_SCROLL_STEPS - 1);
+      const { ctaHeight, footerHeight, vh } = dimensionsRef.current;
 
-    const triggerSec5Hook = (nextIdx: number) => {
-      if (nextIdx !== lastSec5Idx.current) {
-        lastSec5Idx.current = nextIdx;
-        if ((window as any)._sec5GoTo) {
-          (window as any)._sec5GoTo(nextIdx);
-        }
-      }
-    };
-
-    const updatePhysics = () => {
-      if (!isInitialized.current) {
-        currentProgress.current = targetProgress.current;
-        isInitialized.current = true;
-      } else {
-        currentProgress.current += (targetProgress.current - currentProgress.current) * 0.08;
-      }
-
-      const progress = currentProgress.current;
-      const stepProgress = progress * (TOTAL_SCROLL_STEPS - 1);
-      const vh = window.innerHeight;
-
-      const secTwo = scopeRef.current?.querySelector<HTMLElement>(".about-section-two");
-      const secThree = scopeRef.current?.querySelector<HTMLElement>(".about-section-three");
-      const secFour = scopeRef.current?.querySelector<HTMLElement>(".about-section-four");
-      const s4GlassCard = scopeRef.current?.querySelector<HTMLElement>(".s4-glass-card");
-      const secFive = scopeRef.current?.querySelector<HTMLElement>(".about-section-five");
-      const s5Bg = scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
-      const secCta = scopeRef.current?.querySelector<HTMLElement>(".about-section-cta");
-      const ctaInner = scopeRef.current?.querySelector<HTMLElement>(".cta-inner-desktop");
-      const footerWrap = scopeRef.current?.querySelector<HTMLElement>(".about-footer-wrap");
-
-      // ── STEP 0 -> 1: HERO CURTAIN SPLIT ──
-      const s1Prog = easeInOutQuad(Math.min(Math.max(stepProgress - 0, 0), 1));
-
+      // 1. HERO CURTAIN SPLIT (STEPS 0 -> 1)
+      const s1Prog = Math.min(Math.max(stepProgress, 0), 1);
       if (heroLeft && heroRight) {
         const clipVal = s1Prog * 100;
-        const leftInset = `inset(0% 50% ${clipVal}% 0%)`;
-        const rightInset = `inset(${clipVal}% 0% 0% 50%)`;
-
-        heroLeft.style.clipPath = leftInset;
-        (heroLeft.style as any).webkitClipPath = leftInset;
-
-        heroRight.style.clipPath = rightInset;
-        (heroRight.style as any).webkitClipPath = rightInset;
+        heroLeft.style.clipPath = `inset(0% 50% ${clipVal}% 0%)`;
+        heroRight.style.clipPath = `inset(${clipVal}% 0% 0% 50%)`;
       }
-
-      if (heroBgs && heroBgs.length > 0) {
-        const scaleVal = 1.15 - s1Prog * 0.15;
+      if (heroBgs) {
+        const scaleVal = (1.15 - s1Prog * 0.15).toFixed(4);
         heroBgs.forEach((bg) => {
-          bg.style.transform = `translate3d(0,0,0) scale(${scaleVal})`;
+          bg.style.transform = `translate3d(0,0,0) scale3d(${scaleVal}, ${scaleVal}, 1)`;
         });
       }
-
       triggerPlayOnceTextReveal(".about-section-one", stepProgress, 0.4);
 
-      // ── STEP 1.2 -> 2.2: SECTION TWO ──
-      const s2Prog = easeInOutQuad(Math.min(Math.max(stepProgress - 1.2, 0), 1));
+      // 2. SECTION TWO (STEPS 1.2 -> 2.2)
+      const s2Prog = Math.min(Math.max((stepProgress - 1.2) / 1.0, 0), 1);
       if (secTwo) {
-        secTwo.style.visibility = "visible";
+        secTwo.style.visibility = stepProgress >= 1.0 ? "visible" : "hidden";
         secTwo.style.transform = `translate3d(0, ${(1 - s2Prog) * 100}%, 0)`;
       }
       triggerPlayOnceTextReveal(".about-section-two", stepProgress, 1.8);
 
-      // ── STEP 2.4 -> 3.4: SECTION THREE ──
-      const s3Prog = easeInOutQuad(Math.min(Math.max(stepProgress - 2.4, 0), 1));
+      // 3. SECTION THREE (STEPS 2.4 -> 3.4)
+      const s3Prog = Math.min(Math.max((stepProgress - 2.4) / 1.0, 0), 1);
       if (secThree) {
-        secThree.style.visibility = "visible";
-        const clipInset = (1 - s3Prog) * 100;
-        const insetStr = `inset(${clipInset}% 0% 0% 0%)`;
-        secThree.style.clipPath = insetStr;
-        (secThree.style as any).webkitClipPath = insetStr;
+        secThree.style.visibility = stepProgress >= 2.2 ? "visible" : "hidden";
+        secThree.style.clipPath = `inset(${(1 - s3Prog) * 100}% 0% 0% 0%)`;
       }
       triggerPlayOnceTextReveal(".about-section-three", stepProgress, 3.0);
 
-      // ── STEP 3.6 -> 4.6: SECTION FOUR ──
-      const s4Prog = easeInOutQuad(Math.min(Math.max(stepProgress - 3.6, 0), 1));
+      // 4. SECTION FOUR (STEPS 3.6 -> 4.6)
+      const s4Prog = Math.min(Math.max((stepProgress - 3.6) / 1.0, 0), 1);
       if (secFour) {
-        secFour.style.visibility = "visible";
-        const clipInset = (1 - s4Prog) * 100;
-        const insetStr = `inset(${clipInset}% 0% 0% 0%)`;
-        secFour.style.clipPath = insetStr;
-        (secFour.style as any).webkitClipPath = insetStr;
+        secFour.style.visibility = stepProgress >= 3.4 ? "visible" : "hidden";
+        secFour.style.clipPath = `inset(${(1 - s4Prog) * 100}% 0% 0% 0%)`;
       }
       if (s4GlassCard) {
         const glassProg = Math.min(Math.max((stepProgress - 4.0) / 0.6, 0), 1);
@@ -222,29 +200,22 @@ export default function AboutDesktop() {
       }
       triggerPlayOnceTextReveal(".about-section-four", stepProgress, 4.2);
 
-      // ── STEP 4.8 -> 5.8: SECTION FIVE ──
-      const s5Prog = easeInOutQuad(Math.min(Math.max(stepProgress - 4.8, 0), 1));
+      // 5. SECTION FIVE (STEPS 4.8 -> 5.8)
+      const s5Prog = Math.min(Math.max((stepProgress - 4.8) / 1.0, 0), 1);
       if (secFive) {
-        secFive.style.visibility = "visible";
+        secFive.style.visibility = stepProgress >= 4.6 ? "visible" : "hidden";
         secFive.style.transform = `translate3d(0, ${(1 - s5Prog) * 100}%, 0)`;
       }
 
       if (stepProgress >= 5.5 && stepProgress < 8.2) {
         setIsSectionFiveActive(true);
         const sec5SubProgress = (stepProgress - 5.5) / 2.7;
-
-        if (sec5SubProgress < 0.33) {
-          triggerSec5Hook(0);
-        } else if (sec5SubProgress < 0.66) {
-          triggerSec5Hook(1);
-        } else {
-          triggerSec5Hook(2);
-        }
-      } else {
-        if (stepProgress < 5.5) {
-          setIsSectionFiveActive(false);
-          triggerSec5Hook(0);
-        }
+        if (sec5SubProgress < 0.33) triggerSec5Hook(0);
+        else if (sec5SubProgress < 0.66) triggerSec5Hook(1);
+        else triggerSec5Hook(2);
+      } else if (stepProgress < 5.5) {
+        setIsSectionFiveActive(false);
+        triggerSec5Hook(0);
       }
 
       if (s5Bg) {
@@ -252,31 +223,23 @@ export default function AboutDesktop() {
         s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
       }
 
-      // ── STEP 8.2 -> 9.4: CTA ──
-      const ctaProg = easeOutQuad(Math.min(Math.max(stepProgress - 8.2, 0), 1));
-      if (secCta) {
-        secCta.style.visibility = "visible";
-        secCta.style.transform = `translate3d(0, ${(1 - ctaProg) * 100}%, 0)`;
+      // 6. LAYER 6 (CTA)
+      const ctaProgress = Math.min(Math.max((stepProgress - 8.2) / 1.6, 0), 1);
+      if (layer6Ref.current) {
+        const startY = vh;
+        const endY = -(ctaHeight - vh);
+        const currentY = startY + (endY - startY) * ctaProgress;
+        layer6Ref.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
       }
 
-      if (ctaInner) {
-        const fadeProg = Math.min(Math.max((stepProgress - 9.2) / 0.6, 0), 1);
-        ctaInner.style.opacity = `${1 - fadeProg}`;
-        ctaInner.style.transform = `translate3d(0, ${-fadeProg * 40}px, 0)`;
+      // 7. LAYER 7 (FOOTER)
+      const footerProgress = Math.min(Math.max((stepProgress - 9.8) / 1.2, 0), 1);
+      if (layer7Ref.current) {
+        const startY = vh;
+        const endY = vh - footerHeight;
+        const translateY = startY + (endY - startY) * footerProgress;
+        layer7Ref.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
       }
-
-      // ── STEP 9.8 -> 11.0: FOOTER ──
-      const footerHeight = footerWrapRef.current ? footerWrapRef.current.offsetHeight : vh;
-      const footerRawProg = Math.min(Math.max((stepProgress - 9.8) / 1.2, 0), 1);
-      const footerProg = easeOutQuad(footerRawProg);
-
-      if (footerWrap) {
-        footerWrap.style.visibility = "visible";
-        const footerY = (1 - footerProg) * footerHeight;
-        footerWrap.style.transform = `translate3d(0, ${footerY}px, 0)`;
-      }
-
-      rafId.current = requestAnimationFrame(updatePhysics);
     };
 
     const handleScroll = () => {
@@ -303,37 +266,36 @@ export default function AboutDesktop() {
       }
 
       const currentScroll = Math.max(0, -trackRect.top);
-      targetProgress.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
+      progressRef.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
+
+      requestAnimationFrame(renderTransforms);
     };
 
     handleScroll();
-    rafId.current = requestAnimationFrame(updatePhysics);
 
     const lenis = smootherRef?.current;
-    if (lenis) {
+    if (lenis && typeof lenis.on === "function") {
       lenis.on("scroll", handleScroll);
     } else {
       window.addEventListener("scroll", handleScroll, { passive: true });
     }
 
     return () => {
-      if (rafId.current) {
-        cancelAnimationFrame(rafId.current);
-      }
-      if (lenis) {
+      if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
       } else {
         window.removeEventListener("scroll", handleScroll);
       }
-      // Clean up GPU hints
-      if (heroLeft) heroLeft.style.willChange = "";
-      if (heroRight) heroRight.style.willChange = "";
-      heroBgs?.forEach((bg) => (bg.style.willChange = ""));
+      if (typeof window !== "undefined") {
+        delete (window as any)._sec5GoTo;
+      }
     };
-  }, [introDone, preloaderDone, smootherRef]);
+  }, [introDone, preloaderDone, smootherRef, triggerSec5Hook]);
+
+  const isReady = preloaderDone && introDone;
 
   return (
-    <div ref={scopeRef}>
+    <div ref={scopeRef} className="w-full bg-[#162D24]">
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
@@ -343,70 +305,76 @@ export default function AboutDesktop() {
           ref={fixedFrameRef}
           className="about-pin fixed top-0 left-0 h-[100svh] w-full overflow-hidden bg-[#162D24] z-10"
         >
-          {/* SECTION ONE */}
+          {/* HERO COMPONENT - Renders immediately */}
           <div
-            className="about-section-one absolute inset-0 h-full w-full structural-layer bg-[#162D24]"
-            style={{ zIndex: 10 }}
-          >
-            <SectionOne />
-          </div>
-
-          {/* HERO COMPONENT */}
-          <div
-            className="absolute inset-0 h-full w-full structural-layer"
+            className="absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu"
             style={{ zIndex: 20 }}
           >
             <Hero isMobile={false} />
           </div>
 
-          {/* SECTION TWO */}
-          <div
-            className="about-section-two absolute inset-0 h-full w-full structural-layer"
-            style={{ zIndex: 30, visibility: "hidden", transform: "translate3d(0, 100%, 0)" }}
-          >
-            <SectionTwo />
-          </div>
+          {/* DOWNSTREAM SECTIONS - Deferred until intro sequence ends */}
+          {shouldLoadRest && (
+            <>
+              {/* SECTION ONE */}
+              <div
+                className="about-section-one absolute inset-0 h-full w-full structural-layer bg-[#162D24]"
+                style={{ zIndex: 10 }}
+              >
+                <SectionOne />
+              </div>
 
-          {/* SECTION THREE */}
-          <div
-            className="about-section-three absolute inset-0 h-full w-full structural-layer"
-            style={{ zIndex: 40, visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)", WebkitClipPath: "inset(100% 0% 0% 0%)" }}
-          >
-            <SectionThree />
-          </div>
+              {/* SECTION TWO */}
+              <div
+                className="about-section-two absolute inset-0 h-full w-full structural-layer"
+                style={{ zIndex: 30, visibility: "hidden", transform: "translate3d(0, 100%, 0)" }}
+              >
+                <SectionTwo />
+              </div>
 
-          {/* SECTION FOUR */}
-          <div
-            className="about-section-four absolute inset-0 h-full w-full structural-layer"
-            style={{ zIndex: 50, visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)", WebkitClipPath: "inset(100% 0% 0% 0%)" }}
-          >
-            <SectionFour />
-          </div>
+              {/* SECTION THREE */}
+              <div
+                className="about-section-three absolute inset-0 h-full w-full structural-layer"
+                style={{ zIndex: 40, visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)" }}
+              >
+                <SectionThree />
+              </div>
 
-          {/* SECTION FIVE */}
-          <div
-            className="about-section-five absolute inset-0 h-full w-full structural-layer"
-            style={{ zIndex: 60, visibility: "hidden", transform: "translate3d(0, 100%, 0)" }}
-          >
-            <SectionFive isActive={isSectionFiveActive} />
-          </div>
+              {/* SECTION FOUR */}
+              <div
+                className="about-section-four absolute inset-0 h-full w-full structural-layer"
+                style={{ zIndex: 50, visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)" }}
+              >
+                <SectionFour />
+              </div>
 
-          {/* SECTION CTA */}
-          <div
-            className="about-section-cta absolute bottom-0 left-0 w-full structural-layer"
-            style={{ zIndex: 90, visibility: "hidden", transform: "translate3d(0, 100%, 0)" }}
-          >
-            <SectionCTA />
-          </div>
+              {/* SECTION FIVE */}
+              <div
+                className="about-section-five absolute inset-0 h-full w-full structural-layer"
+                style={{ zIndex: 60, visibility: "hidden", transform: "translate3d(0, 100%, 0)" }}
+              >
+                <SectionFive isActive={isSectionFiveActive} />
+              </div>
 
-          {/* FOOTER WRAP */}
-          <div
-            ref={footerWrapRef}
-            className="about-footer-wrap absolute left-0 bottom-0 w-full structural-layer"
-            style={{ zIndex: 100, visibility: "hidden", transform: "translate3d(0, 100%, 0)" }}
-          >
-            <Footer />
-          </div>
+              {/* SECTION CTA */}
+              <div
+                ref={layer6Ref}
+                className="about-section-cta absolute left-0 top-0 w-full z-[90]"
+                style={{ transform: "translate3d(0, 100vh, 0)" }}
+              >
+                <SectionCTA preloaderDone={isReady} />
+              </div>
+
+              {/* FOOTER */}
+              <div
+                ref={layer7Ref}
+                className="about-footer-wrap absolute left-0 top-0 w-full z-[100]"
+                style={{ transform: "translate3d(0, 100vh, 0)" }}
+              >
+                <Footer />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

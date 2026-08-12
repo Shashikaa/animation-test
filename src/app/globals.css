@@ -414,7 +414,14 @@ button.btn-underline:hover::after,
   overflow: visible !important;
 }
 
+/* Allow auto-height override for CTA and dynamic layers */
 .about-stack-layer {
-  height: 100dvh !important;
-  max-height: 100dvh !important;
+  height: 100dvh;
+  max-height: 100dvh;
+}
+
+.about-stack-layer.layer-auto-height {
+  height: auto !important;
+  max-height: none !important;
+  min-height: 100dvh;
 }
