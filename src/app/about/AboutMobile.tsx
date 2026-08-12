@@ -31,7 +31,7 @@ export default function AboutMobile() {
   const { smootherRef } = useSite();
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // ── 1. INITIALIZE & CLEANUP VIEWPORT HEIGHT ──
+  // ── 1. INITIALIZE VIEWPORT HEIGHT ──
   useEffect(() => {
     const updateVh = () => {
       const activeTag = document.activeElement?.tagName;
@@ -59,7 +59,7 @@ export default function AboutMobile() {
     };
   }, []);
 
-  // ── 2. INTRO LOCK WITH CLEANUP GUARANTEE ──
+  // ── 2. INTRO UNLOCK & LENIS RESUME ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -72,6 +72,7 @@ export default function AboutMobile() {
       if (lenis && typeof lenis.start === "function") {
         lenis.start();
       }
+      window.dispatchEvent(new Event("scroll"));
     }
 
     return () => {
@@ -91,7 +92,7 @@ export default function AboutMobile() {
     }
   }, []);
 
-  // ── 4. STACK ANIMATION & ISOLATED SCROLL LOOP ──
+  // ── 4. STACK ANIMATION LOOP ──
   useEffect(() => {
     if (!preloaderDone || !introDone) return;
 
@@ -123,15 +124,12 @@ export default function AboutMobile() {
       if (panels[4]) panels[4].style.transform = `translate3d(0, ${(1 - s4Progress) * 100}%, 0)`;
       if (panels[5]) panels[5].style.transform = `translate3d(0, ${(1 - s5Progress) * 100}%, 0)`;
 
-      // ── SECTION 5 BACKGROUND PARALLAX TRANSLATE ──
       const s5Bg = scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
       if (s5Bg) {
-        // Normalizing the progress across Section 5's active scroll range (step 4.0 to 7.0)
         const parallaxProg = Math.min(Math.max((stepProgress - 4.0) / 3.0, 0), 1);
         s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
       }
 
-      // ── SECTION 5 INNER STEP TRIGGERING ──
       if (stepProgress >= 4.5 && stepProgress < 7.0) {
         setIsSectionFiveActive(true);
         const sec5SubProgress = (stepProgress - 4.5) / 2.5;

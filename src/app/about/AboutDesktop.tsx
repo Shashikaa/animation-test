@@ -37,28 +37,35 @@ export default function AboutDesktop() {
   // Run desktop intro sequence
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: false });
 
-  // ── 1. LOCK SCROLL & LENIS UNTIL INTRO COMPLETES ──
+  // ── 1. UNLOCK SCROLL & LENIS IMMEDIATELY UPON INTRO READY ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
     if (!preloaderDone || !introDone) {
-      if (lenis) lenis.stop();
+      if (lenis && typeof lenis.stop === "function") lenis.stop();
       window.scrollTo(0, 0);
       targetProgress.current = 0;
       currentProgress.current = 0;
 
-      // Force pinned state initially
       if (fixedFrameRef.current) {
         fixedFrameRef.current.style.position = "fixed";
         fixedFrameRef.current.style.top = "0px";
         fixedFrameRef.current.style.bottom = "auto";
       }
     } else {
-      if (lenis) lenis.start();
+      if (lenis && typeof lenis.start === "function") {
+        lenis.start();
+      }
+      // Trigger instant scroll update to prevent first-scroll lag
+      window.dispatchEvent(new Event("scroll"));
     }
   }, [preloaderDone, introDone, smootherRef]);
 
-  const triggerPlayOnceTextReveal = (containerSelector: string, currentStepProg: number, triggerThreshold: number) => {
+  const triggerPlayOnceTextReveal = (
+    containerSelector: string,
+    currentStepProg: number,
+    triggerThreshold: number
+  ) => {
     if (!scopeRef.current) return;
 
     const key = containerSelector;
@@ -72,7 +79,9 @@ export default function AboutDesktop() {
       );
 
       lineInners.forEach((el, idx) => {
-        el.style.transition = `transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.08}s, opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.08}s`;
+        el.style.transition = `transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${
+          idx * 0.08
+        }s, opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.08}s`;
         el.style.transform = "translate3d(0, 0%, 0) rotateZ(0deg)";
         el.style.opacity = "1";
       });
@@ -103,8 +112,25 @@ export default function AboutDesktop() {
   }, [introDone, preloaderDone]);
 
   useEffect(() => {
-    // STRICT GUARD: Do not start scroll listener or physics loop until preloader AND intro are complete
     if (!preloaderDone || !introDone) return;
+
+    const heroLeft = scopeRef.current?.querySelector<HTMLElement>(".about-hero-panel-left");
+    const heroRight = scopeRef.current?.querySelector<HTMLElement>(".about-hero-panel-right");
+    const heroBgs = scopeRef.current?.querySelectorAll<HTMLElement>(".about-hero-bg");
+
+    // 🔥 PRE-WARM GPU COMPOSITING LAYERS TO PREVENT 1ST-SECOND LAG
+    if (heroLeft) {
+      heroLeft.style.willChange = "clip-path, transform";
+      heroLeft.style.transform = "translate3d(0,0,0)";
+    }
+    if (heroRight) {
+      heroRight.style.willChange = "clip-path, transform";
+      heroRight.style.transform = "translate3d(0,0,0)";
+    }
+    heroBgs?.forEach((bg) => {
+      bg.style.willChange = "transform";
+      bg.style.transform = "translate3d(0,0,0) scale(1.15)";
+    });
 
     const triggerSec5Hook = (nextIdx: number) => {
       if (nextIdx !== lastSec5Idx.current) {
@@ -120,16 +146,12 @@ export default function AboutDesktop() {
         currentProgress.current = targetProgress.current;
         isInitialized.current = true;
       } else {
-        currentProgress.current += (targetProgress.current - currentProgress.current) * 0.05;
+        currentProgress.current += (targetProgress.current - currentProgress.current) * 0.08;
       }
 
       const progress = currentProgress.current;
       const stepProgress = progress * (TOTAL_SCROLL_STEPS - 1);
       const vh = window.innerHeight;
-
-      const heroLeft = scopeRef.current?.querySelector<HTMLElement>(".about-hero-panel-left");
-      const heroRight = scopeRef.current?.querySelector<HTMLElement>(".about-hero-panel-right");
-      const heroBgs = scopeRef.current?.querySelectorAll<HTMLElement>(".about-hero-bg");
 
       const secTwo = scopeRef.current?.querySelector<HTMLElement>(".about-section-two");
       const secThree = scopeRef.current?.querySelector<HTMLElement>(".about-section-three");
@@ -142,26 +164,25 @@ export default function AboutDesktop() {
       const footerWrap = scopeRef.current?.querySelector<HTMLElement>(".about-footer-wrap");
 
       // ── STEP 0 -> 1: HERO CURTAIN SPLIT ──
-      if (stepProgress > 0.005) {
-        const s1Prog = easeInOutQuad(Math.min(Math.max(stepProgress - 0, 0), 1));
+      const s1Prog = easeInOutQuad(Math.min(Math.max(stepProgress - 0, 0), 1));
 
-        if (heroLeft && heroRight) {
-          const leftInset = `inset(0% 50% ${s1Prog * 100}% 0%)`;
-          const rightInset = `inset(${s1Prog * 100}% 0% 0% 50%)`;
+      if (heroLeft && heroRight) {
+        const clipVal = s1Prog * 100;
+        const leftInset = `inset(0% 50% ${clipVal}% 0%)`;
+        const rightInset = `inset(${clipVal}% 0% 0% 50%)`;
 
-          heroLeft.style.clipPath = leftInset;
-          (heroLeft.style as any).webkitClipPath = leftInset;
+        heroLeft.style.clipPath = leftInset;
+        (heroLeft.style as any).webkitClipPath = leftInset;
 
-          heroRight.style.clipPath = rightInset;
-          (heroRight.style as any).webkitClipPath = rightInset;
-        }
+        heroRight.style.clipPath = rightInset;
+        (heroRight.style as any).webkitClipPath = rightInset;
+      }
 
-        if (heroBgs && heroBgs.length > 0) {
-          const scaleVal = 1.15 - s1Prog * 0.15;
-          heroBgs.forEach((bg) => {
-            bg.style.transform = `translate3d(0,0,0) scale(${scaleVal})`;
-          });
-        }
+      if (heroBgs && heroBgs.length > 0) {
+        const scaleVal = 1.15 - s1Prog * 0.15;
+        heroBgs.forEach((bg) => {
+          bg.style.transform = `translate3d(0,0,0) scale(${scaleVal})`;
+        });
       }
 
       triggerPlayOnceTextReveal(".about-section-one", stepProgress, 0.4);
@@ -304,6 +325,10 @@ export default function AboutDesktop() {
       } else {
         window.removeEventListener("scroll", handleScroll);
       }
+      // Clean up GPU hints
+      if (heroLeft) heroLeft.style.willChange = "";
+      if (heroRight) heroRight.style.willChange = "";
+      heroBgs?.forEach((bg) => (bg.style.willChange = ""));
     };
   }, [introDone, preloaderDone, smootherRef]);
 
@@ -314,7 +339,6 @@ export default function AboutDesktop() {
         className="about-track-container relative w-full"
         style={{ height: `${TOTAL_SCROLL_STEPS * 100}vh` }}
       >
-        {/* CHANGED DEFAULT CLASS FROM 'absolute' TO 'fixed' */}
         <div
           ref={fixedFrameRef}
           className="about-pin fixed top-0 left-0 h-[100svh] w-full overflow-hidden bg-[#162D24] z-10"

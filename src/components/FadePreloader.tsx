@@ -47,7 +47,6 @@ export default function FadePreloader({
         transition: `opacity ${EXIT_DURATION_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`,
       }}
     >
-      {/* Updated SVG Background */}
       <svg
         className="h-full w-full object-cover"
         width="1920"

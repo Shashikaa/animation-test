@@ -14,6 +14,7 @@ export function useHeroIntro(
   const { preloaderDone } = useSite();
   const [introDone, setIntroDone] = useState(false);
 
+  // Manual scroll restoration on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.history.scrollRestoration) {
@@ -22,6 +23,7 @@ export function useHeroIntro(
     window.scrollTo(0, 0);
   }, []);
 
+  // Manage body overflow during intro phase
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -39,8 +41,8 @@ export function useHeroIntro(
     };
   }, [introDone]);
 
+  // Main Intro Sequence
   useEffect(() => {
-    // ── GUARD: Wait until preloader is completely finished before starting ──
     if (!preloaderDone || !scopeRef.current) return;
 
     const scope = scopeRef.current;
@@ -48,18 +50,19 @@ export function useHeroIntro(
 
     let timer: NodeJS.Timeout;
 
-    // Wait for frame stabilization after preloader disappears
+    // Frame stabilization before triggering class
     const frameId = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          scope.classList.add("hero-animate-active");
+        scope.classList.add("hero-animate-active");
 
-          // Extended duration for a slower, more luxurious reveal (2800ms - 3000ms)
-          const introDuration = isMobile ? 3000 : 2800;
-          timer = setTimeout(() => {
-            setIntroDone(true);
-          }, introDuration);
-        });
+        const totalAnimationTime = isMobile ? 3000 : 2800;
+        // Unlock scroll 250ms BEFORE animation visually ends
+        const unlockOffset = 250;
+        const introDuration = Math.max(0, totalAnimationTime - unlockOffset);
+
+        timer = setTimeout(() => {
+          setIntroDone(true);
+        }, introDuration);
       });
     });
 
@@ -67,7 +70,7 @@ export function useHeroIntro(
       cancelAnimationFrame(frameId);
       if (timer) clearTimeout(timer);
     };
-  }, [preloaderDone, scopeRef, options.isMobile]); // Added preloaderDone to dependencies
+  }, [preloaderDone, scopeRef, options.isMobile]);
 
   return { introDone, preloaderDone };
 }
