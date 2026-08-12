@@ -18,10 +18,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     if (typeof window === "undefined") return;
 
     const setVh = () => {
-      // Avoid firing layout shifts while typing into input fields
-      const activeTag = document.activeElement?.tagName;
-      if (activeTag === "INPUT" || activeTag === "TEXTAREA") return;
-
       const actualHeight = window.visualViewport?.height || window.innerHeight;
       document.documentElement.style.setProperty("--vh", `${actualHeight * 0.01}px`);
     };
@@ -38,15 +34,17 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     window.addEventListener("resize", handleResize);
     window.addEventListener("orientationchange", handleResize);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", setVh);
+    }
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      window.removeEventListener("orientationchange", handleOrientationChange);
+      window.removeEventListener("orientationchange", handleResize);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", setVh);
+      }
     };
-
-    function handleOrientationChange() {
-      setTimeout(setVh, 200);
-    }
   }, []);
 
   useEffect(() => {
@@ -61,8 +59,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     const initLocomotive = async () => {
       const LocomotiveScroll = (await import("locomotive-scroll")).default;
 
-      const isMobileDevice = window.innerWidth < 1024;
-
       instance = new LocomotiveScroll({
         lenisOptions: {
           wrapper: window,
@@ -71,10 +67,9 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
           duration: 1.2,
           smoothWheel: true,
           wheelMultiplier: 1.1,
-          // Touch adjustments to prevent keyboard scroll jams
-          touchMultiplier: isMobileDevice ? 1.0 : 1.5,
-          syncTouch: !isMobileDevice, 
-          syncTouchLerp: 0.08,
+          touchMultiplier: 1.5,
+          syncTouch: true,
+          syncTouchLerp: 0.1,
         },
       });
 
@@ -101,16 +96,10 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     if (!locomotiveRef.current) return;
 
     if (!preloaderDone) {
-      if (typeof locomotiveRef.current.stop === "function") {
-        locomotiveRef.current.stop();
-      }
+      locomotiveRef.current.stop();
     } else {
-      if (typeof locomotiveRef.current.start === "function") {
-        locomotiveRef.current.start();
-      }
-      if (typeof locomotiveRef.current.scrollTo === "function") {
-        locomotiveRef.current.scrollTo(0, { immediate: true });
-      }
+      locomotiveRef.current.start();
+      locomotiveRef.current.scrollTo(0, { immediate: true });
     }
   }, [pathname, preloaderDone]);
 
