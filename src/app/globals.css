@@ -186,12 +186,12 @@ body.preloading header {
   max-height: none !important;
 }
 
-/* ─── GPU Optimization Fix (Prevents VRAM Memory Leaks) ──────── */
 .gpu-accelerated,
 .structural-layer {
   transform: translate3d(0, 0, 0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  will-change: transform;
 }
 
 .section-six-wrapper,
