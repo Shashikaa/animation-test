@@ -2,7 +2,7 @@
 
 /* ================================================================
    TAILWIND v4 THEME
-================================================================ */
+   ================================================================ */
 
 @theme {
   --font-display: var(--font-display), Georgia, serif;
@@ -14,7 +14,7 @@
 
 /* ================================================================
    DESIGN TOKENS
-================================================================ */
+   ================================================================ */
 
 :root {
   --background: #ffffff;
@@ -59,23 +59,19 @@
   --duration-base: 300ms;
   --duration-slow: 600ms;
 
-  /* ==============================================================
-     STABLE VIEWPORT
-     
-     svh = Small Viewport Height.
-     
-     This is intentional.
-     It prevents sections from changing height when the mobile
-     browser address bar appears/disappears.
-  ============================================================== */
-
+  /*
+   * Stable mobile viewport.
+   *
+   * 100svh intentionally does not change when the browser
+   * address bar expands/collapses.
+   */
   --stable-vh: 100svh;
   --stable-vw: 100vw;
 }
 
 /* ================================================================
    DARK MODE
-================================================================ */
+   ================================================================ */
 
 @media (prefers-color-scheme: dark) {
   :root {
@@ -90,7 +86,7 @@
 
 /* ================================================================
    RESET
-================================================================ */
+   ================================================================ */
 
 *,
 *::before,
@@ -106,8 +102,8 @@ html {
   scroll-behavior: auto !important;
 
   /*
-    Reserve scrollbar space so the layout does not shift.
-  */
+   * Reserve scrollbar space on desktop.
+   */
   scrollbar-gutter: stable;
 
   -webkit-font-smoothing: antialiased;
@@ -130,34 +126,19 @@ body {
   overflow-y: auto;
 
   /*
-    IMPORTANT:
-    Do not use overflow:hidden globally.
-    Lenis / GSAP / ScrollTrigger need the document to scroll.
-  */
+   * IMPORTANT:
+   * Do not use overflow:hidden globally.
+   * Lenis / GSAP / ScrollTrigger need the document to scroll.
+   */
 
   -webkit-overflow-scrolling: touch;
 
-  /*
-    Prevent mobile browser overscroll from producing unwanted
-    horizontal movement.
-  */
   overscroll-behavior-x: none;
 }
 
 /* ================================================================
-   MOBILE STABLE VIEWPORT
-================================================================ */
-
-/*
-  IMPORTANT:
-
-  100dvh changes when the mobile browser toolbar/address bar
-  expands or collapses.
-
-  100svh remains stable.
-
-  Therefore the main cinematic panels use 100svh.
-*/
+   STABLE MOBILE VIEWPORT
+   ================================================================ */
 
 html,
 body {
@@ -185,22 +166,52 @@ body {
     min-height: 100svh;
   }
 
-  /* 
-    Allow auto-height reveals like footers to slide cleanly 
-    without being forcibly flattened by 100svh hard-locks
-  */
+  /*
+   * ============================================================
+   * ABOUT PIN
+   * ============================================================
+   *
+   * The About cinematic section is one viewport tall.
+   *
+   * IMPORTANT:
+   * Do NOT force absolute children to height:100%.
+   * The footer must keep its natural/content height.
+   */
+
   .about-pin {
+    position: relative;
+
+    width: 100%;
+
+    height: 100svh;
     min-height: 100svh;
+
+    overflow: hidden;
   }
 
+  /*
+   * CRITICAL FIX:
+   *
+   * Previously this was:
+   *
+   * .about-pin > .absolute {
+   *   height: 100% !important;
+   * }
+   *
+   * That made the footer a full viewport.
+   *
+   * Keep absolute children content-height instead.
+   */
+
   .about-pin > .absolute {
-    height: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
   }
 }
 
 /* ================================================================
    LENIS
-================================================================ */
+   ================================================================ */
 
 html.lenis,
 html.lenis body {
@@ -229,7 +240,7 @@ html.lenis body {
 
 /* ================================================================
    PRELOADER
-================================================================ */
+   ================================================================ */
 
 html.preloading,
 body.preloading {
@@ -256,7 +267,7 @@ body.preloading {
 
 /* ================================================================
    PRELOADER — HARD PIN CONTENT
-================================================================ */
+   ================================================================ */
 
 html.preloading .about-pin,
 html.preloading .contact-pin-master,
@@ -264,7 +275,6 @@ html.preloading .master-viewport,
 html.preloading .pin-all-projects,
 html.preloading .services-hero-master,
 html.preloading .services-pin-master,
-
 body.preloading .about-pin,
 body.preloading .contact-pin-master,
 body.preloading .master-viewport,
@@ -286,7 +296,7 @@ body.preloading .services-pin-master {
 
 /* ================================================================
    PRELOADER — HIDE SITE ROOT
-================================================================ */
+   ================================================================ */
 
 html.preloading .site-root,
 body.preloading .site-root,
@@ -299,7 +309,7 @@ body.preloading header {
 
 /* ================================================================
    SITE ROOT
-================================================================ */
+   ================================================================ */
 
 .site-root {
   position: relative;
@@ -317,7 +327,7 @@ body.preloading header {
 
 /* ================================================================
    SCROLL CONTAINER
-================================================================ */
+   ================================================================ */
 
 .scroll-container {
   position: relative;
@@ -326,7 +336,7 @@ body.preloading header {
 
 /* ================================================================
    FULL HEIGHT CINEMATIC PANELS
-================================================================ */
+   ================================================================ */
 
 .pin-all,
 .pin-all-home,
@@ -339,10 +349,6 @@ body.preloading header {
 
   width: 100%;
 
-  /*
-    Stable viewport.
-    DO NOT change this to 100dvh.
-  */
   height: 100svh;
   min-height: 100svh;
 
@@ -351,7 +357,7 @@ body.preloading header {
 
 /* ================================================================
    ABOUT PIN
-================================================================ */
+   ================================================================ */
 
 .about-pin {
   position: relative;
@@ -366,7 +372,7 @@ body.preloading header {
 
 /* ================================================================
    GPU ACCELERATION
-================================================================ */
+   ================================================================ */
 
 .gpu-accelerated,
 .structural-layer {
@@ -378,7 +384,7 @@ body.preloading header {
 
 /* ================================================================
    ANIMATED IMAGE LAYERS
-================================================================ */
+   ================================================================ */
 
 .info-img-layer {
   -webkit-backface-visibility: hidden;
@@ -400,7 +406,7 @@ body.preloading header {
 
 /* ================================================================
    SECTION WRAPPERS
-================================================================ */
+   ================================================================ */
 
 .section-six-wrapper,
 .section-nine-wrapper {
@@ -409,7 +415,7 @@ body.preloading header {
 
 /* ================================================================
    TYPOGRAPHY
-================================================================ */
+   ================================================================ */
 
 .font-display {
   font-family: var(--font-display);
@@ -428,7 +434,7 @@ body.preloading header {
 
 /* ================================================================
    DISPLAY TEXT
-================================================================ */
+   ================================================================ */
 
 .text-display {
   font-family: var(--font-display);
@@ -442,7 +448,7 @@ body.preloading header {
 
 /* ================================================================
    CORMORANT TEXT
-================================================================ */
+   ================================================================ */
 
 .text-cormorant {
   font-family: var(--font-cormorant);
@@ -488,7 +494,7 @@ body.preloading header {
 
 /* ================================================================
    BODY TEXT
-================================================================ */
+   ================================================================ */
 
 .text-body {
   font-family: var(--font-body);
@@ -508,7 +514,7 @@ body.preloading header {
 
 /* ================================================================
    GLOBAL HEADINGS
-================================================================ */
+   ================================================================ */
 
 h1,
 h2 {
@@ -523,7 +529,7 @@ p {
 
 /* ================================================================
    CONTAINER
-================================================================ */
+   ================================================================ */
 
 .container {
   width: 100%;
@@ -537,7 +543,7 @@ p {
 
 /* ================================================================
    SECTION
-================================================================ */
+   ================================================================ */
 
 .section {
   padding-block: var(--section-py);
@@ -545,7 +551,7 @@ p {
 
 /* ================================================================
    FLEX UTILITIES
-================================================================ */
+   ================================================================ */
 
 .row {
   display: flex;
@@ -559,7 +565,7 @@ p {
 
 /* ================================================================
    SECTION CONTAINER
-================================================================ */
+   ================================================================ */
 
 .section-container {
   width: 100%;
@@ -572,7 +578,7 @@ p {
 
 /* ================================================================
    TABLET
-================================================================ */
+   ================================================================ */
 
 @media (max-width: 1025px) {
   .section-container {
@@ -583,7 +589,7 @@ p {
 
 /* ================================================================
    MOBILE
-================================================================ */
+   ================================================================ */
 
 @media (max-width: 767px) {
   .section-container {
@@ -594,7 +600,7 @@ p {
 
 /* ================================================================
    TABLET TYPOGRAPHY
-================================================================ */
+   ================================================================ */
 
 @media (max-width: 1024px) {
   h1,
@@ -610,7 +616,7 @@ p {
 
 /* ================================================================
    MOBILE TYPOGRAPHY
-================================================================ */
+   ================================================================ */
 
 @media (max-width: 767px) {
   h1,
@@ -626,7 +632,7 @@ p {
 
 /* ================================================================
    BORDERS
-================================================================ */
+   ================================================================ */
 
 .border {
   border: 1px solid var(--border);
@@ -642,7 +648,7 @@ p {
 
 /* ================================================================
    BORDER RADIUS
-================================================================ */
+   ================================================================ */
 
 .rounded-sm {
   border-radius: var(--radius-sm);
@@ -662,7 +668,7 @@ p {
 
 /* ================================================================
    GENERAL TRANSITIONS
-================================================================ */
+   ================================================================ */
 
 .transition {
   transition:
@@ -676,7 +682,7 @@ p {
 
 /* ================================================================
    TEXT REVEAL
-================================================================ */
+   ================================================================ */
 
 .reveal-text {
   perspective: 1000px;
@@ -693,7 +699,7 @@ p {
 
 /* ================================================================
    GSAP LINE REVEAL
-================================================================ */
+   ================================================================ */
 
 .gs-line {
   display: block;
@@ -719,7 +725,7 @@ p {
 
 /* ================================================================
    GSAP WORD REVEAL
-================================================================ */
+   ================================================================ */
 
 .gs-word-wrapper {
   display: inline-block;
@@ -737,7 +743,7 @@ p {
 
 /* ================================================================
    404 PRELOADER SUPPRESSION
-================================================================ */
+   ================================================================ */
 
 body:has(#not-found-page) #brand-preloader-root,
 body:has(#not-found-page) #fade-preloader-root,
@@ -754,7 +760,7 @@ html.page-404 #fade-preloader-root {
 
 /* ================================================================
    UNDERLINE BUTTON
-================================================================ */
+   ================================================================ */
 
 a.btn-underline,
 button.btn-underline,
@@ -819,7 +825,7 @@ button.btn-underline:hover::after,
 
 /* ================================================================
    REDUCED MOTION
-================================================================ */
+   ================================================================ */
 
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -834,7 +840,7 @@ button.btn-underline:hover::after,
 
 /* ================================================================
    MOBILE TOUCH
-================================================================ */
+   ================================================================ */
 
 @media (max-width: 1024px) {
   html,
@@ -842,10 +848,6 @@ button.btn-underline:hover::after,
     touch-action: pan-y;
   }
 
-  /*
-    Prevent the browser from adding horizontal overscroll.
-    Keep vertical native scrolling available.
-  */
   body {
     overscroll-behavior-x: none;
   }
@@ -853,7 +855,7 @@ button.btn-underline:hover::after,
 
 /* ================================================================
    LENIS PREVENT AREAS
-================================================================ */
+   ================================================================ */
 
 [data-lenis-prevent] {
   overscroll-behavior: contain;
@@ -861,7 +863,7 @@ button.btn-underline:hover::after,
 
 /* ================================================================
    SAFE IMAGE RENDERING
-================================================================ */
+   ================================================================ */
 
 img,
 video {
@@ -874,7 +876,7 @@ img {
 
 /* ================================================================
    MOBILE SAFETY
-================================================================ */
+   ================================================================ */
 
 @media (max-width: 767px) {
   body {
@@ -883,14 +885,77 @@ img {
 }
 
 /* ================================================================
+   ABOUT MOBILE FOOTER
+   ================================================================ */
+
+/*
+ * IMPORTANT:
+ *
+ * This is deliberately NOT:
+ *
+ * height: 100%;
+ * height: 100vh;
+ * height: 100svh;
+ *
+ * The footer keeps its natural content height.
+ */
+
+@media screen and (max-width: 767px) {
+  .about-pin {
+    position: relative;
+
+    width: 100%;
+
+    height: 100svh;
+    min-height: 100svh;
+
+    overflow: hidden;
+  }
+
+  /*
+   * Any direct absolute child of the About scene
+   * must not become a viewport-height panel.
+   */
+  .about-pin > .absolute {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  /*
+   * Common footer selectors.
+   *
+   * If your actual footer has one of these classes,
+   * it will stay content-height.
+   */
+  .about-pin .about-footer,
+  .about-pin .footer,
+  .about-pin > footer {
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    width: 100%;
+
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+
+    margin: 0;
+
+    transform-origin: center bottom;
+
+    will-change: transform;
+
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+}
+
+/* ================================================================
    CUSTOM LUXURY SCROLLBAR
-   Inspired by minimal editorial / luxury websites.
-
-   IMPORTANT:
-   The scrollbar is intentionally NOT hidden anymore.
-================================================================ */
-
-/* Chrome / Safari / Edge */
+   ================================================================ */
 
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
@@ -928,7 +993,9 @@ body::-webkit-scrollbar-corner {
   background: transparent;
 }
 
-/* Firefox */
+/* ================================================================
+   FIREFOX
+   ================================================================ */
 
 html,
 body {
@@ -941,7 +1008,7 @@ body {
 
 /* ================================================================
    DESKTOP SCROLLBAR
-================================================================ */
+   ================================================================ */
 
 @media screen and (min-width: 1025px) {
   html,
@@ -959,13 +1026,8 @@ body {
 }
 
 /* ================================================================
-   MOBILE
-================================================================ */
-
-/*
-  Mobile browsers generally do not expose a persistent custom
-  scrollbar. Do not try to force one.
-*/
+   MOBILE SCROLLBAR
+   ================================================================ */
 
 @media screen and (max-width: 1024px) {
   html,
@@ -981,4 +1043,4 @@ body {
 
 /* ================================================================
    END
-================================================================ */
+   ================================================================ */

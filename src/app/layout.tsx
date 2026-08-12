@@ -12,25 +12,39 @@ import "./globals.css";
 import { SiteProvider } from "../app/context/SiteContext";
 
 import HeaderWrapper from "../components/HeaderWrapper";
+
 import NavMenuWrapper from "../components/NavMenuWrapper";
+
 import PreloaderToggle from "../components/PreloaderToggle";
+
 import SmoothScroll from "../components/SmoothScroll";
+
 
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
+
   weight: ["400", "500", "600", "700"],
+
   style: ["normal", "italic"],
+
   variable: "--font-body",
+
   display: "swap",
 });
 
+
 const cormorantGaramond = Cormorant_Garamond({
   subsets: ["latin"],
+
   weight: ["300", "400", "500", "600", "700"],
+
   style: ["normal", "italic"],
+
   variable: "--font-cormorant",
+
   display: "swap",
 });
+
 
 const canelaText = localFont({
   src: [
@@ -39,51 +53,64 @@ const canelaText = localFont({
       weight: "100",
       style: "normal",
     },
+
     {
       path: "../../public/fonts/Canela-Light-Trial.otf",
       weight: "300",
       style: "normal",
     },
+
     {
       path: "../../public/fonts/CanelaText-Regular-Trial.otf",
       weight: "400",
       style: "normal",
     },
+
     {
       path: "../../public/fonts/Canela-RegularItalic-Trial.otf",
       weight: "400",
       style: "italic",
     },
   ],
+
   variable: "--font-display",
+
   display: "swap",
 });
 
+
 export const metadata: Metadata = {
   title: "Grand Pools",
+
   description:
     "Crafting Custom Swimming Pools with Style, Function, and Quality.",
 };
 
+
 /*
-  IMPORTANT:
-
-  We intentionally DO NOT use:
-    height: "device-height"
-    or dynamic viewport JavaScript.
-
-  viewportFit: cover is enough for safe-area handling.
-
-  The actual stable viewport is controlled in globals.css
-  using 100svh.
-*/
+ * ================================================================
+ * MOBILE VIEWPORT
+ * ================================================================
+ *
+ * Keep the viewport stable.
+ *
+ * We intentionally do NOT use device-height or dynamic
+ * viewport JavaScript.
+ *
+ * The actual stable cinematic viewport is controlled by
+ * 100svh in globals.css.
+ */
 
 export const viewport: Viewport = {
   width: "device-width",
+
   initialScale: 1,
+
   viewportFit: "cover",
+
   userScalable: false,
 };
+
 
 export default function RootLayout({
   children,
@@ -96,6 +123,7 @@ export default function RootLayout({
       className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased preloading`}
     >
       <head>
+
         <style
           dangerouslySetInnerHTML={{
             __html: `
@@ -111,10 +139,10 @@ export default function RootLayout({
               }
 
               /*
-                Stable mobile viewport.
-
-                Do not use 100dvh here.
-              */
+               * Stable mobile viewport.
+               *
+               * Do not use 100dvh.
+               */
               @supports (height: 100svh) {
                 html,
                 body {
@@ -128,8 +156,10 @@ export default function RootLayout({
               }
 
               /*
-                PRELOADER
-              */
+               * ====================================================
+               * PRELOADER
+               * ====================================================
+               */
 
               html.preloading,
               body.preloading {
@@ -163,6 +193,7 @@ export default function RootLayout({
           }}
         />
 
+
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -171,8 +202,9 @@ export default function RootLayout({
                   var p = window.location.pathname;
 
                   /*
-                    Terms/privacy pages don't need the main preloader.
-                  */
+                   * Terms/privacy pages don't need
+                   * the main preloader.
+                   */
                   if (
                     p === '/terms' ||
                     p === '/privacy-policy'
@@ -212,6 +244,7 @@ export default function RootLayout({
           }}
         />
 
+
         <link
           rel="preload"
           href="/fonts/CanelaText-Regular-Trial.otf"
@@ -220,6 +253,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
 
+
         <link
           rel="preload"
           href="/fonts/Canela-Light-Trial.otf"
@@ -227,7 +261,9 @@ export default function RootLayout({
           type="font/otf"
           crossOrigin="anonymous"
         />
+
       </head>
+
 
       <body
         className="flex flex-col min-h-full"
@@ -236,11 +272,15 @@ export default function RootLayout({
         }}
         suppressHydrationWarning
       >
+
         <SiteProvider>
+
           <SmoothScroll>
+
             <HeaderWrapper />
 
             <NavMenuWrapper />
+
 
             <main
               className="
@@ -254,10 +294,14 @@ export default function RootLayout({
             >
               {children}
             </main>
+
           </SmoothScroll>
 
+
           <PreloaderToggle />
+
         </SiteProvider>
+
       </body>
     </html>
   );

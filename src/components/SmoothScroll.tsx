@@ -8,9 +8,7 @@ import gsap from "gsap";
 
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-
 gsap.registerPlugin(ScrollTrigger);
-
 
 export default function SmoothScroll({
   children,
@@ -18,7 +16,26 @@ export default function SmoothScroll({
   children: React.ReactNode;
 }) {
   useEffect(() => {
+    /*
+     * Detect mobile once when the component mounts.
+     *
+     * Desktop:
+     *   Lenis smooth wheel scrolling.
+     *
+     * Mobile:
+     *   Native touch scrolling.
+     *
+     * This prevents Lenis from fighting the mobile browser's
+     * viewport/address-bar behavior.
+     */
+    const isMobile = window.matchMedia(
+      "(max-width: 767px)"
+    ).matches;
+
     const lenis = new Lenis({
+      /*
+       * Desktop smooth scrolling.
+       */
       duration: 1.2,
 
       easing: (t) =>
@@ -28,48 +45,55 @@ export default function SmoothScroll({
         ),
 
       /*
-       * Desktop wheel.
-       */
-      smoothWheel: true,
-
-      /*
-       * Keep touch relatively close to native.
+       * Desktop:
+       * smooth mouse wheel.
        *
-       * Do NOT make this excessively high.
+       * Mobile:
+       * native browser touch scrolling.
        */
-      touchMultiplier: 1,
+      smoothWheel: !isMobile,
 
       /*
-       * Prevent Lenis from trying to fight native touch
-       * momentum.
+       * Keep touch native.
        */
       syncTouch: false,
+
+      /*
+       * Do not amplify mobile touch movement.
+       */
+      touchMultiplier: 1,
     });
 
-
     /*
-     * Every Lenis scroll update tells ScrollTrigger to update.
+     * Every Lenis scroll update tells ScrollTrigger
+     * to recalculate.
      */
     lenis.on("scroll", ScrollTrigger.update);
 
-
     /*
-     * GSAP drives Lenis.
+     * GSAP drives Lenis on desktop.
+     *
+     * On mobile Lenis still exists, but smoothWheel is disabled,
+     * so native touch scrolling remains in control.
      */
     const updateTicker = (time: number) => {
       lenis.raf(time * 1000);
     };
 
-
     gsap.ticker.add(updateTicker);
 
-
     /*
-     * Prevent GSAP from compensating for frame drops by
-     * artificially adjusting time.
+     * Prevent GSAP from artificially changing the time
+     * after dropped frames.
      */
     gsap.ticker.lagSmoothing(0);
 
+    /*
+     * Refresh ScrollTrigger after everything has mounted.
+     */
+    requestAnimationFrame(() => {
+      ScrollTrigger.refresh();
+    });
 
     return () => {
       gsap.ticker.remove(updateTicker);
@@ -77,7 +101,6 @@ export default function SmoothScroll({
       lenis.destroy();
     };
   }, []);
-
 
   return <>{children}</>;
 }
