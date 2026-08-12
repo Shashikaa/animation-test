@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -345,38 +346,72 @@ function CtaSelect({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState("");
-  const [openUpward, setOpenUpward] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+    openUpward: false,
+  });
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const updatePosition = () => {
+    if (dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const dropdownMaxHeight = 180;
+      const spaceBelow = viewportHeight - rect.bottom;
+      const openUpward =
+        spaceBelow < dropdownMaxHeight || rect.bottom > viewportHeight - 120;
+
+      setDropdownPos({
+        top: openUpward
+          ? rect.top + window.scrollY - dropdownMaxHeight - 6
+          : rect.bottom + window.scrollY + 6,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+        openUpward,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    updatePosition();
+
     function handleClickOutside(event: MouseEvent) {
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node)
       ) {
+        const portalElement = document.getElementById(`portal_${name}`);
+        if (portalElement && portalElement.contains(event.target as Node)) {
+          return;
+        }
         setIsOpen(false);
       }
     }
+
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+
+    return () => {
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, name]);
 
   const handleToggle = (e: React.SyntheticEvent) => {
     e.preventDefault();
-
-    if (!isOpen && dropdownRef.current) {
-      const rect = dropdownRef.current.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      const dropdownMaxHeight = 180;
-      const spaceBelow = viewportHeight - rect.bottom;
-
-      if (spaceBelow < dropdownMaxHeight && rect.top > dropdownMaxHeight) {
-        setOpenUpward(true);
-      } else {
-        setOpenUpward(false);
-      }
+    if (!isOpen) {
+      updatePosition();
     }
-
     setIsOpen((prev) => !prev);
   };
 
@@ -397,6 +432,67 @@ function CtaSelect({
     : isOpen
     ? "1px solid rgba(244,238,223,0.75)"
     : `1px solid rgba(244, 238, 223, ${borderOpacity})`;
+
+  const renderDropdownList = () => {
+    if (!isOpen || !mounted) return null;
+
+    const portalContent = (
+      <div
+        id={`portal_${name}`}
+        role="listbox"
+        style={{
+          position: "absolute",
+          top: `${dropdownPos.top}px`,
+          left: `${dropdownPos.left}px`,
+          width: `${dropdownPos.width}px`,
+          background: "linear-gradient(135deg, #162D24 0%, #094146 100%)",
+          boxShadow: "0 12px 40px rgba(0,0,0,0.8)",
+          zIndex: 999999,
+          maxHeight: "180px",
+          overflowY: "auto",
+          WebkitOverflowScrolling: "touch",
+          overscrollBehavior: "contain",
+        }}
+      >
+        {options.map((option) => (
+          <div
+            key={option}
+            role="option"
+            aria-selected={selectedValue === option}
+            onClick={(e) => {
+              e.preventDefault();
+              setSelectedValue(option);
+              setIsOpen(false);
+            }}
+            style={{
+              padding: "12px 16px",
+              color: selectedValue === option ? "#162D24" : "#F4EEDF",
+              background:
+                selectedValue === option ? "#F4EEDF" : "transparent",
+              fontSize: 16,
+              cursor: "pointer",
+              transition: "background 0.15s ease, color 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              if (selectedValue !== option) {
+                e.currentTarget.style.background =
+                  "rgba(244, 238, 223, 0.08)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (selectedValue !== option) {
+                e.currentTarget.style.background = "transparent";
+              }
+            }}
+          >
+            {option}
+          </div>
+        ))}
+      </div>
+    );
+
+    return createPortal(portalContent, document.body);
+  };
 
   return (
     <div
@@ -455,62 +551,7 @@ function CtaSelect({
         </svg>
       </div>
 
-      {isOpen && (
-        <div
-          role="listbox"
-          style={{
-            position: "absolute",
-            top: openUpward ? "auto" : "100%",
-            bottom: openUpward ? "100%" : "auto",
-            left: 0,
-            right: 0,
-            marginTop: openUpward ? "0px" : "6px",
-            marginBottom: openUpward ? "6px" : "0px",
-            background: "linear-gradient(135deg, #162D24 0%, #094146 100%)",
-            boxShadow: "0 12px 40px rgba(0,0,0,0.8)",
-            zIndex: 9999,
-            maxHeight: "180px",
-            overflowY: "auto",
-            WebkitOverflowScrolling: "touch",
-            overscrollBehavior: "contain",
-          }}
-        >
-          {options.map((option) => (
-            <div
-              key={option}
-              role="option"
-              aria-selected={selectedValue === option}
-              onClick={(e) => {
-                e.preventDefault();
-                setSelectedValue(option);
-                setIsOpen(false);
-              }}
-              style={{
-                padding: "12px 16px",
-                color: selectedValue === option ? "#162D24" : "#F4EEDF",
-                background:
-                  selectedValue === option ? "#F4EEDF" : "transparent",
-                fontSize: 16,
-                cursor: "pointer",
-                transition: "background 0.15s ease, color 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                if (selectedValue !== option) {
-                  e.currentTarget.style.background =
-                    "rgba(244, 238, 223, 0.08)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (selectedValue !== option) {
-                  e.currentTarget.style.background = "transparent";
-                }
-              }}
-            >
-              {option}
-            </div>
-          ))}
-        </div>
-      )}
+      {renderDropdownList()}
 
       {error && (
         <span
