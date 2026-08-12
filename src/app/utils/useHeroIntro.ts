@@ -40,21 +40,22 @@ export function useHeroIntro(
   }, [introDone]);
 
   useEffect(() => {
-    if (!scopeRef.current) return;
+    // ── GUARD: Wait until preloader is completely finished before starting ──
+    if (!preloaderDone || !scopeRef.current) return;
 
     const scope = scopeRef.current;
     const isMobile = options.isMobile ?? false;
 
     let timer: NodeJS.Timeout;
 
-    // Use triple rAF to guarantee full render layout frame stabilization
+    // Wait for frame stabilization after preloader disappears
     const frameId = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           scope.classList.add("hero-animate-active");
 
-          // Adjusted intro timings to sync seamlessly with CSS transitions
-          const introDuration = isMobile ? 2200 : 2000;
+          // Extended duration for a slower, more luxurious reveal (2800ms - 3000ms)
+          const introDuration = isMobile ? 3000 : 2800;
           timer = setTimeout(() => {
             setIntroDone(true);
           }, introDuration);
@@ -66,7 +67,7 @@ export function useHeroIntro(
       cancelAnimationFrame(frameId);
       if (timer) clearTimeout(timer);
     };
-  }, [scopeRef, options.isMobile]);
+  }, [preloaderDone, scopeRef, options.isMobile]); // Added preloaderDone to dependencies
 
   return { introDone, preloaderDone };
 }

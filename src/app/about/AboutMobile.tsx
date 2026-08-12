@@ -43,7 +43,6 @@ export default function AboutMobile() {
       targetProgress.current = 0;
       currentProgress.current = 0;
 
-      // Force pinned fixed state during preloader and hero intro
       if (fixedFrameRef.current) {
         fixedFrameRef.current.style.position = "fixed";
         fixedFrameRef.current.style.top = "0px";
@@ -55,7 +54,6 @@ export default function AboutMobile() {
   }, [preloaderDone, introDone, smootherRef]);
 
   useEffect(() => {
-    // STRICT GUARD: Wait until preloader AND intro sequence are completely done
     if (!preloaderDone || !introDone) return;
 
     const panels = trackRef.current?.querySelectorAll<HTMLElement>(".about-stack-layer");
@@ -71,13 +69,14 @@ export default function AboutMobile() {
     };
 
     const updatePhysics = () => {
-      const lerpFactor = 0.06; // Softened slightly for silkier touch scrolling
+      const lerpFactor = 0.06;
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
       const progress = currentProgress.current;
       const stepProgress = progress * (TOTAL_SCROLL_STEPS - 1);
       const vh = window.innerHeight;
 
+      // Card Stacking Progress (Sections 1-5)
       const s1Progress = easeOutQuad(Math.min(Math.max(stepProgress - 0, 0), 1));
       const s2Progress = easeOutQuad(Math.min(Math.max(stepProgress - 1, 0), 1));
       const s3Progress = easeOutQuad(Math.min(Math.max(stepProgress - 2, 0), 1));
@@ -108,23 +107,32 @@ export default function AboutMobile() {
         }
       }
 
+      // ── 2. CTA & FOOTER REVEAL LOGIC ──
       const ctaEl = ctaWrapRef.current;
-      const ctaHeight = ctaEl ? ctaEl.offsetHeight : vh;
-      const extraCtaScroll = Math.max(0, ctaHeight - vh);
-
-      const rawCtaProgress = Math.min(Math.max((stepProgress - 7.0) / 1.5, 0), 1);
-      const ctaProgress = easeOutQuad(rawCtaProgress);
-      const ctaY = (1 - ctaProgress) * vh - ctaProgress * extraCtaScroll;
-      panels[6].style.transform = `translate3d(0, ${ctaY}px, 0)`;
-
       const footerEl = footerWrapRef.current;
       const footerHeight = footerEl ? footerEl.offsetHeight : vh;
 
-      const rawFooterProgress = Math.min(Math.max((stepProgress - 8.5) / 1.3, 0), 1);
-      const footerProgress = easeOutQuad(rawFooterProgress);
-      const footerY = (1 - footerProgress) * footerHeight;
+      // Phase 1: CTA enters over Section 5 (steps 7.0 to 8.5)
+      const rawCtaEnter = Math.min(Math.max((stepProgress - 7.0) / 1.5, 0), 1);
+      const ctaEnterProgress = easeOutQuad(rawCtaEnter);
 
-      panels[7].style.transform = `translate3d(0, ${footerY}px, 0)`;
+      // Phase 2: CTA lifts up to reveal Footer underneath (steps 8.5 to 10.0)
+      const rawFooterReveal = Math.min(Math.max((stepProgress - 8.5) / 1.5, 0), 1);
+      const footerRevealProgress = easeOutQuad(rawFooterReveal);
+
+      // CTA Y position: starts at 100vh down, enters to 0px, then shifts up by footerHeight
+      const ctaY = (1 - ctaEnterProgress) * vh - footerRevealProgress * footerHeight;
+
+      // Footer Y position: stays pushed off-screen until CTA covers viewport, then rests at 0px
+      const footerY = (1 - ctaEnterProgress) * footerHeight;
+
+      if (ctaEl) {
+        ctaEl.style.transform = `translate3d(0, ${ctaY}px, 0)`;
+      }
+
+      if (footerEl) {
+        footerEl.style.transform = `translate3d(0, ${footerY}px, 0)`;
+      }
 
       rafId.current = requestAnimationFrame(updatePhysics);
     };
@@ -186,7 +194,6 @@ export default function AboutMobile() {
         className="about-track-container relative w-full"
         style={{ height: `${TOTAL_SCROLL_STEPS * 100}vh` }}
       >
-        {/* CHANGED DEFAULT CLASS FROM 'absolute' TO 'fixed' */}
         <div
           ref={fixedFrameRef}
           className="fixed top-0 left-0 h-[100svh] w-full overflow-hidden bg-[#162D24] z-10"
@@ -236,19 +243,19 @@ export default function AboutMobile() {
             <SectionFive isActive={isSectionFiveActive} />
           </div>
 
-          {/* 6: SECTION CTA */}
+          {/* 6: SECTION CTA (z-[160] sits on top of Footer) */}
           <div
             ref={ctaWrapRef}
-            className="about-stack-layer absolute left-0 top-0 w-full min-h-[100svh] z-[150] gpu-accelerated bg-[#162D24]"
+            className="about-stack-layer absolute left-0 top-0 w-full min-h-[100svh] z-[160] gpu-accelerated bg-[#162D24]"
             style={{ transform: "translate3d(0, 100%, 0)" }}
           >
             <SectionCTA />
           </div>
 
-          {/* 7: FOOTER WRAP */}
+          {/* 7: FOOTER WRAP (z-[150] rests behind CTA) */}
           <div
             ref={footerWrapRef}
-            className="about-stack-layer absolute inset-x-0 bottom-0 w-full z-[160] gpu-accelerated"
+            className="about-stack-layer absolute inset-x-0 bottom-0 w-full z-[150] gpu-accelerated"
             style={{ transform: "translate3d(0, 100%, 0)" }}
           >
             <Footer />

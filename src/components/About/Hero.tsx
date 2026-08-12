@@ -20,33 +20,27 @@ export default function Hero({ isMobile = false }: HeroProps) {
       className="relative w-full h-full overflow-hidden bg-transparent [contain:strict] [transform:translateZ(0)]"
     >
       <style jsx>{`
-        /* 
-          Smooth Background Zoom: 
-          Extended duration and ultra-smooth easing prevents the "rushed" feeling
-        */
+        /* Slower, luxurious background zoom out */
         .hero-bg-target {
-          transform: translate3d(0, 0, 0) scale(${isMobile ? 1.25 : 1.3});
-          transition: transform ${isMobile ? "2200ms" : "2000ms"} cubic-bezier(0.22, 1, 0.36, 1);
+          transform: translate3d(0, 0, 0) scale(${isMobile ? 1.3 : 1.35});
+          transition: transform ${isMobile ? "3000ms" : "2800ms"} cubic-bezier(0.16, 1, 0.3, 1);
           will-change: transform;
         }
 
-        /* 
-          Text Reveal: 
-          Added custom cubic-bezier and GPU hints for silk-smooth entry 
-        */
+        /* Smooth, delayed text reveal */
         .hero-text-target {
           opacity: 0;
-          transform: translate3d(0, 40px, 0);
-          transition: transform 1400ms cubic-bezier(0.16, 1, 0.3, 1), opacity 1400ms cubic-bezier(0.16, 1, 0.3, 1);
+          transform: translate3d(0, 45px, 0);
+          transition: transform 1800ms cubic-bezier(0.16, 1, 0.3, 1), opacity 1800ms cubic-bezier(0.16, 1, 0.3, 1);
           will-change: transform, opacity;
         }
 
         .hero-title-target {
-          transition-delay: 200ms;
+          transition-delay: 400ms;
         }
 
         .hero-desc-target {
-          transition-delay: 380ms;
+          transition-delay: 650ms;
         }
 
         :global(.hero-animate-active) .hero-bg-target {
