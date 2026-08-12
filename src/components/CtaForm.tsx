@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useSite } from "@/src/app/context/SiteContext";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -269,6 +268,17 @@ function CtaInput({
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     e.target.style.borderColor = error ? "#feb2b2" : "rgba(244,238,223,0.75)";
+
+    // Force input into view above soft keyboard on mobile
+    if (isMobile && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "nearest",
+        });
+      }, 350);
+    }
   };
 
   return (
@@ -301,7 +311,7 @@ function CtaInput({
           border: "none",
           borderBottom: defaultBorder,
           color: "#F4EEDF",
-          fontSize: 16, // Preserves 16px minimum font size to stop iOS auto-zoom
+          fontSize: 16,
           padding: "10px 10px 10px 0",
           outline: "none",
           width: "100%",
@@ -377,6 +387,15 @@ function CtaSelect({
         setOpenUpward(true);
       } else {
         setOpenUpward(false);
+      }
+
+      if (isMobile) {
+        setTimeout(() => {
+          dropdownRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }, 150);
       }
     }
 

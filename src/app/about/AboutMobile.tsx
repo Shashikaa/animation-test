@@ -34,7 +34,7 @@ export default function AboutMobile() {
   const { smootherRef } = useSite();
   const { introDone, preloaderDone } = useHeroIntro(scopeRef, { isMobile: true });
 
-  // ── 1. KEYBOARD & INPUT DISMISSAL RE-ALIGNMENT ──
+  // ── 1. KEYBOARD & INPUT FOCUS RE-ALIGNMENT ──
   useEffect(() => {
     const isInteractiveElement = (target: HTMLElement | null) => {
       if (!target) return false;
@@ -85,57 +85,33 @@ export default function AboutMobile() {
             if (typeof lenis.start === "function") lenis.start();
           }
         }
-      }, 200);
-    };
-
-    // Auto-blur input when swiping on touch devices to dismiss soft keyboard cleanly
-    let touchStartY = 0;
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartY = e.touches[0].clientY;
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isInputFocusedRef.current) return;
-      const currentY = e.touches[0].clientY;
-      const diffY = Math.abs(currentY - touchStartY);
-
-      // If user drags finger > 30px, dismiss keyboard so layout can unfreeze
-      if (diffY > 30) {
-        const active = document.activeElement as HTMLElement;
-        if (active && typeof active.blur === "function") {
-          active.blur();
-        }
-      }
+      }, 250);
     };
 
     window.addEventListener("focusin", handleFocusIn);
     window.addEventListener("focusout", handleFocusOut);
-    window.addEventListener("touchstart", handleTouchStart, { passive: true });
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
 
     return () => {
       window.removeEventListener("focusin", handleFocusIn);
       window.removeEventListener("focusout", handleFocusOut);
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchmove", handleTouchMove);
     };
   }, [smootherRef]);
 
-  // ── 2. STABLE VIEWPORT HEIGHT LOCK ──
+  // ── 2. STABLE VIEWPORT HEIGHT LOCK (VISUAL VIEWPORT AWARE) ──
   useEffect(() => {
     const updateVh = () => {
       const currentWidth = window.innerWidth;
-      // Use visualViewport if available to avoid keyboard height shifts, fall back to innerHeight
-      const currentHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      const currentHeight = window.innerHeight;
 
+      // Lock height during active input to prevent address bar recalculation jumps
       if (
         !isInputFocusedRef.current &&
         (vhRef.current === 0 || currentWidth !== lastWidthRef.current)
       ) {
-        vhRef.current = window.innerHeight; // Standardize on full screen height
+        vhRef.current = currentHeight;
         lastWidthRef.current = currentWidth;
         if (fixedFrameRef.current) {
-          fixedFrameRef.current.style.height = `${vhRef.current}px`;
+          fixedFrameRef.current.style.height = `${currentHeight}px`;
         }
       }
     };
@@ -197,7 +173,7 @@ export default function AboutMobile() {
         return;
       }
 
-      // Smooth progress physics lerp
+      // Smooth progress lerp
       const lerpFactor = 0.15;
       currentProgress.current += (targetProgress.current - currentProgress.current) * lerpFactor;
 
@@ -209,7 +185,6 @@ export default function AboutMobile() {
       const totalSteps = 7.0 + ctaStepLength;
       const requiredTrackHeight = (totalSteps + 1) * vh;
 
-      // Ensure stable track height
       if (trackRef.current && !isInputFocusedRef.current) {
         if (Math.abs(lastTrackHeightRef.current - requiredTrackHeight) > 2) {
           lastTrackHeightRef.current = requiredTrackHeight;
@@ -250,7 +225,7 @@ export default function AboutMobile() {
         }
       }
 
-      // Translate CTA + Footer combined layer smoothly
+      // Translate CTA + Footer combined layer precisely
       const rawCtaProgress = Math.min(Math.max((stepProgress - 7.0) / ctaStepLength, 0), 1);
       const ctaY = (1 - rawCtaProgress) * vh - rawCtaProgress * extraScroll;
 
@@ -270,7 +245,6 @@ export default function AboutMobile() {
 
       if (totalScrollable <= 0) return;
 
-      // Lock fixed frame position properly regardless of input focus state
       if (trackRect.top <= 0 && trackRect.bottom >= vh) {
         fixedFrameRef.current.style.position = "fixed";
         fixedFrameRef.current.style.top = "0px";
