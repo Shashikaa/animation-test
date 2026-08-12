@@ -34,7 +34,6 @@ export default function AboutMobile() {
   // ── 1. INITIALIZE STABLE VIEWPORT HEIGHT ──
   useEffect(() => {
     const updateVh = () => {
-      // Ignore viewport height re-calculations if an input is focused (keyboard up)
       const activeTag = document.activeElement?.tagName;
       if (activeTag === "INPUT" || activeTag === "TEXTAREA" || activeTag === "SELECT") return;
 
@@ -100,11 +99,10 @@ export default function AboutMobile() {
         return;
       }
 
-      // Smooth lerp interpolation for the pinned sections
       currentProgress.current += (targetProgress.current - currentProgress.current) * 0.18;
 
-      // 5 Steps total for Hero -> Section 5
-      const totalSteps = 5.0;
+      // Restored 7.0 total steps so Section 5 has full scroll distance for sub-animations
+      const totalSteps = 7.0;
       const stepProgress = currentProgress.current * totalSteps;
 
       const s1Progress = easeOutQuad(Math.min(Math.max(stepProgress - 0, 0), 1));
@@ -119,10 +117,10 @@ export default function AboutMobile() {
       if (panels[4]) panels[4].style.transform = `translate3d(0, ${(1 - s4Progress) * 100}%, 0)`;
       if (panels[5]) panels[5].style.transform = `translate3d(0, ${(1 - s5Progress) * 100}%, 0)`;
 
-      // Handle Section 5 internal steps
-      if (stepProgress >= 4.2) {
+      // Restored original Section 5 internal steps logic (0, 1, 2)
+      if (stepProgress >= 4.5 && stepProgress < 7.0) {
         setIsSectionFiveActive(true);
-        const sec5SubProgress = (stepProgress - 4.2) / 0.8;
+        const sec5SubProgress = (stepProgress - 4.5) / 2.5;
 
         if (sec5SubProgress < 0.33) {
           triggerSec5Hook(0);
@@ -132,8 +130,10 @@ export default function AboutMobile() {
           triggerSec5Hook(2);
         }
       } else {
-        setIsSectionFiveActive(false);
-        triggerSec5Hook(0);
+        if (stepProgress < 4.5) {
+          setIsSectionFiveActive(false);
+          triggerSec5Hook(0);
+        }
       }
 
       rafId.current = requestAnimationFrame(updatePhysics);
@@ -148,7 +148,6 @@ export default function AboutMobile() {
 
       if (totalScrollable <= 0) return;
 
-      // Pin frame when track is active, unpin when scrolled past
       if (trackRect.top <= 0 && trackRect.bottom >= vh) {
         fixedFrameRef.current.style.position = "fixed";
         fixedFrameRef.current.style.top = "0px";
@@ -192,11 +191,11 @@ export default function AboutMobile() {
 
   return (
     <div ref={scopeRef} className="w-full bg-[#162D24]">
-      {/* ── PINNED SECTION TRACK (HERO THROUGH SECTION 5) ── */}
+      {/* Track container set to 800vh to accommodate full Sec 5 internal animations */}
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
-        style={{ height: "600vh" }} // 600vh height provides smooth scroll depth for 5 sections
+        style={{ height: "800vh" }}
       >
         <div
           ref={fixedFrameRef}
@@ -250,7 +249,7 @@ export default function AboutMobile() {
         </div>
       </div>
 
-      {/* ── STANDARD FLOW CTA & FOOTER ── */}
+      {/* Standard Flow CTA + Footer */}
       <div className="relative z-[70] w-full bg-[#162D24]">
         <SectionCTA preloaderDone={isReady} />
         <footer className="w-full bg-[#162D24]">

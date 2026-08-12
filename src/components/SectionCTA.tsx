@@ -80,7 +80,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
 
       {/* Mobile Layout */}
       <div
-        className="flex lg:hidden cta-inner-mobile min-h-[100dvh] h-auto w-full pt-12 pb-16"
+        className="flex lg:hidden cta-inner-mobile min-h-[100dvh] h-auto w-full !pt-12 !pb-16"
         style={{
           position: "relative",
           zIndex: 10,
