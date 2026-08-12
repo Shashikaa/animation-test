@@ -16,7 +16,8 @@ const SectionFive = dynamic(() => import("@/src/components/About/SectionFive"));
 const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
-const TOTAL_SCROLL_STEPS = 12;
+// Bumped to 13 to give full scroll track room for the footer reveal
+const TOTAL_SCROLL_STEPS = 13;
 
 export default function AboutDesktop() {
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
@@ -40,40 +41,53 @@ export default function AboutDesktop() {
     introDurationMs: 2800,
   });
 
-  // ── 1. UNLOCK LENIS ONLY AFTER INTRO COMPLETES ──
+  // ── 1. UNLOCK LENIS & FORCE INSTANT SCROLL RESPONSIVENESS ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
     if (!preloaderDone || !introDone) {
       if (lenis && typeof lenis.stop === "function") lenis.stop();
-      progressRef.current = 0;
-      window.scrollTo(0, 0);
+      if (progressRef?.current !== undefined) progressRef.current = 0;
     } else {
       document.body.classList.remove("preloading");
       document.documentElement.classList.remove("preloading");
 
-      if (lenis && typeof lenis.start === "function") {
-        lenis.start();
+      if (lenis) {
+        if (typeof lenis.resize === "function") lenis.resize();
+        if (typeof lenis.start === "function") lenis.start();
       }
-      window.dispatchEvent(new Event("scroll"));
+
+      // Instantly trigger scroll loop calculation on next frame
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event("scroll"));
+      });
     }
   }, [preloaderDone, introDone, smootherRef]);
 
-  // ── 2. CACHE ELEMENT DIMENSIONS ON RESIZE ──
+  // ── 2. CACHE ELEMENT DIMENSIONS ON RESIZE & DYNAMIC ITEM MOUNT ──
   useEffect(() => {
     if (!shouldLoadRest) return;
 
     const measure = () => {
       dimensionsRef.current = {
         ctaHeight: layer6Ref.current?.offsetHeight || window.innerHeight,
-        footerHeight: layer7Ref.current?.offsetHeight || window.innerHeight,
+        footerHeight: layer7Ref.current?.offsetHeight || layer7Ref.current?.scrollHeight || window.innerHeight,
         vh: window.innerHeight,
       };
     };
 
     measure();
+
+    // ResizeObserver guarantees measurement updates after next/dynamic chunk loads
+    const resizeObserver = new ResizeObserver(() => measure());
+    if (layer6Ref.current) resizeObserver.observe(layer6Ref.current);
+    if (layer7Ref.current) resizeObserver.observe(layer7Ref.current);
+
     window.addEventListener("resize", measure, { passive: true });
-    return () => window.removeEventListener("resize", measure);
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", measure);
+    };
   }, [shouldLoadRest]);
 
   // ── 3. SECTION 5 TRIGGER HOOK ──
@@ -138,7 +152,6 @@ export default function AboutDesktop() {
 
   // ── 4. DIRECT GPU SCROLL RENDERING ──
   useEffect(() => {
-    // Avoid calculating scroll transforms during intro animation
     if (!preloaderDone || !introDone || !scopeRef.current) return;
 
     const scope = scopeRef.current;
@@ -223,8 +236,8 @@ export default function AboutDesktop() {
         s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
       }
 
-      // 6. LAYER 6 (CTA)
-      const ctaProgress = Math.min(Math.max((stepProgress - 8.2) / 1.6, 0), 1);
+      // 6. LAYER 6 (CTA) - STEPS 8.2 -> 10.0
+      const ctaProgress = Math.min(Math.max((stepProgress - 8.2) / 1.8, 0), 1);
       if (layer6Ref.current) {
         const startY = vh;
         const endY = -(ctaHeight - vh);
@@ -232,8 +245,8 @@ export default function AboutDesktop() {
         layer6Ref.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
       }
 
-      // 7. LAYER 7 (FOOTER)
-      const footerProgress = Math.min(Math.max((stepProgress - 9.8) / 1.2, 0), 1);
+      // 7. LAYER 7 (FOOTER) - STEPS 10.0 -> 12.0
+      const footerProgress = Math.min(Math.max((stepProgress - 10.0) / 2.0, 0), 1);
       if (layer7Ref.current) {
         const startY = vh;
         const endY = vh - footerHeight;
@@ -305,7 +318,7 @@ export default function AboutDesktop() {
           ref={fixedFrameRef}
           className="about-pin fixed top-0 left-0 h-[100svh] w-full overflow-hidden bg-[#162D24] z-10"
         >
-          {/* HERO COMPONENT - Renders immediately */}
+          {/* HERO COMPONENT */}
           <div
             className="absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu"
             style={{ zIndex: 20 }}
@@ -313,7 +326,7 @@ export default function AboutDesktop() {
             <Hero isMobile={false} />
           </div>
 
-          {/* DOWNSTREAM SECTIONS - Deferred until intro sequence ends */}
+          {/* DOWNSTREAM SECTIONS */}
           {shouldLoadRest && (
             <>
               {/* SECTION ONE */}

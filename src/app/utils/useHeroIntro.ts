@@ -17,7 +17,6 @@ export function useHeroIntro(
   const [introDone, setIntroDone] = useState(false);
   const [shouldLoadRest, setShouldLoadRest] = useState(false);
 
-  // Disable browser automatic scroll restoration
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.history.scrollRestoration) {
@@ -26,35 +25,52 @@ export function useHeroIntro(
     window.scrollTo(0, 0);
   }, []);
 
-  // Lock scroll and delay downstream DOM mounting
   useEffect(() => {
     if (!preloaderDone || !scopeRef.current) return;
 
     const lenis = smootherRef?.current;
     const scope = scopeRef.current;
 
-    // Lock scroll at origin during animation
+    // Lock initial scroll
     if (lenis && typeof lenis.stop === "function") {
       lenis.stop();
     }
     window.scrollTo(0, 0);
 
-    // 1. Activate CSS transition
+    // 1. Activate GPU animation layer synchronously
     scope.classList.add("hero-animate-active");
 
-    // 2. Mount downstream components slightly before intro ends to prevent pop-in
-    const mountRestTimer = setTimeout(() => {
-      setShouldLoadRest(true);
-    }, Math.max(0, introDurationMs - 400));
+    // 2. Schedule downstream DOM mounting during idle time
+    const deferMountTime = Math.max(800, introDurationMs - 1200);
+    const mountTimer = setTimeout(() => {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(() => setShouldLoadRest(true), { timeout: 300 });
+      } else {
+        setShouldLoadRest(true);
+      }
+    }, deferMountTime);
 
-    // 3. Mark intro complete and allow smooth scrolling
+    // 3. WAKE UP LENIS EARLY (250ms before completion)
+    // This allows Lenis to warm up its internal virtual scroll listener so inputs register on Frame 1
+    const wakeLenisTimer = setTimeout(() => {
+      if (lenis) {
+        if (typeof lenis.resize === "function") lenis.resize();
+        if (typeof lenis.start === "function") lenis.start();
+      }
+    }, Math.max(0, introDurationMs - 250));
+
+    // 4. Complete intro phase
     const completeTimer = setTimeout(() => {
       setIntroDone(true);
       scope.classList.add("hero-animate-done");
+      
+      // Force immediate DOM scroll sync
+      window.dispatchEvent(new Event("scroll"));
     }, introDurationMs);
 
     return () => {
-      clearTimeout(mountRestTimer);
+      clearTimeout(mountTimer);
+      clearTimeout(wakeLenisTimer);
       clearTimeout(completeTimer);
     };
   }, [preloaderDone, scopeRef, smootherRef, introDurationMs]);
