@@ -5,19 +5,34 @@ import { useRef, useEffect, useCallback } from "react";
 import ContactHero from "@/src/components/contact/Hero";
 import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
-import { useStackedScroll } from "@/src/app/utils/useStackedScroll";
 
 const SectionCTA = dynamic(() => import("@/src/components/contact/SectionCTA"));
 const SectionOne = dynamic(() => import("@/src/components/contact/SectionOne"));
 const FAQSection = dynamic(() => import("@/src/components/contact/FAQSection"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
-const easeOutQuad = (t: number) => t * (2 - t);
+const clamp = (val: number, min = 0, max = 1) => Math.min(Math.max(val, min), max);
 
 export default function ContactMobile() {
   const scopeRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const fixedFrameRef = useRef<HTMLDivElement>(null);
+
   const layer2ContentRef = useRef<HTMLDivElement>(null);
   const layer3FooterRef = useRef<HTMLDivElement>(null);
+
+  const scrollMetricsRef = useRef({
+    totalScrollable: 0,
+    vh: 0,
+    h2: 0,
+    h3: 0,
+    dist1: 0,
+    dist2: 0,
+    dist3: 0,
+    trackTopOffset: 0,
+  });
+
+  const rawProgress = useRef(0);
   const rafId = useRef<number | null>(null);
 
   const { smootherRef } = useSite();
@@ -27,31 +42,80 @@ export default function ContactMobile() {
     unlockScrollEarlyMs: 1800,
   });
 
-  const { trackRef, fixedFrameRef, rawProgress, scrollMetricsRef } = useStackedScroll({
-    totalSteps: 3,
-    shouldLoadRest,
-  });
+  useEffect(() => {
+    if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+  }, []);
+
+  const updateMetrics = useCallback(() => {
+    if (!trackRef.current || !layer2ContentRef.current || !layer3FooterRef.current) return;
+
+    const vh = window.innerHeight;
+    const h2 = layer2ContentRef.current.offsetHeight || vh;
+    const h3 = layer3FooterRef.current.offsetHeight || vh;
+
+    const dist1 = vh;
+    const dist2 = Math.max(0, h2 - vh);
+    const dist3 = h3;
+
+    const totalScrollable = dist1 + dist2 + dist3;
+    const totalTrackHeight = totalScrollable + vh;
+
+    scrollMetricsRef.current = {
+      totalScrollable,
+      vh,
+      h2,
+      h3,
+      dist1,
+      dist2,
+      dist3,
+      trackTopOffset: window.scrollY + trackRef.current.getBoundingClientRect().top,
+    };
+
+    trackRef.current.style.height = `${totalTrackHeight}px`;
+
+    const lenis = smootherRef?.current;
+    if (lenis && typeof lenis.resize === "function") {
+      lenis.resize();
+    }
+  }, [smootherRef]);
+
+  useEffect(() => {
+    if (!shouldLoadRest) return;
+
+    updateMetrics();
+
+    const resizeObserver = new ResizeObserver(() => updateMetrics());
+    if (layer2ContentRef.current) resizeObserver.observe(layer2ContentRef.current);
+    if (layer3FooterRef.current) resizeObserver.observe(layer3FooterRef.current);
+
+    window.addEventListener("resize", updateMetrics, { passive: true });
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateMetrics);
+    };
+  }, [shouldLoadRest, updateMetrics]);
 
   useEffect(() => {
     if (!shouldLoadRest) return;
 
     const render = () => {
-      const p = rawProgress.current;
-      const { vh } = scrollMetricsRef.current;
+      const currentProg = rawProgress.current;
+      const { totalScrollable, vh, h2, h3, dist1, dist2, dist3 } = scrollMetricsRef.current;
 
-      const h2 = layer2ContentRef.current?.offsetHeight || vh;
-      const h3 = layer3FooterRef.current?.offsetHeight || vh;
+      if (totalScrollable <= 0) return;
 
-      // Phase 1: Slide Layer 2 onto screen (0.00 - 0.33)
-      // Phase 2: Scroll through Layer 2 body (0.33 - 0.66)
-      // Phase 3: Footer slide overlay (0.66 - 1.00)
+      const relativeScroll = currentProg * totalScrollable;
+
+      // Linear motion profile matching About page travel velocity
       let layer2Y = vh;
-      if (p <= 0.33) {
-        const p1 = easeOutQuad(p / 0.33);
+      if (relativeScroll <= dist1) {
+        const p1 = relativeScroll / dist1;
         layer2Y = vh * (1 - p1);
-      } else if (p <= 0.66) {
-        const p2 = (p - 0.33) / 0.33;
-        layer2Y = -p2 * Math.max(0, h2 - vh);
+      } else if (relativeScroll <= dist1 + dist2) {
+        layer2Y = -(relativeScroll - dist1);
       } else {
         layer2Y = -(h2 - vh);
       }
@@ -61,9 +125,9 @@ export default function ContactMobile() {
       }
 
       let footerY = vh;
-      if (p > 0.66) {
-        const p3 = easeOutQuad((p - 0.66) / 0.34);
-        footerY = vh - p3 * h3;
+      if (relativeScroll > dist1 + dist2 && dist3 > 0) {
+        const footerProgress = Math.min((relativeScroll - (dist1 + dist2)) / dist3, 1);
+        footerY = vh - h3 * footerProgress;
       }
 
       if (layer3FooterRef.current) {
@@ -71,7 +135,34 @@ export default function ContactMobile() {
       }
     };
 
-    const handleScroll = () => {
+    const handleScroll = (e?: any) => {
+      const lenis = smootherRef?.current;
+      const scrollY = e?.scroll ?? lenis?.scroll ?? window.scrollY;
+      const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
+
+      if (totalScrollable <= 0) return;
+
+      const relativeScroll = scrollY - trackTopOffset;
+      const trackBottom = relativeScroll + totalScrollable;
+
+      if (fixedFrameRef.current) {
+        if (relativeScroll >= 0 && trackBottom >= 0) {
+          fixedFrameRef.current.style.position = "fixed";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        } else if (trackBottom < 0) {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "auto";
+          fixedFrameRef.current.style.bottom = "0px";
+        } else {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        }
+      }
+
+      rawProgress.current = clamp(relativeScroll / totalScrollable);
+
       if (rafId.current) cancelAnimationFrame(rafId.current);
       rafId.current = requestAnimationFrame(render);
     };
@@ -83,6 +174,7 @@ export default function ContactMobile() {
       window.addEventListener("scroll", handleScroll, { passive: true });
     }
 
+    handleScroll();
     render();
 
     return () => {
@@ -93,7 +185,7 @@ export default function ContactMobile() {
         window.removeEventListener("scroll", handleScroll);
       }
     };
-  }, [shouldLoadRest, smootherRef, rawProgress, scrollMetricsRef]);
+  }, [shouldLoadRest, smootherRef]);
 
   return (
     <div ref={scopeRef} className="w-full bg-[#162D24]">

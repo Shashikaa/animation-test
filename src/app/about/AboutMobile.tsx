@@ -5,7 +5,6 @@ import Hero from "@/src/components/About/Hero";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
-import { useStackedScroll } from "@/src/app/utils/useStackedScroll";
 
 const SectionOne = dynamic(() => import("@/src/components/About/SectionOne"));
 const SectionTwo = dynamic(() => import("@/src/components/About/SectionTwo"));
@@ -14,23 +13,25 @@ const SectionFour = dynamic(() => import("@/src/components/About/SectionFour"));
 const SectionFive = dynamic(() => import("@/src/components/About/SectionFive"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
-// Velocity-aware easing function
-const getVelocityEase = (t: number, velocity: number) => {
-  if (t <= 0) return 0;
-  if (t >= 1) return 1;
-  // On slow scroll (velocity ~ 0): Linear 1:1 control (t * (2 - t))
-  // On fast scroll (velocity -> 1): Power curve snaps layers into view faster
-  const exponent = 1 + (1 - velocity) * 0.8;
-  return Math.pow(t, exponent);
+const clamp = (val: number, min = 0, max = 1) => Math.min(Math.max(val, min), max);
+const mapRange = (val: number, inMin: number, inMax: number) => {
+  if (inMin === inMax) return 0;
+  return clamp((val - inMin) / (inMax - inMin));
 };
 
 export default function AboutMobile() {
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
+  const scopeRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const fixedFrameRef = useRef<HTMLDivElement>(null);
   const layer7Ref = useRef<HTMLDivElement>(null);
+
+  const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
+  const rawProgress = useRef(0);
+  
   const rafId = useRef<number | null>(null);
   const lastSec5Idx = useRef<number>(-1);
 
-  const scopeRef = useRef<HTMLDivElement>(null);
   const { smootherRef } = useSite();
   const { preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
     isMobile: true,
@@ -38,10 +39,23 @@ export default function AboutMobile() {
     unlockScrollEarlyMs: 1800,
   });
 
-  const { trackRef, fixedFrameRef, rawProgress, scrollVelocity, scrollMetricsRef } = useStackedScroll({
-    totalSteps: 7.5,
-    shouldLoadRest,
-  });
+  const updateMetrics = useCallback(() => {
+    if (!trackRef.current) return;
+    const rect = trackRef.current.getBoundingClientRect();
+    const vh = window.innerHeight;
+    scrollMetricsRef.current = {
+      totalScrollable: rect.height - vh,
+      vh,
+      trackTopOffset: window.scrollY + rect.top,
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!shouldLoadRest) return;
+    updateMetrics();
+    window.addEventListener("resize", updateMetrics, { passive: true });
+    return () => window.removeEventListener("resize", updateMetrics);
+  }, [shouldLoadRest, updateMetrics]);
 
   const triggerSec5Hook = useCallback((nextIdx: number) => {
     if (nextIdx !== lastSec5Idx.current) {
@@ -59,19 +73,16 @@ export default function AboutMobile() {
     const s5Bg = scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
 
     const render = () => {
-      const currentProg = rawProgress.current;
-      const velocity = scrollVelocity.current;
-      const totalSteps = 7.5;
-      const stepProgress = currentProg * totalSteps;
+      // Linear progress for 1:1 consistent tactile travel across all viewports
+      const p = rawProgress.current;
 
-      // Apply safe velocity-based step reveals
-      const s1Prog = getVelocityEase(Math.min(Math.max(stepProgress - 0, 0), 1), velocity);
-      const s2Prog = getVelocityEase(Math.min(Math.max(stepProgress - 1, 0), 1), velocity);
-      const s3Prog = getVelocityEase(Math.min(Math.max(stepProgress - 2, 0), 1), velocity);
-      const s4Prog = getVelocityEase(Math.min(Math.max(stepProgress - 3, 0), 1), velocity);
-      const s5Prog = getVelocityEase(Math.min(Math.max(stepProgress - 4, 0), 1), velocity);
-
-      const footerProgress = getVelocityEase(Math.min(Math.max(stepProgress - 6.5, 0), 1), velocity);
+      // Evenly spaced linear domain intervals (0.14 step width per panel)
+      const s1Prog = mapRange(p, 0.00, 0.14);
+      const s2Prog = mapRange(p, 0.14, 0.28);
+      const s3Prog = mapRange(p, 0.28, 0.42);
+      const s4Prog = mapRange(p, 0.42, 0.56);
+      const s5Prog = mapRange(p, 0.56, 0.70);
+      const footerProgress = mapRange(p, 0.86, 1.00);
 
       if (panels && panels.length > 0) {
         if (panels[1]) panels[1].style.transform = `translate3d(0, ${(1 - s1Prog) * 100}%, 0)`;
@@ -85,30 +96,55 @@ export default function AboutMobile() {
 
       if (layer7Ref.current) {
         const footerHeight = layer7Ref.current.offsetHeight || vh;
-        const startY = vh;
-        const endY = vh - footerHeight;
-        const translateY = startY + (endY - startY) * footerProgress;
+        const translateY = vh - footerHeight * footerProgress;
         layer7Ref.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
       }
 
       if (s5Bg) {
-        const parallaxProg = Math.min(Math.max((stepProgress - 4.0) / 2.5, 0), 1);
+        const parallaxProg = mapRange(p, 0.56, 0.86);
         s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
       }
 
-      // Preserve exact original Sec5 inner step timing
-      if (stepProgress >= 4.2 && stepProgress < 6.5) {
+      if (p >= 0.70 && p < 0.86) {
         setIsSectionFiveActive(true);
-        if (stepProgress < 5.0) triggerSec5Hook(0);
-        else if (stepProgress < 5.7) triggerSec5Hook(1);
+        const s5Internal = mapRange(p, 0.70, 0.86);
+        if (s5Internal < 0.33) triggerSec5Hook(0);
+        else if (s5Internal < 0.66) triggerSec5Hook(1);
         else triggerSec5Hook(2);
-      } else if (stepProgress < 4.2) {
+      } else if (p < 0.70) {
         setIsSectionFiveActive(false);
         triggerSec5Hook(0);
       }
     };
 
-    const handleScroll = () => {
+    const handleScroll = (e?: any) => {
+      const lenis = smootherRef?.current;
+      const scrollY = e?.scroll ?? lenis?.scroll ?? window.scrollY;
+      const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
+
+      if (totalScrollable <= 0) return;
+
+      const relativeScroll = scrollY - trackTopOffset;
+      const trackBottom = relativeScroll + totalScrollable;
+
+      if (fixedFrameRef.current) {
+        if (relativeScroll >= 0 && trackBottom >= 0) {
+          fixedFrameRef.current.style.position = "fixed";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        } else if (trackBottom < 0) {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "auto";
+          fixedFrameRef.current.style.bottom = "0px";
+        } else {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        }
+      }
+
+      rawProgress.current = clamp(relativeScroll / totalScrollable);
+
       if (rafId.current) cancelAnimationFrame(rafId.current);
       rafId.current = requestAnimationFrame(render);
     };
@@ -120,6 +156,7 @@ export default function AboutMobile() {
       window.addEventListener("scroll", handleScroll, { passive: true });
     }
 
+    handleScroll();
     render();
 
     return () => {
@@ -131,11 +168,15 @@ export default function AboutMobile() {
       }
       if (typeof window !== "undefined") delete (window as any)._sec5GoTo;
     };
-  }, [shouldLoadRest, smootherRef, triggerSec5Hook, trackRef, rawProgress, scrollVelocity, scrollMetricsRef]);
+  }, [shouldLoadRest, smootherRef, triggerSec5Hook]);
 
   return (
     <div ref={scopeRef} className="w-full">
-      <div ref={trackRef} className="about-track-container relative w-full">
+      <div
+        ref={trackRef}
+        className="about-track-container relative w-full"
+        style={{ height: "700vh" }}
+      >
         <div
           ref={fixedFrameRef}
           className="fixed top-0 left-0 w-full overflow-hidden z-10 h-[100dvh]"
