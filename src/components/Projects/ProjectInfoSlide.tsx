@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useEffect } from "react";
-import gsap from "gsap";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { InfoSlide } from "../../app/projects/[slug]/data";
 
 interface ProjectInfoSlideProps {
@@ -9,124 +9,103 @@ interface ProjectInfoSlideProps {
   isActive?: boolean;
 }
 
-const TEXT_DURATION = 0.4;
+// Staggered text animation variants for title & description
+const textContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    },
+  },
+  exit: {
+    opacity: 0,
+    transition: { duration: 0.2, ease: "easeIn" as any },
+  },
+};
+
+const textItemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.4, ease: [0.25, 1, 0.5, 1] as any },
+  },
+  exit: {
+    y: -15,
+    opacity: 0,
+    transition: { duration: 0.2, ease: "easeIn" as any },
+  },
+};
 
 export default function ProjectInfoSlide({ slides }: ProjectInfoSlideProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const currentRef = useRef<number>(0);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const currentRef = useRef(0);
 
-  function animateTextIn(index: number) {
-    if (!containerRef.current) return;
-    const targets = containerRef.current.querySelectorAll(
-      `.slide-text-${index} .info-anim-item`
-    );
+  const goTo = useCallback(
+    (next: number) => {
+      const prev = currentRef.current;
+      if (next === prev || next < 0 || next >= slides.length) return;
+      currentRef.current = next;
+      setCurrentIdx(next);
+    },
+    [slides.length]
+  );
 
-    gsap.killTweensOf(targets);
-    gsap.fromTo(
-      targets,
-      { y: 20, opacity: 0 },
-      {
-        y: 0,
-        opacity: 1,
-        duration: TEXT_DURATION,
-        ease: "power2.out",
-        stagger: 0.04,
-        overwrite: "auto",
-      }
-    );
-  }
-
-  function animateTextOut(index: number, callback?: () => void) {
-    if (!containerRef.current) return;
-    const targets = containerRef.current.querySelectorAll(
-      `.slide-text-${index} .info-anim-item`
-    );
-
-    if (targets.length === 0) {
-      if (callback) callback();
-      return;
-    }
-
-    gsap.killTweensOf(targets);
-    gsap.to(targets, {
-      y: -15,
-      opacity: 0,
-      duration: 0.25,
-      ease: "power2.in",
-      stagger: 0.02,
-      onComplete: callback,
-      overwrite: "auto",
-    });
-  }
-
+  // Sync window hook with main page render loops (Desktop & Mobile)
   useEffect(() => {
-    (window as any)._projectInfoGoTo = (nextIdx: number) => {
-      const prevIdx = currentRef.current;
-      if (nextIdx === prevIdx) return;
-
-      currentRef.current = nextIdx;
-
-      animateTextOut(prevIdx, () => {
-        if (!containerRef.current) return;
-
-        slides.forEach((_, i) => {
-          const el = containerRef.current?.querySelector(
-            `.slide-text-${i}`
-          ) as HTMLElement;
-          if (el) {
-            const isTarget = i === nextIdx;
-            el.style.opacity = isTarget ? "1" : "0";
-            el.style.pointerEvents = isTarget ? "auto" : "none";
-            el.style.visibility = isTarget ? "visible" : "hidden";
-          }
-        });
-
-        animateTextIn(nextIdx);
-      });
+    (window as any)._projectInfoGoTo = (targetIdx: number) => {
+      goTo(targetIdx);
     };
-
     return () => {
       delete (window as any)._projectInfoGoTo;
     };
-  }, [slides]);
+  }, [goTo]);
 
   if (!slides || slides.length === 0) return null;
 
+  const activeSlide = slides[currentIdx];
+
   return (
     <div
-      ref={containerRef}
       className="absolute inset-0 w-full h-full overflow-hidden bg-[#131313] project-info-master z-[20] gpu-accelerated"
       style={{ contain: "paint" }}
     >
       <div className="w-full h-full flex flex-col lg:grid lg:grid-cols-2">
-        {/* Text Column */}
+        {/* ── 1. TEXT COLUMN (Framer Motion Stagger Reveal) ── */}
         <div className="relative w-full h-[50vh] lg:h-full order-1 lg:order-2 bg-[#EFECE6] !p-6 md:!p-16 lg:!p-20 flex flex-col justify-center z-[60] text-[#131313]">
           <div className="relative w-full h-full flex flex-col justify-center">
-            {slides.map((slide, index) => (
-              <div
-                key={`info-text-${index}`}
-                className={`info-text-block slide-text-${index} absolute inset-0 flex flex-col justify-center gap-3 md:gap-8`}
-                style={{
-                  opacity: index === 0 ? 1 : 0,
-                  pointerEvents: index === 0 ? "auto" : "none",
-                  visibility: index === 0 ? "visible" : "hidden",
-                  willChange: "opacity, transform",
-                }}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentIdx}
+                variants={textContainerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="info-text-block absolute inset-0 flex flex-col justify-center gap-3 md:gap-8 pointer-events-auto"
               >
-                <h2 className="info-anim-item text-[#242A27] font-display text-2xl sm:text-3xl md:text-5xl font-light leading-tight">
-                  {slide.title}
-                </h2>
-                <div className="info-anim-item max-w-md pt-1 md:pt-0 pb-0 md:pb-12">
+                <motion.h2
+                  variants={textItemVariants}
+                  className="info-anim-item text-[#242A27] font-display text-2xl sm:text-3xl md:text-5xl font-light leading-tight"
+                >
+                  {activeSlide.title}
+                </motion.h2>
+
+                <motion.div
+                  variants={textItemVariants}
+                  className="info-anim-item max-w-md pt-1 md:pt-0 pb-0 md:pb-12"
+                >
                   <p className="text-xs sm:text-sm md:text-base leading-relaxed text-[#242A27] font-normal">
-                    {slide.description}
+                    {activeSlide.description}
                   </p>
-                </div>
-              </div>
-            ))}
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
 
-        {/* Image Layer Column */}
+        {/* ── 2. IMAGE COLUMN (Continuous Layer Stacking - No Empty Flashes) ── */}
         <div className="relative w-full h-[50vh] lg:h-full order-2 lg:order-1 overflow-hidden bg-[#1e1e1e]">
           {slides.map((slide, index) => (
             <div
@@ -135,6 +114,7 @@ export default function ProjectInfoSlide({ slides }: ProjectInfoSlideProps) {
               style={{
                 zIndex: index + 10,
                 willChange: "clip-path",
+                // Base layout state: Slide 0 is fully visible, subsequent slides wait for main scroll engine to peel clipPath
                 clipPath:
                   index === 0
                     ? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
@@ -145,7 +125,7 @@ export default function ProjectInfoSlide({ slides }: ProjectInfoSlideProps) {
                 className="info-image-inner w-full h-full bg-cover bg-center gpu-accelerated"
                 style={{
                   backgroundImage: `url(${slide.image})`,
-                  transform: "scale(1.2)",
+                  transform: index === 0 ? "scale(1)" : "scale(1.25)",
                   transformOrigin: "center center",
                   willChange: "transform",
                 }}

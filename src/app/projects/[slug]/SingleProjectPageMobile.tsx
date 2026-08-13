@@ -12,7 +12,7 @@ const Appsection = dynamic(() => import("@/src/components/Projects/Appsection"))
 const FAQSection = dynamic(() => import("@/src/components/contact/FAQSection"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
-const easeOutQuad = (t: number) => t * (2 - t);
+const clamp = (val: number, min = 0, max = 1) => Math.min(Math.max(val, min), max);
 
 type SubServicesMobileProps = {
   pageData: FullServiceData;
@@ -55,7 +55,6 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
     }
   }, []);
 
-  // 1. UNLOCK LENIS & INITIALIZE
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -77,7 +76,6 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // 2. CACHE METRICS
   const updateMetrics = useCallback(() => {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
@@ -96,24 +94,21 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
     return () => window.removeEventListener("resize", updateMetrics);
   }, [shouldLoadRest, updateMetrics]);
 
-  // 3. GPU-ACCELERATED STEP RENDER LOOP WITH PAUSE BUFFER
   useEffect(() => {
     if (!shouldLoadRest) return;
 
     const render = () => {
       const currentProg = targetProgress.current;
       const subSlidesSteps = Math.max(0, infoSlidesCount - 1);
-      
-      // Add a 0.8 pause step buffer after the last info slide before AppSection starts
-      const PAUSE_BUFFER = 0.8; 
+      const PAUSE_BUFFER = 0.8;
       const totalSteps = 4 + subSlidesSteps + PAUSE_BUFFER;
       const stepProgress = currentProg * totalSteps;
 
       const { vh } = scrollMetricsRef.current;
 
-      // STEP 1: Hero Text Fade Out + Project Info Slide-Up (0.0 -> 1.0)
+      // STEP 1: Hero Text Fade Out + Project Info Slide-Up
       const heroTextWrap = scopeRef.current?.querySelector<HTMLElement>(".hero-text-wrap");
-      const infoProg = easeOutQuad(Math.min(Math.max(stepProgress - 0, 0), 1));
+      const infoProg = clamp(stepProgress);
 
       if (heroTextWrap) {
         heroTextWrap.style.opacity = `${1 - infoProg}`;
@@ -132,16 +127,16 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
         setIsProjectInfoActive(false);
       }
 
-      // STEP 2: Sequential Inner Info Slides (1.0 -> 1.0 + subSlidesSteps)
+      // STEP 2: Sequential Inner Info Slides
       if (subSlidesSteps > 0) {
-        const subProgress = Math.min(Math.max(stepProgress - 1.0, 0), subSlidesSteps);
+        const subProgress = clamp((stepProgress - 1.0) / subSlidesSteps) * subSlidesSteps;
         const currentSubIdx = Math.min(infoSlidesCount - 1, Math.floor(subProgress));
         triggerInfoHook(currentSubIdx);
 
         infoSlides.forEach((_, idx) => {
           if (idx === 0) return;
 
-          const layerProg = Math.min(Math.max(stepProgress - (1.0 + idx - 1), 0), 1);
+          const layerProg = clamp(stepProgress - (1.0 + idx - 1));
           const imgLayer = scopeRef.current?.querySelector<HTMLElement>(`.info-img-layer-${idx}`);
           const imgInner = scopeRef.current?.querySelector<HTMLElement>(`.info-img-layer-${idx} .info-image-inner`);
 
@@ -157,10 +152,9 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
         triggerInfoHook(0);
       }
 
-      // STEP 3: Dynamic Height App Section Reveal AFTER PAUSE BUFFER (appStartStep -> appStartStep + 1.0)
-      // Starts after (1.0 + subSlidesSteps + PAUSE_BUFFER)
+      // STEP 3: Dynamic App Section Reveal
       const appStartStep = 1.0 + subSlidesSteps + PAUSE_BUFFER;
-      const appProg = easeOutQuad(Math.min(Math.max(stepProgress - appStartStep, 0), 1));
+      const appProg = clamp(stepProgress - appStartStep);
 
       if (appSectionRef.current) {
         const appHeight = appSectionRef.current.offsetHeight || vh;
@@ -169,20 +163,21 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
         const currentY = startY + (endY - startY) * appProg;
         appSectionRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
       }
+
       if (projectInfoRef.current && appProg > 0) {
         projectInfoRef.current.style.transform = `translate3d(0, ${-appProg * 15}%, 0)`;
       }
 
       const phoneWrapper = scopeRef.current?.querySelector<HTMLElement>(".appsec-phone-wrapper");
       if (phoneWrapper) {
-        const phoneProg = Math.min(Math.max((stepProgress - (appStartStep + 0.2)) / 0.8, 0), 1);
+        const phoneProg = clamp((stepProgress - (appStartStep + 0.2)) / 0.8);
         phoneWrapper.style.opacity = `${phoneProg}`;
         phoneWrapper.style.transform = `translate3d(0, ${(1 - phoneProg) * 30}px, 0)`;
       }
 
-      // STEP 4: Dynamic Height FAQ Section Reveal (faqStartStep -> faqStartStep + 1.0)
+      // STEP 4: Dynamic FAQ Section Reveal
       const faqStartStep = appStartStep + 1.0;
-      const faqProg = easeOutQuad(Math.min(Math.max(stepProgress - faqStartStep, 0), 1));
+      const faqProg = clamp(stepProgress - faqStartStep);
 
       if (faqSectionRef.current) {
         const faqHeight = faqSectionRef.current.offsetHeight || vh;
@@ -192,21 +187,20 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
         faqSectionRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
       }
 
-      // STEP 5: Footer Reveal (footerStartStep -> footerStartStep + 1.0)
+      // STEP 5: Footer Reveal
       const footerStartStep = faqStartStep + 1.0;
-      const footerProg = easeOutQuad(Math.min(Math.max(stepProgress - footerStartStep, 0), 1));
+      const footerProg = clamp(stepProgress - footerStartStep);
 
       if (footerLayerRef.current) {
         const footerHeight = footerLayerRef.current.offsetHeight || vh;
-        const startY = vh;
-        const endY = vh - footerHeight;
-        const translateY = startY + (endY - startY) * footerProg;
+        const translateY = vh - footerHeight * footerProg;
         footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
       }
     };
 
     const handleScroll = (e?: any) => {
-      const scrollY = e?.scroll !== undefined ? e.scroll : window.scrollY;
+      const lenis = smootherRef?.current;
+      const scrollY = e?.scroll ?? lenis?.scroll ?? window.scrollY;
       const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
 
       if (totalScrollable <= 0) return;
@@ -230,7 +224,7 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
         }
       }
 
-      targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
+      targetProgress.current = clamp(relativeScroll / totalScrollable);
 
       if (rafId.current) cancelAnimationFrame(rafId.current);
       rafId.current = requestAnimationFrame(render);
@@ -270,7 +264,6 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
           ref={fixedFrameRef}
           className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-[100dvh]"
         >
-          {/* Layer 1: Hero */}
           <div
             ref={heroPanelRef}
             className="project-hero-master absolute inset-0 w-full h-[100dvh] z-10 gpu-accelerated transform-gpu will-change-transform"
@@ -284,7 +277,6 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
 
           {shouldLoadRest && (
             <>
-              {/* Layer 2: Project Info Slide */}
               <div
                 ref={projectInfoRef}
                 className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-20 gpu-accelerated will-change-transform"
@@ -296,7 +288,6 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
                 />
               </div>
 
-              {/* Layer 3: Dynamic Height App Section */}
               <div
                 ref={appSectionRef}
                 className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-30 will-change-transform"
@@ -305,7 +296,6 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
                 <Appsection />
               </div>
 
-              {/* Layer 4: Dynamic Height FAQ Section */}
               <div
                 ref={faqSectionRef}
                 className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-40 will-change-transform"
@@ -314,7 +304,6 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
                 <FAQSection />
               </div>
 
-              {/* Layer 5: Footer */}
               <div
                 ref={footerLayerRef}
                 className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-50 will-change-transform"

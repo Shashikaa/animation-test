@@ -125,7 +125,7 @@ export default function CustomScrollBar() {
 
       {/* 10px Indicator Thumb */}
       <div
-        className="absolute right-0 w-1.5 h-[16px] bg-white rounded-full transition-transform duration-75 ease-out will-change-transform"
+        className="absolute right-0 w-1.5 lg:w-1.5 h-[20px] bg-white/55 rounded-full transition-transform duration-75 ease-out will-change-transform"
         style={{
           transform: `translate3d(0, calc(${progress} * (100vh - 10px)), 0)`,
         }}

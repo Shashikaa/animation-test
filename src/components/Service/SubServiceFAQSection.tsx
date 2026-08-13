@@ -27,7 +27,7 @@ export default function SubServiceFAQSection({ data }: FAQSectionProps) {
       />
       
       {/* Main Container */}
-      <div className="faq-content section-container relative z-20 w-full min-h-screen h-full flex flex-col lg:flex-row justify-start lg:justify-between gap-4 md:gap-8 pb-16 lg:pb-24">
+      <div className="faq-content section-container relative z-20 w-full min-h-screen h-full flex flex-col lg:flex-row justify-center lg:justify-between gap-4 md:gap-8 pb-12 lg:pb-24">
         
         {/* LEFT SIDE */}
         <div className="flex flex-col select-none justify-center pt-2 md:!pt-24 lg:!pt-32">
@@ -44,16 +44,13 @@ export default function SubServiceFAQSection({ data }: FAQSectionProps) {
           <FAQAccordion items={faqItems} />
         </div>
 
-        {/* Contact Us Button - Anchored to the exact bottom-right corner of the section block */}
-        <div className="absolute bottom-10 left-6 md:left-10 lg:bottom-16 lg:left-auto lg:right-18 z-30">
-
-                    <a
+        {/* Contact Us Button - Relative in flow for mobile (with mt-10 gap), Absolute for Desktop */}
+        <div className="!mt-14 mb-6 lg:m-0 lg:absolute lg:bottom-16 lg:left-auto lg:right-18 z-30">
+          <a
             href="/contact"
-
             className="group btn-underline font-body"
           >
             CONTACT US
-
           </a>
         </div>
 

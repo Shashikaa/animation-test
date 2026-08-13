@@ -14,7 +14,7 @@ const SectionNine = dynamic(() => import("../components/Home/SectionNine"), { ss
 const SectionTen = dynamic(() => import("../components/Home/SectionTen"), { ssr: false });
 const Appsection = dynamic(() => import("../components/Appsection"), { ssr: false });
 
-const easeOutQuad = (t: number) => t * (2 - t);
+const clamp = (val: number, min = 0, max = 1) => Math.min(Math.max(val, min), max);
 
 function executeInlineSplitting(selector: string) {
   if (typeof document === "undefined") return;
@@ -71,6 +71,12 @@ export default function HomeMobile() {
     unlockScrollEarlyMs: 1800,
   });
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+  }, []);
+
   // 1. UNLOCK LENIS & INITIALIZE
   useEffect(() => {
     const lenis = smootherRef?.current;
@@ -93,7 +99,6 @@ export default function HomeMobile() {
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // Execute line splitting after mounts and force initial hidden states
   useEffect(() => {
     if (!shouldLoadRest) return;
     executeInlineSplitting(".hero-title");
@@ -115,7 +120,7 @@ export default function HomeMobile() {
     }
   }, [shouldLoadRest]);
 
-  // 2. CACHE METRICS TO PREVENT LAYOUT THRASHING
+  // 2. CACHE METRICS
   const updateMetrics = useCallback(() => {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
@@ -160,19 +165,20 @@ export default function HomeMobile() {
     return () => window.removeEventListener("resize", updateMetrics);
   }, [shouldLoadRest, updateMetrics]);
 
-  // 3. GPU-ACCELERATED STEP RENDER LOOP
+  // 3. GPU-ACCELERATED RENDER LOOP
   useEffect(() => {
     if (!shouldLoadRest) return;
 
     const render = () => {
       const currentProg = targetProgress.current;
-      const totalSteps = 9.0;
+      // Expanded totalSteps from 9.0 to 9.8 to give Sec 2 equal scroll distance/speed
+      const totalSteps = 9.8;
       const stepProgress = currentProg * totalSteps;
       const { vh } = scrollMetricsRef.current;
       const cache = domCache.current;
 
       // ── Step 0 -> 1: HERO ANIMATIONS ──
-      const heroProg = Math.min(Math.max(stepProgress - 0, 0), 1);
+      const heroProg = clamp(stepProgress);
       const progressFill = cache.progressFill as HTMLElement;
       const heroBg = cache.heroBg as HTMLElement;
       const heroLeftInitial = cache.heroLeftInitial as HTMLElement;
@@ -185,7 +191,7 @@ export default function HomeMobile() {
       if (heroBg) heroBg.style.transform = `scale(${1.0 + heroProg * 0.08})`;
       if (progressFill) progressFill.style.transform = `scaleY(${heroProg})`;
 
-      const titleFade = Math.min(1, heroProg / 0.4);
+      const titleFade = clamp(heroProg / 0.4);
       if (heroTitleInners) {
         heroTitleInners.forEach((el) => {
           el.style.opacity = `${(1 - titleFade).toFixed(2)}`;
@@ -195,8 +201,8 @@ export default function HomeMobile() {
 
       if (heroLeftInitial) heroLeftInitial.style.visibility = heroProg >= 0.4 ? "hidden" : "visible";
 
-      const rightIn = Math.min(1, Math.max(0, (heroProg - 0.2) / 0.4));
-      const rightOut = Math.min(1, Math.max(0, (heroProg - 0.6) / 0.4));
+      const rightIn = clamp((heroProg - 0.2) / 0.4);
+      const rightOut = clamp((heroProg - 0.6) / 0.4);
 
       if (heroRightWrap) {
         heroRightWrap.style.visibility = heroProg >= 0.2 && heroProg < 0.8 ? "visible" : "hidden";
@@ -210,7 +216,7 @@ export default function HomeMobile() {
         });
       }
 
-      const secIn = Math.min(1, Math.max(0, (heroProg - 0.6) / 0.4));
+      const secIn = clamp((heroProg - 0.6) / 0.4);
       if (heroSecWrap) {
         heroSecWrap.style.visibility = secIn > 0 ? "visible" : "hidden";
         heroSecWrap.style.opacity = `${secIn.toFixed(2)}`;
@@ -222,20 +228,21 @@ export default function HomeMobile() {
         });
       }
 
-      // ── Step 1 -> 2: SECTION TWO SLIDES UP (100% -> 0%) ──
-      const s2Prog = easeOutQuad(Math.min(Math.max(stepProgress - 1.0, 0), 1));
+      // ── Step 1 -> 2: SECTION TWO SLIDES UP ──
+      const s2Prog = clamp(stepProgress - 1.0);
       if (sec2Ref.current) sec2Ref.current.style.transform = `translate3d(0, ${(1 - s2Prog) * 100}%, 0)`;
       if (heroPanelRef.current && s2Prog > 0) heroPanelRef.current.style.transform = `translate3d(0, ${-s2Prog * 15}%, 0)`;
 
-      // ── Step 2 -> 3.2: SECTION TWO INNER ANIMATIONS (STARTS ONLY AFTER PINNING AT Step 2.0) ──
-      const s2InnerProg = Math.min(Math.max((stepProgress - 2.0) / 1.2, 0), 1);
+      // ── Step 2 -> 4.0: SECTION TWO INNER ANIMATIONS (MATCHED SPEED WITH SUB-SERVICES) ──
+      // Expanded step window from 1.2 to 2.0 (Step 2.0 -> Step 4.0)
+      const s2InnerProg = clamp((stepProgress - 2.0) / 2.0);
       const s2Titles = cache.s2Titles as NodeListOf<HTMLElement>;
       const s2ScrollWrap = cache.s2ScrollWrap as HTMLElement;
       const s2Clip1 = cache.s2Clip1 as HTMLElement;
       const s2Clip2 = cache.s2Clip2 as HTMLElement;
       const s2Clip3 = cache.s2Clip3 as HTMLElement;
 
-      const titleFadeOut = Math.min(1, s2InnerProg / 0.20);
+      const titleFadeOut = clamp(s2InnerProg / 0.15);
       if (s2Titles) {
         s2Titles.forEach((el) => {
           el.style.opacity = `${(1 - titleFadeOut).toFixed(2)}`;
@@ -243,29 +250,19 @@ export default function HomeMobile() {
         });
       }
 
-      const scrollInProg = Math.min(1, Math.max(0, (s2InnerProg - 0.15) / 0.85));
+      const scrollInProg = clamp((s2InnerProg - 0.10) / 0.90);
       if (s2ScrollWrap) {
         s2ScrollWrap.style.opacity = `${Math.min(1, scrollInProg * 2.5).toFixed(2)}`;
         s2ScrollWrap.style.transform = `translate3d(0, ${80 - s2InnerProg * 160}%, 0)`;
         s2ScrollWrap.style.pointerEvents = scrollInProg > 0.1 ? "auto" : "none";
       }
 
-      // Smooth, non-laggy mobile background opacity transitions
-      if (s2Clip1) {
-        const clip1Prog = Math.min(1, Math.max(0, (s2InnerProg - 0.25) / 0.35));
-        s2Clip1.style.opacity = clip1Prog.toFixed(2);
-      }
-      if (s2Clip2) {
-        const clip2Prog = Math.min(1, Math.max(0, (s2InnerProg - 0.45) / 0.35));
-        s2Clip2.style.opacity = clip2Prog.toFixed(2);
-      }
-      if (s2Clip3) {
-        const clip3Prog = Math.min(1, Math.max(0, (s2InnerProg - 0.65) / 0.35));
-        s2Clip3.style.opacity = clip3Prog.toFixed(2);
-      }
+      if (s2Clip1) s2Clip1.style.opacity = clamp((s2InnerProg - 0.20) / 0.30).toFixed(2);
+      if (s2Clip2) s2Clip2.style.opacity = clamp((s2InnerProg - 0.45) / 0.30).toFixed(2);
+      if (s2Clip3) s2Clip3.style.opacity = clamp((s2InnerProg - 0.70) / 0.30).toFixed(2);
 
-      // ── Step 3.2 -> 4.2: SECTION EIGHT ──
-      const s8Prog = easeOutQuad(Math.min(Math.max(stepProgress - 3.2, 0), 1));
+      // ── Step 4.0 -> 5.0: SECTION EIGHT (SHIFTED OFFSET BY +0.8) ──
+      const s8Prog = clamp(stepProgress - 4.0);
       if (sec8Ref.current) {
         sec8Ref.current.style.transform = `translate3d(0, ${(1 - s8Prog) * 100}%, 0)`;
         sec8Ref.current.style.opacity = `${s8Prog > 0 ? 1 : 0}`;
@@ -281,7 +278,7 @@ export default function HomeMobile() {
       if (s8BgImg) s8BgImg.style.transform = `translate3d(0, ${(1 - s8Prog) * 20}%, 0)`;
       if (s8MobBg) s8MobBg.style.transform = `scale(${1.35 - s8Prog * 0.35})`;
 
-      // ── Step 4.2 -> 5.2: SECTION TEN ──
+      // ── Step 5.0 -> 6.0: SECTION TEN ──
       let s10HeaderEls = cache.s10HeaderEls as NodeListOf<HTMLElement>;
       let s10ScrollContainer = cache.s10ScrollContainer as HTMLElement;
 
@@ -294,7 +291,7 @@ export default function HomeMobile() {
         cache.s10ScrollContainer = s10ScrollContainer;
       }
 
-      const s10SlideProg = easeOutQuad(Math.min(Math.max((stepProgress - 4.2) / 0.5, 0), 1));
+      const s10SlideProg = clamp((stepProgress - 5.0) / 0.5);
 
       if (sec10Ref.current) {
         sec10Ref.current.style.transform = `translate3d(0, ${(1 - s10SlideProg) * 100}%, 0)`;
@@ -306,7 +303,7 @@ export default function HomeMobile() {
         sec8Ref.current.style.transform = `translate3d(0, ${-s10SlideProg * 15}%, 0)`;
       }
 
-      const s10InnerProg = Math.min(Math.max((stepProgress - 4.6) / 0.6, 0), 1);
+      const s10InnerProg = clamp((stepProgress - 5.4) / 0.6);
 
       if (s10HeaderEls) {
         s10HeaderEls.forEach((el) => {
@@ -319,8 +316,8 @@ export default function HomeMobile() {
         s10ScrollContainer.style.transform = `translate3d(0, ${containerY}%, 0)`;
       }
 
-      // ── Step 5.2 -> 6.2: SECTION SEVEN ──
-      const s7Prog = easeOutQuad(Math.min(Math.max(stepProgress - 5.2, 0), 1));
+      // ── Step 6.0 -> 7.0: SECTION SEVEN ──
+      const s7Prog = clamp(stepProgress - 6.0);
 
       if (sec7Ref.current) {
         sec7Ref.current.style.transform = `translate3d(0, ${(1 - s7Prog) * 100}%, 0)`;
@@ -340,8 +337,8 @@ export default function HomeMobile() {
       if (s7BgImg) s7BgImg.style.transform = `translate3d(0, ${(1 - s7Prog) * 20}%, 0)`;
       if (s7MobBg) s7MobBg.style.transform = `scale(${1.35 - s7Prog * 0.35})`;
 
-      // ── Step 6.2 -> 7.2: APP SECTION ──
-      const appProg = easeOutQuad(Math.min(Math.max(stepProgress - 6.2, 0), 1));
+      // ── Step 7.0 -> 8.0: APP SECTION ──
+      const appProg = clamp(stepProgress - 7.0);
 
       if (appSecRef.current) {
         const appHeight = appSecRef.current.offsetHeight || vh;
@@ -357,8 +354,8 @@ export default function HomeMobile() {
         sec7Ref.current.style.transform = `translate3d(0, ${-appProg * 15}%, 0)`;
       }
 
-      // ── Step 7.2 -> 8.2: SECTION NINE ──
-      const s9Prog = easeOutQuad(Math.min(Math.max(stepProgress - 7.2, 0), 1));
+      // ── Step 8.0 -> 9.0: SECTION NINE ──
+      const s9Prog = clamp(stepProgress - 8.0);
 
       if (sec9Ref.current) {
         sec9Ref.current.style.transform = `translate3d(0, ${(1 - s9Prog) * 100}%, 0)`;
@@ -372,14 +369,12 @@ export default function HomeMobile() {
         s9BgImg.style.transform = `scale(${1.35 - s9Prog * 0.35}) translate3d(0, ${(1 - s9Prog) * 20}%, 0)`;
       }
 
-      // ── Step 8.2 -> 9.0: FOOTER REVEAL ──
-      const footerProgress = easeOutQuad(Math.min(Math.max((stepProgress - 8.2) / 0.8, 0), 1));
+      // ── Step 9.0 -> 9.8: FOOTER REVEAL ──
+      const footerProgress = clamp((stepProgress - 9.0) / 0.8);
 
       if (footerLayerRef.current) {
         const footerHeight = footerLayerRef.current.offsetHeight || vh;
-        const startY = vh;
-        const endY = vh - footerHeight;
-        const translateY = startY + (endY - startY) * footerProgress;
+        const translateY = vh - footerHeight * footerProgress;
         footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
         footerLayerRef.current.style.opacity = `${footerProgress > 0 ? 1 : 0}`;
         footerLayerRef.current.style.visibility = footerProgress > 0 ? "visible" : "hidden";
@@ -387,7 +382,8 @@ export default function HomeMobile() {
     };
 
     const handleScroll = (e?: any) => {
-      const scrollY = e?.scroll !== undefined ? e.scroll : window.scrollY;
+      const lenis = smootherRef?.current;
+      const scrollY = e?.scroll ?? lenis?.scroll ?? window.scrollY;
       const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
 
       if (totalScrollable <= 0) return;
@@ -411,7 +407,7 @@ export default function HomeMobile() {
         }
       }
 
-      targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
+      targetProgress.current = clamp(relativeScroll / totalScrollable);
 
       if (rafId.current) cancelAnimationFrame(rafId.current);
       rafId.current = requestAnimationFrame(render);
@@ -457,7 +453,7 @@ export default function HomeMobile() {
       <div
         ref={trackRef}
         className="home-track-container relative w-full"
-        style={{ height: "1000vh" }}
+        style={{ height: "1100vh" }}
       >
         <div
           ref={fixedFrameRef}

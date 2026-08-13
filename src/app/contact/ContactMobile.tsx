@@ -86,7 +86,10 @@ export default function ContactMobile() {
 
     updateMetrics();
 
-    const resizeObserver = new ResizeObserver(() => updateMetrics());
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(() => updateMetrics());
+    });
+
     if (layer2ContentRef.current) resizeObserver.observe(layer2ContentRef.current);
     if (layer3FooterRef.current) resizeObserver.observe(layer3FooterRef.current);
 
@@ -213,7 +216,7 @@ export default function ContactMobile() {
                   <SectionOne />
                 </section>
                 <section className="relative w-full">
-                  <FAQSection />
+                  <FAQSection onLayoutChange={updateMetrics} />
                 </section>
               </div>
 

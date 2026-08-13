@@ -9,8 +9,8 @@ export default function SectionNine() {
         {/* LEFT PANEL */}
         <div className="s9-left-side absolute left-0 bottom-0 w-full lg:w-1/2 h-1/2 lg:h-full overflow-hidden pointer-events-auto bg-black">
           <div 
-            className="s9-bg-img-left absolute inset-0 bg-cover bg-left w-[200%] h-full opacity-60 mix-blend-lighten"
-            style={{ backgroundImage: "url('/secnine.webp')" }}
+            className="s9-bg-img-left absolute inset-0 bg-cover bg-left w-[200%] h-full opacity-60 mix-blend-lighten bg-black/50 bg-blend-multiply"
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1572331165267-854da2b10ccc?auto=format&fit=crop&w=1200&q=80')" }}
           />
           
           <div className="s9-native-title-wrapper-1 absolute top-1/2 right-0 -translate-y-1/2 w-[400px] hidden lg:block">
@@ -23,9 +23,9 @@ export default function SectionNine() {
         {/* RIGHT PANEL */}
         <div className="s9-right-side absolute right-0 top-0 w-full lg:w-1/2 h-1/2 lg:h-full overflow-hidden pointer-events-auto bg-black">
           <div 
-            className="s9-bg-img-right absolute inset-0 bg-cover bg-right w-[200%] h-full opacity-60 mix-blend-lighten"
+            className="s9-bg-img-right absolute inset-0 bg-cover bg-right w-[200%] h-full opacity-60 mix-blend-lighten bg-black/50 bg-blend-multiply"
             style={{ 
-              backgroundImage: "url('/secnine.webp')",
+              backgroundImage: "url('https://images.unsplash.com/photo-1572331165267-854da2b10ccc?auto=format&fit=crop&w=1200&q=80')",
               left: "-100%"
             }}
           />
@@ -39,11 +39,10 @@ export default function SectionNine() {
       </div>
 
       {/* MOBILE & TABLET BACKGROUND */}
-      <div 
-        className="absolute inset-0 z-10 block lg:hidden bg-cover bg-center"
-        style={{ backgroundImage: "url('/secnine.webp')" }}
-      />
-
+<div 
+  className="absolute inset-0 z-10 block lg:hidden bg-cover bg-center bg-black/50 bg-blend-multiply"
+  style={{ backgroundImage: "url('https://images.unsplash.com/photo-1572331165267-854da2b10ccc?auto=format&fit=crop&w=1200&q=80')" }}
+/>
       {/* ── GLOBAL FOREGROUND LAYER FOR UNCLIPPED FLIGHT PATH ── */}
       <div className="s9-global-flight-container absolute inset-0 z-30 hidden lg:block pointer-events-none opacity-0 invisible">
         <div className="s9-flight-wrapper absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 flex items-center justify-center text-[#F4EEDF]">

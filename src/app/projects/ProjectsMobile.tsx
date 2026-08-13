@@ -11,7 +11,7 @@ const SectionOne = dynamic(() => import("@/src/components/Projects/SectionOne"))
 const SectionTwo = dynamic(() => import("@/src/components/Projects/SectionTwo"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
-const easeOutQuad = (t: number) => t * (2 - t);
+const clamp = (val: number, min = 0, max = 1) => Math.min(Math.max(val, min), max);
 
 function executeMobileSplitting(selector: string) {
   const elements = document.querySelectorAll(selector);
@@ -68,7 +68,6 @@ export default function ProjectsMobile() {
     unlockScrollEarlyMs: 1800,
   });
 
-  // Prepare text splitting after hero intro unlocks
   useEffect(() => {
     if (!shouldLoadRest) return;
     executeMobileSplitting(".scroll-para-1");
@@ -80,7 +79,6 @@ export default function ProjectsMobile() {
     };
   }, [shouldLoadRest]);
 
-  // 1. UNLOCK LENIS & INITIALIZE INSTANTLY
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -102,7 +100,6 @@ export default function ProjectsMobile() {
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // 2. CACHE METRICS
   const updateMetrics = useCallback(() => {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
@@ -121,7 +118,6 @@ export default function ProjectsMobile() {
     return () => window.removeEventListener("resize", updateMetrics);
   }, [shouldLoadRest, updateMetrics]);
 
-  // 3. GPU-ACCELERATED RENDER LOOP
   useEffect(() => {
     if (!shouldLoadRest) return;
 
@@ -132,12 +128,13 @@ export default function ProjectsMobile() {
 
       const { vh } = scrollMetricsRef.current;
 
-      // Hero Text Crossfade / Reveal (0.0 -> 1.0)
+      // Hero Text Reveal
       const heroTextWrap = scopeRef.current?.querySelector<HTMLElement>(".hero-text-wrap");
       const scrollPara1 = scopeRef.current?.querySelector<HTMLElement>(".scroll-para-1");
       const paraLines = scopeRef.current?.querySelectorAll<HTMLElement>(".scroll-para-1 .custom-line-inner");
+      const parallaxImg = scopeRef.current?.querySelector<HTMLElement>(".parallax-img-asset");
 
-      const heroTextFade = Math.min(Math.max(stepProgress / 0.4, 0), 1);
+      const heroTextFade = clamp(stepProgress / 0.4);
       if (heroTextWrap) {
         heroTextWrap.style.opacity = `${1 - heroTextFade}`;
         heroTextWrap.style.transform = `translate3d(0, ${-30 * heroTextFade}px, 0)`;
@@ -145,18 +142,18 @@ export default function ProjectsMobile() {
       }
 
       if (scrollPara1 && paraLines) {
-        const paraProgress = Math.min(Math.max((stepProgress - 0.3) / 0.5, 0), 1);
+        const paraProgress = clamp((stepProgress - 0.3) / 0.5);
         scrollPara1.style.visibility = paraProgress > 0 ? "visible" : "hidden";
 
         paraLines.forEach((line, idx) => {
-          const lineStaggerProg = Math.min(Math.max((paraProgress - idx * 0.1) / 0.6, 0), 1);
+          const lineStaggerProg = clamp((paraProgress - idx * 0.1) / 0.6);
           line.style.opacity = `${lineStaggerProg}`;
           line.style.transform = `translate3d(0, ${(1 - lineStaggerProg) * 100}%, 0)`;
         });
       }
 
-      // Step 1: Section One Reveal & Hero Parallax Push (1.0 -> 2.0)
-      const s1Prog = easeOutQuad(Math.min(Math.max(stepProgress - 1.0, 0), 1));
+      // ── Section One Reveal & Parallax Image Transform ──
+      const s1Prog = clamp(stepProgress - 1.0);
       if (heroPanelRef.current) {
         heroPanelRef.current.style.transform = `translate3d(0, ${-s1Prog * 15}%, 0)`;
       }
@@ -164,32 +161,36 @@ export default function ProjectsMobile() {
         sectionOneRef.current.style.transform = `translate3d(0, ${(1 - s1Prog) * 100}%, 0)`;
       }
 
-      // Step 2: Section Two Reveal (2.0 -> 3.0) & Stay Pinned
-      const s2Prog = easeOutQuad(Math.min(Math.max(stepProgress - 2.0, 0), 1));
+      // Parallax image translation (Translates up as section reveals)
+      if (parallaxImg) {
+        const imgY = -20 + s1Prog * 40;
+        parallaxImg.style.transform = `translate3d(0, ${imgY.toFixed(2)}%, 0)`;
+      }
+
+      // ── Section Two ──
+      const s2Prog = clamp(stepProgress - 2.0);
       if (sectionTwoRef.current) {
         sectionTwoRef.current.style.transform = `translate3d(0, ${(1 - s2Prog) * 100}%, 0)`;
       }
 
-      // Keep SectionTwo active continuously through the footer slide-up
       if (stepProgress >= 2.2 && stepProgress <= 4.5) {
         setIsSectionTwoActive(true);
       } else {
         setIsSectionTwoActive(false);
       }
 
-      // Step 3: Footer Reveal (3.5 -> 4.5)
-      const footerProgress = easeOutQuad(Math.min(Math.max(stepProgress - 3.5, 0), 1));
+      // ── Footer Layer ──
+      const footerProgress = clamp(stepProgress - 3.5);
       if (footerLayerRef.current) {
         const footerHeight = footerLayerRef.current.offsetHeight || vh;
-        const startY = vh;
-        const endY = vh - footerHeight;
-        const translateY = startY + (endY - startY) * footerProgress;
+        const translateY = vh - footerHeight * footerProgress;
         footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
       }
     };
 
     const handleScroll = (e?: any) => {
-      const scrollY = e?.scroll !== undefined ? e.scroll : window.scrollY;
+      const lenis = smootherRef?.current;
+      const scrollY = e?.scroll ?? lenis?.scroll ?? window.scrollY;
       const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
 
       if (totalScrollable <= 0) return;
@@ -213,7 +214,7 @@ export default function ProjectsMobile() {
         }
       }
 
-      targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
+      targetProgress.current = clamp(relativeScroll / totalScrollable);
 
       if (rafId.current) cancelAnimationFrame(rafId.current);
       rafId.current = requestAnimationFrame(render);
@@ -250,7 +251,6 @@ export default function ProjectsMobile() {
           ref={fixedFrameRef}
           className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-[100dvh]"
         >
-          {/* Layer 1: Hero */}
           <div
             ref={heroPanelRef}
             className="projects-hero-master absolute inset-0 w-full h-[100dvh] z-10 gpu-accelerated transform-gpu will-change-transform"
@@ -260,7 +260,6 @@ export default function ProjectsMobile() {
 
           {shouldLoadRest && (
             <>
-              {/* Layer 2: Section One */}
               <div
                 ref={sectionOneRef}
                 className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-20 gpu-accelerated will-change-transform"
@@ -269,7 +268,6 @@ export default function ProjectsMobile() {
                 <SectionOne />
               </div>
 
-              {/* Layer 3: Section Two */}
               <div
                 ref={sectionTwoRef}
                 className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-30 gpu-accelerated will-change-transform"
@@ -278,7 +276,6 @@ export default function ProjectsMobile() {
                 <SectionTwo isActive={isSectionTwoActive} />
               </div>
 
-              {/* Layer 4: Footer */}
               <div
                 ref={footerLayerRef}
                 className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[151] will-change-transform"

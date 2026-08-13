@@ -12,7 +12,7 @@ const SubServiceSectionOne = dynamic(() => import("@/src/components/Service/SubS
 const SubServiceFAQSection = dynamic(() => import("@/src/components/Service/SubServiceFAQSection"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
-const easeOutQuad = (t: number) => t * (2 - t);
+const clamp = (val: number, min = 0, max = 1) => Math.min(Math.max(val, min), max);
 
 type SubServicesMobileProps = {
   pageData: FullServiceData;
@@ -81,7 +81,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     seqContainerRef.current = scopeRef.current.querySelector<HTMLElement>(".s10-seq-container");
   }, [shouldLoadRest]);
 
-  // Handle Lenis smooth scrolling
+  // Handle Lenis smooth scrolling setup
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -124,7 +124,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     return () => window.removeEventListener("resize", updateMetrics);
   }, [shouldLoadRest, updateMetrics]);
 
-  // 60FPS Render Loop
+  // 60FPS Render Loop with linear physical travel profiles
   useEffect(() => {
     if (!shouldLoadRest) return;
 
@@ -135,8 +135,8 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
 
       const { vh } = scrollMetricsRef.current;
 
-      // --- STEP 1: HERO TOP LAYER CLIP / TEXT FADE (0.0 -> 1.0) ---
-      const heroPhase1Prog = Math.min(Math.max(stepProgress / 1.0, 0), 1);
+      // --- STEP 1: HERO TOP LAYER CLIP (BOTTOM TO TOP REVEAL) / TEXT FADE (0.0 -> 1.0) ---
+      const heroPhase1Prog = clamp(stepProgress / 1.0);
 
       if (heroTextWrapRef.current) {
         heroTextWrapRef.current.style.opacity = `${1 - heroPhase1Prog}`;
@@ -145,8 +145,10 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
       }
 
       if (heroTopLayerRef.current) {
-        const layerWidthProg = (1 - heroPhase1Prog) * 100;
-        heroTopLayerRef.current.style.clipPath = `inset(0% 0% 0% ${100 - layerWidthProg}%)`;
+        // Bottom-to-top reveal: inset(top right bottom left)
+        // bottom-inset moves from 0% (full cover) to 100% (completely revealed upward)
+        const bottomInset = heroPhase1Prog * 100;
+        heroTopLayerRef.current.style.clipPath = `inset(0% 0% ${bottomInset}% 0%)`;
       }
 
       if (heroBgRef.current) {
@@ -155,7 +157,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
       }
 
       // --- STEP 2: SECTION ONE SLIDES UP OVER HERO (1.0 -> 2.0) ---
-      const s1Prog = easeOutQuad(Math.min(Math.max(stepProgress - 1.0, 0), 1));
+      const s1Prog = clamp(stepProgress - 1.0);
       if (sectionOneRef.current) {
         sectionOneRef.current.style.transform = `translate3d(0, ${(1 - s1Prog) * 100}%, 0)`;
       }
@@ -187,7 +189,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
           seqContainerRef.current.style.transform = "translate3d(0, 0px, 0)";
         }
       } else {
-        const expandProg = Math.min(Math.max((stepProgress - 2.0) / 1.0, 0), 1);
+        const expandProg = clamp((stepProgress - 2.0) / 1.0);
 
         if (s10ParaTopRef.current) {
           s10ParaTopRef.current.style.opacity = `${1 - expandProg}`;
@@ -198,10 +200,9 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
           s10TitleRef.current.style.transform = `translate3d(0, ${-35 * expandProg}px, 0)`;
         }
 
-        // Smoothly expand inner wrap on mobile to fill 100vw x 100vh full screen
         if (s10ImgInnerWrapRef.current) {
-          const currentRight = (1 - expandProg) * 4;   // 4vw -> 0vw
-          const currentBottom = (1 - expandProg) * 10; // 10vh -> 0vh
+          const currentRight = (1 - expandProg) * 4;
+          const currentBottom = (1 - expandProg) * 10;
 
           s10ImgInnerWrapRef.current.style.right = `${currentRight}vw`;
           s10ImgInnerWrapRef.current.style.bottom = `${currentBottom}vh`;
@@ -215,14 +216,14 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         }
 
         if (seqContainerRef.current) {
-          const textProg = Math.min(Math.max((stepProgress - 3.0) / 2.0, 0), 1);
+          const textProg = clamp((stepProgress - 3.0) / 2.0);
           const seqY = -textProg * 1240;
           seqContainerRef.current.style.transform = `translate3d(0, ${seqY}px, 0)`;
         }
       }
 
       // --- STEP 4: FAQ SECTION REVEAL (5.0 -> 6.0) ---
-      const faqProg = easeOutQuad(Math.min(Math.max(stepProgress - 5.0, 0), 1));
+      const faqProg = clamp(stepProgress - 5.0);
       if (faqSectionRef.current) {
         const faqHeight = faqSectionRef.current.offsetHeight || vh;
         const startY = vh;
@@ -236,18 +237,17 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
       }
 
       // --- STEP 5: FOOTER REVEAL (6.0 -> 7.0) ---
-      const footerProg = easeOutQuad(Math.min(Math.max(stepProgress - 6.0, 0), 1));
+      const footerProg = clamp(stepProgress - 6.0);
       if (footerLayerRef.current) {
         const footerHeight = footerLayerRef.current.offsetHeight || vh;
-        const startY = vh;
-        const endY = vh - footerHeight;
-        const translateY = startY + (endY - startY) * footerProg;
+        const translateY = vh - footerHeight * footerProg;
         footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
       }
     };
 
     const handleScroll = (e?: any) => {
-      const scrollY = e?.scroll !== undefined ? e.scroll : window.scrollY;
+      const lenis = smootherRef?.current;
+      const scrollY = e?.scroll ?? lenis?.scroll ?? window.scrollY;
       const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
 
       if (totalScrollable <= 0) return;
@@ -271,7 +271,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         }
       }
 
-      targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
+      targetProgress.current = clamp(relativeScroll / totalScrollable);
 
       if (rafId.current) cancelAnimationFrame(rafId.current);
       rafId.current = requestAnimationFrame(render);

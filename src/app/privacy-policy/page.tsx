@@ -47,24 +47,27 @@ export default function PrivacyPolicyPage() {
   const sectionRef = useRef<HTMLElement>(null);
   const scrollWrapperRef = useRef<HTMLDivElement>(null);
   const scrollContentRef = useRef<HTMLDivElement>(null);
+  const scrollTrackRef = useRef<HTMLDivElement>(null);
+  const scrollThumbRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
       const mm = gsap.matchMedia();
 
-      // Enable pinned scroll animation across ALL screen sizes (Mobile + Desktop)
       mm.add("(min-width: 0px)", () => {
         const section = sectionRef.current;
         const wrapper = scrollWrapperRef.current;
         const content = scrollContentRef.current;
+        const track = scrollTrackRef.current;
+        const thumb = scrollThumbRef.current;
 
         if (!section || !wrapper || !content) return;
 
-        const getScrollAmount = () => content.scrollHeight - wrapper.clientHeight;
+        // Calculate precise scrollable distance
+        const getScrollAmount = () =>
+          content.scrollHeight - wrapper.clientHeight;
 
-        gsap.to(content, {
-          y: () => -getScrollAmount(),
-          ease: "none",
+        const tl = gsap.timeline({
           scrollTrigger: {
             trigger: section,
             start: "top top",
@@ -75,12 +78,35 @@ export default function PrivacyPolicyPage() {
             anticipatePin: 1,
           },
         });
+
+        // 1. Scroll content upward
+        tl.to(
+          content,
+          {
+            y: () => -getScrollAmount(),
+            ease: "none",
+          },
+          0
+        );
+
+        // 2. Move thumb down custom track synchronously
+        if (track && thumb) {
+          tl.to(
+            thumb,
+            {
+              y: () => track.clientHeight - thumb.clientHeight,
+              ease: "none",
+            },
+            0
+          );
+        }
       });
     }, scopeRef);
 
+    // Refresh after DOM layout stabilization
     const timer = setTimeout(() => {
       ScrollTrigger.refresh();
-    }, 150);
+    }, 200);
 
     return () => {
       clearTimeout(timer);
@@ -90,7 +116,7 @@ export default function PrivacyPolicyPage() {
 
   return (
     <div ref={scopeRef}>
-      <main className="relative w-full bg-[#10221C] min-h-screen">
+      <main className="relative w-full bg-[#10221C] h-auto">
         {/* Fixed Background Image */}
         <div
           className="hero-bg-wrapper fixed inset-0 w-full h-full z-0 pointer-events-none overflow-hidden"
@@ -102,93 +128,111 @@ export default function PrivacyPolicyPage() {
           />
         </div>
 
-        {/* Full Screen Privacy Policy Section */}
+        {/* Full Screen Policy Section */}
         <section
           ref={sectionRef}
-          className="hero relative w-full h-screen bg-transparent overflow-hidden z-10"
+          className="hero relative w-full h-screen bg-transparent overflow-hidden z-10 flex flex-col justify-between"
         >
-          {/* Policy Content Container */}
-          <div className="section-container relative h-full w-full flex flex-col lg:flex-row justify-between gap-6 lg:gap-18 px-6 lg:px-16 py-8 lg:py-16">
-            
+          {/* Main Container */}
+          <div className="section-container relative h-full w-full flex flex-col lg:flex-row justify-between gap-6 lg:gap-16 px-6 lg:px-16 pt-16 lg:pt-20 !pb-4 lg:!pb-20 min-h-0 flex-1">
             {/* Left Column */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-between h-auto lg:h-full">
+            <div className="w-full lg:w-1/2 flex flex-col justify-between shrink-0">
               <div>
-                <h1 className="font-display text-[#F4EEDF] text-3xl sm:text-4xl lg:text-6xl leading-tight select-none">
+                <h1 className="font-display text-[#F4EEDF] text-3xl sm:text-5xl lg:text-6xl leading-tight select-none">
                   Privacy Policy
                 </h1>
-                <p className="font-body text-[#F4EEDF] !mt-4 lg:!mt-6 max-w-md text-xs sm:text-base leading-relaxed">
-                  This Privacy Policy outlines our commitment to privacy, data protection, and transparency for all clients and website visitors. Here you can find clear information about how Grand Pools handles personal data, client communications, third-party integrations, and cookie policies.
+                <p className="font-body text-[#F4EEDF] !mt-3 lg:!mt-6 max-w-md text-xs sm:text-base leading-relaxed opacity-90">
+                  This Privacy Policy outlines our commitment to privacy, data
+                  protection, and transparency for all clients and website
+                  visitors. Here you can find clear information about how Grand
+                  Pools handles personal data, client communications,
+                  third-party integrations, and cookie policies.
                 </p>
               </div>
 
-              {/* Contact Information (Desktop View) */}
-              <div className="hidden lg:flex flex-col gap-3 font-body text-[#F4EEDF] !mt-8 lg:mt-0">
+              {/* Desktop Contact Details */}
+              <div className="hidden lg:flex flex-col gap-4 font-body text-[#F4EEDF] text-sm sm:text-base">
                 <div>
                   <h3 className="text-base font-bold tracking-wide text-[#F4EEDF]">
                     Legal & Privacy Inquiries
                   </h3>
                 </div>
-
-                <div className="flex flex-col gap-2 text-sm sm:text-base pt-1">
-                  <a
-                    href="tel:0422630394"
-                    className="hover:opacity-75 transition-opacity duration-200 w-fit"
-                  >
-                    0422 630 394
-                  </a>
-                  <a
-                    href="mailto:hello@grandpools.com.au"
-                    className="hover:opacity-75 transition-opacity duration-200 w-fit"
-                  >
-                    hello@grandpools.com.au
-                  </a>
-                  <a
-                    href="https://www.instagram.com/grandpools_aus/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Instagram"
-                    className="mt-1 hover:opacity-75 transition-opacity duration-200 w-fit"
-                  >
-                    <img
-                      src="/ig.svg"
-                      alt="Instagram"
-                      className="w-5 h-5 object-contain"
-                    />
-                  </a>
-                </div>
+                <a
+                  href="tel:0422630394"
+                  className="hover:opacity-75 transition-opacity duration-200 w-fit"
+                >
+                  0422 630 394
+                </a>
+                <a
+                  href="mailto:hello@grandpools.com.au"
+                  className="hover:opacity-75 transition-opacity duration-200 w-fit"
+                >
+                  hello@grandpools.com.au
+                </a>
+                <a
+                  href="https://www.instagram.com/grandpools_aus/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="mt-1 hover:opacity-75 transition-opacity duration-200 w-fit"
+                >
+                  <img
+                    src="/ig.svg"
+                    alt="Instagram"
+                    className="w-5 h-5 object-contain"
+                  />
+                </a>
               </div>
             </div>
 
-            {/* Right Column (Inner Scroll Content Enabled for Mobile & Desktop) */}
-            <div className="w-full lg:w-5/12 flex items-center flex-1 h-full min-h-0">
+            {/* Right Column with Scrollable Content */}
+            <div className="w-full lg:w-5/12 flex flex-row gap-4 flex-1 min-h-0 relative items-stretch my-2 lg:my-0">
+              {/* Content Wrapper */}
               <div
                 ref={scrollWrapperRef}
-                className="w-full h-full lg:h-[520px] overflow-hidden relative py-2 lg:py-4"
+                className="w-full h-full overflow-hidden relative"
               >
                 <div
                   ref={scrollContentRef}
-                  className="w-full flex flex-col gap-6 lg:gap-8 text-[#F4EEDF] lg:pr-6 pb-12 lg:pb-24"
+                  className="w-full flex flex-col gap-8 lg:gap-10 text-[#F4EEDF] pb-24"
                 >
                   {policySections.map((item, index) => (
-                    <div key={index} className="flex flex-col gap-2 lg:gap-3 flex-shrink-0">
-                      <h3 className="text-base md:text-xl font-body font-medium tracking-wide text-[#F4EEDF]">
+                    <div
+                      key={index}
+                      className="flex flex-col gap-2 lg:gap-3 shrink-0"
+                    >
+                      <h3 className="text-base sm:text-lg lg:text-xl font-body font-medium tracking-wide text-[#F4EEDF]">
                         {item.title}
                       </h3>
-                      <p className="font-body text-[#F4EEDF] text-xs sm:text-sm leading-relaxed lg:max-w-md">
+                      <p className="font-body text-[#F4EEDF]/90 text-xs sm:text-sm leading-relaxed max-w-md">
                         {item.content}
                       </p>
                     </div>
                   ))}
                 </div>
               </div>
+
+              {/* Custom GSAP Scrollbar Track & Thumb */}
+              <div
+                ref={scrollTrackRef}
+                className="w-1 rounded-full h-full bg-[#F4EEDF]/20 relative overflow-hidden shrink-0"
+              >
+                <div
+                  ref={scrollThumbRef}
+                  className="w-full h-10 bg-[#F4EEDF] rounded-full absolute top-0 left-0"
+                />
+              </div>
             </div>
 
-            {/* Contact details for Mobile Viewport */}
-            <div className="flex lg:hidden flex-row gap-4 justify-between items-center font-body text-[#F4EEDF] text-xs pt-4 border-t border-[#F4EEDF]/20">
+            {/* Mobile Contact Info (Pinned at Bottom) */}
+            <div className="flex lg:hidden flex-row gap-2 justify-between items-center font-body text-[#F4EEDF] text-xs pt-0 !mt-4 shrink-0 z-20 w-full">
               <a href="tel:0422630394" className="hover:opacity-75">
                 0422 630 394
               </a>
-              <a href="mailto:hello@grandpools.com.au" className="hover:opacity-75">
+              <a
+                href="mailto:hello@grandpools.com.au"
+                className="hover:opacity-75"
+              >
                 hello@grandpools.com.au
               </a>
               <a
@@ -197,15 +241,18 @@ export default function PrivacyPolicyPage() {
                 rel="noopener noreferrer"
                 aria-label="Instagram"
               >
-                <img src="/ig.svg" alt="Instagram" className="w-4 h-4 object-contain" />
+                <img
+                  src="/ig.svg"
+                  alt="Instagram"
+                  className="w-4 h-4 object-contain"
+                />
               </a>
             </div>
-
           </div>
         </section>
 
-        {/* Footer Section Row */}
-        <div className="footer-section-row relative w-full z-10 bg-transparent">
+        {/* Footer Section */}
+        <div className="footer-section-row relative w-full z-10 bg-transparent !mt-16">
           <Footer />
         </div>
       </main>

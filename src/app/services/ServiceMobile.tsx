@@ -11,7 +11,7 @@ const SectionTwo = dynamic(() => import("@/src/components/Service/SectionTwo"));
 const Appsection = dynamic(() => import("@/src/components/Appsection"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
-const easeOutQuad = (t: number) => t * (2 - t);
+const clamp = (val: number, min = 0, max = 1) => Math.min(Math.max(val, min), max);
 
 export default function ServicesMobile() {
   const scopeRef = useRef<HTMLDivElement>(null);
@@ -47,14 +47,12 @@ export default function ServicesMobile() {
     }
   }, []);
 
-  // Prevent browser layout jump on load/refresh
   useEffect(() => {
     if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
   }, []);
 
-  // 1. UNLOCK LENIS & INITIALIZE
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -76,7 +74,6 @@ export default function ServicesMobile() {
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // 2. CACHE METRICS
   const updateMetrics = useCallback(() => {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
@@ -95,7 +92,6 @@ export default function ServicesMobile() {
     return () => window.removeEventListener("resize", updateMetrics);
   }, [shouldLoadRest, updateMetrics]);
 
-  // 3. GPU-ACCELERATED STEP RENDER LOOP
   useEffect(() => {
     if (!shouldLoadRest) return;
 
@@ -106,13 +102,13 @@ export default function ServicesMobile() {
 
       const { vh } = scrollMetricsRef.current;
 
-      // --- STEP 1: COMPRESS HERO TOP LAYER TO REVEAL UNDERNEATH LAYER (0.0 -> 1.0) ---
+      // --- STEP 1: COMPRESS HERO TOP LAYER (0.0 -> 1.0) ---
       const heroTextWrap = scopeRef.current?.querySelector<HTMLElement>(".hero-text-wrap");
       const heroBtn = scopeRef.current?.querySelector<HTMLElement>(".hero-btn");
       const heroTopLayer = scopeRef.current?.querySelector<HTMLElement>(".services-hero-top-layer");
       const serviceHeroBg = scopeRef.current?.querySelector<HTMLElement>(".service-hero-bg");
 
-      const step1Prog = Math.min(Math.max(stepProgress / 1.0, 0), 1);
+      const step1Prog = clamp(stepProgress / 1.0);
 
       if (heroTextWrap) {
         heroTextWrap.style.transform = `translate3d(0, ${-vh * step1Prog}px, 0)`;
@@ -131,7 +127,7 @@ export default function ServicesMobile() {
       }
 
       // --- STEP 2: SECTION ONE SLIDES UP DIRECTLY OVER HERO (1.0 -> 2.0) ---
-      const step2Prog = easeOutQuad(Math.min(Math.max(stepProgress - 1.0, 0), 1));
+      const step2Prog = clamp(stepProgress - 1.0);
       if (sectionOneRef.current) {
         sectionOneRef.current.style.transform = `translate3d(0, ${(1 - step2Prog) * 100}%, 0)`;
       }
@@ -139,8 +135,8 @@ export default function ServicesMobile() {
         heroPanelRef.current.style.transform = `translate3d(0, ${-step2Prog * 15}%, 0)`;
       }
 
-      // --- STEP 3: SECTION TWO SLIDES UP OVER SECTION ONE & DISCRETE STEPPERS (2.0 -> 5.0) ---
-      const step3Prog = easeOutQuad(Math.min(Math.max(stepProgress - 2.0, 0), 1));
+      // --- STEP 3: SECTION TWO SLIDES UP OVER SECTION ONE (2.0 -> 5.0) ---
+      const step3Prog = clamp(stepProgress - 2.0);
       if (sectionTwoRef.current) {
         sectionTwoRef.current.style.transform = `translate3d(0, ${(1 - step3Prog) * 100}%, 0)`;
       }
@@ -163,7 +159,7 @@ export default function ServicesMobile() {
       }
 
       // --- STEP 4: APP SECTION SLIDES UP OVER SECTION TWO (5.0 -> 6.0) ---
-      const appProg = easeOutQuad(Math.min(Math.max(stepProgress - 5.0, 0), 1));
+      const appProg = clamp(stepProgress - 5.0);
       if (appSecRef.current) {
         const appHeight = appSecRef.current.offsetHeight || vh;
         const startY = vh;
@@ -176,18 +172,17 @@ export default function ServicesMobile() {
       }
 
       // --- STEP 5: FOOTER REVEAL (6.0 -> 7.0) ---
-      const footerProg = easeOutQuad(Math.min(Math.max(stepProgress - 6.0, 0), 1));
+      const footerProg = clamp(stepProgress - 6.0);
       if (footerLayerRef.current) {
         const footerHeight = footerLayerRef.current.offsetHeight || vh;
-        const startY = vh;
-        const endY = vh - footerHeight;
-        const translateY = startY + (endY - startY) * footerProg;
+        const translateY = vh - footerHeight * footerProg;
         footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
       }
     };
 
     const handleScroll = (e?: any) => {
-      const scrollY = e?.scroll !== undefined ? e.scroll : window.scrollY;
+      const lenis = smootherRef?.current;
+      const scrollY = e?.scroll ?? lenis?.scroll ?? window.scrollY;
       const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
 
       if (totalScrollable <= 0) return;
@@ -211,7 +206,7 @@ export default function ServicesMobile() {
         }
       }
 
-      targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
+      targetProgress.current = clamp(relativeScroll / totalScrollable);
 
       if (rafId.current) cancelAnimationFrame(rafId.current);
       rafId.current = requestAnimationFrame(render);

@@ -26,12 +26,12 @@ const CARDS = [
 
 export default function SectionOne() {
   return (
-    <div className="w-full min-h-screen lg:h-full relative overflow-hidden bg-black">
+    <div className="w-full min-h-screen md:min-h-auto  md:h-full relative overflow-hidden bg-black">
       {/* Background Image Layer */}
-      <div
-        className="contact-one-bg absolute top-0 left-0 w-full h-[200%] bg-cover bg-top bg-no-repeat will-change-transform"
-        style={{ backgroundImage: "url('/contactparalax.webp')" }}
-      />
+<div
+  className="contact-one-bg absolute top-0 left-0 w-full h-[100%] lg:h-[200%] bg-cover bg-bottom lg:bg-center bg-no-repeat will-change-transform"
+  style={{ backgroundImage: "url('/contactparalax.webp')" }}
+/>
       
       {/* Main Layout Grid Context */}
       <div className="section-container relative z-10 w-full h-auto lg:h-full flex flex-col lg:flex-row items-stretch justify-center lg:justify-between gap-12 lg:gap-0">

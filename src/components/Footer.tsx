@@ -101,7 +101,7 @@ export default function Footer() {
           /* Exact Figma linear gradient from top-left (#162D24) to bottom-right (#094146) */
           background: "linear-gradient(135deg, #162D24 0%, #094146 100%)",
           borderTop: "1px solid rgba(255, 255, 255, 0.15)",
-          boxShadow: "0 -10px 30px rgba(0, 0, 0, 0.3)",
+         
           transform: "translate3d(0, 0, 0)",
           WebkitTransform: "translate3d(0, 0, 0)",
           isolation: "isolate",

@@ -401,7 +401,7 @@ export default function Preloader({ onComplete }: { onComplete?: () => void }) {
           style={{ background: "linear-gradient(145deg, #0A2B1E 0%, #0E3A28 100%)" }}
         >
           <video
-            src="/videos/Pool-Water-Reflect.mp4"
+            src="/videos/Pool-Water-Reflect.webm"
             loop
             muted
             playsInline
