@@ -117,7 +117,7 @@ export default function ContactDesktop() {
     };
   }, [shouldLoadRest]);
 
-  // ── 4. DIRECT GPU SCROLL RENDERING (NO GSAP) ──
+  // ── 4. DIRECT GPU SCROLL RENDERING (SYNCHRONIZED WITH LENIS) ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
@@ -129,6 +129,8 @@ export default function ContactDesktop() {
     const rightTrack = scope.querySelector<HTMLElement>(".contact-right-scroll-track");
     const faqWrapper = scope.querySelector<HTMLElement>(".faq-scroll-wrapper");
     const footerWrapper = scope.querySelector<HTMLElement>(".footer-scroll-wrapper");
+
+    let rafId: number | null = null;
 
     const renderTransforms = () => {
       const stepProgress = progressRef.current * (TOTAL_SCROLL_STEPS - 1);
@@ -170,7 +172,6 @@ export default function ContactDesktop() {
       triggerPlayOnceTextReveal(".faq-scroll-wrapper", stepProgress, 5.6);
 
       // 5. FOOTER SLIDES UP OVER FAQ (STEPS 6.8 -> 8.0)
-      // Note: FAQ content opacity remains 100% without fading out
       const p5 = Math.min(Math.max((stepProgress - 6.8) / 1.2, 0), 1);
       if (footerWrapper) {
         footerWrapper.style.visibility = stepProgress >= 6.6 ? "visible" : "hidden";
@@ -204,7 +205,8 @@ export default function ContactDesktop() {
       const currentScroll = Math.max(0, -trackRect.top);
       progressRef.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
 
-      requestAnimationFrame(renderTransforms);
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(renderTransforms);
     };
 
     handleScroll();
@@ -217,6 +219,7 @@ export default function ContactDesktop() {
     }
 
     return () => {
+      if (rafId) cancelAnimationFrame(rafId);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
       } else {
@@ -234,10 +237,10 @@ export default function ContactDesktop() {
       >
         <div
           ref={fixedFrameRef}
-          className="contact-pin fixed top-0 left-0 h-[100svh] w-full overflow-hidden bg-black z-10"
+          className="contact-pin fixed top-0 left-0 h-[100svh] w-full overflow-hidden bg-black z-10 transform-gpu"
         >
           {/* HERO COMPONENT */}
-          <div className="absolute inset-0 h-full w-full z-10">
+          <div className="absolute inset-0 h-full w-full z-10 transform-gpu">
             <ContactHero />
           </div>
 

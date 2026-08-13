@@ -6,11 +6,12 @@ export interface TextRevealOptions {
   yPercent?: number;
   stagger?: number;
   duration?: number;
-  rotation?: number;
+  delay?: number;
+  ease?: string;
 }
 
 /**
- * Splits text into wrapped lines without breaking flow or causing layout shifts.
+ * Splits text into wrapped line containers without triggering layout reflow jitter.
  */
 function splitIntoLines(el: HTMLElement): HTMLElement[] {
   if (el.dataset.originalHtml !== undefined) {
@@ -18,22 +19,27 @@ function splitIntoLines(el: HTMLElement): HTMLElement[] {
   }
 
   el.dataset.originalHtml = el.innerHTML;
+
+  // Temporarily reset inline styles to measure line coordinates accurately
+  const prevTransform = el.style.transform;
   el.style.transform = "none";
 
   const textContent = el.textContent || "";
   const words = textContent.trim().split(/\s+/);
 
+  // Wrap each word in an inline container to read line bounds
   el.innerHTML = words
-    .map((word) => `<span class="gs-word-wrapper inline-block overflow-hidden vertical-top"><span class="gs-word inline-block">${word}</span></span>`)
+    .map(
+      (word) =>
+        `<span class="gs-word-wrapper inline-block overflow-hidden align-top"><span class="gs-word inline-block">${word}</span></span>`
+    )
     .join(" ");
 
   const wordNodes = Array.from(el.querySelectorAll<HTMLElement>(".gs-word"));
   const lineMap = new Map<number, HTMLElement[]>();
 
   wordNodes.forEach((word) => {
-    const range = document.createRange();
-    range.selectNode(word);
-    const rect = range.getBoundingClientRect();
+    const rect = word.getBoundingClientRect();
     const top = Math.round(rect.top);
 
     if (!lineMap.has(top)) lineMap.set(top, []);
@@ -45,10 +51,17 @@ function splitIntoLines(el: HTMLElement): HTMLElement[] {
 
   lineMap.forEach((group) => {
     const lineOuter = document.createElement("span");
-    lineOuter.className = "gs-line gs-line-outer block overflow-hidden py-[0.1em] -my-[0.1em] will-change-transform";
+    lineOuter.className =
+      "gs-line gs-line-outer block overflow-hidden py-[0.1em] -my-[0.1em] transform-gpu";
+    lineOuter.style.perspective = "1000px";
 
     const lineInner = document.createElement("span");
-    lineInner.className = "gs-line-inner block will-change-transform";
+    lineInner.className =
+      "gs-line-inner block transform-gpu will-change-transform";
+    
+    // Hardware acceleration optimization hints
+    lineInner.style.backfaceVisibility = "hidden";
+    lineInner.style.webkitBackfaceVisibility = "hidden";
 
     group.forEach((word, i) => {
       lineInner.appendChild(word);
@@ -62,6 +75,7 @@ function splitIntoLines(el: HTMLElement): HTMLElement[] {
     lineInners.push(lineInner);
   });
 
+  el.style.transform = prevTransform;
   return lineInners;
 }
 
@@ -79,10 +93,13 @@ export function restoreTextReveal(scope: HTMLElement, selector: string) {
   });
 }
 
+/**
+ * Prepares text elements by splitting lines and setting initial GPU-hidden states.
+ */
 export function useTextReveal(
   scopeRef: RefObject<HTMLElement | null>,
   selector: string,
-  _options: TextRevealOptions = {}
+  options: TextRevealOptions = {}
 ) {
   const scope = scopeRef.current;
   if (!scope) return;
@@ -90,17 +107,44 @@ export function useTextReveal(
   const elements = Array.from(scope.querySelectorAll<HTMLElement>(selector));
   if (!elements.length) return;
 
+  const { yPercent = 100 } = options;
+
   elements.forEach((el) => {
     el.style.visibility = "visible";
     el.style.opacity = "1";
-    
-    // Split DOM into .gs-line-outer and .gs-line-inner wrappers
+
     const lineInners = splitIntoLines(el);
 
-    // Default hidden position for lines (awaiting JS animation)
     lineInners.forEach((line) => {
-      line.style.transform = "translate3d(0, 105%, 0) rotateZ(2deg)";
+      line.style.transform = `translate3d(0, ${yPercent}%, 0)`;
       line.style.opacity = "0";
+      line.style.transition = "none";
     });
+  });
+}
+
+/**
+ * Helper to smoothly animate text reveal on demand (e.g. scroll triggers).
+ */
+export function animateTextReveal(
+  container: HTMLElement,
+  options: TextRevealOptions = {}
+) {
+  const {
+    stagger = 0.05,
+    duration = 0.85,
+    delay = 0,
+    ease = "cubic-bezier(0.16, 1, 0.3, 1)",
+  } = options;
+
+  const lineInners = container.querySelectorAll<HTMLElement>(
+    ".gs-line-inner, .custom-line-inner"
+  );
+
+  lineInners.forEach((line, idx) => {
+    const totalDelay = delay + idx * stagger;
+    line.style.transition = `transform ${duration}s ${ease} ${totalDelay}s, opacity ${duration}s ${ease} ${totalDelay}s`;
+    line.style.transform = "translate3d(0, 0%, 0)";
+    line.style.opacity = "1";
   });
 }

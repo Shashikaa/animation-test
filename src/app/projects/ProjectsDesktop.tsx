@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import gsap from "gsap";
 import ProjectsHero from "../../components/Projects/ProjectsHero";
 import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal";
 import SectionOne from "@/src/components/Projects/SectionOne";
@@ -69,7 +68,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     unlockScrollEarlyMs: 1800,
   });
 
-  // ── 1. UNLOCK LENIS / SCROLL (MATCHED TO ABOUT PAGE) ──
+  // ── 1. UNLOCK LENIS / SCROLL ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -158,7 +157,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     };
   }, [shouldLoadRest]);
 
-  // ── 4. DIRECT GPU TRANSFORM RENDERING ──
+  // ── 4. DIRECT GPU TRANSFORM RENDERING (SYNCHRONIZED WITH LENIS) ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
@@ -170,6 +169,8 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     const secOne = scope.querySelector<HTMLElement>(".section-one-wrapper");
     const parallaxImg = scope.querySelector<HTMLElement>(".parallax-img-asset");
     const secTwo = scope.querySelector<HTMLElement>(".section-two-wrapper");
+
+    let rafId: number | null = null;
 
     const renderTransforms = () => {
       const stepProgress = progressRef.current * (TOTAL_SCROLL_STEPS - 1);
@@ -284,7 +285,8 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
       const currentScroll = Math.max(0, -trackRect.top);
       progressRef.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
 
-      requestAnimationFrame(renderTransforms);
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(renderTransforms);
     };
 
     handleScroll();
@@ -297,6 +299,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     }
 
     return () => {
+      if (rafId) cancelAnimationFrame(rafId);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
       } else {
@@ -316,7 +319,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
       >
         <div
           ref={fixedFrameRef}
-          className="projects-pin fixed top-0 left-0 h-[100vh] w-full overflow-hidden bg-black z-10"
+          className="projects-pin fixed top-0 left-0 h-[100vh] w-full overflow-hidden bg-black z-10 transform-gpu"
         >
           {/* Layer 1: Hero Section */}
           <div
@@ -332,7 +335,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
               {/* Layer 2: Section One Container */}
               <div
                 ref={sectionOneRef}
-                className="section-one-wrapper absolute left-0 right-0 w-full h-auto structural-layer"
+                className="section-one-wrapper absolute left-0 right-0 w-full h-auto structural-layer transform-gpu"
                 style={{ zIndex: 20, transform: "translate3d(0, 100vh, 0)" }}
               >
                 <SectionOne />
@@ -340,7 +343,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
               {/* Layer 3: Section Two Container */}
               <div
-                className="section-two-wrapper absolute inset-0 w-full h-[100vh] structural-layer"
+                className="section-two-wrapper absolute inset-0 w-full h-[100vh] structural-layer transform-gpu"
                 style={{ zIndex: 30, transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionTwo isActive={isSectionTwoActive} />
@@ -349,7 +352,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
               {/* Layer 4: CTA Section Container */}
               <div
                 ref={layerCTA}
-                className="projects-section-cta absolute left-0 top-0 w-full z-[95] structural-layer pointer-events-auto"
+                className="projects-section-cta absolute left-0 top-0 w-full z-[95] structural-layer pointer-events-auto transform-gpu"
                 style={{ transform: "translate3d(0, 100vh, 0)" }}
               >
                 <SectionCTA preloaderDone={isReady} />
@@ -358,7 +361,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
               {/* Layer 5: Footer Container */}
               <div
                 ref={layerFooter}
-                className="projects-footer-wrap absolute left-0 top-0 w-full z-[96] structural-layer"
+                className="projects-footer-wrap absolute left-0 top-0 w-full z-[96] structural-layer transform-gpu"
                 style={{ zIndex: 96, transform: "translate3d(0, 100vh, 0)" }}
               >
                 <Footer />

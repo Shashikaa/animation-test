@@ -36,7 +36,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
         lenisOptions: {
           wrapper: window,
           content: document.documentElement,
-          lerp: isMobileDevice ? 0.12 : 0.085, // Direct snappy response on touch, smooth momentum on desktop wheel
+          lerp: isMobileDevice ? 0.12 : 0.07, // Direct snappy response on touch, smooth momentum on desktop wheel
           duration: isMobileDevice ? 0.8 : 1.2,
           smoothWheel: true,
           wheelMultiplier: 0.95,

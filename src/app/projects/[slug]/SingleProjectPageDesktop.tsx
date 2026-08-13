@@ -94,7 +94,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     return () => window.removeEventListener("resize", updateMetrics);
   }, [shouldLoadRest, updateMetrics]);
 
-  // 3. GPU-ACCELERATED STEP RENDER LOOP WITH BOTTOM-TO-TOP CLIPPING
+  // 3. GPU-ACCELERATED STEP RENDER LOOP (SYNCHRONIZED WITH LENIS)
   useEffect(() => {
     if (!shouldLoadRest) return;
 
@@ -143,7 +143,6 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
           const imgInner = scopeRef.current?.querySelector<HTMLElement>(`.info-img-layer-${idx} .info-image-inner`);
 
           if (imgLayer) {
-            // Clip reveals upward from bottom to top
             const clipTop = (100 - layerProg * 100).toFixed(2);
             imgLayer.style.clipPath = `polygon(0% ${clipTop}%, 100% ${clipTop}%, 100% 100%, 0% 100%)`;
           }
@@ -242,7 +241,6 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     }
 
     handleScroll();
-    render();
 
     return () => {
       if (rafId.current) cancelAnimationFrame(rafId.current);
@@ -266,7 +264,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
       >
         <div
           ref={fixedFrameRef}
-          className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-[100dvh]"
+          className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-[100dvh] transform-gpu"
         >
           {/* Layer 1: Hero */}
           <div
@@ -285,7 +283,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
               {/* Layer 2: Interactive Project Info Overlay Panel */}
               <div
                 ref={projectInfoRef}
-                className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-20 gpu-accelerated will-change-transform"
+                className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-20 gpu-accelerated transform-gpu will-change-transform"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <ProjectInfoSlide
@@ -297,7 +295,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
               {/* Layer 3: Dynamic Height App Section */}
               <div
                 ref={appSectionRef}
-                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-30 will-change-transform"
+                className="layer-auto-height gpu-accelerated transform-gpu absolute left-0 top-0 w-full z-30 will-change-transform"
                 style={{ transform: "translate3d(0, 100vh, 0)" }}
               >
                 <Appsection />
@@ -306,7 +304,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
               {/* Layer 4: Dynamic Height FAQ Section */}
               <div
                 ref={faqSectionRef}
-                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-40 will-change-transform"
+                className="layer-auto-height gpu-accelerated transform-gpu absolute left-0 top-0 w-full z-40 will-change-transform"
                 style={{ transform: "translate3d(0, 100vh, 0)" }}
               >
                 <FAQSection />
@@ -315,7 +313,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
               {/* Layer 5: Master Footer Overlay Panel */}
               <div
                 ref={footerLayerRef}
-                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-50 will-change-transform"
+                className="layer-auto-height gpu-accelerated transform-gpu absolute left-0 top-0 w-full z-50 will-change-transform"
                 style={{ transform: "translate3d(0, 100vh, 0)" }}
               >
                 <Footer />

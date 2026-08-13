@@ -132,7 +132,7 @@ export default function ServicesDesktop() {
     }
   }, []);
 
-  // ── 3. DIRECT GPU TRANSFORM RENDERING LOOP ──
+  // ── 3. DIRECT GPU TRANSFORM RENDERING LOOP (SYNCHRONIZED WITH LENIS) ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
@@ -149,6 +149,8 @@ export default function ServicesDesktop() {
     const s2DesktopSec = scope.querySelector<HTMLElement>(".s2-desktop-section");
 
     const appSecWrap = scope.querySelector<HTMLElement>(".services-appsec-wrap");
+
+    let rafId: number | null = null;
 
     const renderTransforms = () => {
       const stepProgress = progressRef.current * (TOTAL_SCROLL_STEPS - 1);
@@ -313,7 +315,8 @@ export default function ServicesDesktop() {
       const currentScroll = Math.max(0, -trackRect.top);
       progressRef.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
 
-      requestAnimationFrame(renderTransforms);
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(renderTransforms);
     };
 
     handleScroll();
@@ -326,6 +329,7 @@ export default function ServicesDesktop() {
     }
 
     return () => {
+      if (rafId) cancelAnimationFrame(rafId);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
       } else {
@@ -345,7 +349,7 @@ export default function ServicesDesktop() {
       >
         <div
           ref={fixedFrameRef}
-          className="services-pin fixed top-0 left-0 h-[100vh] w-full overflow-hidden bg-black z-10"
+          className="services-pin fixed top-0 left-0 h-[100vh] w-full overflow-hidden bg-black z-10 transform-gpu"
         >
           {/* Layer 1: Hero Container */}
           <div className="services-hero-wrap absolute inset-0 z-10 pointer-events-auto w-full h-full structural-layer transform-gpu">
@@ -366,7 +370,7 @@ export default function ServicesDesktop() {
                 <SectionOne />
               </div>
 
-              {/* Layer 3: Section Two Container (Slides Up smoothly over Section One) */}
+              {/* Layer 3: Section Two Container */}
               <div
                 className="services-section-two-wrap absolute inset-0 w-full h-full z-30 overflow-hidden structural-layer transform-gpu will-change-transform"
                 style={{
@@ -391,7 +395,7 @@ export default function ServicesDesktop() {
               {/* Layer 5: Section CTA Container */}
               <div
                 ref={layerCTA}
-                className="services-section-cta absolute left-0 top-0 w-full z-[120] structural-layer pointer-events-auto"
+                className="services-section-cta absolute left-0 top-0 w-full z-[120] structural-layer pointer-events-auto transform-gpu"
                 style={{ transform: "translate3d(0, 100vh, 0)", visibility: "hidden" }}
               >
                 <SectionCTA preloaderDone={isReady} />
@@ -400,7 +404,7 @@ export default function ServicesDesktop() {
               {/* Layer 6: Footer Container */}
               <div
                 ref={layerFooter}
-                className="services-footer-wrap absolute left-0 top-0 w-full z-[125] structural-layer"
+                className="services-footer-wrap absolute left-0 top-0 w-full z-[125] structural-layer transform-gpu"
                 style={{ transform: "translate3d(0, 100vh, 0)", visibility: "hidden" }}
               >
                 <Footer />

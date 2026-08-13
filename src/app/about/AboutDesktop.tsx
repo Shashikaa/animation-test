@@ -145,7 +145,7 @@ export default function AboutDesktop() {
     };
   }, [shouldLoadRest]);
 
-  // ── 4. DIRECT GPU SCROLL RENDERING ──
+  // ── 4. DIRECT GPU SCROLL RENDERING (LOCKED TO LENIS/LOCAL FRAME TICK) ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
@@ -160,6 +160,8 @@ export default function AboutDesktop() {
     const secFive = scope.querySelector<HTMLElement>(".about-section-five");
     const s5Bg = scope.querySelector<HTMLElement>(".s5-bg");
 
+    let rafId: number | null = null;
+
     const renderTransforms = () => {
       const stepProgress = progressRef.current * (TOTAL_SCROLL_STEPS - 1);
       const { ctaHeight, footerHeight, vh } = dimensionsRef.current;
@@ -168,7 +170,6 @@ export default function AboutDesktop() {
       const s1Prog = Math.min(Math.max(stepProgress, 0), 1);
       if (heroLeft && heroRight) {
         const clipVal = (s1Prog * 100).toFixed(2);
-        // Set both standard clipPath and WebkitClipPath with !important priority
         heroLeft.style.setProperty("clip-path", `inset(0% 50% ${clipVal}% 0%)`, "important");
         heroLeft.style.setProperty("-webkit-clip-path", `inset(0% 50% ${clipVal}% 0%)`, "important");
 
@@ -281,7 +282,8 @@ export default function AboutDesktop() {
       const currentScroll = Math.max(0, -trackRect.top);
       progressRef.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
 
-      requestAnimationFrame(renderTransforms);
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(renderTransforms);
     };
 
     handleScroll();
@@ -294,6 +296,7 @@ export default function AboutDesktop() {
     }
 
     return () => {
+      if (rafId) cancelAnimationFrame(rafId);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
       } else {
@@ -316,11 +319,11 @@ export default function AboutDesktop() {
       >
         <div
           ref={fixedFrameRef}
-          className="about-pin fixed top-0 left-0 h-[100svh] w-full overflow-hidden bg-[#162D24] z-10"
+          className="about-pin fixed top-0 left-0 h-[100svh] w-full overflow-hidden bg-[#162D24] z-10 transform-gpu"
         >
           {/* HERO COMPONENT */}
           <div
-            className="absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu"
+            className="absolute inset-0 h-full w-full structural-layer transform-gpu"
             style={{ zIndex: 20 }}
           >
             <Hero isMobile={false} />
@@ -331,7 +334,7 @@ export default function AboutDesktop() {
             <>
               {/* SECTION ONE */}
               <div
-                className="about-section-one absolute inset-0 h-full w-full structural-layer bg-[#162D24]"
+                className="about-section-one absolute inset-0 h-full w-full structural-layer bg-[#162D24] transform-gpu"
                 style={{ zIndex: 10 }}
               >
                 <SectionOne />
@@ -339,7 +342,7 @@ export default function AboutDesktop() {
 
               {/* SECTION TWO */}
               <div
-                className="about-section-two absolute inset-0 h-full w-full structural-layer"
+                className="about-section-two absolute inset-0 h-full w-full structural-layer transform-gpu"
                 style={{ zIndex: 30, visibility: "hidden", transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionTwo />
@@ -347,7 +350,7 @@ export default function AboutDesktop() {
 
               {/* SECTION THREE */}
               <div
-                className="about-section-three absolute inset-0 h-full w-full structural-layer"
+                className="about-section-three absolute inset-0 h-full w-full structural-layer transform-gpu"
                 style={{ zIndex: 40, visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)" }}
               >
                 <SectionThree />
@@ -355,7 +358,7 @@ export default function AboutDesktop() {
 
               {/* SECTION FOUR */}
               <div
-                className="about-section-four absolute inset-0 h-full w-full structural-layer"
+                className="about-section-four absolute inset-0 h-full w-full structural-layer transform-gpu"
                 style={{ zIndex: 50, visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)" }}
               >
                 <SectionFour />
@@ -363,7 +366,7 @@ export default function AboutDesktop() {
 
               {/* SECTION FIVE */}
               <div
-                className="about-section-five absolute inset-0 h-full w-full structural-layer"
+                className="about-section-five absolute inset-0 h-full w-full structural-layer transform-gpu"
                 style={{ zIndex: 60, visibility: "hidden", transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionFive isActive={isSectionFiveActive} />
@@ -372,7 +375,7 @@ export default function AboutDesktop() {
               {/* SECTION CTA */}
               <div
                 ref={layer6Ref}
-                className="about-section-cta absolute left-0 top-0 w-full z-[90]"
+                className="about-section-cta absolute left-0 top-0 w-full z-[90] transform-gpu"
                 style={{ transform: "translate3d(0, 100vh, 0)" }}
               >
                 <SectionCTA preloaderDone={isReady} />
@@ -381,7 +384,7 @@ export default function AboutDesktop() {
               {/* FOOTER */}
               <div
                 ref={layer7Ref}
-                className="about-footer-wrap absolute left-0 top-0 w-full z-[100]"
+                className="about-footer-wrap absolute left-0 top-0 w-full z-[100] transform-gpu"
                 style={{ transform: "translate3d(0, 100vh, 0)" }}
               >
                 <Footer />

@@ -107,6 +107,44 @@ body {
   overflow-y:   auto;
 }
 
+/* ─── Buttery Smooth Scroll & Pinning Enhancements ─────────────── */
+
+/* Force Hardware GPU Layering & Prevent Subpixel Jitter */
+.transform-gpu {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+  will-change: transform;
+}
+
+/* Ensure absolute spatial stability for all fixed pin viewports */
+.contact-pin,
+.about-pin,
+.projects-pin,
+.services-pin,
+.sub-services-pin,
+.pin-all {
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Optimize momentum scroll tracks for iOS and high-refresh desktop monitors */
+.contact-track-container,
+.about-track-container,
+.projects-track-container,
+.services-track,
+.sub-services-track,
+.single-project-track,
+.home-track-container {
+  -webkit-overflow-scrolling: touch;
+  overflow: visible !important;
+}
+
 /* ─── Preloader Lock Rules ───────────────────────────────────── */
 html.preloading,
 body.preloading {
@@ -307,7 +345,7 @@ p {
     animation-duration:        0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration:       0.01ms !important;
-    scroll-behavior:          auto !important;
+    scroll-behavior:           auto !important;
   }
 }
 
@@ -410,11 +448,7 @@ button.btn-underline:hover::after,
 }
 
 /* ─── Stack Track & Viewport Layout Lock ─────────────────────── */
-.about-track-container {
-  overflow: visible !important;
-}
 
-/* Allow auto-height override for CTA and dynamic layers */
 .about-stack-layer {
   height: 100dvh;
   max-height: 100dvh;
@@ -457,7 +491,6 @@ button.btn-underline:hover::after,
   }
 }
 
-/* Base Initial States */
 .hero-bg-target,
 .about-hero-bg,
 .contact-hero-bg {
@@ -481,7 +514,6 @@ button.btn-underline:hover::after,
   -webkit-backface-visibility: hidden;
 }
 
-/* Triggered Keyframe Animations */
 .hero-animate-active .hero-bg-target,
 .hero-animate-active .about-hero-bg,
 .hero-animate-active .contact-hero-bg {
@@ -509,7 +541,6 @@ button.btn-underline:hover::after,
   animation-delay: 650ms !important;
 }
 
-/* Final rested state after animation finishes */
 .hero-animate-done .hero-bg-target,
 .hero-animate-done .about-hero-bg,
 .hero-animate-done .contact-hero-bg {

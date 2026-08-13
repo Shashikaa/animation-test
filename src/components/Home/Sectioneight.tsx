@@ -125,11 +125,7 @@ export default function SectionEight({ preloaderDone }: SectionEightProps) {
           </div>
         </div>
         
-        {/* Dark Overlay */}
-        <div 
-          className="absolute inset-0 z-10 pointer-events-none opacity-10" 
-          style={{ background: "linear-gradient(135deg, #162D24 0%, #094146 100%)" }} 
-        />
+
         
         {/* Foreground Content Stack */}
         <div className="absolute inset-0 z-20 pointer-events-none">

@@ -90,7 +90,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     };
   }, []);
 
-  // ── 3. DIRECT GPU TRANSFORM RENDERING LOOP ──
+  // ── 3. DIRECT GPU TRANSFORM RENDERING LOOP (SYNCHRONIZED WITH LENIS) ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
@@ -107,6 +107,8 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     const s10ImgElem = scope.querySelector<HTMLElement>(".s10-img-element");
     const s10SeqContainer = scope.querySelector<HTMLElement>(".s10-seq-container");
     const faqWrap = scope.querySelector<HTMLElement>(".services-faq-wrap");
+
+    let rafId: number | null = null;
 
     const renderTransforms = () => {
       const stepProgress = progressRef.current * (TOTAL_SCROLL_STEPS - 1);
@@ -242,7 +244,8 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
       const currentScroll = Math.max(0, -trackRect.top);
       progressRef.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
 
-      requestAnimationFrame(renderTransforms);
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(renderTransforms);
     };
 
     handleScroll();
@@ -255,6 +258,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     }
 
     return () => {
+      if (rafId) cancelAnimationFrame(rafId);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
       } else {
@@ -274,7 +278,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
       >
         <div
           ref={fixedFrameRef}
-          className="sub-services-pin fixed top-0 left-0 h-[100vh] w-full overflow-hidden bg-black z-10"
+          className="sub-services-pin fixed top-0 left-0 h-[100vh] w-full overflow-hidden bg-black z-10 transform-gpu"
         >
           {/* Layer 1: Hero view base */}
           <div className="services-hero-wrap absolute inset-0 z-10 pointer-events-auto w-full h-full structural-layer transform-gpu">
@@ -309,7 +313,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
               {/* Layer 4: Section CTA wrapper */}
               <div
                 ref={layerCTA}
-                className="services-section-cta absolute left-0 top-0 w-full z-[95] structural-layer pointer-events-auto"
+                className="services-section-cta absolute left-0 top-0 w-full z-[95] structural-layer pointer-events-auto transform-gpu"
                 style={{ transform: "translate3d(0, 100vh, 0)", visibility: "hidden" }}
               >
                 <SectionCTA preloaderDone={isReady} />
@@ -318,7 +322,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
               {/* Layer 5: Footer wrapper */}
               <div
                 ref={layerFooter}
-                className="services-footer-wrap absolute left-0 top-0 w-full z-[96] structural-layer"
+                className="services-footer-wrap absolute left-0 top-0 w-full z-[96] structural-layer transform-gpu"
                 style={{ transform: "translate3d(0, 100vh, 0)", visibility: "hidden" }}
               >
                 <Footer />

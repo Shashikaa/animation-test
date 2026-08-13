@@ -16,10 +16,10 @@ export default function ContactHero({
   const bgImage = isMobile ? mobileImg : desktopImg;
 
   return (
-    <section className="relative w-full h-full overflow-hidden bg-transparent [contain:strict] [transform:translateZ(0)]">
+    <section className="relative w-full min-h-[100dvh] flex flex-col justify-end overflow-hidden bg-transparent">
       {/* Background Image Layer */}
       <div className="absolute inset-0 z-[1] overflow-hidden">
-        <div className="hero-bg-target absolute -top-[10%] -bottom-[10%] h-[120%] w-full [backface-visibility:hidden]">
+        <div className="hero-bg-target absolute inset-0 h-full w-full">
           <Image
             src={bgImage}
             alt="Contact Grand Pools Hero"
@@ -37,10 +37,10 @@ export default function ContactHero({
 
       {/* Hero Content */}
       {!hideText && (
-        <div className="section-container relative z-10 h-full flex flex-col justify-end !pb-22 w-full">
-          <div className="flex flex-col !gap-4 lg:!gap-8 leading-normal">
+        <div className="section-container relative z-10 w-full pb-16 pt-32">
+          <div className="flex flex-col gap-4 lg:gap-8 leading-normal">
             <h1
-              className="hero-text-target hero-title-target text-[#F4EEDF] !font-[100]"
+              className="hero-text-target hero-title-target text-[#F4EEDF] font-[100]"
               style={{ fontFamily: "var(--font-display)" }}
             >
               Let’s Bring Your

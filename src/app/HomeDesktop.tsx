@@ -73,7 +73,6 @@ export default function HomeDesktop() {
     executeDesktopSplitting(".hero-right-text");
     executeDesktopSplitting(".hero-secondary-para");
 
-    // Hide hero right text on mounting to prevent flashing before JS animation loop runs
     const heroRightText = document.querySelector<HTMLElement>(".hero-right-text");
     if (heroRightText) {
       heroRightText.style.visibility = "hidden";
@@ -165,7 +164,7 @@ export default function HomeDesktop() {
       const elements = scopeRef.current.querySelectorAll<HTMLElement>(selectors);
 
       elements.forEach((el, idx) => {
-        el.style.transition = `transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s, opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s`;
+        el.style.transition = `transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s, opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s`;
         el.style.transform = "translate3d(0, 0px, 0)";
         el.style.opacity = "1";
       });
@@ -176,7 +175,6 @@ export default function HomeDesktop() {
     if (!preloaderDone || !introDone || !scopeRef.current) return;
 
     useTextReveal(scopeRef, ".section-8 .reveal-text");
-    useTextReveal(scopeRef, ".section-10 .reveal-text");
     useTextReveal(scopeRef, ".section-7 .reveal-text");
     useTextReveal(scopeRef, ".section-appsec .reveal-text");
 
@@ -186,7 +184,6 @@ export default function HomeDesktop() {
           scopeRef.current,
           [
             ".section-8 .reveal-text",
-            ".section-10 .reveal-text",
             ".section-7 .reveal-text",
             ".section-appsec .reveal-text",
             ".s9-para-desktop", 
@@ -197,7 +194,7 @@ export default function HomeDesktop() {
     };
   }, [preloaderDone, introDone]);
 
-  // ── 5. NATIVE GPU-ACCELERATED SCROLL ANIMATION ENGINE ──
+  // ── 5. DIRECT GPU SCROLL RENDERING ENGINE ──
   useEffect(() => {
     if (!preloaderDone || !introDone || !scopeRef.current) return;
 
@@ -226,10 +223,6 @@ export default function HomeDesktop() {
 
     const secTen = scope.querySelector<HTMLElement>(".section-10");
     const s10BgImg = scope.querySelector<HTMLElement>(".s10-bg-img");
-    const s10Title = scope.querySelector<HTMLElement>(".s10-title");
-    const s10TitleSub = scope.querySelector<HTMLElement>(".s10-title-sub");
-    const s10ParaTop = scope.querySelector<HTMLElement>(".s10-para-top");
-    const s10TextElements = scope.querySelectorAll<HTMLElement>(".section-10 .reveal-text, .section-10 .gs-line-inner, .section-10 .custom-line-inner");
     const s10ContentWrap = scope.querySelector<HTMLElement>(".s10-content-wrap");
 
     const secSeven = scope.querySelector<HTMLElement>(".section-7");
@@ -253,6 +246,8 @@ export default function HomeDesktop() {
 
     const ctaInner = scope.querySelector<HTMLElement>(".section-cta .cta-inner-desktop");
 
+    let rafId: number | null = null;
+
     const renderTransforms = () => {
       const stepProgress = progressRef.current * (TOTAL_SCROLL_STEPS - 1);
       const { ctaHeight, footerHeight, vh } = dimensionsRef.current;
@@ -260,8 +255,8 @@ export default function HomeDesktop() {
       // ── 1. HERO PHASE 1 & 2 (STEPS 0 -> 2.5) ──
       const heroPhase1 = Math.min(Math.max(stepProgress / 1.2, 0), 1);
       if (heroBg) {
-        const bgScale = 1.0 + heroPhase1 * 0.15 + Math.min(Math.max((stepProgress - 1.2) / 1.3, 0), 1) * 0.15;
-        heroBg.style.transform = `scale3d(${bgScale}, ${bgScale}, 1)`;
+        const bgScale = (1.0 + heroPhase1 * 0.15 + Math.min(Math.max((stepProgress - 1.2) / 1.3, 0), 1) * 0.15).toFixed(4);
+        heroBg.style.transform = `translate3d(0,0,0) scale3d(${bgScale}, ${bgScale}, 1)`;
       }
 
       if (heroLeftInitial) {
@@ -288,47 +283,44 @@ export default function HomeDesktop() {
         });
       }
 
-      // Hero Secondary Text (STEPS 1.2 -> 2.5)
+      // Hero Secondary Text
       const heroSecProg = Math.min(Math.max((stepProgress - 1.2) / 1.3, 0), 1);
       if (heroSecWrap) {
         heroSecWrap.style.visibility = stepProgress >= 1.2 && stepProgress < 3.2 ? "visible" : "hidden";
         heroSecWrap.style.opacity = stepProgress >= 1.2 && stepProgress < 3.2 ? "1" : "0";
         if (stepProgress < 2.5) {
-          heroSecWrap.style.transform = `translate3d(0, ${(1 - heroSecProg) * 0 - heroSecProg * 50}vh, 0)`;
+          heroSecWrap.style.transform = `translate3d(0, ${-heroSecProg * 50}vh, 0)`;
         } else {
           const exitProg = Math.min(Math.max((stepProgress - 2.5) / 0.7, 0), 1);
           heroSecWrap.style.transform = `translate3d(0, ${-50 - exitProg * 60}vh, 0)`;
         }
       }
 
-      // Hero Buttons Fade
       const heroBtnProg = Math.min(Math.max((stepProgress - 2.0) / 0.5, 0), 1);
       if (heroContactBtn) heroContactBtn.style.opacity = `${1 - heroBtnProg}`;
       if (heroScrollInd) heroScrollInd.style.opacity = `${1 - heroBtnProg}`;
 
       if (heroEl) {
-        heroEl.style.display = stepProgress < 3.5 ? "block" : "none";
+        heroEl.style.visibility = stepProgress < 3.7 ? "visible" : "hidden";
       }
 
-      // ── 2. SECTION 2 (STEPS 2.5 -> 5.5) ──
-      const s2ArriveProg = Math.min(Math.max((stepProgress - 2.5) / 1.0, 0), 1);
+      // ── 2. SECTION 2 ENTRANCE & INNER SEQUENCING (STEPS 2.5 -> 5.5) ──
+      const s2ArriveProg = Math.min(Math.max((stepProgress - 2.5) / 1.2, 0), 1);
       if (secTwo) {
-        secTwo.style.display = stepProgress >= 2.0 && stepProgress < 6.5 ? "block" : "none";
+        secTwo.style.visibility = stepProgress >= 2.0 && stepProgress < 6.7 ? "visible" : "hidden";
         secTwo.style.transform = `translate3d(0, ${(1 - s2ArriveProg) * 100}%, 0)`;
       }
 
-      // Section 2 Text Fade Out as inner scroll begins
-      const s2TextFadeProg = Math.min(Math.max((stepProgress - 3.5) / 0.5, 0), 1);
+      const s2TextFadeProg = Math.min(Math.max((stepProgress - 3.7) / 0.6, 0), 1);
       [s2TitleMain, s2TitleSub, s2BodyText].forEach((el) => {
         if (el) {
           el.style.opacity = `${1 - s2TextFadeProg}`;
-          el.style.transform = `translate3d(0, ${-s2TextFadeProg * 40}px, 0)`;
+          el.style.transform = `translate3d(0, ${-s2TextFadeProg * 35}px, 0)`;
         }
       });
 
-      // Section 2 Frame 1 Cut Inset
-      const s2Frame1InProg = Math.min(Math.max((stepProgress - 3.8) / 0.7, 0), 1);
-      const s2Frame1OutProg = Math.min(Math.max((stepProgress - 4.7) / 0.7, 0), 1);
+      const s2Frame1InProg = Math.min(Math.max((stepProgress - 3.7) / 0.8, 0), 1);
+      const s2Frame1OutProg = Math.min(Math.max((stepProgress - 4.8) / 0.7, 0), 1);
       if (s2Frame1) {
         if (s2Frame1OutProg > 0) {
           s2Frame1.style.clipPath = `inset(0% 0% ${s2Frame1OutProg * 100}% 0%)`;
@@ -337,104 +329,105 @@ export default function HomeDesktop() {
         }
       }
 
-      // Section 2 Frame 2 Under Reveal
-      const s2Frame2Prog = Math.min(Math.max((stepProgress - 4.7) / 0.7, 0), 1);
+      const s2Frame2Prog = Math.min(Math.max((stepProgress - 4.7) / 0.8, 0), 1);
       if (s2Frame2) {
         s2Frame2.style.clipPath = `inset(${(1 - s2Frame2Prog) * 100}% 0% 0% 0%)`;
       }
 
-      // Section 2 Scroll Content
-      const s2ScrollInProg = Math.min(Math.max((stepProgress - 4.2) / 0.6, 0), 1);
-      const s2ScrollPhase2 = Math.min(Math.max((stepProgress - 4.7) / 0.7, 0), 1);
+      const s2ScrollInProg = Math.min(Math.max((stepProgress - 3.9) / 0.8, 0), 1);
+      const s2ScrollPhase2 = Math.min(Math.max((stepProgress - 4.7) / 0.8, 0), 1);
       if (s2ScrollContent) {
-        const yPercent = (1 - s2ScrollInProg) * 100 - s2ScrollPhase2 * 45;
+        const yPercent = (1 - s2ScrollInProg) * 100 - s2ScrollPhase2 * 50;
         s2ScrollContent.style.transform = `translate3d(0, ${yPercent}%, 0)`;
         s2ScrollContent.style.opacity = `${s2ScrollInProg}`;
       }
 
       // ── 3. SECTION 8 (STEPS 5.5 -> 7.0) ──
-      const s8ArriveProg = Math.min(Math.max((stepProgress - 5.5) / 1.0, 0), 1);
+      const s8ArriveProg = Math.min(Math.max((stepProgress - 5.5) / 1.2, 0), 1);
       if (secEight) {
-        secEight.style.display = stepProgress >= 5.2 && stepProgress < 8.0 ? "block" : "none";
+        secEight.style.visibility = stepProgress >= 5.2 && stepProgress < 8.2 ? "visible" : "hidden";
         secEight.style.transform = `translate3d(0, ${(1 - s8ArriveProg) * 100}%, 0)`;
       }
       if (s8BgImg) {
         s8BgImg.style.transform = `translate3d(0, ${(1 - s8ArriveProg) * 20}%, 0)`;
       }
-      triggerPlayOnceTextReveal(".section-8", stepProgress, 6.0);
+      triggerPlayOnceTextReveal(".section-8", stepProgress, 5.8);
 
-      // ── 4. SECTION 10 (STEPS 7.0 -> 9.5) ──
-      const s10ArriveProg = Math.min(Math.max((stepProgress - 7.0) / 1.0, 0), 1);
+      // ── 4. SECTION 10 - FULL SLIDE-UP TEXT & BOTTOM CONTAINER REVEAL ──
+      const s10ArriveProg = Math.min(Math.max((stepProgress - 7.0) / 1.2, 0), 1);
       if (secTen) {
-        secTen.style.display = stepProgress >= 6.8 && stepProgress < 10.5 ? "block" : "none";
+        secTen.style.visibility = stepProgress >= 6.8 && stepProgress < 10.7 ? "visible" : "hidden";
         secTen.style.transform = `translate3d(0, ${(1 - s10ArriveProg) * 100}%, 0)`;
       }
 
-      triggerPlayOnceTextReveal(".section-10", stepProgress, 7.3);
+      const s10ScrollProg = Math.min(Math.max((stepProgress - 7.8) / 1.2, 0), 1);
 
-      const s10TextHideProg = Math.min(Math.max((stepProgress - 7.8) / 0.7, 0), 1);
-      [s10Title, s10TitleSub, s10ParaTop].forEach((el) => {
-        if (el) {
-          el.style.opacity = `${1 - s10TextHideProg}`;
-          el.style.transform = `translate3d(0, ${-s10TextHideProg * 50}px, 0)`;
-        }
+      const allS10TextNodes = scope.querySelectorAll<HTMLElement>(
+        ".section-10 .s10-title, .section-10 .s10-title-sub, .section-10 .s10-para-top, .section-10 .reveal-text, .section-10 .gs-line-inner, .section-10 .custom-line-inner"
+      );
+
+      allS10TextNodes.forEach((el) => {
+        el.style.setProperty("opacity", "1", "important");
+        el.style.setProperty("visibility", "visible", "important");
+        el.style.transform = `translate3d(0, ${-s10ScrollProg * 100}vh, 0)`;
       });
 
-      s10TextElements.forEach((el) => {
-        el.style.opacity = `${1 - s10TextHideProg}`;
-        el.style.transform = `translate3d(0, ${-s10TextHideProg * 50}px, 0)`;
-      });
-
-      const s10ContentProg = Math.min(Math.max((stepProgress - 8.3) / 0.9, 0), 1);
       if (s10ContentWrap) {
-        s10ContentWrap.style.transform = `translate3d(0, ${(1 - s10ContentProg) * 150}vh, 0)`;
+        const cardY = (1 - s10ScrollProg) * 100;
+        s10ContentWrap.style.transform = `translate3d(0, ${cardY}vh, 0)`;
+        s10ContentWrap.style.setProperty("opacity", "1", "important");
       }
+
       if (s10BgImg) {
-        const scaleVal = 1.5 + s10ContentProg * 0.1;
-        s10BgImg.style.transform = `scale3d(${scaleVal}, ${scaleVal}, 1)`;
+        const bgScale = (1.1 + s10ScrollProg * 0.1).toFixed(4);
+        const bgParallaxY = -s10ScrollProg * 10;
+        s10BgImg.style.transform = `translate3d(0, ${bgParallaxY}%, 0) scale3d(${bgScale}, ${bgScale}, 1)`;
       }
 
       // ── 5. SECTION 7 (STEPS 9.5 -> 11.5) ──
-      const s7ArriveProg = Math.min(Math.max((stepProgress - 9.5) / 1.0, 0), 1);
+      const s7ArriveProg = Math.min(Math.max((stepProgress - 9.5) / 1.2, 0), 1);
       if (secSeven) {
-        secSeven.style.display = stepProgress >= 9.2 && stepProgress < 12.5 ? "block" : "none";
+        secSeven.style.visibility = stepProgress >= 9.2 && stepProgress < 12.7 ? "visible" : "hidden";
         secSeven.style.transform = `translate3d(0, ${(1 - s7ArriveProg) * 100}%, 0)`;
       }
+
       if (s7BgImg) {
-        s7BgImg.style.transform = "translate3d(0, 0px, 0)";
+        const bgCounterY = -(1 - s7ArriveProg) * 100;
+        s7BgImg.style.transform = `translate3d(0, ${bgCounterY}%, 0)`;
       }
-      triggerPlayOnceTextReveal(".section-7", stepProgress, 10.0);
+
+      triggerPlayOnceTextReveal(".section-7", stepProgress, 9.8);
 
       // ── 6. APPSECTION (STEPS 11.5 -> 13.5) ──
-      const appSecArriveProg = Math.min(Math.max((stepProgress - 11.5) / 1.0, 0), 1);
+      const appSecArriveProg = Math.min(Math.max((stepProgress - 11.5) / 1.2, 0), 1);
       if (secAppSec) {
-        secAppSec.style.display = stepProgress >= 11.2 && stepProgress < 14.5 ? "block" : "none";
+        secAppSec.style.visibility = stepProgress >= 11.2 && stepProgress < 14.7 ? "visible" : "hidden";
         secAppSec.style.transform = `translate3d(0, ${(1 - appSecArriveProg) * 100}%, 0)`;
       }
       if (appSecPhone) {
         const phoneProg = Math.min(Math.max((stepProgress - 11.6) / 0.8, 0), 1);
         appSecPhone.style.transform = `translate3d(0, ${(1 - phoneProg) * 40}%, 0)`;
       }
-      triggerPlayOnceTextReveal(".section-appsec", stepProgress, 12.0);
+      triggerPlayOnceTextReveal(".section-appsec", stepProgress, 11.8);
 
-      // ── 7. SECTION 9 & FLYING TEXT MATH (STEPS 13.5 -> 15.7) ──
-      const s9ArriveProg = Math.min(Math.max((stepProgress - 13.5) / 1.0, 0), 1);
+      // ── 7. SECTION 9 & FLYING TEXT (STEPS 13.5 -> 15.7) ──
+      const s9ArriveProg = Math.min(Math.max((stepProgress - 13.5) / 1.2, 0), 1);
       if (secNine) {
         secNine.style.visibility = stepProgress >= 13.2 ? "visible" : "hidden";
       }
 
       if (appSecContent) appSecContent.style.opacity = `${1 - s9ArriveProg}`;
       if (appSecBg) {
-        const scaleVal = 1.25 - s9ArriveProg * 0.25;
+        const scaleVal = (1.25 - s9ArriveProg * 0.25).toFixed(4);
         appSecBg.style.transform = `translate3d(0, ${s9ArriveProg * 12}%, 0) scale3d(${scaleVal}, ${scaleVal}, 1)`;
       }
 
       if (s9LeftSide) s9LeftSide.style.transform = `translate3d(0, ${(1 - s9ArriveProg) * 100}%, 0)`;
       if (s9RightSide) s9RightSide.style.transform = `translate3d(0, ${-(1 - s9ArriveProg) * 100}%, 0)`;
 
-      const s9BgScale = 1.1 - s9ArriveProg * 0.1;
-      if (s9BgLeft) s9BgLeft.style.transform = `scale3d(${s9BgScale}, ${s9BgScale}, 1)`;
-      if (s9BgRight) s9BgRight.style.transform = `scale3d(${s9BgScale}, ${s9BgScale}, 1)`;
+      const s9BgScale = (1.1 - s9ArriveProg * 0.1).toFixed(4);
+      if (s9BgLeft) s9BgLeft.style.transform = `translate3d(0,0,0) scale3d(${s9BgScale}, ${s9BgScale}, 1)`;
+      if (s9BgRight) s9BgRight.style.transform = `translate3d(0,0,0) scale3d(${s9BgScale}, ${s9BgScale}, 1)`;
 
       const flyProg = Math.min(Math.max((stepProgress - 14.7) / 1.0, 0), 1);
 
@@ -471,20 +464,19 @@ export default function HomeDesktop() {
         s9ParaDesktop.style.transform = `translate3d(0, ${(1 - paraProg) * 20}px, 0)`;
       }
 
-      // ── 8. CTA REVEAL & CONTENT FADE (STEPS 15.7 -> 16.5) ──
+      // ── 8. CTA REVEAL (STEPS 15.7 -> 16.5) ──
       const ctaArriveProg = Math.min(Math.max((stepProgress - 15.7) / 0.8, 0), 1);
       if (layerCTA.current) {
         const startY = vh;
         const endY = -(ctaHeight - vh);
         const currentY = startY + (endY - startY) * ctaArriveProg;
+        layerCTA.current.style.visibility = stepProgress >= 15.5 ? "visible" : "hidden";
         layerCTA.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
-        layerCTA.current.style.display = stepProgress >= 15.5 ? "block" : "none";
       }
 
-      const ctaFadeOutProg = Math.min(Math.max((stepProgress - 16.3) / 0.4, 0), 1);
       if (ctaInner) {
-        ctaInner.style.opacity = `${1 - ctaFadeOutProg}`;
-        ctaInner.style.transform = `translate3d(0, ${-ctaFadeOutProg * 40}px, 0)`;
+        ctaInner.style.opacity = "1";
+        ctaInner.style.transform = "translate3d(0, 0px, 0)";
       }
 
       // ── 9. FOOTER REVEAL (STEPS 16.5 -> 17.0) ──
@@ -493,8 +485,8 @@ export default function HomeDesktop() {
         const startY = vh;
         const endY = vh - footerHeight;
         const translateY = startY + (endY - startY) * footerArriveProg;
+        layerFooter.current.style.visibility = stepProgress >= 16.2 ? "visible" : "hidden";
         layerFooter.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
-        layerFooter.current.style.display = stepProgress >= 16.2 ? "block" : "none";
       }
     };
 
@@ -524,7 +516,8 @@ export default function HomeDesktop() {
       const currentScroll = Math.max(0, -trackRect.top);
       progressRef.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
 
-      requestAnimationFrame(renderTransforms);
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(renderTransforms);
     };
 
     handleScroll();
@@ -537,6 +530,7 @@ export default function HomeDesktop() {
     }
 
     return () => {
+      if (rafId) cancelAnimationFrame(rafId);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
       } else {
@@ -554,48 +548,66 @@ export default function HomeDesktop() {
       >
         <div
           ref={fixedFrameRef}
-          className="pin-all fixed top-0 left-0 h-[100svh] w-full overflow-hidden bg-black z-10"
+          className="pin-all fixed top-0 left-0 h-[100svh] w-full overflow-hidden bg-black z-10 transform-gpu"
         >
-          <div className="section-2 absolute inset-0 h-full w-full structural-layer hidden z-[95]">
+          <div 
+            className="section-2 absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu z-[95]"
+            style={{ visibility: "hidden" }}
+          >
             <SectionTwo />
           </div>
 
-          <div className="section-8 absolute inset-0 h-full w-full structural-layer hidden z-[99]">
+          <div 
+            className="section-8 absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu z-[99]"
+            style={{ visibility: "hidden" }}
+          >
             <SectionEight preloaderDone={preloaderDone} />
           </div>
 
-          <div className="section-10 absolute inset-0 h-full w-full structural-layer hidden z-[100]">
+          <div 
+            className="section-10 absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu z-[100]"
+            style={{ visibility: "hidden" }}
+          >
             <SectionTen />
           </div>
 
-          <div className="section-7 absolute inset-0 h-full w-full structural-layer hidden z-[105]">
+          <div 
+            className="section-7 absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu z-[105]"
+            style={{ visibility: "hidden" }}
+          >
             <SectionSeven />
           </div>
 
-          <div className="section-appsec absolute inset-0 h-full w-full structural-layer hidden z-[110]">
+          <div 
+            className="section-appsec absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu z-[110]"
+            style={{ visibility: "hidden" }}
+          >
             <Appsection />
           </div>
 
-          <div className="section-9 absolute inset-0 h-full w-full structural-layer invisible z-[115]">
+          <div 
+            className="section-9 absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu z-[115]"
+            style={{ visibility: "hidden" }}
+          >
             <SectionNine />
           </div>
 
           <div
             ref={layerCTA}
-            className="section-cta absolute left-0 top-0 w-full hidden z-[120]"
-            style={{ transform: "translate3d(0, 100vh, 0)" }}
+            className="section-cta absolute left-0 top-0 w-full z-[120] will-change-transform transform-gpu"
+            style={{ transform: "translate3d(0, 100vh, 0)", visibility: "hidden" }}
           >
             <SectionCTA preloaderDone={preloaderDone} />
           </div>
 
-          <div className="hero absolute inset-0 h-full w-full structural-layer z-[90]">
+          <div className="hero absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu z-[90]">
             <Hero />
           </div>
 
           <div
             ref={layerFooter}
-            className="footer absolute left-0 top-0 w-full hidden z-[125]"
-            style={{ transform: "translate3d(0, 100vh, 0)" }}
+            className="footer absolute left-0 top-0 w-full z-[125] will-change-transform transform-gpu"
+            style={{ transform: "translate3d(0, 100vh, 0)", visibility: "hidden" }}
           >
             <Footer />
           </div>
