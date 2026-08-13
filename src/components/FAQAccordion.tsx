@@ -25,7 +25,7 @@ export default function FAQAccordion({ items }: FAQAccordionProps) {
           >
             <button
               onClick={() => setOpenIndex(isOpen ? null : index)}
-              className="w-full !py-3 md:!py-5 flex items-center justify-between text-left group focus:outline-none !cursor-pointer"
+              className="w-full !py-5 md:!py-5 flex items-center justify-between text-left group focus:outline-none !cursor-pointer"
             >
               {/* Question Text */}
               <span className="!text-[#F4EEDF] font-body !font-[400] !text-[16px] transition-opacity duration-300 group-hover:opacity-80">

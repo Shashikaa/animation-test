@@ -5,6 +5,7 @@ import Hero from "@/src/components/About/Hero";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
+import { useStackedScroll } from "@/src/app/utils/useStackedScroll";
 
 const SectionOne = dynamic(() => import("@/src/components/About/SectionOne"));
 const SectionTwo = dynamic(() => import("@/src/components/About/SectionTwo"));
@@ -17,17 +18,11 @@ const easeOutQuad = (t: number) => t * (2 - t);
 
 export default function AboutMobile() {
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
-  const scopeRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const fixedFrameRef = useRef<HTMLDivElement>(null);
-
   const layer7Ref = useRef<HTMLDivElement>(null);
-
-  const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
-  const targetProgress = useRef(0);
   const rafId = useRef<number | null>(null);
   const lastSec5Idx = useRef<number>(-1);
 
+  const scopeRef = useRef<HTMLDivElement>(null);
   const { smootherRef } = useSite();
   const { preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
     isMobile: true,
@@ -35,49 +30,13 @@ export default function AboutMobile() {
     unlockScrollEarlyMs: 1800,
   });
 
-  // 1. UNLOCK LENIS & INITIALIZE INSTANTLY
-  useEffect(() => {
-    const lenis = smootherRef?.current;
+  // Keep total track steps aligned with your original setup
+  const { trackRef, fixedFrameRef, rawProgress, scrollMetricsRef } = useStackedScroll({
+    totalSteps: 7.5,
+    shouldLoadRest,
+  });
 
-    if (!preloaderDone || !shouldLoadRest) {
-      if (lenis && typeof lenis.stop === "function") lenis.stop();
-      targetProgress.current = 0;
-    } else {
-      document.body.classList.remove("preloading");
-      document.documentElement.classList.remove("preloading");
-
-      if (lenis) {
-        if (typeof lenis.resize === "function") lenis.resize();
-        if (typeof lenis.start === "function") lenis.start();
-      }
-
-      // Trigger scroll event on next tick for immediate alignment
-      requestAnimationFrame(() => {
-        window.dispatchEvent(new Event("scroll"));
-      });
-    }
-  }, [preloaderDone, shouldLoadRest, smootherRef]);
-
-  // 2. CACHE METRICS TO PREVENT LAYOUT THRASHING
-  const updateMetrics = useCallback(() => {
-    if (!trackRef.current) return;
-    const rect = trackRef.current.getBoundingClientRect();
-    const vh = window.innerHeight;
-    scrollMetricsRef.current = {
-      totalScrollable: rect.height - vh,
-      vh,
-      trackTopOffset: window.scrollY + rect.top,
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!shouldLoadRest) return;
-    updateMetrics();
-    window.addEventListener("resize", updateMetrics, { passive: true });
-    return () => window.removeEventListener("resize", updateMetrics);
-  }, [shouldLoadRest, updateMetrics]);
-
-  // 3. SECTION 5 HOOK
+  // Original Section 5 Hook Handler
   const triggerSec5Hook = useCallback((nextIdx: number) => {
     if (nextIdx !== lastSec5Idx.current) {
       lastSec5Idx.current = nextIdx;
@@ -87,7 +46,6 @@ export default function AboutMobile() {
     }
   }, []);
 
-  // 4. GPU-ACCELERATED RENDER LOOP (Runs as soon as downstream components mount!)
   useEffect(() => {
     if (!shouldLoadRest) return;
 
@@ -95,18 +53,17 @@ export default function AboutMobile() {
     const s5Bg = scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
 
     const render = () => {
-      const currentProg = targetProgress.current;
-      // Adjusted total steps to accommodate footer sliding up seamlessly after Section 5
+      const currentProg = rawProgress.current;
       const totalSteps = 7.5;
       const stepProgress = currentProg * totalSteps;
 
+      // Exact original step progress calculations & threshold triggers
       const s1Prog = easeOutQuad(Math.min(Math.max(stepProgress - 0, 0), 1));
       const s2Prog = easeOutQuad(Math.min(Math.max(stepProgress - 1, 0), 1));
       const s3Prog = easeOutQuad(Math.min(Math.max(stepProgress - 2, 0), 1));
       const s4Prog = easeOutQuad(Math.min(Math.max(stepProgress - 3, 0), 1));
       const s5Prog = easeOutQuad(Math.min(Math.max(stepProgress - 4, 0), 1));
 
-      // Footer progress triggers right after Section 5 finishes
       const footerProgress = easeOutQuad(Math.min(Math.max(stepProgress - 6.5, 0), 1));
 
       if (panels && panels.length > 0) {
@@ -132,6 +89,7 @@ export default function AboutMobile() {
         s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
       }
 
+      // Restored exact original inner animation triggers for Section Five
       if (stepProgress >= 4.2 && stepProgress < 6.5) {
         setIsSectionFiveActive(true);
         if (stepProgress < 5.0) triggerSec5Hook(0);
@@ -143,33 +101,7 @@ export default function AboutMobile() {
       }
     };
 
-    const handleScroll = (e?: any) => {
-      const scrollY = e?.scroll !== undefined ? e.scroll : window.scrollY;
-      const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
-
-      if (totalScrollable <= 0) return;
-
-      const relativeScroll = scrollY - trackTopOffset;
-      const trackBottom = relativeScroll + totalScrollable;
-
-      if (fixedFrameRef.current) {
-        if (relativeScroll >= 0 && trackBottom >= 0) {
-          fixedFrameRef.current.style.position = "fixed";
-          fixedFrameRef.current.style.top = "0px";
-          fixedFrameRef.current.style.bottom = "auto";
-        } else if (trackBottom < 0) {
-          fixedFrameRef.current.style.position = "absolute";
-          fixedFrameRef.current.style.top = "auto";
-          fixedFrameRef.current.style.bottom = "0px";
-        } else {
-          fixedFrameRef.current.style.position = "absolute";
-          fixedFrameRef.current.style.top = "0px";
-          fixedFrameRef.current.style.bottom = "auto";
-        }
-      }
-
-      targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
-
+    const handleScroll = () => {
       if (rafId.current) cancelAnimationFrame(rafId.current);
       rafId.current = requestAnimationFrame(render);
     };
@@ -181,7 +113,6 @@ export default function AboutMobile() {
       window.addEventListener("scroll", handleScroll, { passive: true });
     }
 
-    handleScroll();
     render();
 
     return () => {
@@ -193,19 +124,14 @@ export default function AboutMobile() {
       }
       if (typeof window !== "undefined") delete (window as any)._sec5GoTo;
     };
-  }, [shouldLoadRest, smootherRef, triggerSec5Hook]);
+  }, [shouldLoadRest, smootherRef, triggerSec5Hook, trackRef, rawProgress, scrollMetricsRef]);
 
   return (
-    <div ref={scopeRef} className="w-full ">
-      <div
-        ref={trackRef}
-        className="about-track-container relative w-full"
-        // Reduced track height slightly since CTA was removed (adjust if needed)
-        style={{ height: "800vh" }}
-      >
+    <div ref={scopeRef} className="w-full">
+      <div ref={trackRef} className="about-track-container relative w-full">
         <div
           ref={fixedFrameRef}
-          className="fixed top-0 left-0 w-full overflow-hidden  z-10 h-[100dvh]"
+          className="fixed top-0 left-0 w-full overflow-hidden z-10 h-[100dvh]"
         >
           <div className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-10 gpu-accelerated transform-gpu will-change-transform">
             <Hero isMobile={true} />

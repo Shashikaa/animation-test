@@ -27,7 +27,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     const initLocomotive = async () => {
       const LocomotiveScroll = (await import("locomotive-scroll")).default;
 
-      // Detect mobile device touch input vs desktop pointer
       const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent
       );
@@ -36,13 +35,13 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
         lenisOptions: {
           wrapper: window,
           content: document.documentElement,
-          lerp: isMobileDevice ? 0.12 : 0.07, // Direct snappy response on touch, smooth momentum on desktop wheel
-          duration: isMobileDevice ? 0.8 : 1.2,
+          lerp: isMobileDevice ? 0.16 : 0.09,
+          duration: isMobileDevice ? 0.6 : 1.0,
           smoothWheel: true,
           wheelMultiplier: 1.3,
-          touchMultiplier: 1.5,
+          touchMultiplier: 2.0,
           syncTouch: true,
-          syncTouchLerp: 0.075,
+          syncTouchLerp: 0.09,
           autoResize: true,
         },
       });

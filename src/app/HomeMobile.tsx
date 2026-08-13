@@ -160,19 +160,19 @@ export default function HomeMobile() {
     return () => window.removeEventListener("resize", updateMetrics);
   }, [shouldLoadRest, updateMetrics]);
 
-  // 3. GPU-ACCELERATED STEP RENDER LOOP (Optimized Hero Speeds)
+  // 3. GPU-ACCELERATED STEP RENDER LOOP
   useEffect(() => {
     if (!shouldLoadRest) return;
 
     const render = () => {
       const currentProg = targetProgress.current;
-      const totalSteps = 11.0;
+      const totalSteps = 9.0;
       const stepProgress = currentProg * totalSteps;
       const { vh } = scrollMetricsRef.current;
       const cache = domCache.current;
 
-      // ── 1. HERO ANIMATIONS (Tuned for snappy, responsive pacing) ──
-      const h1Prog = Math.min(Math.max(stepProgress / 0.8, 0), 1);
+      // ── Step 0 -> 1: HERO ANIMATIONS ──
+      const heroProg = Math.min(Math.max(stepProgress - 0, 0), 1);
       const progressFill = cache.progressFill as HTMLElement;
       const heroBg = cache.heroBg as HTMLElement;
       const heroLeftInitial = cache.heroLeftInitial as HTMLElement;
@@ -182,97 +182,53 @@ export default function HomeMobile() {
       const heroSecWrap = cache.heroSecWrap as HTMLElement;
       const heroSecInners = cache.heroSecInners as NodeListOf<HTMLElement>;
 
-      if (heroBg) heroBg.style.transform = `scale(${1.0 + h1Prog * 0.08})`;
-      if (progressFill) progressFill.style.transform = `scaleY(${Math.min(0.33, h1Prog * 0.33)})`;
+      if (heroBg) heroBg.style.transform = `scale(${1.0 + heroProg * 0.08})`;
+      if (progressFill) progressFill.style.transform = `scaleY(${heroProg})`;
 
-      const titleFadeOutProg = Math.min(1, h1Prog / 0.35);
+      const titleFade = Math.min(1, heroProg / 0.4);
       if (heroTitleInners) {
         heroTitleInners.forEach((el) => {
-          el.style.opacity = `${1 - titleFadeOutProg}`;
-          el.style.transform = `translate3d(0, ${-20 * titleFadeOutProg}px, 0)`;
+          el.style.opacity = `${(1 - titleFade).toFixed(2)}`;
+          el.style.transform = `translate3d(0, ${-20 * titleFade}px, 0)`;
         });
       }
 
-      if (heroLeftInitial) heroLeftInitial.style.visibility = h1Prog >= 0.35 ? "hidden" : "visible";
+      if (heroLeftInitial) heroLeftInitial.style.visibility = heroProg >= 0.4 ? "hidden" : "visible";
 
-      const rightTextInProg = Math.min(1, Math.max(0, (h1Prog - 0.2) / 0.6));
+      const rightIn = Math.min(1, Math.max(0, (heroProg - 0.2) / 0.4));
+      const rightOut = Math.min(1, Math.max(0, (heroProg - 0.6) / 0.4));
+
       if (heroRightWrap) {
-        if (stepProgress < 0.8) {
-          heroRightWrap.style.visibility = rightTextInProg > 0 ? "visible" : "hidden";
-          heroRightWrap.style.opacity = `${rightTextInProg}`;
-          heroRightWrap.style.transform = `translate3d(0, ${(1 - rightTextInProg) * 40}px, 0)`;
-        }
+        heroRightWrap.style.visibility = heroProg >= 0.2 && heroProg < 0.8 ? "visible" : "hidden";
+        heroRightWrap.style.opacity = `${(rightIn * (1 - rightOut)).toFixed(2)}`;
       }
 
-      if (heroRightInners && stepProgress < 0.8) {
+      if (heroRightInners) {
         heroRightInners.forEach((el) => {
-          el.style.opacity = `${rightTextInProg}`;
-          el.style.transform = `translate3d(0, ${(1 - rightTextInProg) * 100}%, 0)`;
+          el.style.opacity = `${(rightIn * (1 - rightOut)).toFixed(2)}`;
+          el.style.transform = `translate3d(0, ${(1 - rightIn) * 40 - rightOut * 20}px, 0)`;
         });
       }
 
-      const h2Prog = Math.min(Math.max((stepProgress - 0.8) / 0.8, 0), 1);
-      if (progressFill && stepProgress >= 0.8 && stepProgress < 1.6) {
-        progressFill.style.transform = `scaleY(${0.33 + h2Prog * 0.33})`;
-      }
-
-      if (heroRightInners && stepProgress >= 0.8) {
-        heroRightInners.forEach((el) => {
-          el.style.opacity = `${1 - h2Prog}`;
-          el.style.transform = `translate3d(0, ${-20 * h2Prog}px, 0)`;
-        });
-      }
-
-      if (heroRightWrap && stepProgress >= 0.8) {
-        heroRightWrap.style.visibility = h2Prog >= 1 ? "hidden" : "visible";
-      }
-
+      const secIn = Math.min(1, Math.max(0, (heroProg - 0.6) / 0.4));
       if (heroSecWrap) {
-        if (stepProgress < 0.8) {
-          heroSecWrap.style.visibility = "hidden";
-          heroSecWrap.style.opacity = "0";
-        } else if (stepProgress >= 0.8 && stepProgress < 1.6) {
-          heroSecWrap.style.visibility = "visible";
-          heroSecWrap.style.opacity = `${Math.min(1, h2Prog * 1.5)}`;
-        }
+        heroSecWrap.style.visibility = secIn > 0 ? "visible" : "hidden";
+        heroSecWrap.style.opacity = `${secIn.toFixed(2)}`;
       }
-
       if (heroSecInners) {
-        if (stepProgress < 0.8) {
-          heroSecInners.forEach((el) => {
-            el.style.opacity = "0";
-            el.style.transform = "translate3d(0, 100%, 0)";
-          });
-        } else if (stepProgress >= 0.8 && stepProgress < 1.6) {
-          heroSecInners.forEach((el) => {
-            el.style.opacity = `${h2Prog}`;
-            el.style.transform = `translate3d(0, ${(1 - h2Prog) * 100}%, 0)`;
-          });
-        }
-      }
-
-      const s2Prog = easeOutQuad(Math.min(Math.max(stepProgress - 1.6, 0), 1));
-      if (progressFill && stepProgress >= 1.6) progressFill.style.transform = `scaleY(${0.66 + s2Prog * 0.34})`;
-
-      if (heroSecInners && stepProgress >= 1.6) {
         heroSecInners.forEach((el) => {
-          el.style.opacity = `${1 - s2Prog}`;
-          el.style.transform = `translate3d(0, ${-20 * s2Prog}px, 0)`;
+          el.style.opacity = `${secIn.toFixed(2)}`;
+          el.style.transform = `translate3d(0, ${(1 - secIn) * 100}%, 0)`;
         });
       }
 
-      if (heroSecWrap && stepProgress >= 1.6) heroSecWrap.style.opacity = `${1 - s2Prog}`;
-
-      const heroControls = cache.heroControls as NodeListOf<HTMLElement>;
-      if (heroControls && stepProgress >= 1.6) {
-        heroControls.forEach((el) => { el.style.opacity = `${1 - s2Prog}`; });
-      }
-
+      // ── Step 1 -> 2: SECTION TWO SLIDES UP (100% -> 0%) ──
+      const s2Prog = easeOutQuad(Math.min(Math.max(stepProgress - 1.0, 0), 1));
       if (sec2Ref.current) sec2Ref.current.style.transform = `translate3d(0, ${(1 - s2Prog) * 100}%, 0)`;
       if (heroPanelRef.current && s2Prog > 0) heroPanelRef.current.style.transform = `translate3d(0, ${-s2Prog * 15}%, 0)`;
 
-      // ── 2. SECTION TWO INNER ANIMATIONS ──
-      const s2InnerProg = Math.min(Math.max((stepProgress - 2.6) / 2.0, 0), 1);
+      // ── Step 2 -> 3.2: SECTION TWO INNER ANIMATIONS (STARTS ONLY AFTER PINNING AT Step 2.0) ──
+      const s2InnerProg = Math.min(Math.max((stepProgress - 2.0) / 1.2, 0), 1);
       const s2Titles = cache.s2Titles as NodeListOf<HTMLElement>;
       const s2ScrollWrap = cache.s2ScrollWrap as HTMLElement;
       const s2Clip1 = cache.s2Clip1 as HTMLElement;
@@ -282,28 +238,34 @@ export default function HomeMobile() {
       const titleFadeOut = Math.min(1, s2InnerProg / 0.20);
       if (s2Titles) {
         s2Titles.forEach((el) => {
-          el.style.opacity = `${1 - titleFadeOut}`;
+          el.style.opacity = `${(1 - titleFadeOut).toFixed(2)}`;
           el.style.transform = `translate3d(0, ${-30 * titleFadeOut}px, 0)`;
         });
       }
 
       const scrollInProg = Math.min(1, Math.max(0, (s2InnerProg - 0.15) / 0.85));
       if (s2ScrollWrap) {
-        s2ScrollWrap.style.opacity = `${Math.min(1, scrollInProg * 2.5)}`;
+        s2ScrollWrap.style.opacity = `${Math.min(1, scrollInProg * 2.5).toFixed(2)}`;
         s2ScrollWrap.style.transform = `translate3d(0, ${80 - s2InnerProg * 160}%, 0)`;
         s2ScrollWrap.style.pointerEvents = scrollInProg > 0.1 ? "auto" : "none";
       }
 
-      const clip1Prog = Math.min(1, Math.max(0, (s2InnerProg - 0.25) / 0.35));
-      const clip2Prog = Math.min(1, Math.max(0, (s2InnerProg - 0.45) / 0.35));
-      const clip3Prog = Math.min(1, Math.max(0, (s2InnerProg - 0.65) / 0.35));
+      // Smooth, non-laggy mobile background opacity transitions
+      if (s2Clip1) {
+        const clip1Prog = Math.min(1, Math.max(0, (s2InnerProg - 0.25) / 0.35));
+        s2Clip1.style.opacity = clip1Prog.toFixed(2);
+      }
+      if (s2Clip2) {
+        const clip2Prog = Math.min(1, Math.max(0, (s2InnerProg - 0.45) / 0.35));
+        s2Clip2.style.opacity = clip2Prog.toFixed(2);
+      }
+      if (s2Clip3) {
+        const clip3Prog = Math.min(1, Math.max(0, (s2InnerProg - 0.65) / 0.35));
+        s2Clip3.style.opacity = clip3Prog.toFixed(2);
+      }
 
-      if (s2Clip1) s2Clip1.style.opacity = `${clip1Prog}`;
-      if (s2Clip2) s2Clip2.style.opacity = `${clip2Prog}`;
-      if (s2Clip3) s2Clip3.style.opacity = `${clip3Prog}`;
-
-      // ── 3. SECTION EIGHT ──
-      const s8Prog = easeOutQuad(Math.min(Math.max(stepProgress - 5.0, 0), 1));
+      // ── Step 3.2 -> 4.2: SECTION EIGHT ──
+      const s8Prog = easeOutQuad(Math.min(Math.max(stepProgress - 3.2, 0), 1));
       if (sec8Ref.current) {
         sec8Ref.current.style.transform = `translate3d(0, ${(1 - s8Prog) * 100}%, 0)`;
         sec8Ref.current.style.opacity = `${s8Prog > 0 ? 1 : 0}`;
@@ -319,7 +281,7 @@ export default function HomeMobile() {
       if (s8BgImg) s8BgImg.style.transform = `translate3d(0, ${(1 - s8Prog) * 20}%, 0)`;
       if (s8MobBg) s8MobBg.style.transform = `scale(${1.35 - s8Prog * 0.35})`;
 
-      // ── 4. SECTION TEN ──
+      // ── Step 4.2 -> 5.2: SECTION TEN ──
       let s10HeaderEls = cache.s10HeaderEls as NodeListOf<HTMLElement>;
       let s10ScrollContainer = cache.s10ScrollContainer as HTMLElement;
 
@@ -332,7 +294,7 @@ export default function HomeMobile() {
         cache.s10ScrollContainer = s10ScrollContainer;
       }
 
-      const s10SlideProg = easeOutQuad(Math.min(Math.max((stepProgress - 6.0) / 0.6, 0), 1));
+      const s10SlideProg = easeOutQuad(Math.min(Math.max((stepProgress - 4.2) / 0.5, 0), 1));
 
       if (sec10Ref.current) {
         sec10Ref.current.style.transform = `translate3d(0, ${(1 - s10SlideProg) * 100}%, 0)`;
@@ -344,7 +306,7 @@ export default function HomeMobile() {
         sec8Ref.current.style.transform = `translate3d(0, ${-s10SlideProg * 15}%, 0)`;
       }
 
-      const s10InnerProg = Math.min(Math.max((stepProgress - 6.6) / 0.9, 0), 1);
+      const s10InnerProg = Math.min(Math.max((stepProgress - 4.6) / 0.6, 0), 1);
 
       if (s10HeaderEls) {
         s10HeaderEls.forEach((el) => {
@@ -357,8 +319,8 @@ export default function HomeMobile() {
         s10ScrollContainer.style.transform = `translate3d(0, ${containerY}%, 0)`;
       }
 
-      // ── 5. SECTION SEVEN ──
-      const s7Prog = easeOutQuad(Math.min(Math.max(stepProgress - 7.5, 0), 1));
+      // ── Step 5.2 -> 6.2: SECTION SEVEN ──
+      const s7Prog = easeOutQuad(Math.min(Math.max(stepProgress - 5.2, 0), 1));
 
       if (sec7Ref.current) {
         sec7Ref.current.style.transform = `translate3d(0, ${(1 - s7Prog) * 100}%, 0)`;
@@ -378,8 +340,8 @@ export default function HomeMobile() {
       if (s7BgImg) s7BgImg.style.transform = `translate3d(0, ${(1 - s7Prog) * 20}%, 0)`;
       if (s7MobBg) s7MobBg.style.transform = `scale(${1.35 - s7Prog * 0.35})`;
 
-      // ── 6. APP SECTION ──
-      const appProg = easeOutQuad(Math.min(Math.max(stepProgress - 8.5, 0), 1));
+      // ── Step 6.2 -> 7.2: APP SECTION ──
+      const appProg = easeOutQuad(Math.min(Math.max(stepProgress - 6.2, 0), 1));
 
       if (appSecRef.current) {
         const appHeight = appSecRef.current.offsetHeight || vh;
@@ -395,8 +357,8 @@ export default function HomeMobile() {
         sec7Ref.current.style.transform = `translate3d(0, ${-appProg * 15}%, 0)`;
       }
 
-      // ── 7. SECTION NINE ──
-      const s9Prog = easeOutQuad(Math.min(Math.max(stepProgress - 9.2, 0), 1));
+      // ── Step 7.2 -> 8.2: SECTION NINE ──
+      const s9Prog = easeOutQuad(Math.min(Math.max(stepProgress - 7.2, 0), 1));
 
       if (sec9Ref.current) {
         sec9Ref.current.style.transform = `translate3d(0, ${(1 - s9Prog) * 100}%, 0)`;
@@ -410,8 +372,8 @@ export default function HomeMobile() {
         s9BgImg.style.transform = `scale(${1.35 - s9Prog * 0.35}) translate3d(0, ${(1 - s9Prog) * 20}%, 0)`;
       }
 
-      // ── 8. FOOTER REVEAL ──
-      const footerProgress = easeOutQuad(Math.min(Math.max((stepProgress - 10.0) / 1.0, 0), 1));
+      // ── Step 8.2 -> 9.0: FOOTER REVEAL ──
+      const footerProgress = easeOutQuad(Math.min(Math.max((stepProgress - 8.2) / 0.8, 0), 1));
 
       if (footerLayerRef.current) {
         const footerHeight = footerLayerRef.current.offsetHeight || vh;
@@ -495,7 +457,7 @@ export default function HomeMobile() {
       <div
         ref={trackRef}
         className="home-track-container relative w-full"
-        style={{ height: "1200vh" }}
+        style={{ height: "1000vh" }}
       >
         <div
           ref={fixedFrameRef}
