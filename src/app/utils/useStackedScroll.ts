@@ -14,7 +14,11 @@ export function useStackedScroll({ totalSteps, shouldLoadRest }: UseStackedScrol
   const fixedFrameRef = useRef<HTMLDivElement>(null);
 
   const rawProgress = useRef(0);
+  const scrollVelocity = useRef(0);
+  const lastScrollY = useRef(0);
+  const lastTime = useRef(0);
   const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
+
   const { smootherRef } = useSite();
 
   const updateMetrics = useCallback(() => {
@@ -22,7 +26,6 @@ export function useStackedScroll({ totalSteps, shouldLoadRest }: UseStackedScrol
     const vh = window.innerHeight;
     const totalScrollable = totalSteps * vh;
 
-    // Enforce consistent viewport-based track height across all pages
     trackRef.current.style.height = `${totalScrollable + vh}px`;
 
     scrollMetricsRef.current = {
@@ -49,10 +52,19 @@ export function useStackedScroll({ totalSteps, shouldLoadRest }: UseStackedScrol
 
       if (totalScrollable <= 0) return;
 
+      const now = performance.now();
+      const dt = Math.max(now - lastTime.current, 16);
+      const dy = Math.abs(scrollY - lastScrollY.current);
+
+      lastScrollY.current = scrollY;
+      lastTime.current = now;
+
+      // Track clean velocity normalized between 0 and 1
+      scrollVelocity.current = Math.min((dy / dt) / 3, 1);
+
       const relativeScroll = scrollY - trackTopOffset;
       const trackBottom = relativeScroll + totalScrollable;
 
-      // Uniform pinning behavior
       if (fixedFrameRef.current) {
         if (relativeScroll >= 0 && trackBottom >= 0) {
           fixedFrameRef.current.style.position = "fixed";
@@ -69,6 +81,7 @@ export function useStackedScroll({ totalSteps, shouldLoadRest }: UseStackedScrol
         }
       }
 
+      // Pure 1:1 Scroll Mapping (Prevents messy state bugs)
       rawProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
     };
 
@@ -90,5 +103,5 @@ export function useStackedScroll({ totalSteps, shouldLoadRest }: UseStackedScrol
     };
   }, [shouldLoadRest, smootherRef]);
 
-  return { scopeRef, trackRef, fixedFrameRef, rawProgress, scrollMetricsRef };
+  return { scopeRef, trackRef, fixedFrameRef, rawProgress, scrollVelocity, scrollMetricsRef };
 }

@@ -14,7 +14,15 @@ const SectionFour = dynamic(() => import("@/src/components/About/SectionFour"));
 const SectionFive = dynamic(() => import("@/src/components/About/SectionFive"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
-const easeOutQuad = (t: number) => t * (2 - t);
+// Velocity-aware easing function
+const getVelocityEase = (t: number, velocity: number) => {
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  // On slow scroll (velocity ~ 0): Linear 1:1 control (t * (2 - t))
+  // On fast scroll (velocity -> 1): Power curve snaps layers into view faster
+  const exponent = 1 + (1 - velocity) * 0.8;
+  return Math.pow(t, exponent);
+};
 
 export default function AboutMobile() {
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
@@ -30,13 +38,11 @@ export default function AboutMobile() {
     unlockScrollEarlyMs: 1800,
   });
 
-  // Keep total track steps aligned with your original setup
-  const { trackRef, fixedFrameRef, rawProgress, scrollMetricsRef } = useStackedScroll({
+  const { trackRef, fixedFrameRef, rawProgress, scrollVelocity, scrollMetricsRef } = useStackedScroll({
     totalSteps: 7.5,
     shouldLoadRest,
   });
 
-  // Original Section 5 Hook Handler
   const triggerSec5Hook = useCallback((nextIdx: number) => {
     if (nextIdx !== lastSec5Idx.current) {
       lastSec5Idx.current = nextIdx;
@@ -54,17 +60,18 @@ export default function AboutMobile() {
 
     const render = () => {
       const currentProg = rawProgress.current;
+      const velocity = scrollVelocity.current;
       const totalSteps = 7.5;
       const stepProgress = currentProg * totalSteps;
 
-      // Exact original step progress calculations & threshold triggers
-      const s1Prog = easeOutQuad(Math.min(Math.max(stepProgress - 0, 0), 1));
-      const s2Prog = easeOutQuad(Math.min(Math.max(stepProgress - 1, 0), 1));
-      const s3Prog = easeOutQuad(Math.min(Math.max(stepProgress - 2, 0), 1));
-      const s4Prog = easeOutQuad(Math.min(Math.max(stepProgress - 3, 0), 1));
-      const s5Prog = easeOutQuad(Math.min(Math.max(stepProgress - 4, 0), 1));
+      // Apply safe velocity-based step reveals
+      const s1Prog = getVelocityEase(Math.min(Math.max(stepProgress - 0, 0), 1), velocity);
+      const s2Prog = getVelocityEase(Math.min(Math.max(stepProgress - 1, 0), 1), velocity);
+      const s3Prog = getVelocityEase(Math.min(Math.max(stepProgress - 2, 0), 1), velocity);
+      const s4Prog = getVelocityEase(Math.min(Math.max(stepProgress - 3, 0), 1), velocity);
+      const s5Prog = getVelocityEase(Math.min(Math.max(stepProgress - 4, 0), 1), velocity);
 
-      const footerProgress = easeOutQuad(Math.min(Math.max(stepProgress - 6.5, 0), 1));
+      const footerProgress = getVelocityEase(Math.min(Math.max(stepProgress - 6.5, 0), 1), velocity);
 
       if (panels && panels.length > 0) {
         if (panels[1]) panels[1].style.transform = `translate3d(0, ${(1 - s1Prog) * 100}%, 0)`;
@@ -89,7 +96,7 @@ export default function AboutMobile() {
         s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
       }
 
-      // Restored exact original inner animation triggers for Section Five
+      // Preserve exact original Sec5 inner step timing
       if (stepProgress >= 4.2 && stepProgress < 6.5) {
         setIsSectionFiveActive(true);
         if (stepProgress < 5.0) triggerSec5Hook(0);
@@ -124,7 +131,7 @@ export default function AboutMobile() {
       }
       if (typeof window !== "undefined") delete (window as any)._sec5GoTo;
     };
-  }, [shouldLoadRest, smootherRef, triggerSec5Hook, trackRef, rawProgress, scrollMetricsRef]);
+  }, [shouldLoadRest, smootherRef, triggerSec5Hook, trackRef, rawProgress, scrollVelocity, scrollMetricsRef]);
 
   return (
     <div ref={scopeRef} className="w-full">
