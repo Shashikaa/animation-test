@@ -20,7 +20,7 @@ import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
 
 const TOTAL_SCROLL_STEPS = 18;
 
-// QUADRATIC EASING MATCHES THE MOBILE ULTRA-SMOOTH INERTIA
+// QUADRATIC EASING MATCHES THE ULTRA-SMOOTH FLUID INERTIA
 const easeOutQuad = (t: number) => t * (2 - t);
 
 function executeDesktopSplitting(selector: string) {
@@ -64,6 +64,7 @@ export default function HomeDesktop() {
   const s9TargetRectRef = useRef<{ deltaX: number; deltaY: number } | null>(null);
   
   const targetProgress = useRef(0);
+  const currentProgressRef = useRef(0);
   const rafId = useRef<number | null>(null);
   const revealedSections = useRef<Set<string>>(new Set());
 
@@ -112,6 +113,7 @@ export default function HomeDesktop() {
       if (lenis && typeof lenis.stop === "function") lenis.stop();
       window.scrollTo(0, 0);
       targetProgress.current = 0;
+      currentProgressRef.current = 0;
     } else {
       document.documentElement.style.overflow = "";
       document.body.style.overflow = "";
@@ -235,7 +237,6 @@ export default function HomeDesktop() {
 
     const scope = scopeRef.current;
     let isRunning = true;
-    let currentProgress = targetProgress.current;
 
     // Direct Pre-Hide for late sections on load to prevent flashes
     const s8TextElements = scope.querySelectorAll<HTMLElement>(".section-8 .reveal-text");
@@ -301,7 +302,11 @@ export default function HomeDesktop() {
     const s9FlightWrapper = scope.querySelector<HTMLElement>(".s9-flight-wrapper");
     const s9ParaDesktop = scope.querySelector<HTMLElement>(".s9-para-desktop");
 
-    // Promote Section 2 & Section 9 elements to hardware layers
+    const allS10TextNodes = scope.querySelectorAll<HTMLElement>(
+      ".section-10 .s10-title, .section-10 .s10-title-sub, .section-10 .s10-para-top, .section-10 .reveal-text, .section-10 .gs-line-inner, .section-10 .custom-line-inner"
+    );
+
+    // Promote elements to hardware layers
     [s2Frame1, s2Frame2, s2ScrollContent, s9LeftSide, s9RightSide, s9BgLeft, s9BgRight, s9FlightWrapper, appSecBg].forEach(el => {
       if (el) {
         el.style.willChange = "transform, opacity, clip-path";
@@ -314,10 +319,11 @@ export default function HomeDesktop() {
     const renderTransforms = () => {
       if (!isRunning) return;
 
-      // ── SILKY PHYSICS LERP INERTIA ──
-      currentProgress += (targetProgress.current - currentProgress) * 0.08;
+      // UNIFORM LERP MATCHING LENIS / SMOOTHSCROLL ENGINE (0.075)
+      const diff = targetProgress.current - currentProgressRef.current;
+      currentProgressRef.current += diff * 0.075;
 
-      const stepProgress = currentProgress * (TOTAL_SCROLL_STEPS - 1);
+      const stepProgress = currentProgressRef.current * (TOTAL_SCROLL_STEPS - 1);
       const { ctaHeight, footerHeight, vh } = dimensionsRef.current;
 
       // ── 1. HERO PHASE 1 & 2 (STEPS 0 -> 2.5) ──
@@ -387,7 +393,8 @@ export default function HomeDesktop() {
         secTwo.style.transform = `translate3d(0, ${((1 - s2ArriveProg) * 100).toFixed(3)}%, 0)`;
       }
 
-      const s2TextFadeProg = easeOutQuad(Math.min(Math.max((stepProgress - 3.7) / 0.6, 0), 1));
+      // Inner animations wait until section 2 is fully revealed (step 3.7)
+      const s2TextFadeProg = easeOutQuad(Math.min(Math.max((stepProgress - 3.7) / 0.5, 0), 1));
       [s2TitleMain, s2TitleSub, s2BodyText].forEach((el) => {
         if (el) {
           el.style.opacity = `${(1 - s2TextFadeProg).toFixed(3)}`;
@@ -395,8 +402,8 @@ export default function HomeDesktop() {
         }
       });
 
-      const s2Frame1InProg = easeOutQuad(Math.min(Math.max((stepProgress - 3.6) / 0.9, 0), 1));
-      const s2Frame1OutProg = easeOutQuad(Math.min(Math.max((stepProgress - 4.8) / 0.7, 0), 1));
+      const s2Frame1InProg = easeOutQuad(Math.min(Math.max((stepProgress - 4.1) / 0.9, 0), 1));
+      const s2Frame1OutProg = easeOutQuad(Math.min(Math.max((stepProgress - 5.0) / 0.5, 0), 1));
       if (s2Frame1) {
         if (s2Frame1OutProg > 0) {
           s2Frame1.style.clipPath = `inset(0% 0% ${(s2Frame1OutProg * 100).toFixed(2)}% 0%)`;
@@ -405,17 +412,17 @@ export default function HomeDesktop() {
         }
       }
 
-      const s2Frame2Prog = easeOutQuad(Math.min(Math.max((stepProgress - 4.7) / 0.8, 0), 1));
+      const s2Frame2Prog = easeOutQuad(Math.min(Math.max((stepProgress - 4.9) / 0.6, 0), 1));
       if (s2Frame2) {
         s2Frame2.style.clipPath = `inset(${((1 - s2Frame2Prog) * 100).toFixed(2)}% 0% 0% 0%)`;
       }
 
-      const s2ScrollInProg = easeOutQuad(Math.min(Math.max((stepProgress - 3.9) / 0.8, 0), 1));
-      const s2ScrollPhase2 = easeOutQuad(Math.min(Math.max((stepProgress - 4.7) / 0.8, 0), 1));
+      const s2ScrollInProg = easeOutQuad(Math.min(Math.max((stepProgress - 4.1) / 0.8, 0), 1));
+      const s2ScrollPhase2 = easeOutQuad(Math.min(Math.max((stepProgress - 4.9) / 0.6, 0), 1));
       if (s2ScrollContent) {
         const yPercent = (1 - s2ScrollInProg) * 100 - s2ScrollPhase2 * 50;
         s2ScrollContent.style.transform = `translate3d(0, ${yPercent.toFixed(2)}%, 0)`;
-        s2ScrollContent.style.opacity = `${s2ScrollInProg.toFixed(3)}`;
+        s2ScrollContent.style.opacity = "1";
       }
 
       // ── 3. SECTION 8 (STEPS 5.5 -> 7.0) ──
@@ -436,11 +443,8 @@ export default function HomeDesktop() {
         secTen.style.transform = `translate3d(0, ${((1 - s10ArriveProg) * 100).toFixed(3)}%, 0)`;
       }
 
-      const s10ScrollProg = easeOutQuad(Math.min(Math.max((stepProgress - 7.8) / 1.2, 0), 1));
-
-      const allS10TextNodes = scope.querySelectorAll<HTMLElement>(
-        ".section-10 .s10-title, .section-10 .s10-title-sub, .section-10 .s10-para-top, .section-10 .reveal-text, .section-10 .gs-line-inner, .section-10 .custom-line-inner"
-      );
+      // Inner scroll content/text movements wait until step 8.2 (after full reveal)
+      const s10ScrollProg = easeOutQuad(Math.min(Math.max((stepProgress - 8.2) / 1.2, 0), 1));
 
       allS10TextNodes.forEach((el) => {
         if (stepProgress >= 7.0 && stepProgress < 10.7) {
@@ -498,6 +502,7 @@ export default function HomeDesktop() {
       triggerPlayOnceTextReveal(".section-appsec", stepProgress, 11.8);
 
       // ── 7. SECTION 9 & FLYING TEXT (STEPS 13.5 -> 15.7) ──
+      // Section 9 arrival finishes at step 14.7 (13.5 + 1.2)
       const s9ArriveProg = easeOutQuad(Math.min(Math.max((stepProgress - 13.5) / 1.2, 0), 1));
       if (secNine) {
         secNine.style.visibility = stepProgress >= 13.2 ? "visible" : "hidden";
@@ -516,7 +521,8 @@ export default function HomeDesktop() {
       if (s9BgLeft) s9BgLeft.style.transform = `translate3d(0,0,0) scale3d(${s9BgScale}, ${s9BgScale}, 1)`;
       if (s9BgRight) s9BgRight.style.transform = `translate3d(0,0,0) scale3d(${s9BgScale}, ${s9BgScale}, 1)`;
 
-      const flyProg = easeOutQuad(Math.min(Math.max((stepProgress - 14.7) / 1.0, 0), 1));
+      // Flight ONLY starts after Section 9 finishes its arrival transition (at step 14.7)
+      const flyProg = Math.min(Math.max((stepProgress - 14.7) / 1.0, 0), 1);
 
       if (s9NativeTitle1) s9NativeTitle1.style.opacity = flyProg > 0 ? "0" : "1";
       if (s9NativeTitle2) s9NativeTitle2.style.opacity = flyProg > 0 ? "0" : "1";
@@ -526,11 +532,9 @@ export default function HomeDesktop() {
         s9GlobalFlight.style.opacity = flyProg > 0 ? "1" : "0";
       }
 
-      // Smooth flying animation using cached target offsets
       if (s9FlightWrapper && flyProg > 0 && s9TargetRectRef.current) {
         const { deltaX, deltaY } = s9TargetRectRef.current;
-        const easedProg = 1 - Math.pow(1 - flyProg, 3);
-        s9FlightWrapper.style.transform = `translate3d(${(deltaX * easedProg).toFixed(2)}px, ${(deltaY * easedProg).toFixed(2)}px, 0)`;
+        s9FlightWrapper.style.transform = `translate3d(${(deltaX * flyProg).toFixed(2)}px, ${(deltaY * flyProg).toFixed(2)}px, 0)`;
       }
 
       if (s9ParaDesktop) {
@@ -570,7 +574,6 @@ export default function HomeDesktop() {
         layerFooter.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
       }
 
-      // Keep RAF loop running continuously for fluid momentum smoothing
       rafId.current = requestAnimationFrame(renderTransforms);
     };
 

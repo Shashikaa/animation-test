@@ -35,13 +35,15 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
         lenisOptions: {
           wrapper: window,
           content: document.documentElement,
-          lerp: isMobileDevice ? 0.16 : 0.09,
-          duration: isMobileDevice ? 0.6 : 1.0,
+          // Mobile settings strictly untouched
+          lerp: isMobileDevice ? 0.16 : 0.075,
+          duration: isMobileDevice ? 0.6 : undefined,
           smoothWheel: true,
-          wheelMultiplier: 1.3,
-          touchMultiplier: 2.0,
-          syncTouch: true,
-          syncTouchLerp: 0.09,
+          wheelMultiplier: 1.0, // Desktop mouse scroll normalized to remove jumps
+          touchMultiplier: 2.0, // Mobile untouched
+          syncTouch: true, // Mobile untouched
+          syncTouchLerp: 0.09, // Mobile untouched
+          easing: isMobileDevice ? undefined : (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
           autoResize: true,
         },
       });

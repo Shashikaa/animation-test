@@ -21,7 +21,7 @@ export default function SubServiceFAQSection({ data }: FAQSectionProps) {
       
       {/* BACKGROUND IMAGE LAYER */}
       <img
-        src="/faqbg.webp" 
+        src="/contactparalax.webp" 
         alt="Grand Pools background scenery"
         className="absolute top-0 left-0 w-full h-full object-cover z-0 pointer-events-none"
       />

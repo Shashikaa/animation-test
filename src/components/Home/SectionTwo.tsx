@@ -19,17 +19,18 @@ export default function SectionTwo() {
     };
 
     handleResize();
-    window.addEventListener("resize", handleResize);
+    window.addEventListener("resize", handleResize, { passive: true });
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
     <section
       ref={sectionRef}
-      className="relative w-full h-full overflow-hidden bg-[#0A1410]"
+      className="relative w-full h-full overflow-hidden bg-[#0A1410] isolate"
       style={{
         transform: "translate3d(0, 0, 0)",
         backfaceVisibility: "hidden",
+        contain: "strict",
       }}
     >
       <link rel="preload" href="/sectiontwo.webp" as="image" type="image/webp" />
@@ -38,15 +39,17 @@ export default function SectionTwo() {
       <link rel="preload" href="/pool.webp" as="image" type="image/webp" />
 
       {/* BASE BACKGROUND LAYER (IMAGE 1) */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none transform-gpu">
         {/* Mobile / Tablet Background */}
         <img
           src="/PremiumPool.webp"
           alt="Background layer mobile"
+          decoding="async"
           className="block lg:hidden w-full h-full object-cover"
           style={{
             willChange: "transform",
             transform: "translate3d(0,0,0)",
+            backfaceVisibility: "hidden",
           }}
         />
 
@@ -54,26 +57,30 @@ export default function SectionTwo() {
         <img
           src="/sectiontwo.webp"
           alt="Background layer desktop"
+          decoding="async"
           className="hidden lg:block w-full h-full object-cover"
           style={{
             willChange: "transform",
             transform: "translate3d(0,0,0)",
+            backfaceVisibility: "hidden",
           }}
         />
       </div>
 
       {/* MOBILE BACKGROUND LAYER 2 */}
       <div
-        className="s2-mob-clip-bg-1 lg:hidden absolute inset-0 z-[1] overflow-hidden pointer-events-none"
+        className="s2-mob-clip-bg-1 lg:hidden absolute inset-0 z-[1] overflow-hidden pointer-events-none transform-gpu"
         style={{
           opacity: 1,
           clipPath: "inset(0 0 100% 0)",
           willChange: "clip-path",
+          backfaceVisibility: "hidden",
         }}
       >
         <img
           src="/hero.webp"
           alt="Background layer 2"
+          decoding="async"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/50"></div>
@@ -81,16 +88,18 @@ export default function SectionTwo() {
 
       {/* MOBILE BACKGROUND LAYER 3 */}
       <div
-        className="s2-mob-clip-bg-2 lg:hidden absolute inset-0 z-[2] overflow-hidden pointer-events-none"
+        className="s2-mob-clip-bg-2 lg:hidden absolute inset-0 z-[2] overflow-hidden pointer-events-none transform-gpu"
         style={{
           opacity: 1,
           clipPath: "inset(0 0 100% 0)",
           willChange: "clip-path",
+          backfaceVisibility: "hidden",
         }}
       >
         <img
           src="/pool-new.webp"
           alt="Background layer 3"
+          decoding="async"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/50"></div>
@@ -98,23 +107,25 @@ export default function SectionTwo() {
 
       {/* MOBILE BACKGROUND LAYER 4 */}
       <div
-        className="s2-mob-clip-bg-3 lg:hidden absolute inset-0 z-[3] overflow-hidden pointer-events-none"
+        className="s2-mob-clip-bg-3 lg:hidden absolute inset-0 z-[3] overflow-hidden pointer-events-none transform-gpu"
         style={{
           opacity: 1,
           clipPath: "inset(0 0 100% 0)",
           willChange: "clip-path",
+          backfaceVisibility: "hidden",
         }}
       >
         <img
           src="/pool.webp"
           alt="Background layer 4"
+          decoding="async"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/50"></div>
       </div>
 
       {/* CONTENT BLOCK OVERLAY (FIRST FRAME TEXT) */}
-      <div className="section-container absolute inset-0 z-10 h-full flex flex-col justify-end pointer-events-none">
+      <div className="section-container absolute inset-0 z-10 h-full flex flex-col justify-end pointer-events-none transform-gpu">
         <div className="s2-body flex flex-col items-end text-right gap-2 lg:gap-3 p-4 md:p-8 !mb-6">
           <p className="text-[#F4EEDF] font-body text-sm md:text-base leading-relaxed text-right w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px]">
             From renovations to new builds, we design and construct pools that combine style, functionality, and durability.
@@ -123,7 +134,7 @@ export default function SectionTwo() {
       </div>
 
       {/* CORE WORKSPACE GRID */}
-      <div className="absolute inset-0 z-20 grid grid-cols-1 lg:grid-cols-2 w-full h-full pointer-events-none">
+      <div className="absolute inset-0 z-20 grid grid-cols-1 lg:grid-cols-2 w-full h-full pointer-events-none transform-gpu">
         {/* LEFT COLUMN: INITIAL TITLE */}
         <div className="relative h-full overflow-hidden !pt-30 md:!pt-66 lg:!pt-36">
           <div className="!mb-33 md:!mb-80 lg:!mb-0 h-[100px] !ml-[20px] md:!ml-[30px] lg:!ml-[65px]">
@@ -137,7 +148,7 @@ export default function SectionTwo() {
         </div>
 
         {/* RIGHT COLUMN: DOUBLE LAYER STACK (DESKTOP ONLY) */}
-        <div className="absolute top-0 right-0 bottom-0 left-1/2 hidden lg:block z-20 pointer-events-auto">
+        <div className="absolute top-0 right-0 bottom-0 left-1/2 hidden lg:block z-20 pointer-events-auto transform-gpu">
           {/* UNDERNEATH LAYER */}
           <div 
             className="s2-right-img-frame-under absolute inset-0 w-full h-full z-10"
@@ -149,9 +160,11 @@ export default function SectionTwo() {
           >
             <div className="w-full h-full relative overflow-hidden shadow-2xl">
               <img
-                src="/pool-new.webp"
+                src="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7"
                 alt="Premium pool design structural layout"
+                decoding="async"
                 className="w-full h-full object-cover"
+                style={{ transform: "translate3d(0,0,0)" }}
               />
             </div>
           </div>
@@ -167,9 +180,11 @@ export default function SectionTwo() {
           >
             <div className="w-full h-full relative overflow-hidden shadow-2xl">
               <img
-                src="/pool.webp"
+                src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914"
                 alt="Figma layout premium overview pool"
+                decoding="async"
                 className="w-full h-full object-cover"
+                style={{ transform: "translate3d(0,0,0)" }}
               />
             </div>
           </div>
@@ -178,7 +193,7 @@ export default function SectionTwo() {
 
       {/* DESKTOP SCROLLING WORKSPACE GRID CONTAINER */}
       <div 
-        className="s2-scroll-content hidden lg:flex absolute left-4 md:left-8 lg:left-16 top-0 flex-col w-full max-w-[40%] z-30 pointer-events-none pt-[12vh] pb-16 opacity-0"
+        className="s2-scroll-content hidden lg:flex absolute left-4 md:left-8 lg:left-16 top-0 flex-col w-full max-w-[40%] z-30 pointer-events-none pt-[12vh] pb-16 opacity-0 transform-gpu"
         style={{
           willChange: "transform, opacity",
           transform: "translate3d(0, 100%, 0)",
@@ -189,32 +204,35 @@ export default function SectionTwo() {
           Since 2021, Grand Pools has been creating custom swimming pools with a focus on refined design, quality craftsmanship, and a smooth building experience.
         </p>
         <p className="text-[#F4EEDF] font-body text-base leading-relaxed !text-left max-w-[230px] !self-end !mt-[80px]">
-          <span className="!font-bold ">Tailor-Made Designs</span> <br /> Custom pools shaped around your space, style, and lifestyle.
+          <span className="!font-bold">Tailor-Made Designs</span> <br /> Custom pools shaped around your space, style, and lifestyle.
         </p>
-        <div className="w-full aspect-[4/3] max-w-[340px] overflow-hidden !mt-[40px]">
+        <div className="w-full aspect-[4/3] max-w-[340px] overflow-hidden !mt-[40px] transform-gpu">
           <img
             src="/hero.webp"
             alt="Architectural swimming details"
+            decoding="async"
             className="w-full h-full object-cover"
+            style={{ transform: "translate3d(0,0,0)" }}
           />
         </div>
         <p className="text-[#F4EEDF] font-body text-sm leading-relaxed !text-left max-w-[290px] !mt-[60px]">
-          <span className="!font-bold ">Expert Craftsmanship</span> <br />
+          <span className="!font-bold">Expert Craftsmanship</span> <br />
           Built with precision using high-quality materials and techniques.
         </p>
         <p className="text-[#F4EEDF] font-body text-sm leading-relaxed !text-left max-w-[230px] !self-end !mt-[40px]">
-          <span className="!font-bold ">Seamless Process</span><br />
+          <span className="!font-bold">Seamless Process</span><br />
           From consultation to completion, we make it easy & stress-free.
         </p>
       </div>
 
       {/* MOBILE & TABLET TEXT-ONLY SCROLL CONTAINER */}
       <div
-        className="s2-mob-scroll-wrapper section-container lg:hidden relative w-full h-auto z-40 pointer-events-auto px-6 md:px-12"
+        className="s2-mob-scroll-wrapper section-container lg:hidden relative w-full h-auto z-40 pointer-events-auto px-6 md:px-12 transform-gpu"
         style={{
           opacity: 0,
           willChange: "transform",
           transform: "translate3d(0, 100vh, 0)",
+          backfaceVisibility: "hidden"
         }}
       >
         <div className="w-full flex flex-col py-[18vh] items-start">
