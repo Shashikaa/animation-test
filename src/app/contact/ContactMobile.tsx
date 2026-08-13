@@ -49,7 +49,7 @@ export default function ContactMobile() {
     }
   }, []);
 
-  // 2. Lenis Lifecycle Control (Matched with About page)
+  // 2. Lenis Lifecycle Control
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -71,17 +71,17 @@ export default function ContactMobile() {
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // 3. Dynamic Height & Metrics Engine
+  // 3. Dynamic Height & Metrics Engine (FIXED: dist3 uses actual measured footer height h3)
   const updateMetrics = useCallback(() => {
-    if (!trackRef.current || !layer2ContentRef.current) return;
+    if (!trackRef.current || !layer2ContentRef.current || !layer3FooterRef.current) return;
 
     const vh = window.innerHeight;
     const h2 = layer2ContentRef.current.offsetHeight || vh;
-    const h3 = layer3FooterRef.current?.offsetHeight || vh;
+    const h3 = layer3FooterRef.current.offsetHeight || vh;
 
-    const dist1 = vh; // Slide Layer 2 onto screen
-    const dist2 = Math.max(0, h2 - vh); // Scroll through CTA -> SectionOne -> FAQ
-    const dist3 = vh; // Slide Footer over FAQ
+    const dist1 = vh;                  // Slide Layer 2 onto screen
+    const dist2 = Math.max(0, h2 - vh); // Scroll through Layer 2 (CTA -> SectionOne -> FAQ)
+    const dist3 = h3;                  // FIXED: Match exact footer height (no empty scroll buffer)
 
     const totalScrollable = dist1 + dist2 + dist3;
     const totalTrackHeight = totalScrollable + vh;
@@ -122,7 +122,7 @@ export default function ContactMobile() {
     };
   }, [shouldLoadRest, updateMetrics]);
 
-  // 4. Smooth Render Loop (Harmonized with About page)
+  // 4. Smooth Render Loop
   useEffect(() => {
     if (!shouldLoadRest) return;
 
@@ -134,7 +134,7 @@ export default function ContactMobile() {
 
       const relativeScroll = currentProg * totalScrollable;
 
-      // Phase 1 & 2: Layer 2 position with smooth interpolation
+      // Phase 1 & 2: Layer 2 translation
       let layer2Y = vh;
       if (relativeScroll <= dist1) {
         const p1 = easeOutQuad(relativeScroll / dist1);
@@ -149,9 +149,9 @@ export default function ContactMobile() {
         layer2ContentRef.current.style.transform = `translate3d(0, ${layer2Y}px, 0)`;
       }
 
-      // Phase 3: Layer 3 (Footer) position with eased entry
+      // Phase 3: Layer 3 (Footer) reveal matching footer height
       let footerY = vh;
-      if (relativeScroll > dist1 + dist2) {
+      if (relativeScroll > dist1 + dist2 && dist3 > 0) {
         const rawFooterProg = Math.min((relativeScroll - (dist1 + dist2)) / dist3, 1);
         const footerProgress = easeOutQuad(rawFooterProg);
         const startY = vh;
@@ -173,7 +173,7 @@ export default function ContactMobile() {
       const relativeScroll = scrollY - trackTopOffset;
       const trackBottom = relativeScroll + totalScrollable;
 
-      // Dynamic Frame Pinning (matches About page mechanics)
+      // Dynamic Frame Pinning
       if (fixedFrameRef.current) {
         if (relativeScroll >= 0 && trackBottom >= 0) {
           fixedFrameRef.current.style.position = "fixed";
@@ -234,6 +234,7 @@ export default function ContactMobile() {
               {/* LAYER 2: CTA + Section One + FAQ */}
               <div
                 ref={layer2ContentRef}
+                id="contact-section"
                 className="absolute top-0 left-0 w-full z-20 bg-[#162D24] shadow-[0_-20px_50px_rgba(0,0,0,0.5)] rounded-t-[24px] gpu-accelerated will-change-transform"
                 style={{ transform: "translate3d(0, 100vh, 0)" }}
               >

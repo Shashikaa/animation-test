@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { IconMark } from "./IconMark";
 import SubmitRequestModal from "./SubmitRequestModal";
+import { useSite } from "@/src/app/context/SiteContext";
 
 export const LOGO_COLOR        = "#F4EEDF";
 export const LOGO_ICON_W       = 160;
@@ -143,6 +144,8 @@ export default function Header({
   const [hovered,   setHovered]   = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  
+  const { smootherRef } = useSite();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -165,11 +168,16 @@ export default function Header({
 
   const handleContactBtnClick = () => {
     if (typeof window !== "undefined" && window.location.pathname === "/contact") {
-      const contactElem = document.getElementById("contact-section");
-      if (contactElem) {
-        contactElem.scrollIntoView({ behavior: "smooth" });
+      const lenis = smootherRef?.current || (window as any).lenis || (window as any).__lenis;
+      const targetScrollY = window.innerHeight;
+
+      if (lenis && typeof lenis.scrollTo === "function") {
+        lenis.scrollTo(targetScrollY, { duration: 1.2 });
       } else {
-        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+        window.scrollTo({
+          top: targetScrollY,
+          behavior: "smooth",
+        });
       }
     } else {
       setModalOpen(true);
