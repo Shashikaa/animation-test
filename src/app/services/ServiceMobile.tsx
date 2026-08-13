@@ -135,20 +135,27 @@ export default function ServicesMobile() {
         heroPanelRef.current.style.transform = `translate3d(0, ${-step2Prog * 15}%, 0)`;
       }
 
-      // --- STEP 3: SECTION TWO SLIDES UP OVER SECTION ONE (2.0 -> 5.0) ---
-      const step3Prog = clamp(stepProgress - 2.0);
+      // --- STEP 3: SECTION TWO SLIDES UP OVER SECTION ONE & CYCLES SLIDES (2.0 -> 5.0) ---
+      const step3Total = clamp((stepProgress - 2.0) / 3.0, 0, 1);
+      
       if (sectionTwoRef.current) {
-        sectionTwoRef.current.style.transform = `translate3d(0, ${(1 - step3Prog) * 100}%, 0)`;
+        // First 20% of Step 3 smoothly transitions SectionTwo into view, then holds pinned
+        const entryProg = clamp(step3Total / 0.2);
+        sectionTwoRef.current.style.transform = `translate3d(0, ${(1 - entryProg) * 100}%, 0)`;
       }
-      if (sectionOneRef.current && step3Prog > 0) {
-        sectionOneRef.current.style.transform = `translate3d(0, ${-step3Prog * 15}%, 0)`;
+      if (sectionOneRef.current && step3Total > 0) {
+        sectionOneRef.current.style.transform = `translate3d(0, ${-step3Total * 15}%, 0)`;
       }
 
       if (stepProgress >= 2.0 && stepProgress < 5.0) {
         setIsSectionTwoActive(true);
-        if (stepProgress < 3.0) {
+
+        // Normalize range [2.0, 5.0) strictly into 3 equal 1.0-unit slices
+        const sec2Progress = stepProgress - 2.0;
+
+        if (sec2Progress < 1.0) {
           triggerSec2Hook(0);
-        } else if (stepProgress < 4.0) {
+        } else if (sec2Progress < 2.0) {
           triggerSec2Hook(1);
         } else {
           triggerSec2Hook(2);
