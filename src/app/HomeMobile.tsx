@@ -4,7 +4,6 @@ import { useRef, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import Hero from "../components/Home/Hero";
 import SectionTwo from "../components/Home/SectionTwo";
-import SectionCTA from "../components/SectionCTA";
 import Footer from "../components/Footer";
 import { useSite } from "./context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
@@ -57,7 +56,6 @@ export default function HomeMobile() {
   const sec7Ref = useRef<HTMLDivElement>(null);
   const appSecRef = useRef<HTMLDivElement>(null);
   const sec9Ref = useRef<HTMLDivElement>(null);
-  const ctaLayerRef = useRef<HTMLDivElement>(null);
   const footerLayerRef = useRef<HTMLDivElement>(null);
 
   const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
@@ -162,19 +160,19 @@ export default function HomeMobile() {
     return () => window.removeEventListener("resize", updateMetrics);
   }, [shouldLoadRest, updateMetrics]);
 
-  // 3. GPU-ACCELERATED STEP RENDER LOOP
+  // 3. GPU-ACCELERATED STEP RENDER LOOP (Optimized Hero Speeds)
   useEffect(() => {
     if (!shouldLoadRest) return;
 
     const render = () => {
       const currentProg = targetProgress.current;
-      const totalSteps = 12.0;
+      const totalSteps = 11.0;
       const stepProgress = currentProg * totalSteps;
       const { vh } = scrollMetricsRef.current;
       const cache = domCache.current;
 
-      // ── 1. HERO ANIMATIONS ──
-      const h1Prog = Math.min(Math.max(stepProgress / 1.0, 0), 1);
+      // ── 1. HERO ANIMATIONS (Tuned for snappy, responsive pacing) ──
+      const h1Prog = Math.min(Math.max(stepProgress / 0.8, 0), 1);
       const progressFill = cache.progressFill as HTMLElement;
       const heroBg = cache.heroBg as HTMLElement;
       const heroLeftInitial = cache.heroLeftInitial as HTMLElement;
@@ -187,7 +185,7 @@ export default function HomeMobile() {
       if (heroBg) heroBg.style.transform = `scale(${1.0 + h1Prog * 0.08})`;
       if (progressFill) progressFill.style.transform = `scaleY(${Math.min(0.33, h1Prog * 0.33)})`;
 
-      const titleFadeOutProg = Math.min(1, h1Prog / 0.4);
+      const titleFadeOutProg = Math.min(1, h1Prog / 0.35);
       if (heroTitleInners) {
         heroTitleInners.forEach((el) => {
           el.style.opacity = `${1 - titleFadeOutProg}`;
@@ -195,57 +193,57 @@ export default function HomeMobile() {
         });
       }
 
-      if (heroLeftInitial) heroLeftInitial.style.visibility = h1Prog >= 0.4 ? "hidden" : "visible";
+      if (heroLeftInitial) heroLeftInitial.style.visibility = h1Prog >= 0.35 ? "hidden" : "visible";
 
-      const rightTextInProg = Math.min(1, Math.max(0, (h1Prog - 0.3) / 0.7));
+      const rightTextInProg = Math.min(1, Math.max(0, (h1Prog - 0.2) / 0.6));
       if (heroRightWrap) {
-        if (stepProgress < 1.0) {
+        if (stepProgress < 0.8) {
           heroRightWrap.style.visibility = rightTextInProg > 0 ? "visible" : "hidden";
           heroRightWrap.style.opacity = `${rightTextInProg}`;
           heroRightWrap.style.transform = `translate3d(0, ${(1 - rightTextInProg) * 40}px, 0)`;
         }
       }
 
-      if (heroRightInners && stepProgress < 1.0) {
+      if (heroRightInners && stepProgress < 0.8) {
         heroRightInners.forEach((el) => {
           el.style.opacity = `${rightTextInProg}`;
           el.style.transform = `translate3d(0, ${(1 - rightTextInProg) * 100}%, 0)`;
         });
       }
 
-      const h2Prog = Math.min(Math.max((stepProgress - 1.0) / 1.0, 0), 1);
-      if (progressFill && stepProgress >= 1.0 && stepProgress < 2.0) {
+      const h2Prog = Math.min(Math.max((stepProgress - 0.8) / 0.8, 0), 1);
+      if (progressFill && stepProgress >= 0.8 && stepProgress < 1.6) {
         progressFill.style.transform = `scaleY(${0.33 + h2Prog * 0.33})`;
       }
 
-      if (heroRightInners && stepProgress >= 1.0) {
+      if (heroRightInners && stepProgress >= 0.8) {
         heroRightInners.forEach((el) => {
           el.style.opacity = `${1 - h2Prog}`;
           el.style.transform = `translate3d(0, ${-20 * h2Prog}px, 0)`;
         });
       }
 
-      if (heroRightWrap && stepProgress >= 1.0) {
+      if (heroRightWrap && stepProgress >= 0.8) {
         heroRightWrap.style.visibility = h2Prog >= 1 ? "hidden" : "visible";
       }
 
       if (heroSecWrap) {
-        if (stepProgress < 1.0) {
+        if (stepProgress < 0.8) {
           heroSecWrap.style.visibility = "hidden";
           heroSecWrap.style.opacity = "0";
-        } else if (stepProgress >= 1.0 && stepProgress < 2.0) {
+        } else if (stepProgress >= 0.8 && stepProgress < 1.6) {
           heroSecWrap.style.visibility = "visible";
           heroSecWrap.style.opacity = `${Math.min(1, h2Prog * 1.5)}`;
         }
       }
 
       if (heroSecInners) {
-        if (stepProgress < 1.0) {
+        if (stepProgress < 0.8) {
           heroSecInners.forEach((el) => {
             el.style.opacity = "0";
             el.style.transform = "translate3d(0, 100%, 0)";
           });
-        } else if (stepProgress >= 1.0 && stepProgress < 2.0) {
+        } else if (stepProgress >= 0.8 && stepProgress < 1.6) {
           heroSecInners.forEach((el) => {
             el.style.opacity = `${h2Prog}`;
             el.style.transform = `translate3d(0, ${(1 - h2Prog) * 100}%, 0)`;
@@ -253,20 +251,20 @@ export default function HomeMobile() {
         }
       }
 
-      const s2Prog = easeOutQuad(Math.min(Math.max(stepProgress - 2.0, 0), 1));
-      if (progressFill && stepProgress >= 2.0) progressFill.style.transform = `scaleY(${0.66 + s2Prog * 0.34})`;
+      const s2Prog = easeOutQuad(Math.min(Math.max(stepProgress - 1.6, 0), 1));
+      if (progressFill && stepProgress >= 1.6) progressFill.style.transform = `scaleY(${0.66 + s2Prog * 0.34})`;
 
-      if (heroSecInners && stepProgress >= 2.0) {
+      if (heroSecInners && stepProgress >= 1.6) {
         heroSecInners.forEach((el) => {
           el.style.opacity = `${1 - s2Prog}`;
           el.style.transform = `translate3d(0, ${-20 * s2Prog}px, 0)`;
         });
       }
 
-      if (heroSecWrap && stepProgress >= 2.0) heroSecWrap.style.opacity = `${1 - s2Prog}`;
+      if (heroSecWrap && stepProgress >= 1.6) heroSecWrap.style.opacity = `${1 - s2Prog}`;
 
       const heroControls = cache.heroControls as NodeListOf<HTMLElement>;
-      if (heroControls && stepProgress >= 2.0) {
+      if (heroControls && stepProgress >= 1.6) {
         heroControls.forEach((el) => { el.style.opacity = `${1 - s2Prog}`; });
       }
 
@@ -274,7 +272,7 @@ export default function HomeMobile() {
       if (heroPanelRef.current && s2Prog > 0) heroPanelRef.current.style.transform = `translate3d(0, ${-s2Prog * 15}%, 0)`;
 
       // ── 2. SECTION TWO INNER ANIMATIONS ──
-      const s2InnerProg = Math.min(Math.max((stepProgress - 3.0) / 2.0, 0), 1);
+      const s2InnerProg = Math.min(Math.max((stepProgress - 2.6) / 2.0, 0), 1);
       const s2Titles = cache.s2Titles as NodeListOf<HTMLElement>;
       const s2ScrollWrap = cache.s2ScrollWrap as HTMLElement;
       const s2Clip1 = cache.s2Clip1 as HTMLElement;
@@ -380,7 +378,7 @@ export default function HomeMobile() {
       if (s7BgImg) s7BgImg.style.transform = `translate3d(0, ${(1 - s7Prog) * 20}%, 0)`;
       if (s7MobBg) s7MobBg.style.transform = `scale(${1.35 - s7Prog * 0.35})`;
 
-      // ── 6. APP SECTION (Auto-Height recalculation like CTA) ──
+      // ── 6. APP SECTION ──
       const appProg = easeOutQuad(Math.min(Math.max(stepProgress - 8.5, 0), 1));
 
       if (appSecRef.current) {
@@ -398,7 +396,7 @@ export default function HomeMobile() {
       }
 
       // ── 7. SECTION NINE ──
-      const s9Prog = easeOutQuad(Math.min(Math.max(stepProgress - 9.5, 0), 1));
+      const s9Prog = easeOutQuad(Math.min(Math.max(stepProgress - 9.2, 0), 1));
 
       if (sec9Ref.current) {
         sec9Ref.current.style.transform = `translate3d(0, ${(1 - s9Prog) * 100}%, 0)`;
@@ -412,21 +410,8 @@ export default function HomeMobile() {
         s9BgImg.style.transform = `scale(${1.35 - s9Prog * 0.35}) translate3d(0, ${(1 - s9Prog) * 20}%, 0)`;
       }
 
-      // ── 8. SECTION CTA ──
-      const ctaProgress = easeOutQuad(Math.min(Math.max((stepProgress - 10.2) / 1.0, 0), 1));
-
-      if (ctaLayerRef.current) {
-        const ctaHeight = ctaLayerRef.current.offsetHeight || vh;
-        const startY = vh;
-        const endY = -(ctaHeight - vh);
-        const currentY = startY + (endY - startY) * ctaProgress;
-        ctaLayerRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
-        ctaLayerRef.current.style.opacity = `${ctaProgress > 0 ? 1 : 0}`;
-        ctaLayerRef.current.style.visibility = ctaProgress > 0 ? "visible" : "hidden";
-      }
-
-      // ── 9. FOOTER (FULL REVEAL FIX) ──
-      const footerProgress = easeOutQuad(Math.min(Math.max((stepProgress - 11.2) / 0.8, 0), 1));
+      // ── 8. FOOTER REVEAL ──
+      const footerProgress = easeOutQuad(Math.min(Math.max((stepProgress - 10.0) / 1.0, 0), 1));
 
       if (footerLayerRef.current) {
         const footerHeight = footerLayerRef.current.offsetHeight || vh;
@@ -507,11 +492,10 @@ export default function HomeMobile() {
         }
       `}</style>
 
-      {/* Expanded Track Container Height to 1400vh for complete footer reveal */}
       <div
         ref={trackRef}
         className="home-track-container relative w-full"
-        style={{ height: "1400vh" }}
+        style={{ height: "1200vh" }}
       >
         <div
           ref={fixedFrameRef}
@@ -581,16 +565,7 @@ export default function HomeMobile() {
                 <SectionNine />
               </div>
 
-              {/* Layer 8: CTA Section */}
-              <div
-                ref={ctaLayerRef}
-                className="section-cta layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[125] will-change-transform"
-                style={{ transform: "translate3d(0, 100vh, 0)", opacity: 0, visibility: "hidden" }}
-              >
-                <SectionCTA />
-              </div>
-
-              {/* Layer 9: Footer */}
+              {/* Layer 8: Footer */}
               <div
                 ref={footerLayerRef}
                 className="footer layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[126] will-change-transform"

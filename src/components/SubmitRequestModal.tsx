@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import gsap from "gsap";
@@ -18,10 +19,30 @@ export default function SubmitRequestModal({ open, onClose }: SubmitRequestModal
     setMounted(true);
   }, []);
 
-  // Lock body scroll
+  // Prevent scroll propagation to underlying body / Lenis instance
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (!open) return;
+
+    // Lock html & body explicitly
+    const originalStyle = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    // Stop wheel/touch event propagation so Lenis doesn't swallow modal scrolls
+    const el = panelRef.current;
+    if (!el) return;
+
+    const stopPropagation = (e: Event) => {
+      e.stopPropagation();
+    };
+
+    el.addEventListener("wheel", stopPropagation, { passive: true });
+    el.addEventListener("touchmove", stopPropagation, { passive: true });
+
+    return () => {
+      document.body.style.overflow = originalStyle;
+      el.removeEventListener("wheel", stopPropagation);
+      el.removeEventListener("touchmove", stopPropagation);
+    };
   }, [open]);
 
   // Escape key
@@ -40,6 +61,8 @@ export default function SubmitRequestModal({ open, onClose }: SubmitRequestModal
     tweenRef.current?.kill();
 
     if (open) {
+      // Reset scroll position to top when opened
+      el.scrollTop = 0;
       gsap.set(el, { display: "block", xPercent: 100 });
       tweenRef.current = gsap.to(el, {
         xPercent: 0,
@@ -63,14 +86,20 @@ export default function SubmitRequestModal({ open, onClose }: SubmitRequestModal
   return createPortal(
     <div
       ref={panelRef}
+      data-lenis-prevent="true"
       style={{
-        display:             "none",
-        position:            "fixed",
-        inset:               0,
-        zIndex:              9999,
-        overflowY:           "auto",
-        willChange:          "transform",
-        backfaceVisibility:  "hidden",
+        display: "none",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100dvh",
+        zIndex: 99999,
+        overflowY: "auto",
+        overflowX: "hidden",
+        WebkitOverflowScrolling: "touch",
+        willChange: "transform",
+        backfaceVisibility: "hidden",
       }}
     >
       <SubmitRequestSection onClose={onClose} />

@@ -28,7 +28,7 @@ export default function SubServiceSectionOne({ data }: SubServiceSectionOneProps
   return (
     <section
       ref={sectionRef}
-      className="s10-section relative w-full h-full overflow-hidden "
+      className="s10-section relative w-full h-full overflow-hidden"
     >
       {/* ── Background Static Image Layer ── */}
       <div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full mix-blend-normal">
@@ -61,22 +61,24 @@ export default function SubServiceSectionOne({ data }: SubServiceSectionOneProps
             {data.title}
           </h2> 
 
-          {/* Spacer block hidden on mobile and tablet layout */}
-          <div className="hidden lg:block w-full lg:w-[clamp(450px,40vw,650px)] lg:h-[clamp(300px,28vh,420px)] invisible pointer-events-none"></div>
+          {/* Spacer block sized to match the max 500px desktop image card width */}
+          <div className="hidden lg:block w-[min(500px,38vw)] h-[clamp(300px,28vh,420px)] invisible pointer-events-none"></div>
         </div>
 
       </div>
 
-      {/* ── THE REAL IMAGE LAYER ── */}
-      <div className="s10-img-absolute-container absolute right-[4vw] lg:right-[8vw] bottom-[10vh] z-[11] overflow-hidden w-[calc(100vw-8vw)] lg:w-[clamp(450px,40vw,650px)] h-[220px] sm:h-[320px] lg:h-[clamp(300px,28vh,420px)] origin-bottom-right">
-        {/* The Image */}
-        <img
-          src={data.sideImageUrl} 
-          alt={data.title}
-          className="s10-img-element w-full h-full object-cover origin-center relative z-10"
-        />
-        {/* Image Specific Dark Overlay */}
-        <div className="absolute inset-0 bg-black/20 z-20 pointer-events-none mix-blend-multiply" />
+      {/* ── THE REAL IMAGE LAYER (Constrained wrapper with desktop max-width 500px) ── */}
+      <div className="s10-img-absolute-container absolute inset-0 z-[11] overflow-hidden w-full h-full">
+        <div className="s10-img-inner-wrap absolute right-[4vw] lg:right-[8vw] bottom-[10vh] w-[calc(100vw-8vw)] lg:w-[min(500px,38vw)] h-[220px] sm:h-[320px] lg:h-[clamp(300px,28vh,420px)] origin-bottom-right transition-none overflow-hidden">
+          {/* The Image */}
+          <img
+            src={data.sideImageUrl} 
+            alt={data.title}
+            className="s10-img-element w-full h-full object-cover origin-center relative z-10"
+          />
+          {/* Image Specific Dark Overlay */}
+          <div className="absolute inset-0 bg-black/20 z-20 pointer-events-none mix-blend-multiply" />
+        </div>
       </div>
 
       {/* ── Overlaid 4 Sequential Paragraphs Layer ── */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import ProjectsHero from "../../components/Projects/ProjectsHero";
 import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal";
 import SectionOne from "@/src/components/Projects/SectionOne";
@@ -15,6 +15,9 @@ type ContactProps = {
 };
 
 const TOTAL_SCROLL_STEPS = 10;
+
+// QUADRATIC EASING MATCHES THE MOBILE ULTRA-SMOOTH INERTIA
+const easeOutQuad = (t: number) => t * (2 - t);
 
 function executeDesktopSplitting(selector: string) {
   const elements = document.querySelectorAll(selector);
@@ -55,9 +58,18 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
   const layerCTA = useRef<HTMLDivElement>(null);
   const layerFooter = useRef<HTMLDivElement>(null);
 
-  const dimensionsRef = useRef({ sec1Height: 0, ctaHeight: 0, footerHeight: 0, vh: 0 });
-  const progressRef = useRef(0);
+  const dimensionsRef = useRef({
+    sec1Height: 0,
+    ctaHeight: 0,
+    footerHeight: 0,
+    vh: 0,
+    trackTopOffset: 0,
+    totalScrollable: 0,
+  });
+
+  const targetProgress = useRef(0);
   const revealedSections = useRef<Set<string>>(new Set());
+  const rafId = useRef<number | null>(null);
 
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
 
@@ -74,7 +86,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
     if (!preloaderDone || !shouldLoadRest) {
       if (lenis && typeof lenis.stop === "function") lenis.stop();
-      progressRef.current = 0;
+      targetProgress.current = 0;
     } else {
       document.body.classList.remove("preloading");
       document.documentElement.classList.remove("preloading");
@@ -90,19 +102,24 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // ── 2. CACHE DIMENSIONS ──
+  // ── 2. CACHE METRICS TO PREVENT LAYOUT THRASHING ──
+  const measure = useCallback(() => {
+    if (!trackRef.current) return;
+    const rect = trackRef.current.getBoundingClientRect();
+    const vh = window.innerHeight;
+
+    dimensionsRef.current = {
+      sec1Height: sectionOneRef.current?.offsetHeight || vh,
+      ctaHeight: layerCTA.current?.offsetHeight || vh,
+      footerHeight: layerFooter.current?.offsetHeight || layerFooter.current?.scrollHeight || vh,
+      vh,
+      trackTopOffset: window.scrollY + rect.top,
+      totalScrollable: rect.height - vh,
+    };
+  }, []);
+
   useEffect(() => {
     if (!shouldLoadRest) return;
-
-    const measure = () => {
-      dimensionsRef.current = {
-        sec1Height: sectionOneRef.current?.offsetHeight || window.innerHeight,
-        ctaHeight: layerCTA.current?.offsetHeight || window.innerHeight,
-        footerHeight: layerFooter.current?.offsetHeight || layerFooter.current?.scrollHeight || window.innerHeight,
-        vh: window.innerHeight,
-      };
-    };
-
     measure();
 
     const resizeObserver = new ResizeObserver(() => measure());
@@ -115,10 +132,10 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
       resizeObserver.disconnect();
       window.removeEventListener("resize", measure);
     };
-  }, [shouldLoadRest]);
+  }, [shouldLoadRest, measure]);
 
   // ── 3. TEXT REVEALS ──
-  const triggerPlayOnceTextReveal = (
+  const triggerPlayOnceTextReveal = useCallback((
     containerSelector: string,
     currentStepProg: number,
     triggerThreshold: number
@@ -141,7 +158,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
         el.style.opacity = "1";
       });
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
@@ -157,11 +174,15 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     };
   }, [shouldLoadRest]);
 
-  // ── 4. DIRECT GPU TRANSFORM RENDERING (SYNCHRONIZED WITH LENIS) ──
+  // ── 4. ULTRA-SMOOTH CONTINUOUS LERP RENDER ENGINE (HOMEDESKTOP PARITY) ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
     const scope = scopeRef.current;
+    let isRunning = true;
+    let currentProgress = targetProgress.current;
+
+    // Cache element references inside closure
     const heroTextWrap = scope.querySelector<HTMLElement>(".hero-text-wrap");
     const scrollPara1 = scope.querySelector<HTMLElement>(".scroll-para-1");
     const paraInners = scope.querySelectorAll<HTMLElement>(".scroll-para-1 .custom-line-inner");
@@ -170,23 +191,34 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     const parallaxImg = scope.querySelector<HTMLElement>(".parallax-img-asset");
     const secTwo = scope.querySelector<HTMLElement>(".section-two-wrapper");
 
-    let rafId: number | null = null;
+    // Promote elements for hardware composition
+    [secOne, parallaxImg, secTwo, layerCTA.current, layerFooter.current].forEach((el) => {
+      if (el) {
+        el.style.willChange = "transform, opacity";
+        el.style.transform = "translate3d(0, 0, 0)";
+      }
+    });
 
     const renderTransforms = () => {
-      const stepProgress = progressRef.current * (TOTAL_SCROLL_STEPS - 1);
+      if (!isRunning) return;
+
+      // CONTINUOUS SILKY PHYSICS LERP INERTIA
+      currentProgress += (targetProgress.current - currentProgress) * 0.08;
+
+      const stepProgress = currentProgress * (TOTAL_SCROLL_STEPS - 1);
       const { sec1Height, ctaHeight, footerHeight, vh } = dimensionsRef.current;
 
       // ── STEP 1: HERO TEXT, PARAGRAPH & BACKGROUND TRANSLATE ──
-      const heroFadeOutProg = Math.min(Math.max(stepProgress / 0.4, 0), 1);
+      const heroFadeOutProg = easeOutQuad(Math.min(Math.max(stepProgress / 0.4, 0), 1));
 
       if (heroTextWrap) {
-        heroTextWrap.style.opacity = `${1 - heroFadeOutProg}`;
-        heroTextWrap.style.transform = `translate3d(0, ${-heroFadeOutProg * 20}px, 0)`;
+        heroTextWrap.style.opacity = `${(1 - heroFadeOutProg).toFixed(3)}`;
+        heroTextWrap.style.transform = `translate3d(0, ${(-heroFadeOutProg * 20).toFixed(2)}px, 0)`;
         heroTextWrap.style.visibility = heroFadeOutProg >= 1 ? "hidden" : "visible";
       }
 
       const paraStart = 0.4;
-      const paraInProg = Math.min(Math.max((stepProgress - paraStart) / 0.6, 0), 1);
+      const paraInProg = easeOutQuad(Math.min(Math.max((stepProgress - paraStart) / 0.6, 0), 1));
 
       if (scrollPara1) {
         scrollPara1.style.visibility = stepProgress >= paraStart ? "visible" : "hidden";
@@ -194,13 +226,13 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
       if (paraInners && paraInners.length > 0) {
         paraInners.forEach((inner) => {
-          inner.style.opacity = `${paraInProg}`;
-          inner.style.transform = `translate3d(0, ${(1 - paraInProg) * 100}%, 0)`;
+          inner.style.opacity = `${paraInProg.toFixed(3)}`;
+          inner.style.transform = `translate3d(0, ${((1 - paraInProg) * 100).toFixed(2)}%, 0)`;
         });
       }
 
       // Hero background scale AND translate upward
-      const heroBgProg = Math.min(Math.max(stepProgress / 1.0, 0), 1);
+      const heroBgProg = easeOutQuad(Math.min(Math.max(stepProgress / 1.0, 0), 1));
       if (heroBgs && heroBgs.length > 0) {
         const scaleVal = (1.0 + heroBgProg * 0.05).toFixed(4);
         const bgY = (-heroBgProg * 12).toFixed(2);
@@ -211,12 +243,12 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
       // ── STEP 2: SECTION ONE FULL HEIGHT REVEAL (STEPS 1.0 -> 3.0) ──
       const s1Start = 1.0;
-      const s1Prog = Math.min(Math.max((stepProgress - s1Start) / 2.0, 0), 1);
+      const s1Prog = easeOutQuad(Math.min(Math.max((stepProgress - s1Start) / 2.0, 0), 1));
 
       if (secOne) {
         const targetY = -(sec1Height - vh);
         const currentY = vh + (targetY - vh) * s1Prog;
-        secOne.style.transform = `translate3d(0, ${currentY}px, 0)`;
+        secOne.style.transform = `translate3d(0, ${currentY.toFixed(2)}px, 0)`;
       }
 
       if (parallaxImg) {
@@ -228,10 +260,10 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
       // ── STEP 3: SECTION TWO SLIDES OVER SECTION ONE (STEPS 3.5 -> 5.5) ──
       const s2Start = 3.5;
-      const s2Prog = Math.min(Math.max((stepProgress - s2Start) / 2.0, 0), 1);
+      const s2Prog = easeOutQuad(Math.min(Math.max((stepProgress - s2Start) / 2.0, 0), 1));
 
       if (secTwo) {
-        secTwo.style.transform = `translate3d(0, ${(1 - s2Prog) * 100}%, 0)`;
+        secTwo.style.transform = `translate3d(0, ${((1 - s2Prog) * 100).toFixed(3)}%, 0)`;
       }
 
       if (stepProgress >= 4.0 && stepProgress < 7.0) {
@@ -241,55 +273,54 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
       }
 
       // ── STEP 4: LAYER CTA SLIDE (STEPS 6.0 -> 7.8) ──
-      const ctaProgress = Math.min(Math.max((stepProgress - 6.0) / 1.8, 0), 1);
+      const ctaProgress = easeOutQuad(Math.min(Math.max((stepProgress - 6.0) / 1.8, 0), 1));
       if (layerCTA.current) {
         const startY = vh;
         const endY = -(ctaHeight - vh);
         const currentY = startY + (endY - startY) * ctaProgress;
-        layerCTA.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
+        layerCTA.current.style.transform = `translate3d(0, ${currentY.toFixed(2)}px, 0)`;
       }
 
       // ── STEP 5: LAYER FOOTER SLIDE (STEPS 7.8 -> 9.0) ──
-      const footerProgress = Math.min(Math.max((stepProgress - 7.8) / 1.2, 0), 1);
+      const footerProgress = easeOutQuad(Math.min(Math.max((stepProgress - 7.8) / 1.2, 0), 1));
       if (layerFooter.current) {
         const startY = vh;
         const endY = vh - footerHeight;
         const translateY = startY + (endY - startY) * footerProgress;
-        layerFooter.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
+        layerFooter.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
       }
+
+      // Keep RAF loop running continuously for fluid momentum inertia
+      rafId.current = requestAnimationFrame(renderTransforms);
     };
 
-    const handleScroll = () => {
-      if (!trackRef.current || !fixedFrameRef.current) return;
-
-      const trackRect = trackRef.current.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const totalScrollable = trackRect.height - vh;
+    const handleScroll = (e?: any) => {
+      const scrollY = e?.scroll !== undefined ? e.scroll : window.scrollY;
+      const { totalScrollable, trackTopOffset } = dimensionsRef.current;
 
       if (totalScrollable <= 0) return;
 
-      if (trackRect.top <= 0 && trackRect.bottom >= vh) {
-        fixedFrameRef.current.style.position = "fixed";
-        fixedFrameRef.current.style.top = "0px";
-        fixedFrameRef.current.style.bottom = "auto";
-      } else if (trackRect.bottom < vh) {
-        fixedFrameRef.current.style.position = "absolute";
-        fixedFrameRef.current.style.top = "auto";
-        fixedFrameRef.current.style.bottom = "0px";
-      } else {
-        fixedFrameRef.current.style.position = "absolute";
-        fixedFrameRef.current.style.top = "0px";
-        fixedFrameRef.current.style.bottom = "auto";
+      const relativeScroll = scrollY - trackTopOffset;
+      const trackBottom = relativeScroll + totalScrollable;
+
+      if (fixedFrameRef.current) {
+        if (relativeScroll >= 0 && trackBottom >= 0) {
+          fixedFrameRef.current.style.position = "fixed";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        } else if (trackBottom < 0) {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "auto";
+          fixedFrameRef.current.style.bottom = "0px";
+        } else {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        }
       }
 
-      const currentScroll = Math.max(0, -trackRect.top);
-      progressRef.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
-
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(renderTransforms);
+      targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
     };
-
-    handleScroll();
 
     const lenis = smootherRef?.current;
     if (lenis && typeof lenis.on === "function") {
@@ -298,15 +329,19 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
       window.addEventListener("scroll", handleScroll, { passive: true });
     }
 
+    handleScroll();
+    rafId.current = requestAnimationFrame(renderTransforms);
+
     return () => {
-      if (rafId) cancelAnimationFrame(rafId);
+      isRunning = false;
+      if (rafId.current) cancelAnimationFrame(rafId.current);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
       } else {
         window.removeEventListener("scroll", handleScroll);
       }
     };
-  }, [shouldLoadRest, smootherRef]);
+  }, [shouldLoadRest, smootherRef, triggerPlayOnceTextReveal]);
 
   const isReady = preloaderDone && introDone;
 
@@ -335,7 +370,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
               {/* Layer 2: Section One Container */}
               <div
                 ref={sectionOneRef}
-                className="section-one-wrapper absolute left-0 right-0 w-full h-auto structural-layer transform-gpu"
+                className="section-one-wrapper absolute left-0 right-0 w-full h-auto structural-layer transform-gpu will-change-transform"
                 style={{ zIndex: 20, transform: "translate3d(0, 100vh, 0)" }}
               >
                 <SectionOne />
@@ -343,7 +378,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
               {/* Layer 3: Section Two Container */}
               <div
-                className="section-two-wrapper absolute inset-0 w-full h-[100vh] structural-layer transform-gpu"
+                className="section-two-wrapper absolute inset-0 w-full h-[100vh] structural-layer transform-gpu will-change-transform"
                 style={{ zIndex: 30, transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionTwo isActive={isSectionTwoActive} />
@@ -352,7 +387,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
               {/* Layer 4: CTA Section Container */}
               <div
                 ref={layerCTA}
-                className="projects-section-cta absolute left-0 top-0 w-full z-[95] structural-layer pointer-events-auto transform-gpu"
+                className="projects-section-cta absolute left-0 top-0 w-full z-[95] structural-layer pointer-events-auto transform-gpu will-change-transform"
                 style={{ transform: "translate3d(0, 100vh, 0)" }}
               >
                 <SectionCTA preloaderDone={isReady} />
@@ -361,7 +396,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
               {/* Layer 5: Footer Container */}
               <div
                 ref={layerFooter}
-                className="projects-footer-wrap absolute left-0 top-0 w-full z-[96] structural-layer transform-gpu"
+                className="projects-footer-wrap absolute left-0 top-0 w-full z-[96] structural-layer transform-gpu will-change-transform"
                 style={{ zIndex: 96, transform: "translate3d(0, 100vh, 0)" }}
               >
                 <Footer />

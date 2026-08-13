@@ -34,12 +34,12 @@ const canelaText = localFont({
   variable: "--font-display",
   display: "swap",
 });
+
 export const metadata: Metadata = {
   title: "Grand Pools",
   description: "Crafting Custom Swimming Pools with Style, Function, and Quality.",
 };
 
-// Locks viewport scale and prevents mobile browser address bar layout jumps
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -52,8 +52,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html 
       lang="en" 
-      className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased preloading`}
+      className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased`}
       style={{ backgroundColor: "#162D24", minHeight: "100vh" }}
+      suppressHydrationWarning
     >
       <head>
         <style

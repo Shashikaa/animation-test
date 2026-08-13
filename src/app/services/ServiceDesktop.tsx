@@ -23,8 +23,16 @@ export default function ServicesDesktop() {
   const layerCTA = useRef<HTMLDivElement>(null);
   const layerFooter = useRef<HTMLDivElement>(null);
 
-  const dimensionsRef = useRef({ ctaHeight: 0, footerHeight: 0, vh: 0 });
-  const progressRef = useRef(0);
+  const scrollMetricsRef = useRef({
+    ctaHeight: 0,
+    footerHeight: 0,
+    vh: 0,
+    trackTopOffset: 0,
+    totalScrollable: 0,
+  });
+
+  const targetProgress = useRef(0);
+  const rafId = useRef<number | null>(null);
   const lastSec2Idx = useRef<number>(-1);
   const revealedSections = useRef<Set<string>>(new Set());
 
@@ -43,7 +51,7 @@ export default function ServicesDesktop() {
 
     if (!preloaderDone || !shouldLoadRest) {
       if (lenis && typeof lenis.stop === "function") lenis.stop();
-      progressRef.current = 0;
+      targetProgress.current = 0;
     } else {
       document.body.classList.remove("preloading");
       document.documentElement.classList.remove("preloading");
@@ -59,18 +67,23 @@ export default function ServicesDesktop() {
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // ── 2. CACHE DIMENSIONS ──
+  // ── 2. CACHE METRICS TO PREVENT LAYOUT THRASHING ──
+  const measure = useCallback(() => {
+    if (!trackRef.current) return;
+    const rect = trackRef.current.getBoundingClientRect();
+    const vh = window.innerHeight;
+
+    scrollMetricsRef.current = {
+      ctaHeight: layerCTA.current?.offsetHeight || vh,
+      footerHeight: layerFooter.current?.offsetHeight || layerFooter.current?.scrollHeight || vh,
+      vh,
+      trackTopOffset: window.scrollY + rect.top,
+      totalScrollable: rect.height - vh,
+    };
+  }, []);
+
   useEffect(() => {
     if (!shouldLoadRest) return;
-
-    const measure = () => {
-      dimensionsRef.current = {
-        ctaHeight: layerCTA.current?.offsetHeight || window.innerHeight,
-        footerHeight: layerFooter.current?.offsetHeight || layerFooter.current?.scrollHeight || window.innerHeight,
-        vh: window.innerHeight,
-      };
-    };
-
     measure();
 
     const resizeObserver = new ResizeObserver(() => measure());
@@ -82,7 +95,7 @@ export default function ServicesDesktop() {
       resizeObserver.disconnect();
       window.removeEventListener("resize", measure);
     };
-  }, [shouldLoadRest]);
+  }, [shouldLoadRest, measure]);
 
   // Text Reveal Preparation
   useEffect(() => {
@@ -132,7 +145,7 @@ export default function ServicesDesktop() {
     }
   }, []);
 
-  // ── 3. DIRECT GPU TRANSFORM RENDERING LOOP (SYNCHRONIZED WITH LENIS) ──
+  // ── 3. EASED GPU TRANSFORM RENDERING LOOP ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
@@ -150,14 +163,13 @@ export default function ServicesDesktop() {
 
     const appSecWrap = scope.querySelector<HTMLElement>(".services-appsec-wrap");
 
-    let rafId: number | null = null;
-
     const renderTransforms = () => {
-      const stepProgress = progressRef.current * (TOTAL_SCROLL_STEPS - 1);
-      const { ctaHeight, footerHeight, vh } = dimensionsRef.current;
+      const currentProg = targetProgress.current;
+      const stepProgress = currentProg * (TOTAL_SCROLL_STEPS - 1);
+      const { ctaHeight, footerHeight, vh } = scrollMetricsRef.current;
 
       // ── STEP 1: HERO HOLD & TOP LAYER NARROW (STEPS 0.0 -> 0.8) ──
-      const heroProg = Math.min(Math.max(stepProgress / 0.8, 0), 1);
+      const heroProg = easeOutQuad(Math.min(Math.max(stepProgress / 0.8, 0), 1));
 
       if (heroTextWrap) {
         heroTextWrap.style.transformOrigin = "left bottom";
@@ -168,15 +180,14 @@ export default function ServicesDesktop() {
         heroTopLayer.style.width = `${100 - heroProg * 40}%`;
       }
 
-      // Hide hero button immediately as hero animation begins
       if (heroBtn) {
-        const btnProg = Math.min(Math.max(stepProgress / 0.05, 0), 1);
+        const btnProg = easeOutQuad(Math.min(Math.max(stepProgress / 0.05, 0), 1));
         heroBtn.style.opacity = `${1 - btnProg}`;
         heroBtn.style.pointerEvents = btnProg >= 1 ? "none" : "auto";
       }
 
       // ── STEP 2: SECTION ONE CLIP REVEAL & TEXT REVEAL (STEPS 0.8 -> 2.2) ──
-      const s1Prog = Math.min(Math.max((stepProgress - 0.8) / 1.4, 0), 1);
+      const s1Prog = easeOutQuad(Math.min(Math.max((stepProgress - 0.8) / 1.4, 0), 1));
 
       if (secOneWrap) {
         const clipVal = (1 - s1Prog) * 100;
@@ -196,7 +207,7 @@ export default function ServicesDesktop() {
       }
 
       if (glassCard) {
-        const cardProg = Math.min(Math.max((stepProgress - 1.2) / 0.8, 0), 1);
+        const cardProg = easeOutQuad(Math.min(Math.max((stepProgress - 1.2) / 0.8, 0), 1));
         glassCard.style.opacity = `${cardProg}`;
         glassCard.style.transform = `translate3d(${(1 - cardProg) * 40}px, 0, 0)`;
       }
@@ -214,7 +225,6 @@ export default function ServicesDesktop() {
         s2DesktopSec.style.visibility = stepProgress >= 2.3 ? "visible" : "hidden";
       }
 
-      // Keep Section 1 unscaled at 100% size as Section 2 slides over it
       if (secOneWrap) {
         secOneWrap.style.transform = `translate3d(0, 0%, 0) scale3d(1, 1, 1)`;
       }
@@ -224,7 +234,7 @@ export default function ServicesDesktop() {
       }
 
       if (glassCard && stepProgress >= 2.5) {
-        const cardOutProg = Math.min(Math.max((stepProgress - 2.5) / 0.6, 0), 1);
+        const cardOutProg = easeOutQuad(Math.min(Math.max((stepProgress - 2.5) / 0.6, 0), 1));
         glassCard.style.opacity = `${1 - cardOutProg}`;
         glassCard.style.transform = `translate3d(0, ${-cardOutProg * 50}px, 0)`;
       }
@@ -235,10 +245,11 @@ export default function ServicesDesktop() {
         setIsSectionTwoActive(false);
       }
 
-      // ── STEP 4: FAST SMOOTH SECTION TWO INTERNAL CARDS INDEXING ──
-      if (stepProgress < 4.5) {
+      // ── STEP 4: BALANCED & SYNCHRONIZED SECTION TWO SLIDE INDEXING ──
+      // Window is Step 3.8 to Step 6.8 (3 full scroll steps divided evenly into 1.0 step increments)
+      if (stepProgress < 4.8) {
         triggerSec2Hook(0);
-      } else if (stepProgress >= 4.5 && stepProgress < 5.3) {
+      } else if (stepProgress >= 4.8 && stepProgress < 5.8) {
         triggerSec2Hook(1);
       } else {
         triggerSec2Hook(2);
@@ -252,7 +263,6 @@ export default function ServicesDesktop() {
         appSecWrap.style.transform = `translate3d(0, ${(1 - appProg) * 100}%, 0)`;
       }
 
-      // Section Two stays fully unscaled (100% size) as App Section slides over top
       if (secTwoWrap && appProg > 0) {
         secTwoWrap.style.transform = `translate3d(0, 0%, 0) scale3d(1, 1, 1)`;
       }
@@ -289,37 +299,36 @@ export default function ServicesDesktop() {
       }
     };
 
-    const handleScroll = () => {
-      if (!trackRef.current || !fixedFrameRef.current) return;
-
-      const trackRect = trackRef.current.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const totalScrollable = trackRect.height - vh;
+    const handleScroll = (e?: any) => {
+      const scrollY = e?.scroll !== undefined ? e.scroll : window.scrollY;
+      const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
 
       if (totalScrollable <= 0) return;
 
-      if (trackRect.top <= 0 && trackRect.bottom >= vh) {
-        fixedFrameRef.current.style.position = "fixed";
-        fixedFrameRef.current.style.top = "0px";
-        fixedFrameRef.current.style.bottom = "auto";
-      } else if (trackRect.bottom < vh) {
-        fixedFrameRef.current.style.position = "absolute";
-        fixedFrameRef.current.style.top = "auto";
-        fixedFrameRef.current.style.bottom = "0px";
-      } else {
-        fixedFrameRef.current.style.position = "absolute";
-        fixedFrameRef.current.style.top = "0px";
-        fixedFrameRef.current.style.bottom = "auto";
+      const relativeScroll = scrollY - trackTopOffset;
+      const trackBottom = relativeScroll + totalScrollable;
+
+      if (fixedFrameRef.current) {
+        if (relativeScroll >= 0 && trackBottom >= 0) {
+          fixedFrameRef.current.style.position = "fixed";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        } else if (trackBottom < 0) {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "auto";
+          fixedFrameRef.current.style.bottom = "0px";
+        } else {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        }
       }
 
-      const currentScroll = Math.max(0, -trackRect.top);
-      progressRef.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
+      targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
 
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(renderTransforms);
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+      rafId.current = requestAnimationFrame(renderTransforms);
     };
-
-    handleScroll();
 
     const lenis = smootherRef?.current;
     if (lenis && typeof lenis.on === "function") {
@@ -328,8 +337,11 @@ export default function ServicesDesktop() {
       window.addEventListener("scroll", handleScroll, { passive: true });
     }
 
+    handleScroll();
+    renderTransforms();
+
     return () => {
-      if (rafId) cancelAnimationFrame(rafId);
+      if (rafId.current) cancelAnimationFrame(rafId.current);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
       } else {
@@ -352,7 +364,7 @@ export default function ServicesDesktop() {
           className="services-pin fixed top-0 left-0 h-[100vh] w-full overflow-hidden bg-black z-10 transform-gpu"
         >
           {/* Layer 1: Hero Container */}
-          <div className="services-hero-wrap absolute inset-0 z-10 pointer-events-auto w-full h-full structural-layer transform-gpu">
+          <div className="services-hero-wrap absolute inset-0 z-10 pointer-events-auto w-full h-full structural-layer transform-gpu will-change-transform">
             <Hero />
           </div>
 
@@ -361,7 +373,7 @@ export default function ServicesDesktop() {
             <>
               {/* Layer 2: Section One Container */}
               <div
-                className="section-one-wrap absolute inset-0 w-full h-full z-20 overflow-hidden structural-layer transform-gpu will-change-transform"
+                className="section-one-wrap absolute inset-0 w-full h-full z-20 overflow-hidden structural-layer transform-gpu will-change-[clip-path]"
                 style={{
                   clipPath: "inset(100% 0% 0% 0%)",
                   WebkitClipPath: "inset(100% 0% 0% 0%)",
@@ -395,7 +407,7 @@ export default function ServicesDesktop() {
               {/* Layer 5: Section CTA Container */}
               <div
                 ref={layerCTA}
-                className="services-section-cta absolute left-0 top-0 w-full z-[120] structural-layer pointer-events-auto transform-gpu"
+                className="services-section-cta absolute left-0 top-0 w-full z-[120] structural-layer pointer-events-auto transform-gpu will-change-transform"
                 style={{ transform: "translate3d(0, 100vh, 0)", visibility: "hidden" }}
               >
                 <SectionCTA preloaderDone={isReady} />
@@ -404,7 +416,7 @@ export default function ServicesDesktop() {
               {/* Layer 6: Footer Container */}
               <div
                 ref={layerFooter}
-                className="services-footer-wrap absolute left-0 top-0 w-full z-[125] structural-layer transform-gpu"
+                className="services-footer-wrap absolute left-0 top-0 w-full z-[125] structural-layer transform-gpu will-change-transform"
                 style={{ transform: "translate3d(0, 100vh, 0)", visibility: "hidden" }}
               >
                 <Footer />

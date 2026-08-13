@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconMark } from "./IconMark";
 import { HEADER_LOGO_SCALE, LOGO_COLOR, LOGO_ICON_W, LOGO_ICON_H, LOGO_GAP } from "./Preloader";
@@ -54,9 +55,10 @@ function SharedLogoMarkup({ onClose }: { onClose?: () => void }) {
       href="/"
       onClick={onClose}
       id="header-logo-inner"
+      aria-label="Grand Pools — go to homepage"
       className="active:opacity-80 active:scale-95 transition-all duration-150"
       style={{
-        display: "inline-flex",
+        display: "flex",
         alignItems: "center",
         gap: LOGO_GAP,
         position: "relative",
@@ -90,7 +92,7 @@ function CloseButton({ onClick, className }: { onClick: () => void; className?: 
     <button
       onClick={onClick}
       aria-label="Close menu"
-      className={`!flex !items-center !justify-center !p-1.5 !mt-2 !bg-transparent !border-none !cursor-pointer !opacity-85 hover:!opacity-100 hover:!rotate-90 active:!scale-90 active:!opacity-100 !transition-[opacity,transform] !duration-200 !ease-in-out ${className ?? ""}`}
+      className={`!flex !items-center !justify-center !p-1.5 !bg-transparent !border-none !cursor-pointer !opacity-85 hover:!opacity-100 hover:!rotate-90 active:!scale-90 active:!opacity-100 !transition-[opacity,transform] !duration-200 !ease-in-out ${className ?? ""}`}
     >
       <img src="/closebtn.svg" alt="Close" className="!w-6 !h-6 md:!w-7 md:!h-7 !block !object-contain" />
     </button>
@@ -192,7 +194,6 @@ const bottomVariants = {
 // ── MOBILE MENU ──────────────────────────────────────────
 function MobileMenu({ open, onClose }: NavMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
-
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   useEffect(() => {
@@ -216,12 +217,23 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
           initial="hidden"
           animate="visible"
           exit="hidden"
-          className="!fixed !z-[2000] !flex !flex-col !w-[100dvw] !h-full !top-0 !left-0"
+          className="!fixed !z-[2000] !flex !flex-col !w-[100dvw] !h-[100dvh] !top-0 !left-0 !overflow-y-auto"
           style={{
             background: "linear-gradient(155deg, #0e2724 0%, #08373b 100%)",
           }}
         >
           <style>{`
+            #nav-header-bar {
+              height: 56px !important;
+              padding: 0 20px !important;
+              flex-shrink: 0 !important;
+            }
+            @media (min-width: 768px) {
+              #nav-header-bar { height: 66px !important; padding: 0 30px !important; }
+            }
+            @media (min-width: 1024px) {
+              #nav-header-bar { height: 72px !important; padding: 0 55px !important; }
+            }
             @media (max-width: 767px) {
               #header-logo-inner { width: 135px !important; gap: 8px !important; }
               #header-logo-inner #h-grand,
@@ -232,18 +244,12 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
             }
           `}</style>
 
-          <div 
-            className="!flex !items-center !justify-between !w-full"
-            style={{
-              height: "64px",
-              padding: "0 24px",
-            }}
-          >
+          <div id="nav-header-bar" className="!flex !items-center !justify-between !w-full">
             <SharedLogoMarkup onClose={onClose} />
             <CloseButton onClick={onClose} />
           </div>
 
-          <div className="!flex-1 !flex !flex-col !px-6 md:!px-10 !pt-[80px] !pb-[120px]">
+          <div className="!flex-1 !flex !flex-col !px-6 md:!px-10 !pt-[40px] !pb-[80px]">
             <motion.nav
               variants={linkContainerVariants}
               initial="hidden"
@@ -273,7 +279,7 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="!px-6 md:!px-10 !pb-[160px]"
+            className="!px-6 md:!px-10 !pb-[100px]"
           >
             <div className="font-body !mb-6">
               <p className="!m-0 !mb-3 !text-[20px]">
@@ -310,12 +316,12 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
 
 // ── DESKTOP/TABLET MENU ───────────────────────────────────
 function DesktopMenu({ open, onClose }: NavMenuProps) {
+  const pathname = usePathname();
+
   const initialActiveIndex = useMemo(() => {
-    if (typeof window === "undefined") return 0;
-    const currentPath = window.location.pathname;
-    const idx = NAV_LINKS.findIndex(link => link.href === currentPath);
+    const idx = NAV_LINKS.findIndex(link => link.href === pathname);
     return idx !== -1 ? idx : 0;
-  }, []);
+  }, [pathname]);
 
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [activeIndex, setActiveIndex]   = useState(initialActiveIndex);
@@ -392,6 +398,27 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
             willChange: "transform, opacity",
           }}
         >
+          <style>{`
+            #nav-header-bar-desktop {
+              height: 56px !important;
+              padding: 0 20px !important;
+            }
+            @media (min-width: 768px) {
+              #nav-header-bar-desktop { height: 66px !important; padding: 0 30px !important; }
+            }
+            @media (min-width: 1024px) {
+              #nav-header-bar-desktop { height: 72px !important; padding: 0 55px !important; }
+            }
+            @media (max-width: 767px) {
+              #header-logo-inner { width: 135px !important; gap: 8px !important; }
+              #header-logo-inner #h-grand,
+              #header-logo-inner #h-pools { flex: 1 1 0; min-width: 0; overflow: visible !important; }
+              #header-logo-inner #h-grand svg,
+              #header-logo-inner #h-pools svg { width: 100% !important; height: auto !important; overflow: visible !important; }
+              #header-logo-inner #h-icon-svg svg { height: 25px !important; width: auto !important; flex-shrink: 0; overflow: visible !important; }
+            }
+          `}</style>
+
           {/* Top-Right Absolute Close Button for Desktop/Tablet */}
           <CloseButton 
             onClick={onClose} 
@@ -399,12 +426,13 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
           />
 
           {/* ── LEFT PANEL ── */}
-<div className="!relative !flex !flex-col !justify-between !pb-12 !px-5 md:!px-[30px] lg:!px-[55px] !w-full !h-full !z-10">
-  {/* Header section with Logo — Matched exactly to header heights (56px / 66px / 72px) */}
-  <div className="!flex !items-center !justify-between !h-[56px] md:!h-[66px] lg:!h-[72px] !w-full">
-    <SharedLogoMarkup onClose={onClose} />
-  </div>
-            <div className="!my-auto !py-8">
+          <div className="!relative !flex !flex-col !justify-between !pb-12 !w-full !h-full !z-10">
+            {/* Header section with Logo — Matched exactly to Header dimensions */}
+            <div id="nav-header-bar-desktop" className="!flex !items-center !justify-between !w-full">
+              <SharedLogoMarkup onClose={onClose} />
+            </div>
+
+            <div className="!my-auto !py-8 !px-5 md:!px-[30px] lg:!px-[55px]">
               <motion.nav
                 variants={linkContainerVariants}
                 initial="hidden"
@@ -433,6 +461,7 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
               initial="hidden"
               animate="visible"
               exit="hidden"
+              className="!px-5 md:!px-[30px] lg:!px-[55px]"
             >
               <div className="font-body !mb-6" style={{ color: LOGO_COLOR }}>
                 <p className="!m-0 !text-[18px] !font-medium">
@@ -477,7 +506,6 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Standardize mobile/tablet switch breakpoint at 1023px (Tailwind lg boundary)
     const mq = window.matchMedia("(max-width: 1023px)");
     setIsMobile(mq.matches);
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
@@ -497,7 +525,8 @@ function NavLink({
   label: string; href: string; isActive: boolean; onClose: () => void;
   onMouseEnter: () => void; isMobile?: boolean;
 }) {
-  const isCurrentPage = typeof window !== "undefined" && window.location.pathname === href;
+  const pathname = usePathname();
+  const isCurrentPage = pathname === href;
   const [isTouched, setIsTouched] = useState(false);
   const highlighted = isActive || isCurrentPage || isTouched;
 

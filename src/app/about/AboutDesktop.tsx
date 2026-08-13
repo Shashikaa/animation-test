@@ -17,6 +17,9 @@ const Footer = dynamic(() => import("@/src/components/Footer"));
 
 const TOTAL_SCROLL_STEPS = 13;
 
+// QUADRATIC EASING MATCHING HOME DESKTOP
+const easeOutQuad = (t: number) => t * (2 - t);
+
 export default function AboutDesktop() {
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
   const scopeRef = useRef<HTMLDivElement>(null);
@@ -26,10 +29,11 @@ export default function AboutDesktop() {
   const layer6Ref = useRef<HTMLDivElement>(null);
   const layer7Ref = useRef<HTMLDivElement>(null);
 
-  const dimensionsRef = useRef({ ctaHeight: 0, footerHeight: 0, vh: 0 });
-  const progressRef = useRef(0);
+  const dimensionsRef = useRef({ ctaHeight: 0, footerHeight: 0, vh: 0, trackTopOffset: 0, totalScrollable: 0 });
+  const targetProgress = useRef(0);
   const revealedSections = useRef<Set<string>>(new Set());
   const lastSec5Idx = useRef<number>(-1);
+  const rafId = useRef<number | null>(null);
 
   const { smootherRef } = useSite();
   const { introDone, preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
@@ -38,13 +42,13 @@ export default function AboutDesktop() {
     unlockScrollEarlyMs: 1800,
   });
 
-  // ── 1. UNLOCK LENIS & FORCE INSTANT SCROLL RESPONSIVENESS ──
+  // ── 1. LENIS UNLOCK & SCROLL CONTROL ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
     if (!preloaderDone || !shouldLoadRest) {
       if (lenis && typeof lenis.stop === "function") lenis.stop();
-      progressRef.current = 0;
+      targetProgress.current = 0;
     } else {
       document.body.classList.remove("preloading");
       document.documentElement.classList.remove("preloading");
@@ -60,18 +64,22 @@ export default function AboutDesktop() {
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // ── 2. CACHE ELEMENT DIMENSIONS ──
+  // ── 2. METRICS CACHING (PREVENT LAYOUT THRASHING) ──
+  const measure = useCallback(() => {
+    if (!trackRef.current) return;
+    const rect = trackRef.current.getBoundingClientRect();
+    const vh = window.innerHeight;
+    dimensionsRef.current = {
+      ctaHeight: layer6Ref.current?.offsetHeight || vh,
+      footerHeight: layer7Ref.current?.offsetHeight || layer7Ref.current?.scrollHeight || vh,
+      vh,
+      trackTopOffset: window.scrollY + rect.top,
+      totalScrollable: rect.height - vh,
+    };
+  }, []);
+
   useEffect(() => {
     if (!shouldLoadRest) return;
-
-    const measure = () => {
-      dimensionsRef.current = {
-        ctaHeight: layer6Ref.current?.offsetHeight || window.innerHeight,
-        footerHeight: layer7Ref.current?.offsetHeight || layer7Ref.current?.scrollHeight || window.innerHeight,
-        vh: window.innerHeight,
-      };
-    };
-
     measure();
 
     const resizeObserver = new ResizeObserver(() => measure());
@@ -83,9 +91,9 @@ export default function AboutDesktop() {
       resizeObserver.disconnect();
       window.removeEventListener("resize", measure);
     };
-  }, [shouldLoadRest]);
+  }, [shouldLoadRest, measure]);
 
-  // ── 3. SECTION 5 TRIGGER HOOK ──
+  // ── 3. SECTION 5 HOOK ──
   const triggerSec5Hook = useCallback((nextIdx: number) => {
     if (nextIdx !== lastSec5Idx.current) {
       lastSec5Idx.current = nextIdx;
@@ -95,7 +103,8 @@ export default function AboutDesktop() {
     }
   }, []);
 
-  const triggerPlayOnceTextReveal = (
+  // ── 4. TEXT REVEALS ──
+  const triggerPlayOnceTextReveal = useCallback((
     containerSelector: string,
     currentStepProg: number,
     triggerThreshold: number
@@ -120,7 +129,7 @@ export default function AboutDesktop() {
         el.style.opacity = "1";
       });
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
@@ -145,11 +154,15 @@ export default function AboutDesktop() {
     };
   }, [shouldLoadRest]);
 
-  // ── 4. DIRECT GPU SCROLL RENDERING (LOCKED TO LENIS/LOCAL FRAME TICK) ──
+  // ── 5. ULTRA-SMOOTH CONTINUOUS LERP RENDER ENGINE (HOMEDESKTOP PARITY) ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
     const scope = scopeRef.current;
+    let isRunning = true;
+    let currentProgress = targetProgress.current;
+
+    // Cache elements
     const heroLeft = scope.querySelector<HTMLElement>(".about-hero-panel-left");
     const heroRight = scope.querySelector<HTMLElement>(".about-hero-panel-right");
     const heroBgs = scope.querySelectorAll<HTMLElement>(".about-hero-bg");
@@ -160,21 +173,29 @@ export default function AboutDesktop() {
     const secFive = scope.querySelector<HTMLElement>(".about-section-five");
     const s5Bg = scope.querySelector<HTMLElement>(".s5-bg");
 
-    let rafId: number | null = null;
+    // Hardware promote animated elements
+    [secTwo, secThree, secFour, secFive, s5Bg].forEach((el) => {
+      if (el) {
+        el.style.willChange = "transform, opacity, clip-path";
+        el.style.transform = "translate3d(0, 0, 0)";
+      }
+    });
 
     const renderTransforms = () => {
-      const stepProgress = progressRef.current * (TOTAL_SCROLL_STEPS - 1);
+      if (!isRunning) return;
+
+      // CONTINUOUS SILKY PHYSICS LERP INERTIA
+      currentProgress += (targetProgress.current - currentProgress) * 0.08;
+
+      const stepProgress = currentProgress * (TOTAL_SCROLL_STEPS - 1);
       const { ctaHeight, footerHeight, vh } = dimensionsRef.current;
 
-      // 1. HERO CURTAIN SPLIT (STEPS 0 -> 1)
-      const s1Prog = Math.min(Math.max(stepProgress, 0), 1);
+      // 1. HERO CURTAIN SPLIT
+      const s1Prog = easeOutQuad(Math.min(Math.max(stepProgress, 0), 1));
       if (heroLeft && heroRight) {
         const clipVal = (s1Prog * 100).toFixed(2);
-        heroLeft.style.setProperty("clip-path", `inset(0% 50% ${clipVal}% 0%)`, "important");
-        heroLeft.style.setProperty("-webkit-clip-path", `inset(0% 50% ${clipVal}% 0%)`, "important");
-
-        heroRight.style.setProperty("clip-path", `inset(${clipVal}% 0% 0% 50%)`, "important");
-        heroRight.style.setProperty("-webkit-clip-path", `inset(${clipVal}% 0% 0% 50%)`, "important");
+        heroLeft.style.clipPath = `inset(0% 50% ${clipVal}% 0%)`;
+        heroRight.style.clipPath = `inset(${clipVal}% 0% 0% 50%)`;
       }
 
       if (heroBgs && heroBgs.length > 0) {
@@ -185,40 +206,40 @@ export default function AboutDesktop() {
       }
       triggerPlayOnceTextReveal(".about-section-one", stepProgress, 0.4);
 
-      // 2. SECTION TWO (STEPS 1.2 -> 2.2)
-      const s2Prog = Math.min(Math.max((stepProgress - 1.2) / 1.0, 0), 1);
+      // 2. SECTION TWO
+      const s2Prog = easeOutQuad(Math.min(Math.max((stepProgress - 1.2) / 1.0, 0), 1));
       if (secTwo) {
         secTwo.style.visibility = stepProgress >= 1.0 ? "visible" : "hidden";
-        secTwo.style.transform = `translate3d(0, ${(1 - s2Prog) * 100}%, 0)`;
+        secTwo.style.transform = `translate3d(0, ${((1 - s2Prog) * 100).toFixed(3)}%, 0)`;
       }
       triggerPlayOnceTextReveal(".about-section-two", stepProgress, 1.8);
 
-      // 3. SECTION THREE (STEPS 2.4 -> 3.4)
-      const s3Prog = Math.min(Math.max((stepProgress - 2.4) / 1.0, 0), 1);
+      // 3. SECTION THREE
+      const s3Prog = easeOutQuad(Math.min(Math.max((stepProgress - 2.4) / 1.0, 0), 1));
       if (secThree) {
         secThree.style.visibility = stepProgress >= 2.2 ? "visible" : "hidden";
-        secThree.style.clipPath = `inset(${(1 - s3Prog) * 100}% 0% 0% 0%)`;
+        secThree.style.clipPath = `inset(${((1 - s3Prog) * 100).toFixed(2)}% 0% 0% 0%)`;
       }
       triggerPlayOnceTextReveal(".about-section-three", stepProgress, 3.0);
 
-      // 4. SECTION FOUR (STEPS 3.6 -> 4.6)
-      const s4Prog = Math.min(Math.max((stepProgress - 3.6) / 1.0, 0), 1);
+      // 4. SECTION FOUR
+      const s4Prog = easeOutQuad(Math.min(Math.max((stepProgress - 3.6) / 1.0, 0), 1));
       if (secFour) {
         secFour.style.visibility = stepProgress >= 3.4 ? "visible" : "hidden";
-        secFour.style.clipPath = `inset(${(1 - s4Prog) * 100}% 0% 0% 0%)`;
+        secFour.style.clipPath = `inset(${((1 - s4Prog) * 100).toFixed(2)}% 0% 0% 0%)`;
       }
       if (s4GlassCard) {
-        const glassProg = Math.min(Math.max((stepProgress - 4.0) / 0.6, 0), 1);
-        s4GlassCard.style.opacity = `${glassProg}`;
-        s4GlassCard.style.transform = `translate3d(0, ${(1 - glassProg) * 40}px, 0)`;
+        const glassProg = easeOutQuad(Math.min(Math.max((stepProgress - 4.0) / 0.6, 0), 1));
+        s4GlassCard.style.opacity = `${glassProg.toFixed(3)}`;
+        s4GlassCard.style.transform = `translate3d(0, ${((1 - glassProg) * 40).toFixed(2)}px, 0)`;
       }
       triggerPlayOnceTextReveal(".about-section-four", stepProgress, 4.2);
 
-      // 5. SECTION FIVE (STEPS 4.8 -> 5.8)
-      const s5Prog = Math.min(Math.max((stepProgress - 4.8) / 1.0, 0), 1);
+      // 5. SECTION FIVE
+      const s5Prog = easeOutQuad(Math.min(Math.max((stepProgress - 4.8) / 1.0, 0), 1));
       if (secFive) {
         secFive.style.visibility = stepProgress >= 4.6 ? "visible" : "hidden";
-        secFive.style.transform = `translate3d(0, ${(1 - s5Prog) * 100}%, 0)`;
+        secFive.style.transform = `translate3d(0, ${((1 - s5Prog) * 100).toFixed(3)}%, 0)`;
       }
 
       if (stepProgress >= 5.5 && stepProgress < 8.2) {
@@ -234,59 +255,58 @@ export default function AboutDesktop() {
 
       if (s5Bg) {
         const parallaxProg = Math.min(Math.max((stepProgress - 4.8) / 3.4, 0), 1);
-        s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
+        s5Bg.style.transform = `translate3d(0, ${(-parallaxProg * 50).toFixed(2)}%, 0)`;
       }
 
-      // 6. LAYER 6 (CTA) - STEPS 8.2 -> 10.0
-      const ctaProgress = Math.min(Math.max((stepProgress - 8.2) / 1.8, 0), 1);
+      // 6. LAYER 6 (CTA)
+      const ctaProgress = easeOutQuad(Math.min(Math.max((stepProgress - 8.2) / 1.8, 0), 1));
       if (layer6Ref.current) {
         const startY = vh;
         const endY = -(ctaHeight - vh);
         const currentY = startY + (endY - startY) * ctaProgress;
-        layer6Ref.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
+        layer6Ref.current.style.transform = `translate3d(0, ${currentY.toFixed(2)}px, 0)`;
       }
 
-      // 7. LAYER 7 (FOOTER) - STEPS 10.0 -> 12.0
-      const footerProgress = Math.min(Math.max((stepProgress - 10.0) / 2.0, 0), 1);
+      // 7. LAYER 7 (FOOTER)
+      const footerProgress = easeOutQuad(Math.min(Math.max((stepProgress - 10.0) / 2.0, 0), 1));
       if (layer7Ref.current) {
         const startY = vh;
         const endY = vh - footerHeight;
         const translateY = startY + (endY - startY) * footerProgress;
-        layer7Ref.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
+        layer7Ref.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
       }
+
+      // Keep RAF loop running endlessly for continuous momentum smoothing
+      rafId.current = requestAnimationFrame(renderTransforms);
     };
 
-    const handleScroll = () => {
-      if (!trackRef.current || !fixedFrameRef.current) return;
-
-      const trackRect = trackRef.current.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const totalScrollable = trackRect.height - vh;
+    const handleScroll = (e?: any) => {
+      const scrollY = e?.scroll !== undefined ? e.scroll : window.scrollY;
+      const { totalScrollable, trackTopOffset } = dimensionsRef.current;
 
       if (totalScrollable <= 0) return;
 
-      if (trackRect.top <= 0 && trackRect.bottom >= vh) {
-        fixedFrameRef.current.style.position = "fixed";
-        fixedFrameRef.current.style.top = "0px";
-        fixedFrameRef.current.style.bottom = "auto";
-      } else if (trackRect.bottom < vh) {
-        fixedFrameRef.current.style.position = "absolute";
-        fixedFrameRef.current.style.top = "auto";
-        fixedFrameRef.current.style.bottom = "0px";
-      } else {
-        fixedFrameRef.current.style.position = "absolute";
-        fixedFrameRef.current.style.top = "0px";
-        fixedFrameRef.current.style.bottom = "auto";
+      const relativeScroll = scrollY - trackTopOffset;
+      const trackBottom = relativeScroll + totalScrollable;
+
+      if (fixedFrameRef.current) {
+        if (relativeScroll >= 0 && trackBottom >= 0) {
+          fixedFrameRef.current.style.position = "fixed";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        } else if (trackBottom < 0) {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "auto";
+          fixedFrameRef.current.style.bottom = "0px";
+        } else {
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
+        }
       }
 
-      const currentScroll = Math.max(0, -trackRect.top);
-      progressRef.current = Math.min(Math.max(currentScroll / totalScrollable, 0), 1);
-
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(renderTransforms);
+      targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
     };
-
-    handleScroll();
 
     const lenis = smootherRef?.current;
     if (lenis && typeof lenis.on === "function") {
@@ -295,8 +315,12 @@ export default function AboutDesktop() {
       window.addEventListener("scroll", handleScroll, { passive: true });
     }
 
+    handleScroll();
+    rafId.current = requestAnimationFrame(renderTransforms);
+
     return () => {
-      if (rafId) cancelAnimationFrame(rafId);
+      isRunning = false;
+      if (rafId.current) cancelAnimationFrame(rafId.current);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
       } else {
@@ -306,7 +330,7 @@ export default function AboutDesktop() {
         delete (window as any)._sec5GoTo;
       }
     };
-  }, [shouldLoadRest, smootherRef, triggerSec5Hook]);
+  }, [shouldLoadRest, smootherRef, triggerSec5Hook, triggerPlayOnceTextReveal]);
 
   const isReady = preloaderDone && introDone;
 
@@ -334,7 +358,7 @@ export default function AboutDesktop() {
             <>
               {/* SECTION ONE */}
               <div
-                className="about-section-one absolute inset-0 h-full w-full structural-layer bg-[#162D24] transform-gpu"
+                className="about-section-one absolute inset-0 h-full w-full structural-layer bg-[#162D24] transform-gpu will-change-transform"
                 style={{ zIndex: 10 }}
               >
                 <SectionOne />
@@ -342,7 +366,7 @@ export default function AboutDesktop() {
 
               {/* SECTION TWO */}
               <div
-                className="about-section-two absolute inset-0 h-full w-full structural-layer transform-gpu"
+                className="about-section-two absolute inset-0 h-full w-full structural-layer transform-gpu will-change-transform"
                 style={{ zIndex: 30, visibility: "hidden", transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionTwo />
@@ -350,7 +374,7 @@ export default function AboutDesktop() {
 
               {/* SECTION THREE */}
               <div
-                className="about-section-three absolute inset-0 h-full w-full structural-layer transform-gpu"
+                className="about-section-three absolute inset-0 h-full w-full structural-layer transform-gpu will-change-[clip-path]"
                 style={{ zIndex: 40, visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)" }}
               >
                 <SectionThree />
@@ -358,7 +382,7 @@ export default function AboutDesktop() {
 
               {/* SECTION FOUR */}
               <div
-                className="about-section-four absolute inset-0 h-full w-full structural-layer transform-gpu"
+                className="about-section-four absolute inset-0 h-full w-full structural-layer transform-gpu will-change-[clip-path]"
                 style={{ zIndex: 50, visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)" }}
               >
                 <SectionFour />
@@ -366,7 +390,7 @@ export default function AboutDesktop() {
 
               {/* SECTION FIVE */}
               <div
-                className="about-section-five absolute inset-0 h-full w-full structural-layer transform-gpu"
+                className="about-section-five absolute inset-0 h-full w-full structural-layer transform-gpu will-change-transform"
                 style={{ zIndex: 60, visibility: "hidden", transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionFive isActive={isSectionFiveActive} />
@@ -375,7 +399,7 @@ export default function AboutDesktop() {
               {/* SECTION CTA */}
               <div
                 ref={layer6Ref}
-                className="about-section-cta absolute left-0 top-0 w-full z-[90] transform-gpu"
+                className="about-section-cta absolute left-0 top-0 w-full z-[90] transform-gpu will-change-transform"
                 style={{ transform: "translate3d(0, 100vh, 0)" }}
               >
                 <SectionCTA preloaderDone={isReady} />
@@ -384,7 +408,7 @@ export default function AboutDesktop() {
               {/* FOOTER */}
               <div
                 ref={layer7Ref}
-                className="about-footer-wrap absolute left-0 top-0 w-full z-[100] transform-gpu"
+                className="about-footer-wrap absolute left-0 top-0 w-full z-[100] transform-gpu will-change-transform"
                 style={{ transform: "translate3d(0, 100vh, 0)" }}
               >
                 <Footer />

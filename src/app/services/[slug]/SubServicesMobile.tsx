@@ -10,7 +10,6 @@ import { FullServiceData } from "./data";
 
 const SubServiceSectionOne = dynamic(() => import("@/src/components/Service/SubServiceSectionOne"));
 const SubServiceFAQSection = dynamic(() => import("@/src/components/Service/SubServiceFAQSection"));
-const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
 const easeOutQuad = (t: number) => t * (2 - t);
@@ -27,10 +26,20 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
   const heroPanelRef = useRef<HTMLDivElement>(null);
   const sectionOneRef = useRef<HTMLDivElement>(null);
   const faqSectionRef = useRef<HTMLDivElement>(null);
-  const ctaLayerRef = useRef<HTMLDivElement>(null);
   const footerLayerRef = useRef<HTMLDivElement>(null);
 
-  const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
+  // Cached DOM element references
+  const heroTextWrapRef = useRef<HTMLElement | null>(null);
+  const heroTopLayerRef = useRef<HTMLElement | null>(null);
+  const heroBgRef = useRef<HTMLElement | null>(null);
+
+  const s10ParaTopRef = useRef<HTMLElement | null>(null);
+  const s10TitleRef = useRef<HTMLElement | null>(null);
+  const s10ImgInnerWrapRef = useRef<HTMLElement | null>(null);
+  const s10ImgElementRef = useRef<HTMLElement | null>(null);
+  const seqContainerRef = useRef<HTMLElement | null>(null);
+
+  const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0, vw: 0 });
   const targetProgress = useRef(0);
   const rafId = useRef<number | null>(null);
 
@@ -41,6 +50,13 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     unlockScrollEarlyMs: 1800,
   });
 
+  // Prevent scroll jumps on page refresh
+  useEffect(() => {
+    if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+  }, []);
+
   useEffect(() => {
     if (!introDone) return;
     return () => {
@@ -50,7 +66,22 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     };
   }, [introDone]);
 
-  // 1. UNLOCK LENIS & INITIALIZE
+  // Cache DOM elements
+  useEffect(() => {
+    if (!shouldLoadRest || !scopeRef.current) return;
+
+    heroTextWrapRef.current = scopeRef.current.querySelector<HTMLElement>(".hero-text-wrap");
+    heroTopLayerRef.current = scopeRef.current.querySelector<HTMLElement>(".services-hero-top-layer");
+    heroBgRef.current = scopeRef.current.querySelector<HTMLElement>(".service-hero-bg");
+
+    s10ParaTopRef.current = scopeRef.current.querySelector<HTMLElement>(".s10-para-top");
+    s10TitleRef.current = scopeRef.current.querySelector<HTMLElement>(".s10-title");
+    s10ImgInnerWrapRef.current = scopeRef.current.querySelector<HTMLElement>(".s10-img-inner-wrap");
+    s10ImgElementRef.current = scopeRef.current.querySelector<HTMLElement>(".s10-img-element");
+    seqContainerRef.current = scopeRef.current.querySelector<HTMLElement>(".s10-seq-container");
+  }, [shouldLoadRest]);
+
+  // Handle Lenis smooth scrolling
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -72,14 +103,16 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // 2. CACHE METRICS
+  // Cache track metrics
   const updateMetrics = useCallback(() => {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
     const vh = window.innerHeight;
+    const vw = window.innerWidth;
     scrollMetricsRef.current = {
       totalScrollable: rect.height - vh,
       vh,
+      vw,
       trackTopOffset: window.scrollY + rect.top,
     };
   }, []);
@@ -91,37 +124,34 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     return () => window.removeEventListener("resize", updateMetrics);
   }, [shouldLoadRest, updateMetrics]);
 
-  // 3. GPU-ACCELERATED RENDER LOOP (FAQ MATOHES CTA DYNAMIC HEIGHT TRANSLATION)
+  // 60FPS Render Loop
   useEffect(() => {
     if (!shouldLoadRest) return;
 
     const render = () => {
       const currentProg = targetProgress.current;
-      const totalSteps = 8.0;
+      const totalSteps = 7.0;
       const stepProgress = currentProg * totalSteps;
 
       const { vh } = scrollMetricsRef.current;
 
       // --- STEP 1: HERO TOP LAYER CLIP / TEXT FADE (0.0 -> 1.0) ---
-      const heroTextWrap = scopeRef.current?.querySelector<HTMLElement>(".hero-text-wrap");
-      const heroTopLayer = scopeRef.current?.querySelector<HTMLElement>(".services-hero-top-layer");
-      const heroBg = scopeRef.current?.querySelector<HTMLElement>(".service-hero-bg");
-
       const heroPhase1Prog = Math.min(Math.max(stepProgress / 1.0, 0), 1);
-      if (heroTextWrap) {
-        heroTextWrap.style.opacity = `${1 - heroPhase1Prog}`;
-        heroTextWrap.style.transform = `translate3d(0, ${-30 * heroPhase1Prog}px, 0)`;
-        heroTextWrap.style.visibility = heroPhase1Prog >= 1 ? "hidden" : "visible";
+
+      if (heroTextWrapRef.current) {
+        heroTextWrapRef.current.style.opacity = `${1 - heroPhase1Prog}`;
+        heroTextWrapRef.current.style.transform = `translate3d(0, ${-30 * heroPhase1Prog}px, 0)`;
+        heroTextWrapRef.current.style.visibility = heroPhase1Prog >= 1 ? "hidden" : "visible";
       }
 
-      if (heroTopLayer) {
+      if (heroTopLayerRef.current) {
         const layerWidthProg = (1 - heroPhase1Prog) * 100;
-        heroTopLayer.style.clipPath = `inset(0% 0% 0% ${100 - layerWidthProg}%)`;
+        heroTopLayerRef.current.style.clipPath = `inset(0% 0% 0% ${100 - layerWidthProg}%)`;
       }
 
-      if (heroBg) {
+      if (heroBgRef.current) {
         const bgScale = 1.1 - heroPhase1Prog * 0.1;
-        heroBg.style.transform = `scale(${bgScale})`;
+        heroBgRef.current.style.transform = `scale(${bgScale})`;
       }
 
       // --- STEP 2: SECTION ONE SLIDES UP OVER HERO (1.0 -> 2.0) ---
@@ -134,73 +164,64 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         heroPanelRef.current.style.transform = `translate3d(0, ${-s1Prog * 15}%, 0)`;
       }
 
-      // --- STEP 3: SECTION ONE EXPANSION & INNER ANIMATIONS (2.0 -> 5.0) ---
-      const s10ParaTop = scopeRef.current?.querySelector<HTMLElement>(".s10-para-top");
-      const s10Title = scopeRef.current?.querySelector<HTMLElement>(".s10-title");
-      const s10ImgContainer = scopeRef.current?.querySelector<HTMLElement>(".s10-img-absolute-container");
-      const s10ImgElement = scopeRef.current?.querySelector<HTMLElement>(".s10-img-element");
-      const seqContainer = scopeRef.current?.querySelector<HTMLElement>(".s10-seq-container");
-
+      // --- STEP 3: SECTION ONE FULLSCREEN EXPANSION & TEXT ANIMATIONS (2.0 -> 5.0) ---
       if (stepProgress < 2.0) {
-        if (s10ParaTop) {
-          s10ParaTop.style.opacity = "1";
-          s10ParaTop.style.transform = "translate3d(0, 0px, 0)";
+        if (s10ParaTopRef.current) {
+          s10ParaTopRef.current.style.opacity = "1";
+          s10ParaTopRef.current.style.transform = "translate3d(0, 0px, 0)";
         }
-        if (s10Title) {
-          s10Title.style.opacity = "1";
-          s10Title.style.transform = "translate3d(0, 0px, 0)";
+        if (s10TitleRef.current) {
+          s10TitleRef.current.style.opacity = "1";
+          s10TitleRef.current.style.transform = "translate3d(0, 0px, 0)";
         }
-        if (s10ImgContainer) {
-          s10ImgContainer.style.width = "";
-          s10ImgContainer.style.height = "";
-          s10ImgContainer.style.right = "";
-          s10ImgContainer.style.bottom = "";
-          s10ImgContainer.style.borderRadius = "0px";
+        if (s10ImgInnerWrapRef.current) {
+          s10ImgInnerWrapRef.current.style.right = "4vw";
+          s10ImgInnerWrapRef.current.style.bottom = "10vh";
+          s10ImgInnerWrapRef.current.style.width = "calc(100vw - 8vw)";
+          s10ImgInnerWrapRef.current.style.height = "220px";
         }
-        if (s10ImgElement) {
-          s10ImgElement.style.transform = "scale(1.0)";
+        if (s10ImgElementRef.current) {
+          s10ImgElementRef.current.style.transform = "scale(1.15)";
         }
-        if (seqContainer) {
-          seqContainer.style.transform = "translate3d(0, 0px, 0)";
+        if (seqContainerRef.current) {
+          seqContainerRef.current.style.transform = "translate3d(0, 0px, 0)";
         }
       } else {
         const expandProg = Math.min(Math.max((stepProgress - 2.0) / 1.0, 0), 1);
 
-        if (s10ParaTop) {
-          s10ParaTop.style.opacity = `${1 - expandProg}`;
-          s10ParaTop.style.transform = `translate3d(0, ${-35 * expandProg}px, 0)`;
+        if (s10ParaTopRef.current) {
+          s10ParaTopRef.current.style.opacity = `${1 - expandProg}`;
+          s10ParaTopRef.current.style.transform = `translate3d(0, ${-35 * expandProg}px, 0)`;
         }
-        if (s10Title) {
-          s10Title.style.opacity = `${1 - expandProg}`;
-          s10Title.style.transform = `translate3d(0, ${-35 * expandProg}px, 0)`;
-        }
-        if (s10ImgContainer) {
-          const initialWidth = window.innerWidth * 0.92;
-          const initialHeight = 220;
-          const currentWidth = initialWidth + (window.innerWidth - initialWidth) * expandProg;
-          const currentHeight = initialHeight + (vh - initialHeight) * expandProg;
-          const currentRight = (1 - expandProg) * (window.innerWidth * 0.04);
-          const currentBottom = (1 - expandProg) * (vh * 0.1);
-
-          s10ImgContainer.style.width = `${currentWidth}px`;
-          s10ImgContainer.style.height = `${currentHeight}px`;
-          s10ImgContainer.style.right = `${currentRight}px`;
-          s10ImgContainer.style.bottom = `${currentBottom}px`;
-          s10ImgContainer.style.borderRadius = "0px";
+        if (s10TitleRef.current) {
+          s10TitleRef.current.style.opacity = `${1 - expandProg}`;
+          s10TitleRef.current.style.transform = `translate3d(0, ${-35 * expandProg}px, 0)`;
         }
 
-        if (s10ImgElement) {
-          s10ImgElement.style.transform = `scale(${1.0 + expandProg * 0.06})`;
+        // Smoothly expand inner wrap on mobile to fill 100vw x 100vh full screen
+        if (s10ImgInnerWrapRef.current) {
+          const currentRight = (1 - expandProg) * 4;   // 4vw -> 0vw
+          const currentBottom = (1 - expandProg) * 10; // 10vh -> 0vh
+
+          s10ImgInnerWrapRef.current.style.right = `${currentRight}vw`;
+          s10ImgInnerWrapRef.current.style.bottom = `${currentBottom}vh`;
+          s10ImgInnerWrapRef.current.style.width = `calc((100vw - 8vw) + 8vw * ${expandProg})`;
+          s10ImgInnerWrapRef.current.style.height = `calc(220px + (100vh - 220px) * ${expandProg})`;
         }
 
-        if (seqContainer) {
+        if (s10ImgElementRef.current) {
+          const innerScale = 1.15 - expandProg * 0.15;
+          s10ImgElementRef.current.style.transform = `scale(${innerScale})`;
+        }
+
+        if (seqContainerRef.current) {
           const textProg = Math.min(Math.max((stepProgress - 3.0) / 2.0, 0), 1);
           const seqY = -textProg * 1240;
-          seqContainer.style.transform = `translate3d(0, ${seqY}px, 0)`;
+          seqContainerRef.current.style.transform = `translate3d(0, ${seqY}px, 0)`;
         }
       }
 
-      // --- STEP 4: FAQ SECTION REVEAL (IDENTICAL TRANSFORM MATH TO CTA) (5.0 -> 6.0) ---
+      // --- STEP 4: FAQ SECTION REVEAL (5.0 -> 6.0) ---
       const faqProg = easeOutQuad(Math.min(Math.max(stepProgress - 5.0, 0), 1));
       if (faqSectionRef.current) {
         const faqHeight = faqSectionRef.current.offsetHeight || vh;
@@ -214,18 +235,8 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         sectionOneRef.current.style.transform = `translate3d(0, ${-faqProg * 15}%, 0)`;
       }
 
-      // --- STEP 5: CTA REVEAL (6.0 -> 7.0) ---
-      const ctaProg = easeOutQuad(Math.min(Math.max(stepProgress - 6.0, 0), 1));
-      if (ctaLayerRef.current) {
-        const ctaHeight = ctaLayerRef.current.offsetHeight || vh;
-        const startY = vh;
-        const endY = -(ctaHeight - vh);
-        const currentY = startY + (endY - startY) * ctaProg;
-        ctaLayerRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
-      }
-
-      // --- STEP 6: FOOTER REVEAL (7.0 -> 8.0) ---
-      const footerProg = easeOutQuad(Math.min(Math.max(stepProgress - 7.0, 0), 1));
+      // --- STEP 5: FOOTER REVEAL (6.0 -> 7.0) ---
+      const footerProg = easeOutQuad(Math.min(Math.max(stepProgress - 6.0, 0), 1));
       if (footerLayerRef.current) {
         const footerHeight = footerLayerRef.current.offsetHeight || vh;
         const startY = vh;
@@ -291,7 +302,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
       <div
         ref={trackRef}
         className="services-track-container relative w-full"
-        style={{ height: "800vh" }}
+        style={{ height: "700vh" }}
       >
         <div
           ref={fixedFrameRef}
@@ -316,7 +327,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
                 <SubServiceSectionOne data={pageData.sectionOne} />
               </div>
 
-              {/* Layer 3: Dynamic Height FAQ Section */}
+              {/* Layer 3: Dynamic FAQ Section */}
               <div
                 ref={faqSectionRef}
                 className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-30 will-change-transform"
@@ -325,19 +336,10 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
                 <SubServiceFAQSection data={pageData.sectionTwo} />
               </div>
 
-              {/* Layer 4: Section CTA */}
-              <div
-                ref={ctaLayerRef}
-                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[95] will-change-transform"
-                style={{ transform: "translate3d(0, 100vh, 0)" }}
-              >
-                <SectionCTA />
-              </div>
-
-              {/* Layer 5: Footer */}
+              {/* Layer 4: Footer */}
               <div
                 ref={footerLayerRef}
-                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[96] will-change-transform"
+                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[95] will-change-transform"
                 style={{ transform: "translate3d(0, 100vh, 0)" }}
               >
                 <Footer />

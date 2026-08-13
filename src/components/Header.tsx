@@ -134,6 +134,7 @@ interface HeaderProps {
 export default function Header({
   onMenuClick,
   onLogoClick,
+  onContactClick,
   logoHref    = "/",
   visible     = true,
   menuOpen    = false,
@@ -162,6 +163,23 @@ export default function Header({
     return () => window.removeEventListener("scroll", handleScrollClass);
   }, []);
 
+  const handleContactBtnClick = () => {
+    if (typeof window !== "undefined" && window.location.pathname === "/contact") {
+      const contactElem = document.getElementById("contact-section");
+      if (contactElem) {
+        contactElem.scrollIntoView({ behavior: "smooth" });
+      } else {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      }
+    } else {
+      setModalOpen(true);
+    }
+
+    if (onContactClick) {
+      onContactClick();
+    }
+  };
+
   const showGlass = hovered || menuOpen || isScrolled;
 
   return (
@@ -184,6 +202,29 @@ export default function Header({
           #header-logo-inner #h-grand svg,
           #header-logo-inner #h-pools svg { width: 100% !important; height: auto !important; overflow: visible !important; }
           #header-logo-inner #h-icon-svg svg { height: 25px !important; width: auto !important; flex-shrink: 0; overflow: visible !important; }
+        }
+
+        .header-contact-btn {
+          color: ${LOGO_COLOR};
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          padding: 6px 12px;
+          transition: opacity 0.25s ease;
+          display: block;
+        }
+
+        .header-contact-btn:hover {
+          opacity: 0.72;
+        }
+
+        @media (min-width: 1025px) {
+          .header-contact-btn {
+            display: none !important;
+          }
         }
       `}</style>
       <motion.header
@@ -217,7 +258,15 @@ export default function Header({
           href={logoHref}
           logoVisible={logoVisible}
         />
-        <div className="relative z-[2] flex items-center gap-0 md:gap-6">
+        <div className="relative z-[2] flex items-center gap-1 md:gap-4">
+          <button 
+            type="button" 
+            onClick={handleContactBtnClick}
+            className="header-contact-btn"
+            aria-label="Contact us"
+          >
+            Contact
+          </button>
           <MenuIcon onClick={onMenuClick} />
         </div>
       </motion.header>

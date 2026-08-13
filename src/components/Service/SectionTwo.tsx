@@ -21,8 +21,8 @@ const slides = [
   },
 ];
 
-const CLIP_DURATION = 0.65;
-const TEXT_DURATION = 0.55;
+// Reduced duration slightly for responsive transitions
+const TRANSITION_DURATION = 0.6; 
 
 type SectionTwoProps = {
   isActive: boolean;
@@ -73,54 +73,8 @@ function splitElementIntoLines(el: HTMLElement) {
 export default function SectionTwo({ isActive }: SectionTwoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const currentRef = useRef<number>(0);
+  const isAnimatingRef = useRef<boolean>(false);
   const [current, setCurrent] = useState(0);
-
-  const animateTextIn = useCallback((index: number) => {
-    if (!containerRef.current) return;
-
-    slides.forEach((_, i) => {
-      const groupEl = containerRef.current?.querySelector(`.s3-text-group-${i + 1}`) as HTMLElement;
-      if (groupEl) {
-        const isTarget = i === index;
-        gsap.to(groupEl, {
-          opacity: isTarget ? 1 : 0,
-          duration: TEXT_DURATION * 0.8,
-          ease: "power2.out",
-          overwrite: "auto",
-          onStart: () => {
-            if (isTarget) {
-              groupEl.style.visibility = "visible";
-              groupEl.style.pointerEvents = "auto";
-            }
-          },
-          onComplete: () => {
-            if (!isTarget) {
-              groupEl.style.visibility = "hidden";
-              groupEl.style.pointerEvents = "none";
-            }
-          },
-        });
-      }
-    });
-
-    const targets = containerRef.current.querySelectorAll(
-      `.s3-text-group-${index + 1} .gs-line-inner`
-    );
-
-    gsap.killTweensOf(targets);
-    gsap.fromTo(
-      targets,
-      { y: 25, opacity: 0 },
-      {
-        y: 0,
-        opacity: 1,
-        duration: TEXT_DURATION,
-        ease: "power2.out",
-        stagger: 0.04,
-        overwrite: "auto",
-      }
-    );
-  }, []);
 
   const goTo = useCallback((next: number) => {
     const prev = currentRef.current;
@@ -128,75 +82,167 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
 
     currentRef.current = next;
     setCurrent(next);
+    isAnimatingRef.current = true;
 
     const targetPanels = [".s2-desktop-section", ".s3-mobile-section"];
 
+    // ── 1. SMOOTH SLIDE TRANSITION ──
     targetPanels.forEach((panel) => {
       slides.forEach((_, i) => {
-        const bgEl = containerRef.current!.querySelector(`${panel} .s3-bg-${i + 1}`) as HTMLElement;
-        if (!bgEl) return;
+        const bgEl = containerRef.current!.querySelector(
+          `${panel} .s3-bg-${i + 1}`
+        ) as HTMLElement;
+        const imgEl = bgEl?.querySelector(".s3-img-inner") as HTMLElement;
+        if (!bgEl || !imgEl) return;
 
-        gsap.killTweensOf(bgEl);
+        gsap.killTweensOf([bgEl, imgEl]);
 
         if (i === next) {
-          bgEl.style.zIndex = "2";
-          bgEl.style.visibility = "visible";
+          gsap.set(bgEl, { zIndex: 2, visibility: "visible", opacity: 1 });
 
           gsap.fromTo(
             bgEl,
-            { clipPath: "inset(100% 0 0 0)" },
+            { yPercent: next > prev ? 100 : -100 },
             {
-              clipPath: "inset(0% 0 0 0)",
-              duration: CLIP_DURATION,
-              ease: "power2.inOut",
+              yPercent: 0,
+              duration: TRANSITION_DURATION,
+              ease: "power3.inOut",
+              onComplete: () => {
+                isAnimatingRef.current = false;
+              },
+            }
+          );
+
+          gsap.fromTo(
+            imgEl,
+            { yPercent: next > prev ? -100 : 100, scale: 1.05 },
+            {
+              yPercent: 0,
+              scale: 1,
+              duration: TRANSITION_DURATION,
+              ease: "power3.inOut",
             }
           );
         } else if (i === prev) {
-          bgEl.style.zIndex = "1";
-          gsap.to(bgEl, {
-            duration: CLIP_DURATION,
-            ease: "power2.inOut",
-            onComplete: () => {
-              bgEl.style.zIndex = "0";
-              bgEl.style.visibility = "hidden";
-            },
+          gsap.set(bgEl, {
+            zIndex: 1,
+            visibility: "visible",
+            opacity: 1,
+            yPercent: 0,
           });
+          gsap.set(imgEl, { yPercent: 0, scale: 1 });
         } else {
-          bgEl.style.zIndex = "0";
-          bgEl.style.visibility = "hidden";
-          bgEl.style.clipPath = "inset(100% 0 0 0)";
+          gsap.set(bgEl, {
+            zIndex: 0,
+            visibility: "hidden",
+            opacity: 1,
+            yPercent: -100,
+          });
+          gsap.set(imgEl, { yPercent: 100 });
         }
       });
     });
 
-    const prevTargets = containerRef.current.querySelectorAll(`.s3-text-group-${prev + 1} .gs-line-inner`);
-    if (prevTargets) {
-      gsap.killTweensOf(prevTargets);
-      gsap.to(prevTargets, {
-        y: -20,
+    // ── 2. TEXT OUT TRANSITION ──
+    const prevGroup = containerRef.current.querySelector(`.s3-text-group-${prev + 1}`);
+    const prevLines = containerRef.current.querySelectorAll(
+      `.s3-text-group-${prev + 1} .gs-line-inner`
+    );
+
+    if (prevGroup && prevLines.length > 0) {
+      gsap.killTweensOf([prevGroup, prevLines]);
+      gsap.to(prevLines, {
+        y: -15,
         opacity: 0,
-        duration: TEXT_DURATION * 0.6,
+        duration: 0.2,
         ease: "power2.in",
+        stagger: 0.015,
+      });
+
+      gsap.to(prevGroup, {
+        opacity: 0,
+        duration: 0.2,
+        ease: "power2.in",
+        onComplete: () => {
+          gsap.set(prevGroup, { visibility: "hidden", pointerEvents: "none" });
+        },
       });
     }
 
-    animateTextIn(next);
-  }, [animateTextIn]);
+    // ── 3. TEXT IN TRANSITION ──
+    const nextGroup = containerRef.current.querySelector(
+      `.s3-text-group-${next + 1}`
+    ) as HTMLElement;
+    const nextLines = containerRef.current.querySelectorAll(
+      `.s3-text-group-${next + 1} .gs-line-inner`
+    );
 
+    if (nextGroup) {
+      gsap.killTweensOf([nextGroup, nextLines]);
+      gsap.set(nextGroup, { visibility: "visible", pointerEvents: "auto" });
+
+      gsap.to(nextGroup, {
+        opacity: 1,
+        duration: 0.3,
+        delay: 0.1,
+        ease: "power2.out",
+      });
+
+      if (nextLines.length > 0) {
+        gsap.fromTo(
+          nextLines,
+          { y: 20, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.35,
+            delay: 0.15,
+            ease: "power2.out",
+            stagger: 0.02,
+          }
+        );
+      }
+    }
+  }, []);
+
+  // Split-text DOM setup & initial slide state
   useEffect(() => {
     if (!containerRef.current) return;
 
     const timeout = setTimeout(() => {
       if (!containerRef.current) return;
-      const splitTargets = containerRef.current.querySelectorAll<HTMLElement>(".split-text-target");
+
+      const splitTargets =
+        containerRef.current.querySelectorAll<HTMLElement>(".split-text-target");
       splitTargets.forEach((el) => splitElementIntoLines(el));
 
+      const targetPanels = [".s2-desktop-section", ".s3-mobile-section"];
+      targetPanels.forEach((panel) => {
+        slides.forEach((_, i) => {
+          const bgEl = containerRef.current!.querySelector(
+            `${panel} .s3-bg-${i + 1}`
+          ) as HTMLElement;
+          const imgEl = bgEl?.querySelector(".s3-img-inner") as HTMLElement;
+          if (!bgEl || !imgEl) return;
+
+          if (i === 0) {
+            gsap.set(bgEl, { zIndex: 1, visibility: "visible", yPercent: 0 });
+            gsap.set(imgEl, { yPercent: 0 });
+          } else {
+            gsap.set(bgEl, { zIndex: 0, visibility: "hidden", yPercent: -100 });
+            gsap.set(imgEl, { yPercent: 100 });
+          }
+        });
+      });
+
       slides.forEach((_, i) => {
-        const targets = containerRef.current!.querySelectorAll(`.s3-text-group-${i + 1} .gs-line-inner`);
+        const targets = containerRef.current!.querySelectorAll(
+          `.s3-text-group-${i + 1} .gs-line-inner`
+        );
         if (i === 0) {
           gsap.set(targets, { y: 0, opacity: 1 });
         } else {
-          gsap.set(targets, { y: 25, opacity: 0 });
+          gsap.set(targets, { y: 20, opacity: 0 });
         }
       });
     }, 50);
@@ -204,6 +250,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
     return () => clearTimeout(timeout);
   }, []);
 
+  // Global trigger hook for parent scroll listener
   useEffect(() => {
     (window as any)._sec2GoTo = (targetIdx: number) => {
       if (targetIdx === currentRef.current) return;
@@ -214,18 +261,14 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
     };
   }, [goTo]);
 
-  useEffect(() => {
-    if (isActive && containerRef.current) {
-      animateTextIn(currentRef.current);
-    }
-  }, [isActive, animateTextIn]);
-
   const renderTextContent = () => (
     <div className="absolute bottom-[10%] left-[5%] md:left-[8%] right-[5%] z-10 pointer-events-none max-w-6xl">
       {slides.map((slide, i) => (
         <div
           key={i}
-          className={`s3-text-group s3-text-group-${i + 1} flex flex-col items-start gap-4 md:gap-8 lg:gap-12`}
+          className={`s3-text-group s3-text-group-${
+            i + 1
+          } flex flex-col items-start gap-4 md:gap-8 lg:gap-12`}
           style={{
             position: i === 0 ? "relative" : "absolute",
             bottom: 0,
@@ -245,8 +288,10 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               {slides.map((_, barIdx) => (
                 <div
                   key={barIdx}
-                  className={`w-[2px] transition-all duration-300 ease-out ${
-                    current === barIdx ? "bg-white h-4 opacity-100" : "bg-white/30 h-4 opacity-40"
+                  className={`w-[2px] transition-all duration-500 ease-out ${
+                    current === barIdx
+                      ? "bg-white h-5 opacity-100"
+                      : "bg-white/30 h-3 opacity-40"
                   }`}
                 />
               ))}
@@ -266,69 +311,61 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
   return (
     <div ref={containerRef} className="w-full h-full">
       {/* DESKTOP LAYOUT */}
-      <section
-        className="s2-desktop-section hidden md:block w-full h-screen relative overflow-hidden bg-transparent"
-        style={{ visibility: "hidden" }}
-      >
-        <div className="absolute inset-0 z-10 flex flex-row w-full h-full pointer-events-none">
-          <div
-            className="s2-left-panel absolute left-0 top-0 w-1/2 h-full overflow-hidden bg-black"
-            style={{ willChange: "transform" }}
-          >
-            <img src={slides[0].img} alt="" aria-hidden className="absolute inset-0 w-[200%] h-full object-cover max-w-none" style={{ left: "0%" }} />
-            <div className="absolute top-0 h-full z-[2] w-[200%]" style={{ left: "0%", background: "linear-gradient(2.13deg, #19211C 3.01%, rgba(21, 40, 31, 0) 59.11%)" }} />
-          </div>
-          
-          <div
-            className="s2-right-panel absolute right-0 top-0 w-1/2 h-full overflow-hidden bg-black"
-            style={{ willChange: "transform" }}
-          >
-            <img src={slides[0].img} alt="" aria-hidden className="absolute inset-0 w-[200%] h-full object-cover max-w-none" style={{ left: "-100%" }} />
-            <div className="absolute top-0 h-full z-[2] w-[200%]" style={{ left: "-100%", background: "linear-gradient(2.13deg, #19211C 3.01%, rgba(21, 40, 31, 0) 59.11%)" }} />
-          </div>
-        </div>
-
-        <div className="absolute inset-0 z-20 w-full h-full pointer-events-none">
+      <section className="s2-desktop-section hidden md:block w-full h-screen relative overflow-hidden bg-transparent">
+        <div className="absolute inset-0 z-20 w-full h-full pointer-events-none overflow-hidden">
           {slides.map((slide, i) => (
             <div
               key={i}
-              className={`s3-bg s3-bg-${i + 1} absolute inset-0 w-full h-full`}
-              style={{ 
-                zIndex: i === 0 ? 1 : 0, 
-                clipPath: i === 0 ? "inset(0 0 0 0)" : "inset(100% 0 0 0)",
-                visibility: i === 0 ? "visible" : "hidden"
-              }} 
+              className={`s3-bg s3-bg-${
+                i + 1
+              } absolute inset-0 w-full h-full overflow-hidden will-change-transform transform-gpu`}
             >
-              <img src={slide.img} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover" />
-              <div className="absolute inset-0 z-[2]" style={{ background: "linear-gradient(2.13deg, #19211C 3.01%, rgba(21, 40, 31, 0) 59.11%)" }} />
+              <div className="s3-img-inner absolute inset-0 w-full h-full overflow-hidden will-change-transform transform-gpu">
+                <img
+                  src={slide.img}
+                  alt=""
+                  aria-hidden
+                  className="absolute inset-0 w-full h-full object-cover transform-gpu backface-hidden"
+                />
+                <div
+                  className="absolute inset-0 z-[2]"
+                  style={{
+                    background:
+                      "linear-gradient(2.13deg, #19211C 3.01%, rgba(21, 40, 31, 0) 59.11%)",
+                  }}
+                />
+              </div>
             </div>
           ))}
         </div>
 
-        <div className="s2-inner-fade-target absolute inset-0 z-30 w-full h-full pointer-events-none" style={{ opacity: 1 }}>
+        <div className="s2-inner-fade-target absolute inset-0 z-30 w-full h-full pointer-events-none">
           {renderTextContent()}
         </div>
       </section>
 
       {/* MOBILE LAYOUT */}
       <section className="s3-mobile-section flex md:hidden flex-col w-full h-full relative overflow-hidden bg-black">
-        <div className="absolute inset-0 w-full h-full z-0">
+        <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
           {slides.map((slide, i) => (
             <div
               key={i}
-              className={`s3-bg s3-bg-${i + 1} absolute inset-0 w-full h-full`}
-              style={{ 
-                zIndex: i === 0 ? 1 : 0, 
-                clipPath: i === 0 ? "inset(0 0 0 0)" : "inset(100% 0 0 0)",
-                visibility: i === 0 ? "visible" : "hidden"
-              }}
+              className={`s3-bg s3-bg-${
+                i + 1
+              } absolute inset-0 w-full h-full overflow-hidden will-change-transform transform-gpu`}
             >
-              <img src={slide.img} alt="" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#19211C]/95 via-[#19211C]/40 to-transparent z-[2]" />
+              <div className="s3-img-inner absolute inset-0 w-full h-full overflow-hidden will-change-transform transform-gpu">
+                <img
+                  src={slide.img}
+                  alt=""
+                  className="w-full h-full object-cover transform-gpu backface-hidden"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#19211C]/95 via-[#19211C]/40 to-transparent z-[2]" />
+              </div>
             </div>
           ))}
         </div>
-        <div className="s2-inner-fade-target absolute inset-0 z-10 w-full h-full pointer-events-none" style={{ opacity: 1 }}>
+        <div className="s2-inner-fade-target absolute inset-0 z-10 w-full h-full pointer-events-none">
           {renderTextContent()}
         </div>
       </section>

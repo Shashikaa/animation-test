@@ -9,7 +9,6 @@ import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 const SectionOne = dynamic(() => import("@/src/components/Service/SectionOne"));
 const SectionTwo = dynamic(() => import("@/src/components/Service/SectionTwo"));
 const Appsection = dynamic(() => import("@/src/components/Appsection"));
-const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
 const easeOutQuad = (t: number) => t * (2 - t);
@@ -23,7 +22,6 @@ export default function ServicesMobile() {
   const sectionOneRef = useRef<HTMLDivElement>(null);
   const sectionTwoRef = useRef<HTMLDivElement>(null);
   const appSecRef = useRef<HTMLDivElement>(null);
-  const ctaLayerRef = useRef<HTMLDivElement>(null);
   const footerLayerRef = useRef<HTMLDivElement>(null);
 
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
@@ -46,6 +44,13 @@ export default function ServicesMobile() {
       if (typeof window !== "undefined" && typeof (window as any)._sec2GoTo === "function") {
         (window as any)._sec2GoTo(nextIdx);
       }
+    }
+  }, []);
+
+  // Prevent browser layout jump on load/refresh
+  useEffect(() => {
+    if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
     }
   }, []);
 
@@ -96,12 +101,12 @@ export default function ServicesMobile() {
 
     const render = () => {
       const currentProg = targetProgress.current;
-      const totalSteps = 8.0;
+      const totalSteps = 7.0;
       const stepProgress = currentProg * totalSteps;
 
       const { vh } = scrollMetricsRef.current;
 
-      // --- STEP 1: COMPRESS HERO TOP LAYER TO REVEAL 100% OF UNDERNEATH LAYER (0.0 -> 1.0) ---
+      // --- STEP 1: COMPRESS HERO TOP LAYER TO REVEAL UNDERNEATH LAYER (0.0 -> 1.0) ---
       const heroTextWrap = scopeRef.current?.querySelector<HTMLElement>(".hero-text-wrap");
       const heroBtn = scopeRef.current?.querySelector<HTMLElement>(".hero-btn");
       const heroTopLayer = scopeRef.current?.querySelector<HTMLElement>(".services-hero-top-layer");
@@ -118,7 +123,6 @@ export default function ServicesMobile() {
         heroBtn.style.opacity = `${1 - step1Prog}`;
       }
       if (heroTopLayer) {
-        // Fully wipe the top layer from bottom to top to reveal the complete underneath text
         const bottomInset = step1Prog * 60;
         heroTopLayer.style.clipPath = `inset(0px 0px ${bottomInset}% 0px)`;
       }
@@ -171,18 +175,8 @@ export default function ServicesMobile() {
         sectionTwoRef.current.style.transform = `translate3d(0, ${-appProg * 15}%, 0)`;
       }
 
-      // --- STEP 5: CTA SLIDES UP OVER APP SECTION (6.0 -> 7.0) ---
-      const ctaProg = easeOutQuad(Math.min(Math.max(stepProgress - 6.0, 0), 1));
-      if (ctaLayerRef.current) {
-        const ctaHeight = ctaLayerRef.current.offsetHeight || vh;
-        const startY = vh;
-        const endY = -(ctaHeight - vh);
-        const currentY = startY + (endY - startY) * ctaProg;
-        ctaLayerRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
-      }
-
-      // --- STEP 6: FOOTER REVEAL (7.0 -> 8.0) ---
-      const footerProg = easeOutQuad(Math.min(Math.max(stepProgress - 7.0, 0), 1));
+      // --- STEP 5: FOOTER REVEAL (6.0 -> 7.0) ---
+      const footerProg = easeOutQuad(Math.min(Math.max(stepProgress - 6.0, 0), 1));
       if (footerLayerRef.current) {
         const footerHeight = footerLayerRef.current.offsetHeight || vh;
         const startY = vh;
@@ -249,7 +243,7 @@ export default function ServicesMobile() {
       <div
         ref={trackRef}
         className="services-track-container relative w-full"
-        style={{ height: "800vh" }}
+        style={{ height: "700vh" }}
       >
         <div
           ref={fixedFrameRef}
@@ -292,16 +286,7 @@ export default function ServicesMobile() {
                 <Appsection />
               </div>
 
-              {/* Layer 5: Section CTA Block */}
-              <div
-                ref={ctaLayerRef}
-                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[150] will-change-transform"
-                style={{ transform: "translate3d(0, 100vh, 0)" }}
-              >
-                <SectionCTA />
-              </div>
-
-              {/* Layer 6: Footer Wrapper Frame */}
+              {/* Layer 5: Footer Wrapper Frame */}
               <div
                 ref={footerLayerRef}
                 className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[151] will-change-transform"

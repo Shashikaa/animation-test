@@ -11,7 +11,6 @@ const SectionTwo = dynamic(() => import("@/src/components/About/SectionTwo"));
 const SectionThree = dynamic(() => import("@/src/components/About/SectionThree"));
 const SectionFour = dynamic(() => import("@/src/components/About/SectionFour"));
 const SectionFive = dynamic(() => import("@/src/components/About/SectionFive"));
-const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
 const easeOutQuad = (t: number) => t * (2 - t);
@@ -22,7 +21,6 @@ export default function AboutMobile() {
   const trackRef = useRef<HTMLDivElement>(null);
   const fixedFrameRef = useRef<HTMLDivElement>(null);
 
-  const layer6Ref = useRef<HTMLDivElement>(null);
   const layer7Ref = useRef<HTMLDivElement>(null);
 
   const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
@@ -31,7 +29,7 @@ export default function AboutMobile() {
   const lastSec5Idx = useRef<number>(-1);
 
   const { smootherRef } = useSite();
-  const { introDone, preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
+  const { preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
     isMobile: true,
     introDurationMs: 2800,
     unlockScrollEarlyMs: 1800,
@@ -98,7 +96,8 @@ export default function AboutMobile() {
 
     const render = () => {
       const currentProg = targetProgress.current;
-      const totalSteps = 8.5;
+      // Adjusted total steps to accommodate footer sliding up seamlessly after Section 5
+      const totalSteps = 7.5;
       const stepProgress = currentProg * totalSteps;
 
       const s1Prog = easeOutQuad(Math.min(Math.max(stepProgress - 0, 0), 1));
@@ -107,8 +106,8 @@ export default function AboutMobile() {
       const s4Prog = easeOutQuad(Math.min(Math.max(stepProgress - 3, 0), 1));
       const s5Prog = easeOutQuad(Math.min(Math.max(stepProgress - 4, 0), 1));
 
-      const ctaProgress = easeOutQuad(Math.min(Math.max(stepProgress - 6.5, 0), 1));
-      const footerProgress = easeOutQuad(Math.min(Math.max(stepProgress - 7.5, 0), 1));
+      // Footer progress triggers right after Section 5 finishes
+      const footerProgress = easeOutQuad(Math.min(Math.max(stepProgress - 6.5, 0), 1));
 
       if (panels && panels.length > 0) {
         if (panels[1]) panels[1].style.transform = `translate3d(0, ${(1 - s1Prog) * 100}%, 0)`;
@@ -119,14 +118,6 @@ export default function AboutMobile() {
       }
 
       const { vh } = scrollMetricsRef.current;
-
-      if (layer6Ref.current) {
-        const ctaHeight = layer6Ref.current.offsetHeight || vh;
-        const startY = vh;
-        const endY = -(ctaHeight - vh);
-        const currentY = startY + (endY - startY) * ctaProgress;
-        layer6Ref.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
-      }
 
       if (layer7Ref.current) {
         const footerHeight = layer7Ref.current.offsetHeight || vh;
@@ -204,18 +195,17 @@ export default function AboutMobile() {
     };
   }, [shouldLoadRest, smootherRef, triggerSec5Hook]);
 
-  const isReady = preloaderDone && introDone;
-
   return (
-    <div ref={scopeRef} className="w-full bg-[#162D24]">
+    <div ref={scopeRef} className="w-full ">
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
-        style={{ height: "900vh" }}
+        // Reduced track height slightly since CTA was removed (adjust if needed)
+        style={{ height: "800vh" }}
       >
         <div
           ref={fixedFrameRef}
-          className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-[100dvh]"
+          className="fixed top-0 left-0 w-full overflow-hidden  z-10 h-[100dvh]"
         >
           <div className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-10 gpu-accelerated transform-gpu will-change-transform">
             <Hero isMobile={true} />
@@ -252,13 +242,6 @@ export default function AboutMobile() {
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionFive isActive={isSectionFiveActive} />
-              </div>
-              <div
-                ref={layer6Ref}
-                className="about-stack-layer layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[150] will-change-transform"
-                style={{ transform: "translate3d(0, 100vh, 0)" }}
-              >
-                <SectionCTA preloaderDone={isReady} />
               </div>
               <div
                 ref={layer7Ref}

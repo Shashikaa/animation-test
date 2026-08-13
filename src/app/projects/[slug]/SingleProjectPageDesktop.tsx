@@ -10,6 +10,7 @@ import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import { useSite } from "@/src/app/context/SiteContext";
 import { FullServiceData } from "./data";
 
+// QUADRATIC EASING MATCHING HOME DESKTOP
 const easeOutQuad = (t: number) => t * (2 - t);
 
 type SubServicesDesktopProps = {
@@ -29,7 +30,15 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
 
   const [isProjectInfoActive, setIsProjectInfoActive] = useState(false);
 
-  const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
+  const scrollMetricsRef = useRef({
+    totalScrollable: 0,
+    vh: 0,
+    trackTopOffset: 0,
+    appHeight: 0,
+    faqHeight: 0,
+    footerHeight: 0,
+  });
+
   const targetProgress = useRef(0);
   const rafId = useRef<number | null>(null);
   const lastInfoIdx = useRef<number>(-1);
@@ -53,7 +62,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     }
   }, []);
 
-  // 1. UNLOCK LENIS & INITIALIZE
+  // ── 1. UNLOCK LENIS & INITIALIZE ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -75,51 +84,88 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // 2. CACHE METRICS
+  // ── 2. CACHE METRICS TO PREVENT LAYOUT THRASHING ──
   const updateMetrics = useCallback(() => {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
     const vh = window.innerHeight;
+
     scrollMetricsRef.current = {
       totalScrollable: rect.height - vh,
       vh,
       trackTopOffset: window.scrollY + rect.top,
+      appHeight: appSectionRef.current?.offsetHeight || vh,
+      faqHeight: faqSectionRef.current?.offsetHeight || vh,
+      footerHeight: footerLayerRef.current?.offsetHeight || vh,
     };
   }, []);
 
   useEffect(() => {
     if (!shouldLoadRest) return;
     updateMetrics();
+
+    const resizeObserver = new ResizeObserver(() => updateMetrics());
+    if (appSectionRef.current) resizeObserver.observe(appSectionRef.current);
+    if (faqSectionRef.current) resizeObserver.observe(faqSectionRef.current);
+    if (footerLayerRef.current) resizeObserver.observe(footerLayerRef.current);
+
     window.addEventListener("resize", updateMetrics, { passive: true });
-    return () => window.removeEventListener("resize", updateMetrics);
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateMetrics);
+    };
   }, [shouldLoadRest, updateMetrics]);
 
-  // 3. GPU-ACCELERATED STEP RENDER LOOP (SYNCHRONIZED WITH LENIS)
+  // ── 3. ULTRA-SMOOTH CONTINUOUS LERP RENDER ENGINE (HOMEDESKTOP PARITY) ──
   useEffect(() => {
-    if (!shouldLoadRest) return;
+    if (!shouldLoadRest || !scopeRef.current) return;
 
-    const render = () => {
-      const currentProg = targetProgress.current;
+    const scope = scopeRef.current;
+    let isRunning = true;
+    let currentProgress = targetProgress.current;
+
+    // Cache element references inside the closure
+    const heroTextWrap = scope.querySelector<HTMLElement>(".hero-text-wrap");
+    const phoneWrapper = scope.querySelector<HTMLElement>(".appsec-phone-wrapper");
+
+    // Hardware promote element layers for ultra-smooth GPU composition
+    [
+      heroPanelRef.current,
+      projectInfoRef.current,
+      appSectionRef.current,
+      faqSectionRef.current,
+      footerLayerRef.current,
+    ].forEach((el) => {
+      if (el) {
+        el.style.willChange = "transform, opacity, clip-path";
+        el.style.transform = "translate3d(0, 0, 0)";
+      }
+    });
+
+    const renderTransforms = () => {
+      if (!isRunning) return;
+
+      // CONTINUOUS SILKY PHYSICS LERP INERTIA
+      currentProgress += (targetProgress.current - currentProgress) * 0.08;
+
       const subSlidesSteps = Math.max(0, infoSlidesCount - 1);
-      
-      const PAUSE_BUFFER = 0.8; 
+      const PAUSE_BUFFER = 0.5;
       const totalSteps = 4 + subSlidesSteps + PAUSE_BUFFER;
-      const stepProgress = currentProg * totalSteps;
+      const stepProgress = currentProgress * totalSteps;
 
-      const { vh } = scrollMetricsRef.current;
+      const { vh, appHeight, faqHeight, footerHeight } = scrollMetricsRef.current;
 
       // STEP 1: Hero Text Fade Out + Project Info Slide-Up (0.0 -> 1.0)
-      const heroTextWrap = scopeRef.current?.querySelector<HTMLElement>(".hero-text-wrap");
-      const infoProg = easeOutQuad(Math.min(Math.max(stepProgress - 0, 0), 1));
+      const infoProg = easeOutQuad(Math.min(Math.max(stepProgress, 0), 1));
 
       if (heroTextWrap) {
-        heroTextWrap.style.opacity = `${1 - infoProg}`;
-        heroTextWrap.style.transform = `translate3d(0, ${-30 * infoProg}px, 0)`;
+        heroTextWrap.style.opacity = `${(1 - infoProg).toFixed(3)}`;
+        heroTextWrap.style.transform = `translate3d(0, ${(-30 * infoProg).toFixed(2)}px, 0)`;
         heroTextWrap.style.visibility = infoProg >= 1 ? "hidden" : "visible";
       }
 
       if (projectInfoRef.current) {
-        projectInfoRef.current.style.transform = `translate3d(0, ${(1 - infoProg) * 100}%, 0)`;
+        projectInfoRef.current.style.transform = `translate3d(0, ${((1 - infoProg) * 100).toFixed(3)}%, 0)`;
       }
 
       const infoEndStep = 1.0 + subSlidesSteps + PAUSE_BUFFER;
@@ -129,7 +175,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
         setIsProjectInfoActive(false);
       }
 
-      // STEP 2: Sequential Inner Info Slides (Bottom-to-Top Clip Path)
+      // STEP 2: Sequential Inner Info Slides
       if (subSlidesSteps > 0) {
         const subProgress = Math.min(Math.max(stepProgress - 1.0, 0), subSlidesSteps);
         const currentSubIdx = Math.min(infoSlidesCount - 1, Math.floor(subProgress));
@@ -139,16 +185,16 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
           if (idx === 0) return;
 
           const layerProg = Math.min(Math.max(stepProgress - (1.0 + idx - 1), 0), 1);
-          const imgLayer = scopeRef.current?.querySelector<HTMLElement>(`.info-img-layer-${idx}`);
-          const imgInner = scopeRef.current?.querySelector<HTMLElement>(`.info-img-layer-${idx} .info-image-inner`);
+          const imgLayer = scope.querySelector<HTMLElement>(`.info-img-layer-${idx}`);
+          const imgInner = scope.querySelector<HTMLElement>(`.info-img-layer-${idx} .info-image-inner`);
 
           if (imgLayer) {
             const clipTop = (100 - layerProg * 100).toFixed(2);
             imgLayer.style.clipPath = `polygon(0% ${clipTop}%, 100% ${clipTop}%, 100% 100%, 0% 100%)`;
           }
           if (imgInner) {
-            const scaleVal = 1.25 - layerProg * 0.25;
-            imgInner.style.transform = `scale(${scaleVal})`;
+            const scaleVal = (1.25 - layerProg * 0.25).toFixed(4);
+            imgInner.style.transform = `scale3d(${scaleVal}, ${scaleVal}, 1)`;
           }
         });
       } else {
@@ -160,21 +206,19 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
       const appProg = easeOutQuad(Math.min(Math.max(stepProgress - appStartStep, 0), 1));
 
       if (appSectionRef.current) {
-        const appHeight = appSectionRef.current.offsetHeight || vh;
         const startY = vh;
         const endY = appHeight > vh ? -(appHeight - vh) : 0;
         const currentY = startY + (endY - startY) * appProg;
-        appSectionRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
+        appSectionRef.current.style.transform = `translate3d(0, ${currentY.toFixed(2)}px, 0)`;
       }
       if (projectInfoRef.current && appProg > 0) {
-        projectInfoRef.current.style.transform = `translate3d(0, ${-appProg * 15}%, 0)`;
+        projectInfoRef.current.style.transform = `translate3d(0, ${(-appProg * 15).toFixed(2)}%, 0)`;
       }
 
-      const phoneWrapper = scopeRef.current?.querySelector<HTMLElement>(".appsec-phone-wrapper");
       if (phoneWrapper) {
         const phoneProg = Math.min(Math.max((stepProgress - (appStartStep + 0.2)) / 0.8, 0), 1);
-        phoneWrapper.style.opacity = `${phoneProg}`;
-        phoneWrapper.style.transform = `translate3d(0, ${(1 - phoneProg) * 30}px, 0)`;
+        phoneWrapper.style.opacity = `${phoneProg.toFixed(3)}`;
+        phoneWrapper.style.transform = `translate3d(0, ${((1 - phoneProg) * 30).toFixed(2)}px, 0)`;
       }
 
       // STEP 4: Dynamic Height FAQ Section Reveal
@@ -182,11 +226,10 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
       const faqProg = easeOutQuad(Math.min(Math.max(stepProgress - faqStartStep, 0), 1));
 
       if (faqSectionRef.current) {
-        const faqHeight = faqSectionRef.current.offsetHeight || vh;
         const startY = vh;
         const endY = faqHeight > vh ? -(faqHeight - vh) : 0;
         const currentY = startY + (endY - startY) * faqProg;
-        faqSectionRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
+        faqSectionRef.current.style.transform = `translate3d(0, ${currentY.toFixed(2)}px, 0)`;
       }
 
       // STEP 5: Footer Reveal
@@ -194,12 +237,14 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
       const footerProg = easeOutQuad(Math.min(Math.max(stepProgress - footerStartStep, 0), 1));
 
       if (footerLayerRef.current) {
-        const footerHeight = footerLayerRef.current.offsetHeight || vh;
         const startY = vh;
         const endY = vh - footerHeight;
         const translateY = startY + (endY - startY) * footerProg;
-        footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
+        footerLayerRef.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
       }
+
+      // Keep RAF loop running continuously for momentum smoothing
+      rafId.current = requestAnimationFrame(renderTransforms);
     };
 
     const handleScroll = (e?: any) => {
@@ -228,9 +273,6 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
       }
 
       targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
-
-      if (rafId.current) cancelAnimationFrame(rafId.current);
-      rafId.current = requestAnimationFrame(render);
     };
 
     const lenis = smootherRef?.current;
@@ -241,8 +283,10 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     }
 
     handleScroll();
+    rafId.current = requestAnimationFrame(renderTransforms);
 
     return () => {
+      isRunning = false;
       if (rafId.current) cancelAnimationFrame(rafId.current);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
@@ -253,7 +297,8 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     };
   }, [shouldLoadRest, smootherRef, infoSlidesCount, infoSlides, triggerInfoHook]);
 
-  const containerHeightVh = 650 + Math.max(0, infoSlidesCount - 1) * 100;
+  // Scaled height prevents the layout track from feeling too long/short
+  const containerHeightVh = 400 + infoSlidesCount * 100;
 
   return (
     <div ref={scopeRef} className="w-full bg-[#162D24]">
@@ -278,6 +323,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
             />
           </div>
 
+          {/* DOWNSTREAM SECTIONS */}
           {shouldLoadRest && (
             <>
               {/* Layer 2: Interactive Project Info Overlay Panel */}

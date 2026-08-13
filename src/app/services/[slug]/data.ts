@@ -32,7 +32,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     hero: {
       title: 'Residential Pool Construction',
       subtitle: 'Tailored pools for relaxing, hosting, and elevated outdoor living.',
-      bgImageUrl: '/service-1-hero.webp',
+      bgImageUrl: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=1920&q=80',
       tabs: [
         {
           label: 'From Vision to Reality',
@@ -72,8 +72,8 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     sectionOne: {
       title: 'Olympic-Grade Architecture',
       paragraph: 'Our residential builds are structurally engineered to handle custom volume profiles, leveraging deep engineering methodologies to guarantee decades of flawless operational durability.',
-      bgImageUrl: '//single-service-8-bg.webp',
-      sideImageUrl: '/service-1-hero.webp',
+      bgImageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1920&q=80',
+      sideImageUrl: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=1000&q=80',
       fourParagraphs: [
         'Custom shotcrete reinforcement guarantees long-term structural load safety.',
         'Precision plumbing alignment scales spatial flow parameters optimally.',
@@ -83,7 +83,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     },
     sectionTwo: {
       title: 'Everything You Need to Know',
-      bgImageUrl: '/images/single-service-25.webp',
+      bgImageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1920&q=80',
       faqs: [
         { question: 'How long does new pool construction take?', answer: 'Most custom shotcrete pools require 8 to 12 weeks depending on site access and structural complexity.' },
         { question: 'What is included in the new pool construction service?', answer: 'Yes, we handle all engineering submissions, environmental zoning clearances, and construction permits.' },
@@ -99,7 +99,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     hero: {
       title: 'Pool Equipment & Installation',
       subtitle: 'Bespoke Private Staycations',
-      bgImageUrl: '/service-1-hero.webp',
+      bgImageUrl: 'https://images.unsplash.com/photo-1572331165267-854da2b10ccc?auto=format&fit=crop&w=1920&q=80',
       tabs: [
         {
           label: 'From Vision to Reality',
@@ -125,8 +125,8 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     sectionOne: {
       title: 'Bespoke Concrete Contours',
       paragraph: 'Every high-end residential build begins with premium custom concrete profiles styled perfectly to fit your land contours, ensuring architectural impact from every viewing angle.',
-      bgImageUrl: '//single-service-8-bg.webp',
-      sideImageUrl: '/service-1-hero.webp',
+      bgImageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1920&q=80',
+      sideImageUrl: 'https://images.unsplash.com/photo-1572331165267-854da2b10ccc?auto=format&fit=crop&w=1000&q=80',
       fourParagraphs: [
         'Vanishing edge structures carve sleek, unobstructed views directly into drop-offs.',
         'Bespoke concrete curves mold completely around modern high-end architectural footprints.',
@@ -136,7 +136,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     },
     sectionTwo: {
       title: 'Luxury Integrations Explained',
-      bgImageUrl: '/images/single-service-25.webp',
+      bgImageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1920&q=80',
       faqs: [
         { question: 'What options do I have for internal finishes?', answer: 'We offer specialized polished aggregate blends, premium quartz formulations, and fully tiled mosaic options.' },
         { question: 'How do vanishing edge parameters perform?', answer: 'They leverage lower catch basins paired with dedicated balance valves to handle subtle pool water overflow smoothly.' }
@@ -149,7 +149,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     hero: {
       title: 'Commercial Pool Construction',
       subtitle: 'Breathing New Life',
-      bgImageUrl: '/service-1-hero.webp',
+      bgImageUrl: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1920&q=80',
       tabs: [
         {
           label: 'From Vision to Reality',
@@ -175,8 +175,8 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     sectionOne: {
       title: 'Modern Structural Refit',
       paragraph: 'We completely revitalize aging frameworks, removing degraded masonry to pave the way for modern sub-surface layouts, updated waterline tiling, and highly efficient structural finishes.',
-      bgImageUrl: '//single-service-8-bg.webp',
-      sideImageUrl: '/service-1-hero.webp',
+      bgImageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1920&q=80',
+      sideImageUrl: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1000&q=80',
       fourParagraphs: [
         'Complete removal of failing sub-layers restores structural integrity before replastering.',
         'Underground pressure scanning isolates and seals historical fluid leaks.',
@@ -186,7 +186,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     },
     sectionTwo: {
       title: 'Restoration Scope & FAQ',
-      bgImageUrl: '/images/single-service-25.webp',
+      bgImageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1920&q=80',
       faqs: [
         { question: 'Can you fix cracked concrete pool shells?', answer: 'Yes, we apply high-tensile staples alongside epoxy injection loops to restore structural engineering load tolerances.' },
         { question: 'Is it possible to convert an older pool to salt chlorination?', answer: 'Absolutely. We seamlessly swap in inline electrolytic cells during the plumbing overhaul phase.' }

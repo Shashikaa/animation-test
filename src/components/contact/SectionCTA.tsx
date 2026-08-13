@@ -13,6 +13,7 @@ export default function SectionCTA({
 }: SectionCTAProps) {
   return (
     <section
+      id="contact-section"
       className="about-section-cta section-cta min-h-screen lg:h-full w-full relative"
       style={{
         background: "linear-gradient(135deg, #19211c 0%, #094146 100%)",

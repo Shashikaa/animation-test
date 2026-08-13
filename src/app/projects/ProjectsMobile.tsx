@@ -9,7 +9,6 @@ import { restoreTextReveal } from "@/src/app/utils/useTextReveal";
 
 const SectionOne = dynamic(() => import("@/src/components/Projects/SectionOne"));
 const SectionTwo = dynamic(() => import("@/src/components/Projects/SectionTwo"));
-const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
 const easeOutQuad = (t: number) => t * (2 - t);
@@ -56,7 +55,6 @@ export default function ProjectsMobile() {
   const heroPanelRef = useRef<HTMLDivElement>(null);
   const sectionOneRef = useRef<HTMLDivElement>(null);
   const sectionTwoRef = useRef<HTMLDivElement>(null);
-  const ctaLayerRef = useRef<HTMLDivElement>(null);
   const footerLayerRef = useRef<HTMLDivElement>(null);
 
   const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
@@ -64,7 +62,7 @@ export default function ProjectsMobile() {
   const rafId = useRef<number | null>(null);
 
   const { smootherRef } = useSite();
-  const { introDone, preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
+  const { preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
     isMobile: true,
     introDurationMs: 2800,
     unlockScrollEarlyMs: 1800,
@@ -129,7 +127,7 @@ export default function ProjectsMobile() {
 
     const render = () => {
       const currentProg = targetProgress.current;
-      const totalSteps = 5;
+      const totalSteps = 4.5;
       const stepProgress = currentProg * totalSteps;
 
       const { vh } = scrollMetricsRef.current;
@@ -166,30 +164,21 @@ export default function ProjectsMobile() {
         sectionOneRef.current.style.transform = `translate3d(0, ${(1 - s1Prog) * 100}%, 0)`;
       }
 
-      // Step 2: Section Two Reveal (2.0 -> 3.0)
+      // Step 2: Section Two Reveal (2.0 -> 3.0) & Stay Pinned
       const s2Prog = easeOutQuad(Math.min(Math.max(stepProgress - 2.0, 0), 1));
       if (sectionTwoRef.current) {
         sectionTwoRef.current.style.transform = `translate3d(0, ${(1 - s2Prog) * 100}%, 0)`;
       }
 
-      if (stepProgress >= 2.2 && stepProgress < 3.5) {
+      // Keep SectionTwo active continuously through the footer slide-up
+      if (stepProgress >= 2.2 && stepProgress <= 4.5) {
         setIsSectionTwoActive(true);
       } else {
         setIsSectionTwoActive(false);
       }
 
-      // Step 3: CTA Reveal (3.0 -> 4.0)
-      const ctaProgress = easeOutQuad(Math.min(Math.max(stepProgress - 3.0, 0), 1));
-      if (ctaLayerRef.current) {
-        const ctaHeight = ctaLayerRef.current.offsetHeight || vh;
-        const startY = vh;
-        const endY = -(ctaHeight - vh);
-        const currentY = startY + (endY - startY) * ctaProgress;
-        ctaLayerRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
-      }
-
-      // Step 4: Footer Reveal (4.0 -> 5.0)
-      const footerProgress = easeOutQuad(Math.min(Math.max(stepProgress - 4.0, 0), 1));
+      // Step 3: Footer Reveal (3.5 -> 4.5)
+      const footerProgress = easeOutQuad(Math.min(Math.max(stepProgress - 3.5, 0), 1));
       if (footerLayerRef.current) {
         const footerHeight = footerLayerRef.current.offsetHeight || vh;
         const startY = vh;
@@ -255,13 +244,13 @@ export default function ProjectsMobile() {
       <div
         ref={trackRef}
         className="projects-track-container relative w-full"
-        style={{ height: "600vh" }}
+        style={{ height: "500vh" }}
       >
         <div
           ref={fixedFrameRef}
           className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-[100dvh]"
         >
-          {/* Layer 1: Hero (Always mounted so keyframe intro animates on load) */}
+          {/* Layer 1: Hero */}
           <div
             ref={heroPanelRef}
             className="projects-hero-master absolute inset-0 w-full h-[100dvh] z-10 gpu-accelerated transform-gpu will-change-transform"
@@ -289,16 +278,7 @@ export default function ProjectsMobile() {
                 <SectionTwo isActive={isSectionTwoActive} />
               </div>
 
-              {/* Layer 4: CTA */}
-              <div
-                ref={ctaLayerRef}
-                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[150] will-change-transform"
-                style={{ transform: "translate3d(0, 100vh, 0)" }}
-              >
-                <SectionCTA />
-              </div>
-
-              {/* Layer 5: Footer */}
+              {/* Layer 4: Footer */}
               <div
                 ref={footerLayerRef}
                 className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[151] will-change-transform"

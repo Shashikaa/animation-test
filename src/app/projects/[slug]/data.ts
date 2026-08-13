@@ -18,38 +18,38 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     category: "Custom Concrete Pool",
     description: "A refined architectural pool designed with privacy, structure, and timeless detail in mind. Set within a premium Toorak residence, this project combines a raised pool form, dark mosaic finishes, soft stone surfaces, and layered landscaping to create a calm, private outdoor retreat.",
     images: [
-      "/kooyong/img-1.webp",
-      "/kooyong/img-2.webp",
-      "/kooyong/img-3.webp",
-      "/kooyong/img-4.webp",
-      "/kooyong/img-5.webp",
-      "/kooyong/img-6.webp"
+      "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?q=80&w=1920&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1572331165267-854da2b10ccc?q=80&w=1920&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?q=80&w=1920&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1562778612-e1e0cda68616?q=80&w=1920&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1532323544230-7191fd51bc1b?q=80&w=1920&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1920&auto=format&fit=crop"
     ],
     slides: [
       {
         title: "Consultation & Site Review",
         description: "We start by understanding your space, goals, and what you want from the pool. Our team reviews the site, access, layout, and key project requirements. This gives us a clear direction before design begins.",
-        image: "/kooyong/img-1.webp"
+        image: "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?q=80&w=1920&auto=format&fit=crop"
       },
       {
         title: "Design & Planning",
         description: "Your pool concept is shaped around the home, landscape, and daily use. We define the layout, finishes, features, and practical details. The result is a clear plan before construction starts.",
-        image: "/kooyong/img-2.webp"
+        image: "https://images.unsplash.com/photo-1572331165267-854da2b10ccc?q=80&w=1920&auto=format&fit=crop"
       },
       {
         title: "Approvals & Preparation",
         description: "Before building begins, we prepare the required details and documentation. This stage helps align the project, schedule, access, and technical needs. Everything is organised so construction can move forward smoothly.",
-        image: "/kooyong/img-3.webp"
+        image: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?q=80&w=1920&auto=format&fit=crop"
       },
       {
         title: "Construction & Installation",
         description: "This is where the pool starts taking shape on site. Our team manages excavation, structure, plumbing, equipment, and installation. Every step is handled with precision and long-term durability in mind.",
-        image: "/kooyong/img-4.webp"
+        image: "https://images.unsplash.com/photo-1562778612-e1e0cda68616?q=80&w=1920&auto=format&fit=crop"
       },
       {
         title: "Finishing & Installation",
         description: "Final finishes, equipment checks, water balance, and detailing are completed. We make sure everything is ready, clean, and working properly. Then we guide you through how to use and care for your new pool.",
-        image: "/kooyong/img-5.webp"
+        image: "https://images.unsplash.com/photo-1532323544230-7191fd51bc1b?q=80&w=1920&auto=format&fit=crop"
       }
     ]
   },

@@ -39,7 +39,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
           lerp: isMobileDevice ? 0.12 : 0.07, // Direct snappy response on touch, smooth momentum on desktop wheel
           duration: isMobileDevice ? 0.8 : 1.2,
           smoothWheel: true,
-          wheelMultiplier: 0.95,
+          wheelMultiplier: 1.3,
           touchMultiplier: 1.5,
           syncTouch: true,
           syncTouchLerp: 0.075,
