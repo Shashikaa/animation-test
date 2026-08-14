@@ -1,15 +1,21 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import Lenis from 'lenis';
 import { useSite } from "../app/context/SiteContext";
 
 export default function SmoothScroll({ children }: { children: React.ReactNode }) {
   const { smootherRef, preloaderDone } = useSite();
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Initialize Lenis with syncTouch: false to prevent mobile address bar lag
+    if (!wrapperRef.current || !contentRef.current) return;
+
+    // Initialize Lenis targeted at custom wrappers to lock mobile address bar
     const lenis = new Lenis({
+      wrapper: wrapperRef.current,
+      content: contentRef.current,
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: "vertical",
@@ -17,7 +23,7 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
       smoothWheel: true,
       wheelMultiplier: 1,
       touchMultiplier: 2,
-      syncTouch: false, // Prevents mobile browser address bar hide/show scroll stutter
+      syncTouch: false, // Disables native touch interception lag
       syncTouchLerp: 0.07,
       infinite: false,
     });
@@ -29,15 +35,16 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
       requestAnimationFrame(raf);
     }
 
-    requestAnimationFrame(raf);
+    const animationId = requestAnimationFrame(raf);
 
     return () => {
+      cancelAnimationFrame(animationId);
       lenis.destroy();
       smootherRef.current = null;
     };
   }, [smootherRef]);
 
-  // Sync scroll lock state with preloader completion
+  // Sync preloader lock state with Lenis
   useEffect(() => {
     const lenis = smootherRef.current;
     if (!lenis) return;
@@ -49,5 +56,15 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     }
   }, [preloaderDone, smootherRef]);
 
-  return <>{children}</>;
+  return (
+    <div
+      ref={wrapperRef}
+      className="scroll-wrapper fixed inset-0 w-full h-full overflow-hidden"
+      style={{ height: "100vh", width: "100vw" }}
+    >
+      <div ref={contentRef} className="scroll-content min-h-full w-full">
+        {children}
+      </div>
+    </div>
+  );
 }

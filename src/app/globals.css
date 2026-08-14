@@ -63,13 +63,14 @@
   }
 }
 
-/* ─── Reset & Core Document Rules ────────────────────────────── */
+/* ─── Reset & Mobile Address Bar Lock Rules ──────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin:     0;
   padding:    0;
 }
 
+/* Locks root elements so mobile browser address bar does NOT hide on scroll */
 html, body {
   background-color: #162D24 !important;
   color-scheme: dark;
@@ -78,16 +79,16 @@ html, body {
   text-rendering: optimizeLegibility;
   
   scroll-behavior: auto !important; 
-  min-height: 100%;
-  width: 100%;
+  height: 100% !important;
+  width: 100% !important;
+  overflow: hidden !important; /* Prevents mobile window scroll events */
 
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y !important;
 
-  /* Hide native scrollbar globally */
+  /* Hide native scrollbars */
   scrollbar-width: none;
   -ms-overflow-style: none;
-  overflow-x: hidden;
 }
 
 html::-webkit-scrollbar,
@@ -102,15 +103,19 @@ body {
   font-family:  var(--font-body);
   font-size:    var(--text-body);
   line-height:  var(--leading-body);
-  overflow-y:   auto;
 }
 
-/* ─── Unified Global Smooth Scroll & Hardware Engine ──────────── */
+/* ─── Unified Lenis & Hardware Engine ────────────────────────── */
 
-/* 1. Lenis Global Rules */
+/* 1. Lenis Wrapper Rules */
 html.lenis,
 html.lenis body {
-  height: auto;
+  height: 100%;
+}
+
+.scroll-wrapper {
+  overscroll-behavior: none;
+  touch-action: pan-y;
 }
 
 .lenis.lenis-smooth {
@@ -122,13 +127,13 @@ body.scroll-locked {
   overflow: hidden !important;
 }
 
-/* 2. Scrolling FPS Optimizations */
+/* 2. Scrolling Performance Boost */
 html.is-scrolling,
 html.is-scrolling * {
   pointer-events: none !important;
 }
 
-/* 3. Global Overscroll Containment */
+/* 3. Global Overscroll Control */
 [data-lenis-prevent],
 .overflow-y-auto,
 .overflow-auto {
@@ -136,7 +141,7 @@ html.is-scrolling * {
   -webkit-overflow-scrolling: touch;
 }
 
-/* 4. GPU Hardware Acceleration & Parallax Rules */
+/* 4. GPU Hardware Acceleration Rules */
 [data-parallax],
 .will-animate,
 .structural-layer {
@@ -150,7 +155,7 @@ img, video {
   image-rendering: -webkit-optimize-contrast;
 }
 
-/* 5. Layout Pinning & Containers */
+/* 5. Layout Pinning with Fixed Viewport Units (100svh) */
 @media (min-width: 1025px) {
   section, .scroll-container {
     contain: content;
@@ -158,10 +163,6 @@ img, video {
 }
 
 @media (max-width: 1024px) {
-  html, body {
-    overscroll-behavior-x: none;
-  }
-
   .pin-all,
   .pin-all-home,
   .pin-all-contact,
@@ -178,14 +179,14 @@ img, video {
 .pin-all-services,
 .pin-all-subservices,
 .pin-all-single-project {
-  height: 100dvh;
-  min-height: 100dvh;
+  height: 100svh;
+  min-height: 100svh;
   width: 100%;
   position: relative;
 }
 
 .pin-spacer {
-  min-height: 100dvh !important;
+  min-height: 100svh !important;
   pointer-events: auto !important;
 }
 
@@ -202,7 +203,7 @@ img, video {
 html.preloading,
 body.preloading {
   overflow: hidden !important;
-  height: 100vh !important;
+  height: 100% !important;
   position: fixed !important;
   width: 100% !important;
   touch-action: none !important;
@@ -453,14 +454,14 @@ button.btn-underline:hover::after,
 
 /* ─── Stack Track & Viewport Layout Lock ─────────────────────── */
 .about-stack-layer {
-  height: 100dvh;
-  max-height: 100dvh;
+  height: 100svh;
+  max-height: 100svh;
 }
 
 .about-stack-layer.layer-auto-height {
   height: auto !important;
   max-height: none !important;
-  min-height: 100dvh;
+  min-height: 100svh;
 }
 
 /* ─── Hardware-Isolated Keyframe Hero Intro ──────────────── */

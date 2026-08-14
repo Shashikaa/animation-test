@@ -53,7 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html 
       lang="en" 
       className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased`}
-      style={{ backgroundColor: "#162D24", minHeight: "100vh" }}
+      style={{ backgroundColor: "#162D24", height: "100%", overflow: "hidden" }}
       suppressHydrationWarning
     >
       <head>
@@ -65,7 +65,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 background-color: #162D24 !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                min-height: 100vh !important;
+                height: 100% !important;
+                overflow: hidden !important;
               }
 
               @font-face {
@@ -76,7 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               html.preloading,
               body.preloading {
                 overflow: hidden !important;
-                min-height: 100vh !important;
+                height: 100% !important;
               }
 
               html.preloading .site-root,
@@ -129,7 +130,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preload" href="/fonts/Canela-Light-Trial.otf" as="font" type="font/otf" crossOrigin="anonymous" />
       </head>
       <body 
-        className="flex flex-col min-h-[100vh]" 
+        className="flex flex-col h-full w-full overflow-hidden" 
         style={{ backgroundColor: "#162D24" }}
         suppressHydrationWarning
       >
@@ -138,7 +139,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <HeaderWrapper />
             <NavMenuWrapper />
 
-            <main className="site-root flex flex-col flex-1 w-full overflow-x-hidden min-h-[100vh]">
+            <main className="site-root flex flex-col flex-1 w-full overflow-x-hidden min-h-full">
               {children}
             </main>
           </SmoothScroll>
