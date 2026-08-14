@@ -25,7 +25,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     let instance: any;
     let tickerCallback: ((time: number) => void) | null = null;
-    let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
     let destroyed = false;
 
     const initLenis = async () => {
@@ -51,13 +50,9 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       lenisRef.current = instance;
       if (smootherRef) smootherRef.current = instance;
 
+      // Cleaned: Removed 'is-scrolling' class toggling so the scrollbar remains static and visible
       instance.on("scroll", () => {
         ScrollTrigger.update();
-        document.documentElement.classList.add("is-scrolling");
-        if (scrollTimeout) clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-          document.documentElement.classList.remove("is-scrolling");
-        }, 120);
       });
 
       tickerCallback = (time: number) => instance?.raf(time * 1000);
@@ -74,8 +69,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       if (instance) instance.destroy();
       lenisRef.current = null;
       if (smootherRef && smootherRef.current === instance) smootherRef.current = null;
-      if (scrollTimeout) clearTimeout(scrollTimeout);
-      document.documentElement.classList.remove("is-scrolling");
     };
   }, [onScrollReady, smootherRef]);
 
