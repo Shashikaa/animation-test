@@ -259,11 +259,11 @@ export default function Header({
     inset: 0,
     zIndex: 0,
     transformOrigin: "top",
-    // --- Styles adapted from your CSS ---
+    // --- Glass Styles ---
     backdropFilter: "blur(15px)",
     WebkitBackdropFilter: "blur(15px)",
     background: "transparent",
-    boxShadow: "0 0 0 1px var(--t-line)",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.15)", // <--- White translucent border
     transform: "translateY(0)",
   }}
 />

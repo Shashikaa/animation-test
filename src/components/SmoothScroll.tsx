@@ -29,24 +29,28 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     }
 
     let instance: any;
-    let tickerCallback: (time: number) => void;
+    let tickerCallback: (time: number, deltaTime: number, frame: number) => void;
     let scrollTimeout: NodeJS.Timeout;
 
     const initLenis = async () => {
       const Lenis = (await import("lenis")).default;
 
+      // Check if user is on a touch device
+      const isTouchDevice =
+        "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
       instance = new Lenis({
         wrapper: window,
         content: document.documentElement,
-        lerp: 0.055,
-        duration: 1.4,
+        // Increased lerp from 0.055 to 0.1 for faster, snappier responsiveness
+        lerp: 0.1,
         smoothWheel: true,
         wheelMultiplier: 1.0,
-        // ── CONTROLLED TOUCH SETTINGS FOR MOBILE ──
-        touchMultiplier: 0.8, // Reduces touch speed boost on fast flicks
-        syncTouch: true,
-        syncTouchLerp: 0.04, // Adds subtle inertia buffer to prevent instant drop
-        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -9 * t)),
+        // ── ULTRA-SMOOTH MOBILE & ANDROID SETTINGS ──
+        // Native mobile scrolling is already GPU-accelerated and smooth on 120Hz displays.
+        // syncTouch: false prevents artificial input delay on touch screens.
+        syncTouch: false,
+        touchMultiplier: isTouchDevice ? 1.5 : 1.0, // Restores swift flick momentum
         autoResize: true,
       });
 
@@ -56,6 +60,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
         smootherRef.current = instance;
       }
 
+      // Sync Lenis scroll updates with GSAP ScrollTrigger
       instance.on("scroll", () => {
         ScrollTrigger.update();
         document.documentElement.classList.add("is-scrolling");
@@ -65,10 +70,13 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
         }, 150);
       });
 
+      // Synchronize Lenis RAF with GSAP Ticker frame loop
       tickerCallback = (time: number) => {
         instance.raf(time * 1000);
       };
+      
       gsap.ticker.add(tickerCallback);
+      // lagSmoothing prevents visual jumps after heavy JS thread stalls
       gsap.ticker.lagSmoothing(0);
 
       onScrollReady?.();

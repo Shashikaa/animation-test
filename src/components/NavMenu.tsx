@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconMark } from "./IconMark";
 import { HEADER_LOGO_SCALE, LOGO_COLOR, LOGO_ICON_W, LOGO_ICON_H, LOGO_GAP } from "./Preloader";
@@ -15,7 +16,7 @@ const NAV_LINKS = [
   { 
     label: "Home", 
     href: "/", 
-    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1400&q=80" // High-end architectural villa with custom linear infinity pool
+    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1400&q=80"
   },
   { 
     label: "About Us", 
@@ -71,7 +72,7 @@ function PoolsSVG({ width, height }: { width: number; height: number }) {
 
 function SharedLogoMarkup({ onClose }: { onClose?: () => void }) {
   return (
-    <a
+    <Link
       href="/"
       onClick={onClose}
       id="header-logo-inner"
@@ -103,7 +104,7 @@ function SharedLogoMarkup({ onClose }: { onClose?: () => void }) {
           <PoolsSVG width={202 * HEADER_LOGO_SCALE} height={30 * HEADER_LOGO_SCALE} />
         </span>
       </span>
-    </a>
+    </Link>
   );
 }
 
@@ -134,8 +135,8 @@ function ImagePanel({ activeIndex }: { activeIndex: number }) {
     });
   }, [activeIndex]);
 
-  const DURATION = 0.65;
-  const EASE = [0.16, 1, 0.3, 1] as const;
+  const DURATION = 0.5;
+  const EASE = [0.25, 1, 0.5, 1] as const;
 
   return (
     <div className="!relative !w-full !h-full !overflow-hidden">
@@ -150,12 +151,9 @@ function ImagePanel({ activeIndex }: { activeIndex: number }) {
             onAnimationComplete={() => setLayers(prev => prev.slice(-1))}
             className="!absolute !inset-0 !z-10"
           >
-            <motion.img
+            <img
               src={NAV_LINKS[layer.index].image}
               alt={NAV_LINKS[layer.index].label}
-              initial={{ scale: 1.1 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: DURATION, ease: EASE }}
               className="!w-full !h-full !object-cover !block"
             />
           </motion.div>
@@ -173,48 +171,87 @@ function ImagePanel({ activeIndex }: { activeIndex: number }) {
   );
 }
 
-const EASE_IN  = [0.22, 1, 0.36, 1] as const;
-const EASE_OUT = [0.76, 0, 0.24, 1] as const;
+// ── OPTIMIZED LUXURY EASINGS & UNIFIED EXIT VARIANTS ──
+const EASE_LUXURY_IN  = [0.16, 1, 0.3, 1] as const;
+const EASE_LUXURY_OUT = [0.7, 0, 0.2, 1] as const;
 
 const desktopContainerVariants = {
   hidden: { 
-    opacity: 0,
-    transition: { duration: 0.45, ease: EASE_OUT } 
+    y: "-100%",
+    opacity: 0.95,
+    transition: { 
+      duration: 0.5, 
+      ease: EASE_LUXURY_OUT
+    } 
   },
   visible: { 
-    opacity: 1, 
+    y: "0%",
+    opacity: 1,
     transition: { 
-      duration: 0.45, ease: EASE_IN
+      duration: 0.65, 
+      ease: EASE_LUXURY_IN 
     } 
   },
 };
 
 const mobileContainerVariants = {
-  hidden:  { x: "100%", opacity: 0.9, transition: { duration: 0.45, ease: EASE_OUT } },
-  visible: { x: 0, opacity: 1, transition: { duration: 0.55, ease: EASE_IN } },
+  hidden:  { 
+    x: "100%", 
+    opacity: 0, 
+    transition: { duration: 0.4, ease: EASE_LUXURY_OUT } 
+  },
+  visible: { 
+    x: "0%", 
+    opacity: 1, 
+    transition: { duration: 0.5, ease: EASE_LUXURY_IN } 
+  },
 };
 
 const linkContainerVariants = {
   hidden: {},
   visible: {
-    transition: { staggerChildren: 0.04, delayChildren: 0.15 },
+    transition: { 
+      staggerChildren: 0.05, 
+      delayChildren: 0.15 
+    },
   },
 };
 
 const linkVariants = {
-  hidden:  { y: 16, opacity: 0 },
-  visible: { y: 0,  opacity: 1, transition: { duration: 0.4, ease: EASE_IN } },
+  hidden:  { 
+    y: 15, 
+    opacity: 0,
+    transition: { duration: 0.2, ease: EASE_LUXURY_OUT }
+  },
+  visible: { 
+    y: 0, 
+    opacity: 1, 
+    transition: { duration: 0.45, ease: EASE_LUXURY_IN } 
+  },
 };
 
 const bottomVariants = {
-  hidden:  { opacity: 0, y: 6 },
-  visible: { opacity: 1, y: 0, transition: { delay: 0.35, duration: 0.35, ease: EASE_OUT } },
+  hidden:  { 
+    opacity: 0,
+    transition: { duration: 0.2, ease: EASE_LUXURY_OUT }
+  },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { delay: 0.35, duration: 0.4, ease: EASE_LUXURY_IN } 
+  },
 };
 
 // ── MOBILE MENU ──────────────────────────────────────────
 function MobileMenu({ open, onClose }: NavMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const pathname = usePathname();
+
+  // FIX 1: Auto-close whenever the route/pathname changes (including back button)
+  useEffect(() => {
+    if (open) onClose();
+  }, [pathname]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -228,7 +265,7 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
   }, [open]);
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {open && (
         <motion.div
           key="nav-menu-mobile"
@@ -240,6 +277,7 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
           className="!fixed !z-[2000] !flex !flex-col !w-[100dvw] !h-[100dvh] !top-0 !left-0 !overflow-y-auto"
           style={{
             background: "linear-gradient(155deg, #0e2724 0%, #08373b 100%)",
+            willChange: "transform, opacity",
           }}
         >
           <style>{`
@@ -279,16 +317,18 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
               className="!flex !flex-col !items-start"
             >
               {NAV_LINKS.map(({ label, href }, i) => (
-                <motion.div key={label} variants={linkVariants} className="!overflow-hidden">
-                  <NavLink
-                    label={label}
-                    href={href}
-                    isActive={hoveredIndex === i}
-                    onClose={onClose}
-                    onMouseEnter={() => setHoveredIndex(i)}
-                    isMobile
-                  />
-                </motion.div>
+                <div key={label} className="!overflow-hidden">
+                  <motion.div variants={linkVariants}>
+                    <NavLink
+                      label={label}
+                      href={href}
+                      isActive={hoveredIndex === i}
+                      onClose={onClose}
+                      onMouseEnter={() => setHoveredIndex(i)}
+                      isMobile
+                    />
+                  </motion.div>
+                </div>
               ))}
             </motion.nav>
           </div>
@@ -337,6 +377,11 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
 // ── DESKTOP/TABLET MENU ───────────────────────────────────
 function DesktopMenu({ open, onClose }: NavMenuProps) {
   const pathname = usePathname();
+
+  // FIX 1: Auto-close whenever the route/pathname changes (including back button)
+  useEffect(() => {
+    if (open) onClose();
+  }, [pathname]);
 
   const initialActiveIndex = useMemo(() => {
     const idx = NAV_LINKS.findIndex(link => link.href === pathname);
@@ -400,7 +445,7 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
   }, [open]);
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {open && (
         <motion.div
           key="nav-menu"
@@ -439,7 +484,6 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
             }
           `}</style>
 
-          {/* Top-Right Absolute Close Button for Desktop/Tablet */}
           <CloseButton 
             onClick={onClose} 
             className="!absolute !top-4 !right-8 lg:!right-14 !z-[30]" 
@@ -447,7 +491,6 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
 
           {/* ── LEFT PANEL ── */}
           <div className="!relative !flex !flex-col !justify-between !pb-12 !w-full !h-full !z-10">
-            {/* Header section with Logo — Matched exactly to Header dimensions */}
             <div id="nav-header-bar-desktop" className="!flex !items-center !justify-between !w-full">
               <SharedLogoMarkup onClose={onClose} />
             </div>
@@ -462,15 +505,17 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
                 className="!flex !flex-col !gap-4 !items-start"
               >
                 {NAV_LINKS.map(({ label, href }, i) => (
-                  <motion.div key={label} variants={linkVariants} className="!overflow-hidden">
-                    <NavLink
-                      label={label}
-                      href={href}
-                      isActive={hoveredIndex === i}
-                      onClose={onClose}
-                      onMouseEnter={() => handleMouseEnter(i)}
-                    />
-                  </motion.div>
+                  <div key={label} className="!overflow-hidden">
+                    <motion.div variants={linkVariants}>
+                      <NavLink
+                        label={label}
+                        href={href}
+                        isActive={hoveredIndex === i}
+                        onClose={onClose}
+                        onMouseEnter={() => handleMouseEnter(i)}
+                      />
+                    </motion.div>
+                  </div>
                 ))}
               </motion.nav>
             </div>
@@ -538,7 +583,7 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
     : <DesktopMenu open={open} onClose={onClose} />;
 }
 
-// ── NAV LINK ──
+// ── NAV LINK (FIX 2: Uses Next.js Link instead of plain <a>) ──
 function NavLink({
   label, href, isActive, onClose, onMouseEnter, isMobile = false,
 }: {
@@ -551,7 +596,7 @@ function NavLink({
   const highlighted = isActive || isCurrentPage || isTouched;
 
   return (
-    <a
+    <Link
       href={href}
       onClick={onClose}
       onMouseEnter={onMouseEnter}
@@ -577,6 +622,6 @@ function NavLink({
       >
         {label}
       </span>
-    </a>
+    </Link>
   );
 }
