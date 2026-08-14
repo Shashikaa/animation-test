@@ -35,7 +35,7 @@ export default function AboutMobile() {
     trackTopOffset: 0,
   });
 
-  const rawProgress = useRef(0);
+  const currentProgress = useRef(0);
   const targetProgress = useRef(0);
   const rafId = useRef<number | null>(null);
   const lastSec5Idx = useRef(-1);
@@ -102,39 +102,17 @@ export default function AboutMobile() {
       scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
 
     let isRunning = true;
-    let lastTime = performance.now();
 
-    const MAX_PROGRESS_SPEED = 1.0;
-    const PROGRESS_SMOOTHNESS = 0.21;
+    // Direct, light smoothing factor (higher = faster response, lower = floatier)
+    const EASE_FACTOR = 0.12; 
 
-    const render = (time: number) => {
+    const render = () => {
       if (!isRunning) return;
 
-      const deltaTime = Math.min(
-        (time - lastTime) / 1000,
-        0.05
-      );
-
-      lastTime = time;
-
-      const current = rawProgress.current;
-      const target = targetProgress.current;
-
-      let next =
-        current +
-        (target - current) * PROGRESS_SMOOTHNESS;
-
-      const maxStep = MAX_PROGRESS_SPEED * deltaTime;
-
-      if (Math.abs(next - current) > maxStep) {
-        next =
-          current +
-          Math.sign(next - current) * maxStep;
-      }
-
-      rawProgress.current = clamp(next);
-
-      const p = rawProgress.current;
+      // Clean single-layer lerp to sync with display refresh rate
+      currentProgress.current += (targetProgress.current - currentProgress.current) * EASE_FACTOR;
+      
+      const p = currentProgress.current;
 
       // ─────────────────────────────────────
       // TIMELINE
@@ -142,15 +120,8 @@ export default function AboutMobile() {
 
       const s1Prog = mapRange(p, 0.00, 0.12);
       const s2Prog = mapRange(p, 0.12, 0.24);
-
-      /*
-       * Section 3 fluid timeline:
-       * Entrance: 0.24 -> 0.36
-       * Exit: 0.36 -> 0.48 (No pause/gap between entrance and exit)
-       */
       const s3EntranceProg = mapRange(p, 0.24, 0.36);
       const s3ExitProg = mapRange(p, 0.36, 0.48);
-
       const s5EntranceProg = mapRange(p, 0.48, 0.60);
       const s5ActiveProg = mapRange(p, 0.60, 0.82);
       const footerProgress = mapRange(p, 0.82, 1.00);
@@ -163,19 +134,19 @@ export default function AboutMobile() {
         // Section 1
         if (panels[1]) {
           const y = (1 - s1Prog) * 100;
-          panels[1].style.transform = `translate3d(0, ${y.toFixed(3)}%, 0)`;
+          panels[1].style.transform = `translate3d(0, ${y}%, 0)`;
         }
 
         // Section 2
         if (panels[2]) {
           const y = (1 - s2Prog) * 100;
-          panels[2].style.transform = `translate3d(0, ${y.toFixed(3)}%, 0)`;
+          panels[2].style.transform = `translate3d(0, ${y}%, 0)`;
         }
 
-        // Section 3 (Seamless continuous motion)
+        // Section 3
         if (panels[3]) {
           const y = (1 - s3EntranceProg) * 100 - (s3ExitProg * 110);
-          panels[3].style.transform = `translate3d(0, ${y.toFixed(3)}%, 0)`;
+          panels[3].style.transform = `translate3d(0, ${y}%, 0)`;
         }
 
         // Section 4
@@ -188,7 +159,7 @@ export default function AboutMobile() {
         // Section 5
         if (panels[5]) {
           const y = (1 - s5EntranceProg) * 100;
-          panels[5].style.transform = `translate3d(0, ${y.toFixed(3)}%, 0)`;
+          panels[5].style.transform = `translate3d(0, ${y}%, 0)`;
         }
       }
 
@@ -201,7 +172,7 @@ export default function AboutMobile() {
       if (layer7Ref.current) {
         const footerHeight = layer7Ref.current.offsetHeight || vh;
         const y = vh - footerHeight * footerProgress;
-        layer7Ref.current.style.transform = `translate3d(0, ${y.toFixed(2)}px, 0)`;
+        layer7Ref.current.style.transform = `translate3d(0, ${y}px, 0)`;
       }
 
       // ─────────────────────────────────────
@@ -210,7 +181,7 @@ export default function AboutMobile() {
 
       if (s5Bg) {
         const parallaxProg = mapRange(p, 0.48, 0.82);
-        s5Bg.style.transform = `translate3d(0, ${(-parallaxProg * 50).toFixed(2)}%, 0)`;
+        s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
       }
 
       // ─────────────────────────────────────
@@ -274,7 +245,6 @@ export default function AboutMobile() {
     }
 
     handleScroll();
-
     rafId.current = requestAnimationFrame(render);
 
     return () => {
