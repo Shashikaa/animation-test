@@ -105,7 +105,7 @@ export default function AboutMobile() {
     let lastTime = performance.now();
 
     const MAX_PROGRESS_SPEED = 1.15;
-    const PROGRESS_SMOOTHNESS = 0.61;
+    const PROGRESS_SMOOTHNESS = 0.21;
 
     const render = (time: number) => {
       if (!isRunning) return;
@@ -144,17 +144,13 @@ export default function AboutMobile() {
       const s2Prog = mapRange(p, 0.12, 0.24);
 
       /*
-       * Section 3 adjusted bounds:
+       * Section 3 fluid timeline:
        * Entrance: 0.24 -> 0.36
-       * Pause/Hold: 0.36 -> 0.40 (prevents immediate abrupt scroll-out on small screens)
-       * Exit: 0.40 -> 0.50
+       * Exit: 0.36 -> 0.48 (No pause/gap between entrance and exit)
        */
       const s3EntranceProg = mapRange(p, 0.24, 0.36);
-      const s3ExitProg = mapRange(p, 0.40, 0.50);
+      const s3ExitProg = mapRange(p, 0.36, 0.48);
 
-      /*
-       * Section 5 Timeline shifted slightly to align with S3 exit
-       */
       const s5EntranceProg = mapRange(p, 0.48, 0.60);
       const s5ActiveProg = mapRange(p, 0.60, 0.82);
       const footerProgress = mapRange(p, 0.82, 1.00);
@@ -176,15 +172,9 @@ export default function AboutMobile() {
           panels[2].style.transform = `translate3d(0, ${y.toFixed(3)}%, 0)`;
         }
 
-        // Section 3 (FIX APPLIED HERE)
+        // Section 3 (Seamless continuous motion)
         if (panels[3]) {
-          let y = (1 - s3EntranceProg) * 100;
-
-          if (s3EntranceProg >= 1) {
-            // Overshoot to -110% to ensure 100% offscreen translation on small screens/safari address bar resizes
-            y = -s3ExitProg * 110;
-          }
-
+          const y = (1 - s3EntranceProg) * 100 - (s3ExitProg * 110);
           panels[3].style.transform = `translate3d(0, ${y.toFixed(3)}%, 0)`;
         }
 
