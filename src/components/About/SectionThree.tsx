@@ -8,7 +8,7 @@ export default function SectionThree() {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full h-screen overflow-hidden"
+      className="relative w-full h-full overflow-hidden"
       style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
     >
       {/* ── DESKTOP: Static Background Image ── */}

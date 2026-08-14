@@ -105,7 +105,7 @@ export default function AboutMobile() {
     let lastTime = performance.now();
 
     const MAX_PROGRESS_SPEED = 1.15;
-    const PROGRESS_SMOOTHNESS = 0.31;
+    const PROGRESS_SMOOTHNESS = 0.61;
 
     const render = (time: number) => {
       if (!isRunning) return;
