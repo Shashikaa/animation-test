@@ -28,7 +28,7 @@ export default function AboutMobile() {
 
   const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
   const rawProgress = useRef(0);
-  const smoothProgress = useRef(0); // Clamped speed tracker
+  const smoothProgress = useRef(0);
   
   const rafId = useRef<number | null>(null);
   const lastSec5Idx = useRef<number>(-1);
@@ -67,7 +67,7 @@ export default function AboutMobile() {
     }
   }, []);
 
-  // ── SMOOTHLY CONTROLLED MOBILE ENGINE ──
+  // ── OPTIMIZED SMOOTH CONTROLLED MOBILE ENGINE ──
   useEffect(() => {
     if (!shouldLoadRest) return;
 
@@ -79,9 +79,9 @@ export default function AboutMobile() {
     const render = () => {
       if (!isRunning) return;
 
-      // Smooth dampening factor (0.12) caps fast swipes so animation plays out progressively
+      // Increased dampening speed from 0.12 to 0.22 for responsive touch speed while keeping 60fps smoothness
       const diff = rawProgress.current - smoothProgress.current;
-      smoothProgress.current += diff * 0.12;
+      smoothProgress.current += diff * 0.22;
       const p = smoothProgress.current;
 
       const s1Prog = mapRange(p, 0.00, 0.14);
