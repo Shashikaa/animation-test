@@ -27,55 +27,25 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     const initLocomotive = async () => {
       const LocomotiveScroll = (await import("locomotive-scroll")).default;
 
-      const ua = navigator.userAgent;
-      const isAndroid = /Android/i.test(ua);
-      const isIOS = /iPhone|iPad|iPod/i.test(ua);
-      const isMobileDevice = isAndroid || isIOS;
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
 
-      // Tailored options per platform to balance momentum vs native address bar behavior
-      const lenisOptions = isIOS
-        ? {
-            wrapper: window,
-            content: document.documentElement,
-            lerp: 0.1, // Higher responsiveness for iOS touch gestures
-            duration: undefined,
-            smoothWheel: true,
-            touchMultiplier: 2.2, // Increases momentum on iOS so 1 swipe moves further
-            wheelMultiplier: 1.0,
-            syncTouch: false, // Prevents fighting iOS Safari browser chrome collapse
-            syncTouchLerp: 0.08,
-            easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            autoResize: true,
-          }
-        : isAndroid
-        ? {
-            wrapper: window,
-            content: document.documentElement,
-            lerp: 0.08,
-            duration: undefined,
-            smoothWheel: true,
-            touchMultiplier: 1.5, // Natural scroll multiplier for Android Chrome
-            wheelMultiplier: 1.0,
-            syncTouch: false,
-            syncTouchLerp: 0.08,
-            easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            autoResize: true,
-          }
-        : {
-            // Desktop settings
-            wrapper: window,
-            content: document.documentElement,
-            lerp: 0.075,
-            duration: undefined,
-            smoothWheel: true,
-            wheelMultiplier: 1.0,
-            touchMultiplier: 1.0,
-            syncTouch: true,
-            easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            autoResize: true,
-          };
-
-      instance = new LocomotiveScroll({ lenisOptions });
+      instance = new LocomotiveScroll({
+        lenisOptions: {
+          wrapper: window,
+          content: document.documentElement,
+          lerp: isMobileDevice ? 0.16 : 0.075,
+          duration: isMobileDevice ? 0.6 : undefined,
+          smoothWheel: true,
+          wheelMultiplier: 1.0,
+          touchMultiplier: 1.5,
+          /* Set syncTouch to false so Lenis doesn't manipulate native touch events that alter mobile address bar state */
+          syncTouch: false,
+          easing: isMobileDevice ? undefined : (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          autoResize: true,
+        },
+      });
 
       locomotiveRef.current = instance;
 
@@ -108,7 +78,8 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   }, [pathname, preloaderDone]);
 
   return (
-    <div className="flex flex-col min-h-[100svh] w-full relative">
+    /* Changed to min-h-[100lvh] to maintain a fixed static viewport without address-bar height shifts */
+    <div className="flex flex-col min-h-[100lvh] w-full relative">
       <CustomScrollBar />
       {children}
     </div>

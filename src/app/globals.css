@@ -77,12 +77,11 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   
-  scroll-behavior: auto !important; 
   min-height: 100%;
   width: 100%;
 
+  /* Allowed native touch events to pass to Lenis without blocking scroll */
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y !important;
 }
 
 /* ─── Hide native scrollbar on all screens ─────────────────── */
@@ -200,6 +199,7 @@ body.preloading header {
   width: 100%;
 }
 
+/* ─── Static Viewport Lock (Prevents address bar resize shifts) ─── */
 .pin-all,
 .pin-all-home,
 .pin-all-contact,
@@ -207,20 +207,20 @@ body.preloading header {
 .pin-all-services,
 .pin-all-subservices,
 .pin-all-single-project {
-  height: 100dvh !important;
-  min-height: 100dvh !important;
+  height: 100lvh !important;
+  min-height: 100lvh !important;
   width: 100%;
   position: relative;
   overflow: hidden;
 }
 
 .pin-spacer {
-  min-height: 100dvh !important;
+  min-height: 100lvh !important;
   pointer-events: auto !important;
 }
 
 .pin-spacer > div {
-  height: 100dvh !important;
+  height: 100lvh !important;
   max-height: none !important;
 }
 
@@ -450,14 +450,14 @@ button.btn-underline:hover::after,
 /* ─── Stack Track & Viewport Layout Lock ─────────────────────── */
 
 .about-stack-layer {
-  height: 100dvh;
-  max-height: 100dvh;
+  height: 100lvh;
+  max-height: 100lvh;
 }
 
 .about-stack-layer.layer-auto-height {
   height: auto !important;
   max-height: none !important;
-  min-height: 100dvh;
+  min-height: 100lvh;
 }
 
 /* ─── Hardware-Isolated Keyframe Hero Intro ──────────────── */
