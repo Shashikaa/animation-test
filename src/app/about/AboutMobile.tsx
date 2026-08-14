@@ -28,13 +28,12 @@ export default function AboutMobile() {
 
   const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
   const rawProgress = useRef(0);
-  const smoothProgress = useRef(0);
   
   const rafId = useRef<number | null>(null);
   const lastSec5Idx = useRef<number>(-1);
 
   const { smootherRef } = useSite();
-  const { preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
+  const { shouldLoadRest } = useHeroIntro(scopeRef, {
     isMobile: true,
     introDurationMs: 2800,
     unlockScrollEarlyMs: 1800,
@@ -79,24 +78,46 @@ export default function AboutMobile() {
     const render = () => {
       if (!isRunning) return;
 
-      // Increased dampening speed from 0.12 to 0.22 for responsive touch speed while keeping 60fps smoothness
-      const diff = rawProgress.current - smoothProgress.current;
-      smoothProgress.current += diff * 0.22;
-      const p = smoothProgress.current;
+      // Direct usage of smooth scroll progress from Lenis
+      const p = rawProgress.current;
 
-      const s1Prog = mapRange(p, 0.00, 0.14);
-      const s2Prog = mapRange(p, 0.14, 0.28);
-      const s3Prog = mapRange(p, 0.28, 0.42);
-      const s4Prog = mapRange(p, 0.42, 0.56);
-      const s5Prog = mapRange(p, 0.56, 0.70);
-      const footerProgress = mapRange(p, 0.86, 1.00);
+      // ── CONTINUOUS TIMELINE (NO DEAD SCROLL GAPS) ──
+      const s1Prog = mapRange(p, 0.00, 0.12);
+      const s2Prog = mapRange(p, 0.12, 0.24);
+      
+      // Section 3: Slides up (0.24 -> 0.36), then slides away upwards (0.36 -> 0.48)
+      const s3EntranceProg = mapRange(p, 0.24, 0.36);
+      const s3ExitProg = mapRange(p, 0.36, 0.48);
+
+      // Section 5: Starts entering RIGHT as Sec 3 finishes exiting (0.48 -> 0.60)
+      const s5EntranceProg = mapRange(p, 0.48, 0.60);
+      
+      // Section 5 pinned slide steps (0.60 -> 0.82)
+      const s5ActiveProg = mapRange(p, 0.60, 0.82);
+
+      // Footer overlay (0.82 -> 1.00)
+      const footerProgress = mapRange(p, 0.82, 1.00);
 
       if (panels && panels.length > 0) {
+        // Hero / Sec 1 / Sec 2
         if (panels[1]) panels[1].style.transform = `translate3d(0, ${((1 - s1Prog) * 100).toFixed(3)}%, 0)`;
         if (panels[2]) panels[2].style.transform = `translate3d(0, ${((1 - s2Prog) * 100).toFixed(3)}%, 0)`;
-        if (panels[3]) panels[3].style.transform = `translate3d(0, ${((1 - s3Prog) * 100).toFixed(3)}%, 0)`;
-        if (panels[4]) panels[4].style.transform = `translate3d(0, ${((1 - s4Prog) * 100).toFixed(3)}%, 0)`;
-        if (panels[5]) panels[5].style.transform = `translate3d(0, ${((1 - s5Prog) * 100).toFixed(3)}%, 0)`;
+
+        // Section 3
+        if (panels[3]) {
+          const yOffset = s3ExitProg > 0 ? -s3ExitProg * 100 : (1 - s3EntranceProg) * 100;
+          panels[3].style.transform = `translate3d(0, ${yOffset.toFixed(3)}%, 0)`;
+        }
+
+        // Section 4: Static underlying panel revealed behind Section 3
+        if (panels[4]) {
+          const isVisible = p >= 0.36;
+          panels[4].style.opacity = isVisible ? "1" : "0";
+          panels[4].style.pointerEvents = isVisible ? "auto" : "none";
+        }
+
+        // Section 5: Overlays Section 4 seamlessly
+        if (panels[5]) panels[5].style.transform = `translate3d(0, ${((1 - s5EntranceProg) * 100).toFixed(3)}%, 0)`;
       }
 
       const { vh } = scrollMetricsRef.current;
@@ -108,17 +129,17 @@ export default function AboutMobile() {
       }
 
       if (s5Bg) {
-        const parallaxProg = mapRange(p, 0.56, 0.86);
+        const parallaxProg = mapRange(p, 0.48, 0.82);
         s5Bg.style.transform = `translate3d(0, ${(-parallaxProg * 50).toFixed(2)}%, 0)`;
       }
 
-      if (p >= 0.70 && p < 0.86) {
+      // Handle active state & steps inside Section 5
+      if (p >= 0.60 && p < 0.82) {
         setIsSectionFiveActive(true);
-        const s5Internal = mapRange(p, 0.70, 0.86);
-        if (s5Internal < 0.33) triggerSec5Hook(0);
-        else if (s5Internal < 0.66) triggerSec5Hook(1);
+        if (s5ActiveProg < 0.33) triggerSec5Hook(0);
+        else if (s5ActiveProg < 0.66) triggerSec5Hook(1);
         else triggerSec5Hook(2);
-      } else if (p < 0.70) {
+      } else if (p < 0.60) {
         setIsSectionFiveActive(false);
         triggerSec5Hook(0);
       }
@@ -182,7 +203,7 @@ export default function AboutMobile() {
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
-        style={{ height: "700vh" }}
+        style={{ height: "600vh" }}
       >
         <div
           ref={fixedFrameRef}
@@ -206,24 +227,31 @@ export default function AboutMobile() {
               >
                 <SectionTwo />
               </div>
-              <div
-                className="about-stack-layer absolute inset-0 w-full h-[100vh] z-40 gpu-accelerated will-change-transform"
-                style={{ transform: "translate3d(0, 100%, 0)" }}
-              >
-                <SectionThree />
-              </div>
+
+              {/* Section Three */}
               <div
                 className="about-stack-layer absolute inset-0 w-full h-[100vh] z-50 gpu-accelerated will-change-transform"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
+                <SectionThree />
+              </div>
+
+              {/* Section Four */}
+              <div
+                className="about-stack-layer absolute inset-0 w-full h-[100vh] z-40 gpu-accelerated opacity-0 pointer-events-none"
+              >
                 <SectionFour />
               </div>
+
+              {/* Section Five */}
               <div
                 className="about-stack-layer absolute inset-0 w-full h-[100vh] z-[60] gpu-accelerated will-change-transform"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionFive isActive={isSectionFiveActive} />
               </div>
+
+              {/* Footer */}
               <div
                 ref={layer7Ref}
                 className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[151] will-change-transform"

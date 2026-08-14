@@ -38,14 +38,16 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       instance = new Lenis({
         wrapper: window,
         content: document.documentElement,
-        lerp: 0.08, // Slightly snappier tracking (from 0.055)
-        duration: 1.2, // Faster response time (from 1.4)
+        lerp: 0.08,
+        duration: 1.2,
         smoothWheel: true,
         wheelMultiplier: 1.0,
-        // ── OPTIMIZED TOUCH SETTINGS FOR MOBILE SPEED & SMOOTHNESS ──
-        touchMultiplier: 1.5, // Increased from 0.8 to give faster response to flicks
-        syncTouch: true,
-        syncTouchLerp: 0.08, // Increased from 0.04 to remove inertia lag on mobile
+
+        // ── MOBILE TOUCH CONFIGURATION (Lenis v1.x+) ──
+        syncTouch: true,          // Intercepts native touch & runs smooth inertia
+        syncTouchLerp: 0.08,      // Controls inertia responsiveness on touch devices
+        touchMultiplier: 1.5,     // Adjust touch velocity/flick strength
+        
         easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -9 * t)),
         autoResize: true,
       });
