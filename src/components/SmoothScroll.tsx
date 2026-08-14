@@ -7,7 +7,6 @@ import CustomScrollBar from "./CustomScrollBar";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-// Register ScrollTrigger plugin safely on client
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
@@ -34,20 +33,20 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     let scrollTimeout: NodeJS.Timeout;
 
     const initLenis = async () => {
-      // Dynamic import Lenis
       const Lenis = (await import("lenis")).default;
 
       instance = new Lenis({
         wrapper: window,
         content: document.documentElement,
-        lerp: 0.075, // Golden ratio for smooth inertia
-        duration: 1.2,
+        lerp: 0.055,
+        duration: 1.4,
         smoothWheel: true,
         wheelMultiplier: 1.0,
-        touchMultiplier: 1.5,
+        // ── CONTROLLED TOUCH SETTINGS FOR MOBILE ──
+        touchMultiplier: 0.8, // Reduces touch speed boost on fast flicks
         syncTouch: true,
-        syncTouchLerp: 0.075,
-        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Exponential ease-out
+        syncTouchLerp: 0.04, // Adds subtle inertia buffer to prevent instant drop
+        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -9 * t)),
         autoResize: true,
       });
 
@@ -57,11 +56,8 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
         smootherRef.current = instance;
       }
 
-      // 1. Sync Lenis scroll events directly with GSAP ScrollTrigger
-      instance.on("scroll", (e: any) => {
+      instance.on("scroll", () => {
         ScrollTrigger.update();
-
-        // Performance Boost: Disable pointer-events globally while scrolling to boost FPS
         document.documentElement.classList.add("is-scrolling");
         clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(() => {
@@ -69,13 +65,10 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
         }, 150);
       });
 
-      // 2. Drive Lenis through GSAP's optimized internal ticker
       tickerCallback = (time: number) => {
         instance.raf(time * 1000);
       };
       gsap.ticker.add(tickerCallback);
-
-      // 3. Disable GSAP lag smoothing to fix layout jumping / pin latency
       gsap.ticker.lagSmoothing(0);
 
       onScrollReady?.();
@@ -96,7 +89,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     };
   }, [onScrollReady, smootherRef]);
 
-  // Handle route switching & preloader sync
   useEffect(() => {
     if (!lenisRef.current) return;
 
@@ -105,8 +97,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     } else {
       lenisRef.current.start();
       lenisRef.current.scrollTo(0, { immediate: true });
-      
-      // Force GSAP ScrollTrigger to recalculate all offsets/pins post-load
+
       setTimeout(() => {
         ScrollTrigger.refresh();
       }, 100);

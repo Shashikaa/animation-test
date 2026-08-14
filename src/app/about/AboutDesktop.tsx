@@ -40,7 +40,6 @@ export default function AboutDesktop() {
     unlockScrollEarlyMs: 1800,
   });
 
-  // ── 1. UNLOCK SCROLL & LENIS ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -62,7 +61,6 @@ export default function AboutDesktop() {
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // ── 2. MEASURE BOUNDS (NO LAYOUT THRASH) ──
   const measure = useCallback(() => {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
@@ -91,7 +89,6 @@ export default function AboutDesktop() {
     };
   }, [shouldLoadRest, measure]);
 
-  // ── 3. SECTION 5 HOOK ──
   const triggerSec5Hook = useCallback((nextIdx: number) => {
     if (nextIdx !== lastSec5Idx.current) {
       lastSec5Idx.current = nextIdx;
@@ -101,7 +98,6 @@ export default function AboutDesktop() {
     }
   }, []);
 
-  // ── 4. TEXT REVEALS ──
   const triggerPlayOnceTextReveal = useCallback((
     containerSelector: string,
     currentStepProg: number,
@@ -150,14 +146,13 @@ export default function AboutDesktop() {
     };
   }, [shouldLoadRest]);
 
-  // ── 5. DIRECT HIGH-FPS RENDER ENGINE (REMOVED SECONDARY LERP) ──
+  // ── HIGH-FPS DIRECT ENGINE ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
     const scope = scopeRef.current;
     let isRunning = true;
 
-    // Cache elements
     const heroLeft = scope.querySelector<HTMLElement>(".about-hero-panel-left");
     const heroRight = scope.querySelector<HTMLElement>(".about-hero-panel-right");
     const heroBgs = scope.querySelectorAll<HTMLElement>(".about-hero-bg");
@@ -171,7 +166,7 @@ export default function AboutDesktop() {
     const renderTransforms = () => {
       if (!isRunning) return;
 
-      // Direct drive from Lenis smooth progress (Eliminates lag and latency)
+      // Driven directly by targetProgress (Lenis position) without artificial lag
       const currentProgress = targetProgress.current;
       const stepProgress = currentProgress * (TOTAL_SCROLL_STEPS - 1);
       const { ctaHeight, footerHeight, vh } = dimensionsRef.current;
@@ -330,7 +325,6 @@ export default function AboutDesktop() {
           ref={fixedFrameRef}
           className="about-pin fixed top-0 left-0 h-[100vh] w-full overflow-hidden bg-[#162D24] z-10 transform-gpu"
         >
-          {/* HERO COMPONENT */}
           <div
             className="absolute inset-0 h-full w-full structural-layer transform-gpu"
             style={{ zIndex: 20 }}
@@ -338,7 +332,6 @@ export default function AboutDesktop() {
             <Hero isMobile={false} />
           </div>
 
-          {/* DOWNSTREAM SECTIONS */}
           {shouldLoadRest && (
             <>
               <div
