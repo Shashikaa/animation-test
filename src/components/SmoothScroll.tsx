@@ -34,18 +34,20 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
       const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
-      instance = new Lenis({
-        wrapper: window,
-        content: document.documentElement,
-        lerp: isMobile ? 0.06 : 0.08,
-        smoothWheel: true,
-        wheelMultiplier: isMobile ? 0.85 : 1,
-        syncTouch: true,
-        syncTouchLerp: isMobile ? 0.04 : 0.08,
-        touchMultiplier: isMobile ? 0.75 : 1,
-        easing: (t: number) => 1 - Math.pow(1 - t, 4),
-        autoResize: true,
-      });
+instance = new Lenis({
+  wrapper: window,
+  content: document.documentElement,
+  lerp: 0.12,
+  duration: 0.8,
+  smoothWheel: true,
+  wheelMultiplier: 1.15,
+  syncTouch: true,
+  syncTouchLerp: 0.14,
+  touchMultiplier: 1.8,
+  easing: (t: number) =>
+    Math.min(1, 1.001 - Math.pow(2, -9 * t)),
+  autoResize: true,
+});
 
       lenisRef.current = instance;
       if (smootherRef) smootherRef.current = instance;
