@@ -14,9 +14,11 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   const { preloaderDone, smootherRef } = useSite();
   const pathname = usePathname();
   const locomotiveRef = useRef<any>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !wrapperRef.current || !contentRef.current) return;
 
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
@@ -33,14 +35,14 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
       instance = new LocomotiveScroll({
         lenisOptions: {
-          wrapper: window,
-          content: document.documentElement,
+          /* Target wrapper and content directly instead of window/documentElement */
+          wrapper: wrapperRef.current!,
+          content: contentRef.current!,
           lerp: isMobileDevice ? 0.16 : 0.075,
           duration: isMobileDevice ? 0.6 : undefined,
           smoothWheel: true,
           wheelMultiplier: 1.0,
           touchMultiplier: 1.5,
-          /* Set syncTouch to false so Lenis doesn't manipulate native touch events that alter mobile address bar state */
           syncTouch: false,
           easing: isMobileDevice ? undefined : (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
           autoResize: true,
@@ -78,10 +80,15 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   }, [pathname, preloaderDone]);
 
   return (
-    /* Changed to min-h-[100lvh] to maintain a fixed static viewport without address-bar height shifts */
-    <div className="flex flex-col min-h-[100lvh] w-full relative">
-      <CustomScrollBar />
-      {children}
+    <div
+      ref={wrapperRef}
+      className="fixed inset-0 w-full h-full overflow-y-auto overflow-x-hidden"
+      style={{ WebkitOverflowScrolling: "touch" }}
+    >
+      <div ref={contentRef} className="flex flex-col min-h-[100lvh] w-full relative">
+        <CustomScrollBar />
+        {children}
+      </div>
     </div>
   );
 }
