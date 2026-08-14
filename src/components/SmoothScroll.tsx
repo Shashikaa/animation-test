@@ -4,6 +4,13 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useSite } from "../app/context/SiteContext";
 import CustomScrollBar from "./CustomScrollBar";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+// Register ScrollTrigger plugin safely on client
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 interface SmoothScrollProps {
   children: React.ReactNode;
@@ -13,7 +20,7 @@ interface SmoothScrollProps {
 export default function SmoothScroll({ children, onScrollReady }: SmoothScrollProps) {
   const { preloaderDone, smootherRef } = useSite();
   const pathname = usePathname();
-  const locomotiveRef = useRef<any>(null);
+  const lenisRef = useRef<any>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -23,58 +30,86 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     }
 
     let instance: any;
+    let tickerCallback: (time: number) => void;
+    let scrollTimeout: NodeJS.Timeout;
 
-    const initLocomotive = async () => {
-      const LocomotiveScroll = (await import("locomotive-scroll")).default;
+    const initLenis = async () => {
+      // Dynamic import Lenis
+      const Lenis = (await import("lenis")).default;
 
-      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      );
-
-      instance = new LocomotiveScroll({
-        lenisOptions: {
-          wrapper: window,
-          content: document.documentElement,
-          // Mobile settings strictly untouched
-          lerp: isMobileDevice ? 0.16 : 0.075,
-          duration: isMobileDevice ? 0.6 : undefined,
-          smoothWheel: true,
-          wheelMultiplier: 1.0, // Desktop mouse scroll normalized to remove jumps
-          touchMultiplier: 2.0, // Mobile untouched
-          syncTouch: true, // Mobile untouched
-          syncTouchLerp: 0.09, // Mobile untouched
-          easing: isMobileDevice ? undefined : (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-          autoResize: true,
-        },
+      instance = new Lenis({
+        wrapper: window,
+        content: document.documentElement,
+        lerp: 0.075, // Golden ratio for smooth inertia
+        duration: 1.2,
+        smoothWheel: true,
+        wheelMultiplier: 1.0,
+        touchMultiplier: 1.5,
+        syncTouch: true,
+        syncTouchLerp: 0.075,
+        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Exponential ease-out
+        autoResize: true,
       });
 
-      locomotiveRef.current = instance;
+      lenisRef.current = instance;
 
       if (smootherRef) {
-        smootherRef.current = instance.lenisInstance || instance;
+        smootherRef.current = instance;
       }
+
+      // 1. Sync Lenis scroll events directly with GSAP ScrollTrigger
+      instance.on("scroll", (e: any) => {
+        ScrollTrigger.update();
+
+        // Performance Boost: Disable pointer-events globally while scrolling to boost FPS
+        document.documentElement.classList.add("is-scrolling");
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          document.documentElement.classList.remove("is-scrolling");
+        }, 150);
+      });
+
+      // 2. Drive Lenis through GSAP's optimized internal ticker
+      tickerCallback = (time: number) => {
+        instance.raf(time * 1000);
+      };
+      gsap.ticker.add(tickerCallback);
+
+      // 3. Disable GSAP lag smoothing to fix layout jumping / pin latency
+      gsap.ticker.lagSmoothing(0);
 
       onScrollReady?.();
     };
 
-    initLocomotive();
+    initLenis();
 
     return () => {
-      if (locomotiveRef.current) {
-        locomotiveRef.current.destroy();
-        locomotiveRef.current = null;
+      if (tickerCallback) {
+        gsap.ticker.remove(tickerCallback);
       }
+      if (lenisRef.current) {
+        lenisRef.current.destroy();
+        lenisRef.current = null;
+      }
+      clearTimeout(scrollTimeout);
+      document.documentElement.classList.remove("is-scrolling");
     };
   }, [onScrollReady, smootherRef]);
 
+  // Handle route switching & preloader sync
   useEffect(() => {
-    if (!locomotiveRef.current) return;
+    if (!lenisRef.current) return;
 
     if (!preloaderDone) {
-      locomotiveRef.current.stop();
+      lenisRef.current.stop();
     } else {
-      locomotiveRef.current.start();
-      locomotiveRef.current.scrollTo(0, { immediate: true });
+      lenisRef.current.start();
+      lenisRef.current.scrollTo(0, { immediate: true });
+      
+      // Force GSAP ScrollTrigger to recalculate all offsets/pins post-load
+      setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 100);
     }
   }, [pathname, preloaderDone]);
 

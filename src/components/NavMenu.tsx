@@ -12,12 +12,32 @@ interface NavMenuProps {
 }
 
 const NAV_LINKS = [
-  { label: "Home", href: "/", image: "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=1400&q=80" },
-  { label: "About Us", href: "/about", image: "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1400&q=80" },
-  { label: "Services", href: "/services", image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=80" },
-  { label: "Projects", href: "/projects", image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400&q=80" },
-  { label: "Contact Us", href: "/contact", image: "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=1400&q=80" },
-]; 
+  { 
+    label: "Home", 
+    href: "/", 
+    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1400&q=80" // High-end architectural villa with custom linear infinity pool
+  },
+  { 
+    label: "About Us", 
+    href: "/about", 
+    image: "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=1400&q=80" 
+  },
+  { 
+    label: "Services", 
+    href: "/services", 
+    image: "https://images.unsplash.com/photo-1572331165267-854da2b10ccc?auto=format&fit=crop&w=1400&q=80" 
+  },
+  { 
+    label: "Projects", 
+    href: "/projects", 
+    image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1400&q=80" 
+  },
+  { 
+    label: "Contact Us", 
+    href: "/contact", 
+    image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1400&q=80" 
+  },
+];
 
 const SOCIAL_LINKS = [
   { label: "Instagram", href: "https://www.instagram.com/grandpools_aus/", src: "/ig.svg" },

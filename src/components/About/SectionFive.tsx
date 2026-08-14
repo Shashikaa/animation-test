@@ -49,8 +49,12 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
       
       {/* TOP / LEFT SIDE */}
       <div className="relative w-full h-[65svh] lg:h-full lg:min-h-screen overflow-hidden bg-[#19211C]">
-        <div className="s5-bg absolute -top-[0%] left-0 w-full h-[240%] bg-cover bg-center will-change-transform bg-[url('/project-aerial2.webp')]" />
-        
+<div 
+  className="s5-bg absolute -top-[0%] left-0 w-full h-[200%] bg-cover bg-center will-change-transform"
+  style={{
+    backgroundImage: `url('https://i.pinimg.com/1200x/c2/2a/07/c22a07cd8a4b2539fd215da26b807e80.jpg')`
+  }}
+/>        
         <div className="absolute inset-0 bg-black/40 pointer-events-none z-[1]" />
         
         <div className="absolute z-10 bottom-[30px] md:bottom-[60px] left-[24px] md:left-[65px] flex flex-col !gap-2 md:!gap-4 overflow-hidden">

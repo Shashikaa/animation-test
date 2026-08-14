@@ -63,7 +63,7 @@
   }
 }
 
-/* ─── Reset & Base ───────────────────────────────────────────── */
+/* ─── Reset & Core Document Rules ────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin:     0;
@@ -83,12 +83,11 @@ html, body {
 
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y !important;
-}
 
-/* ─── Hide native scrollbar on all screens ─────────────────── */
-html, body {
+  /* Hide native scrollbar on all screens globally */
   scrollbar-width: none;
   -ms-overflow-style: none;
+  overflow-x: hidden;
 }
 
 html::-webkit-scrollbar,
@@ -103,46 +102,106 @@ body {
   font-family:  var(--font-body);
   font-size:    var(--text-body);
   line-height:  var(--leading-body);
-  overflow-x:   hidden;
   overflow-y:   auto;
 }
 
-/* ─── Buttery Smooth Scroll & Pinning Enhancements ─────────────── */
+/* ─── Unified Global Smooth Scroll & Hardware Engine ──────────── */
 
-/* Force Hardware GPU Layering & Prevent Subpixel Jitter */
-.transform-gpu {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  perspective: 1000px;
-  -webkit-perspective: 1000px;
-  will-change: transform;
+/* 1. Global Lenis Integration */
+html.lenis,
+html.lenis body {
+  height: auto;
 }
 
-/* Ensure absolute spatial stability for all fixed pin viewports */
-.contact-pin,
-.about-pin,
-.projects-pin,
-.services-pin,
-.sub-services-pin,
-.pin-all {
-  -webkit-transform-style: preserve-3d;
-  transform-style: preserve-3d;
-  will-change: transform;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
 }
 
-/* Optimize momentum scroll tracks for iOS and high-refresh desktop monitors */
-.contact-track-container,
-.about-track-container,
-.projects-track-container,
-.services-track,
-.sub-services-track,
-.single-project-track,
-.home-track-container {
+.lenis.lenis-stopped,
+body.scroll-locked {
+  overflow: hidden !important;
+}
+
+/* 2. Scrolling FPS Optimizations */
+/* Disables pointer-events during scroll to prevent expensive desktop hover calculations */
+html.is-scrolling,
+html.is-scrolling * {
+  pointer-events: none !important;
+}
+
+/* 3. Global Overscroll Containment for nested scroll areas */
+[data-lenis-prevent],
+.overflow-y-auto,
+.overflow-auto {
+  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  overflow: visible !important;
+}
+
+/* 4. Non-breaking GPU Hardware Layering */
+[data-parallax],
+.will-animate {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* Prevent sub-pixel image jitter on scroll transforms */
+img, video {
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* 5. Desktop vs Mobile Specific Tweaks */
+
+/* Desktop Optimizations */
+@media (min-width: 1025px) {
+  section, .scroll-container {
+    contain: content; /* Isolates layout recalculations to single sections */
+  }
+}
+
+/* Mobile & Tablet Optimizations */
+@media (max-width: 1024px) {
+  /* Prevent horizontal drag shifts on iOS/Android gesture navigation */
+  html, body {
+    overscroll-behavior-x: none;
+  }
+
+  /* Prevent mobile webkit momentum rubber-banding on pinned viewports */
+  .pin-all,
+  .pin-all-home,
+  .pin-all-contact,
+  .pin-all-projects,
+  .pin-all-services {
+    touch-action: pan-y;
+  }
+}
+
+/* 6. Global Pins & Viewport Layouts */
+.pin-all,
+.pin-all-home,
+.pin-all-contact,
+.pin-all-projects,
+.pin-all-services,
+.pin-all-subservices,
+.pin-all-single-project {
+  height: 100dvh;
+  min-height: 100dvh;
+  width: 100%;
+  position: relative;
+}
+
+.pin-spacer {
+  min-height: 100dvh !important;
+  pointer-events: auto !important;
+}
+
+.pin-spacer > div {
+  max-height: none !important;
+}
+
+.section-six-wrapper,
+.section-nine-wrapper {
+  overflow: hidden;
 }
 
 /* ─── Preloader Lock Rules ───────────────────────────────────── */
@@ -174,7 +233,6 @@ body.preloading .about-pin,
   top: 0 !important;
   left: 0 !important;
   width: 100% !important;
-  transform: translate3d(0, 0, 0) !important;
 }
 
 html.preloading .site-root,
@@ -198,43 +256,6 @@ body.preloading header {
 .scroll-container {
   position: relative;
   width: 100%;
-}
-
-.pin-all,
-.pin-all-home,
-.pin-all-contact,
-.pin-all-projects,
-.pin-all-services,
-.pin-all-subservices,
-.pin-all-single-project {
-  height: 100dvh !important;
-  min-height: 100dvh !important;
-  width: 100%;
-  position: relative;
-  overflow: hidden;
-}
-
-.pin-spacer {
-  min-height: 100dvh !important;
-  pointer-events: auto !important;
-}
-
-.pin-spacer > div {
-  height: 100dvh !important;
-  max-height: none !important;
-}
-
-.gpu-accelerated,
-.structural-layer {
-  transform: translate3d(0, 0, 0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  will-change: transform;
-}
-
-.section-six-wrapper,
-.section-nine-wrapper {
-  overflow: hidden;
 }
 
 /* ─── Typography Classes ─────────────────────────────────────── */
@@ -338,17 +359,7 @@ p {
   p  { font-size: 16px; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration:        0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration:       0.01ms !important;
-    scroll-behavior:           auto !important;
-  }
-}
-
+/* ─── Text Reveals & Line Splitting Animations ──────────────── */
 .reveal-text {
   perspective: 1000px;
   backface-visibility: hidden;
@@ -392,6 +403,7 @@ html.page-404 #fade-preloader-root {
   pointer-events: none !important;
 }
 
+/* ─── Button Underline Animations ───────────────────────────── */
 a.btn-underline,
 button.btn-underline,
 .btn-underline {
@@ -436,19 +448,16 @@ button.btn-underline:hover::after,
 .info-img-layer {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  transform: translateZ(0);
   will-change: clip-path;
 }
 
 .info-image-inner {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  transform: translateZ(0);
   will-change: transform;
 }
 
 /* ─── Stack Track & Viewport Layout Lock ─────────────────────── */
-
 .about-stack-layer {
   height: 100dvh;
   max-height: 100dvh;
@@ -461,7 +470,6 @@ button.btn-underline:hover::after,
 }
 
 /* ─── Hardware-Isolated Keyframe Hero Intro ──────────────── */
-
 @keyframes heroZoomOutDesktop {
   0% {
     transform: translate3d(0, 0, 0) scale3d(1.35, 1.35, 1);
@@ -552,4 +560,20 @@ button.btn-underline:hover::after,
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
   animation: none !important;
+}
+
+/* ─── Accessibility: Reduced Motion Override ────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+  
+  *,
+  *::before,
+  *::after {
+    animation-duration:        0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration:       0.01ms !important;
+    scroll-behavior:           auto !important;
+  }
 }

@@ -66,17 +66,20 @@ export default function AboutMobile() {
     }
   }, []);
 
+  // ── HIGH-PERFORMANCE MOBILE ENGINE ──
   useEffect(() => {
     if (!shouldLoadRest) return;
 
     const panels = trackRef.current?.querySelectorAll<HTMLElement>(".about-stack-layer");
     const s5Bg = scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
 
+    let isRunning = true;
+
     const render = () => {
-      // Linear progress for 1:1 consistent tactile travel across all viewports
+      if (!isRunning) return;
+
       const p = rawProgress.current;
 
-      // Evenly spaced linear domain intervals (0.14 step width per panel)
       const s1Prog = mapRange(p, 0.00, 0.14);
       const s2Prog = mapRange(p, 0.14, 0.28);
       const s3Prog = mapRange(p, 0.28, 0.42);
@@ -85,11 +88,11 @@ export default function AboutMobile() {
       const footerProgress = mapRange(p, 0.86, 1.00);
 
       if (panels && panels.length > 0) {
-        if (panels[1]) panels[1].style.transform = `translate3d(0, ${(1 - s1Prog) * 100}%, 0)`;
-        if (panels[2]) panels[2].style.transform = `translate3d(0, ${(1 - s2Prog) * 100}%, 0)`;
-        if (panels[3]) panels[3].style.transform = `translate3d(0, ${(1 - s3Prog) * 100}%, 0)`;
-        if (panels[4]) panels[4].style.transform = `translate3d(0, ${(1 - s4Prog) * 100}%, 0)`;
-        if (panels[5]) panels[5].style.transform = `translate3d(0, ${(1 - s5Prog) * 100}%, 0)`;
+        if (panels[1]) panels[1].style.transform = `translate3d(0, ${((1 - s1Prog) * 100).toFixed(3)}%, 0)`;
+        if (panels[2]) panels[2].style.transform = `translate3d(0, ${((1 - s2Prog) * 100).toFixed(3)}%, 0)`;
+        if (panels[3]) panels[3].style.transform = `translate3d(0, ${((1 - s3Prog) * 100).toFixed(3)}%, 0)`;
+        if (panels[4]) panels[4].style.transform = `translate3d(0, ${((1 - s4Prog) * 100).toFixed(3)}%, 0)`;
+        if (panels[5]) panels[5].style.transform = `translate3d(0, ${((1 - s5Prog) * 100).toFixed(3)}%, 0)`;
       }
 
       const { vh } = scrollMetricsRef.current;
@@ -97,12 +100,12 @@ export default function AboutMobile() {
       if (layer7Ref.current) {
         const footerHeight = layer7Ref.current.offsetHeight || vh;
         const translateY = vh - footerHeight * footerProgress;
-        layer7Ref.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
+        layer7Ref.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
       }
 
       if (s5Bg) {
         const parallaxProg = mapRange(p, 0.56, 0.86);
-        s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
+        s5Bg.style.transform = `translate3d(0, ${(-parallaxProg * 50).toFixed(2)}%, 0)`;
       }
 
       if (p >= 0.70 && p < 0.86) {
@@ -115,6 +118,8 @@ export default function AboutMobile() {
         setIsSectionFiveActive(false);
         triggerSec5Hook(0);
       }
+
+      rafId.current = requestAnimationFrame(render);
     };
 
     const handleScroll = (e?: any) => {
@@ -144,9 +149,6 @@ export default function AboutMobile() {
       }
 
       rawProgress.current = clamp(relativeScroll / totalScrollable);
-
-      if (rafId.current) cancelAnimationFrame(rafId.current);
-      rafId.current = requestAnimationFrame(render);
     };
 
     const lenis = smootherRef?.current;
@@ -157,9 +159,10 @@ export default function AboutMobile() {
     }
 
     handleScroll();
-    render();
+    rafId.current = requestAnimationFrame(render);
 
     return () => {
+      isRunning = false;
       if (rafId.current) cancelAnimationFrame(rafId.current);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
@@ -179,40 +182,40 @@ export default function AboutMobile() {
       >
         <div
           ref={fixedFrameRef}
-          className="fixed top-0 left-0 w-full overflow-hidden z-10 h-[100dvh]"
+          className="fixed top-0 left-0 w-full overflow-hidden z-10 h-[100vh]"
         >
-          <div className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-10 gpu-accelerated transform-gpu will-change-transform">
+          <div className="about-stack-layer absolute inset-0 w-full h-[100vh] z-10 gpu-accelerated transform-gpu will-change-transform">
             <Hero isMobile={true} />
           </div>
 
           {shouldLoadRest && (
             <>
               <div
-                className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-20 gpu-accelerated will-change-transform"
+                className="about-stack-layer absolute inset-0 w-full h-[100vh] z-20 gpu-accelerated will-change-transform"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionOne />
               </div>
               <div
-                className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-30 gpu-accelerated will-change-transform"
+                className="about-stack-layer absolute inset-0 w-full h-[100vh] z-30 gpu-accelerated will-change-transform"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionTwo />
               </div>
               <div
-                className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-40 gpu-accelerated will-change-transform"
+                className="about-stack-layer absolute inset-0 w-full h-[100vh] z-40 gpu-accelerated will-change-transform"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionThree />
               </div>
               <div
-                className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-50 gpu-accelerated will-change-transform"
+                className="about-stack-layer absolute inset-0 w-full h-[100vh] z-50 gpu-accelerated will-change-transform"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionFour />
               </div>
               <div
-                className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-[60] gpu-accelerated will-change-transform"
+                className="about-stack-layer absolute inset-0 w-full h-[100vh] z-[60] gpu-accelerated will-change-transform"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionFive isActive={isSectionFiveActive} />

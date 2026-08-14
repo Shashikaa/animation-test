@@ -16,8 +16,6 @@ const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
 const TOTAL_SCROLL_STEPS = 13;
-
-// QUADRATIC EASING MATCHING HOME DESKTOP
 const easeOutQuad = (t: number) => t * (2 - t);
 
 export default function AboutDesktop() {
@@ -42,7 +40,7 @@ export default function AboutDesktop() {
     unlockScrollEarlyMs: 1800,
   });
 
-  // ── 1. LENIS UNLOCK & SCROLL CONTROL ──
+  // ── 1. UNLOCK SCROLL & LENIS ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -64,7 +62,7 @@ export default function AboutDesktop() {
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // ── 2. METRICS CACHING (PREVENT LAYOUT THRASHING) ──
+  // ── 2. MEASURE BOUNDS (NO LAYOUT THRASH) ──
   const measure = useCallback(() => {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
@@ -122,9 +120,7 @@ export default function AboutDesktop() {
       );
 
       lineInners.forEach((el, idx) => {
-        el.style.transition = `transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${
-          idx * 0.08
-        }s, opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.08}s`;
+        el.style.transition = `transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.08}s, opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.08}s`;
         el.style.transform = "translate3d(0, 0%, 0)";
         el.style.opacity = "1";
       });
@@ -154,13 +150,12 @@ export default function AboutDesktop() {
     };
   }, [shouldLoadRest]);
 
-  // ── 5. ULTRA-SMOOTH CONTINUOUS LERP RENDER ENGINE (HOMEDESKTOP PARITY) ──
+  // ── 5. DIRECT HIGH-FPS RENDER ENGINE (REMOVED SECONDARY LERP) ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
     const scope = scopeRef.current;
     let isRunning = true;
-    let currentProgress = targetProgress.current;
 
     // Cache elements
     const heroLeft = scope.querySelector<HTMLElement>(".about-hero-panel-left");
@@ -173,24 +168,15 @@ export default function AboutDesktop() {
     const secFive = scope.querySelector<HTMLElement>(".about-section-five");
     const s5Bg = scope.querySelector<HTMLElement>(".s5-bg");
 
-    // Hardware promote animated elements
-    [secTwo, secThree, secFour, secFive, s5Bg].forEach((el) => {
-      if (el) {
-        el.style.willChange = "transform, opacity, clip-path";
-        el.style.transform = "translate3d(0, 0, 0)";
-      }
-    });
-
     const renderTransforms = () => {
       if (!isRunning) return;
 
-      // CONTINUOUS SILKY PHYSICS LERP INERTIA
-      currentProgress += (targetProgress.current - currentProgress) * 0.08;
-
+      // Direct drive from Lenis smooth progress (Eliminates lag and latency)
+      const currentProgress = targetProgress.current;
       const stepProgress = currentProgress * (TOTAL_SCROLL_STEPS - 1);
       const { ctaHeight, footerHeight, vh } = dimensionsRef.current;
 
-      // 1. HERO CURTAIN SPLIT
+      // 1. Hero Curtain Split
       const s1Prog = easeOutQuad(Math.min(Math.max(stepProgress, 0), 1));
       if (heroLeft && heroRight) {
         const clipVal = (s1Prog * 100).toFixed(2);
@@ -206,7 +192,7 @@ export default function AboutDesktop() {
       }
       triggerPlayOnceTextReveal(".about-section-one", stepProgress, 0.4);
 
-      // 2. SECTION TWO
+      // 2. Section Two
       const s2Prog = easeOutQuad(Math.min(Math.max((stepProgress - 1.2) / 1.0, 0), 1));
       if (secTwo) {
         secTwo.style.visibility = stepProgress >= 1.0 ? "visible" : "hidden";
@@ -214,7 +200,7 @@ export default function AboutDesktop() {
       }
       triggerPlayOnceTextReveal(".about-section-two", stepProgress, 1.8);
 
-      // 3. SECTION THREE
+      // 3. Section Three
       const s3Prog = easeOutQuad(Math.min(Math.max((stepProgress - 2.4) / 1.0, 0), 1));
       if (secThree) {
         secThree.style.visibility = stepProgress >= 2.2 ? "visible" : "hidden";
@@ -222,7 +208,7 @@ export default function AboutDesktop() {
       }
       triggerPlayOnceTextReveal(".about-section-three", stepProgress, 3.0);
 
-      // 4. SECTION FOUR
+      // 4. Section Four
       const s4Prog = easeOutQuad(Math.min(Math.max((stepProgress - 3.6) / 1.0, 0), 1));
       if (secFour) {
         secFour.style.visibility = stepProgress >= 3.4 ? "visible" : "hidden";
@@ -235,7 +221,7 @@ export default function AboutDesktop() {
       }
       triggerPlayOnceTextReveal(".about-section-four", stepProgress, 4.2);
 
-      // 5. SECTION FIVE
+      // 5. Section Five
       const s5Prog = easeOutQuad(Math.min(Math.max((stepProgress - 4.8) / 1.0, 0), 1));
       if (secFive) {
         secFive.style.visibility = stepProgress >= 4.6 ? "visible" : "hidden";
@@ -258,7 +244,7 @@ export default function AboutDesktop() {
         s5Bg.style.transform = `translate3d(0, ${(-parallaxProg * 50).toFixed(2)}%, 0)`;
       }
 
-      // 6. LAYER 6 (CTA)
+      // 6. Section CTA
       const ctaProgress = easeOutQuad(Math.min(Math.max((stepProgress - 8.2) / 1.8, 0), 1));
       if (layer6Ref.current) {
         const startY = vh;
@@ -267,7 +253,7 @@ export default function AboutDesktop() {
         layer6Ref.current.style.transform = `translate3d(0, ${currentY.toFixed(2)}px, 0)`;
       }
 
-      // 7. LAYER 7 (FOOTER)
+      // 7. Footer
       const footerProgress = easeOutQuad(Math.min(Math.max((stepProgress - 10.0) / 2.0, 0), 1));
       if (layer7Ref.current) {
         const startY = vh;
@@ -276,7 +262,6 @@ export default function AboutDesktop() {
         layer7Ref.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
       }
 
-      // Keep RAF loop running endlessly for continuous momentum smoothing
       rafId.current = requestAnimationFrame(renderTransforms);
     };
 
@@ -343,7 +328,7 @@ export default function AboutDesktop() {
       >
         <div
           ref={fixedFrameRef}
-          className="about-pin fixed top-0 left-0 h-[100svh] w-full overflow-hidden bg-[#162D24] z-10 transform-gpu"
+          className="about-pin fixed top-0 left-0 h-[100vh] w-full overflow-hidden bg-[#162D24] z-10 transform-gpu"
         >
           {/* HERO COMPONENT */}
           <div
@@ -356,7 +341,6 @@ export default function AboutDesktop() {
           {/* DOWNSTREAM SECTIONS */}
           {shouldLoadRest && (
             <>
-              {/* SECTION ONE */}
               <div
                 className="about-section-one absolute inset-0 h-full w-full structural-layer bg-[#162D24] transform-gpu will-change-transform"
                 style={{ zIndex: 10 }}
@@ -364,7 +348,6 @@ export default function AboutDesktop() {
                 <SectionOne />
               </div>
 
-              {/* SECTION TWO */}
               <div
                 className="about-section-two absolute inset-0 h-full w-full structural-layer transform-gpu will-change-transform"
                 style={{ zIndex: 30, visibility: "hidden", transform: "translate3d(0, 100%, 0)" }}
@@ -372,7 +355,6 @@ export default function AboutDesktop() {
                 <SectionTwo />
               </div>
 
-              {/* SECTION THREE */}
               <div
                 className="about-section-three absolute inset-0 h-full w-full structural-layer transform-gpu will-change-[clip-path]"
                 style={{ zIndex: 40, visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)" }}
@@ -380,7 +362,6 @@ export default function AboutDesktop() {
                 <SectionThree />
               </div>
 
-              {/* SECTION FOUR */}
               <div
                 className="about-section-four absolute inset-0 h-full w-full structural-layer transform-gpu will-change-[clip-path]"
                 style={{ zIndex: 50, visibility: "hidden", clipPath: "inset(100% 0% 0% 0%)" }}
@@ -388,7 +369,6 @@ export default function AboutDesktop() {
                 <SectionFour />
               </div>
 
-              {/* SECTION FIVE */}
               <div
                 className="about-section-five absolute inset-0 h-full w-full structural-layer transform-gpu will-change-transform"
                 style={{ zIndex: 60, visibility: "hidden", transform: "translate3d(0, 100%, 0)" }}
@@ -396,7 +376,6 @@ export default function AboutDesktop() {
                 <SectionFive isActive={isSectionFiveActive} />
               </div>
 
-              {/* SECTION CTA */}
               <div
                 ref={layer6Ref}
                 className="about-section-cta absolute left-0 top-0 w-full z-[90] transform-gpu will-change-transform"
@@ -405,7 +384,6 @@ export default function AboutDesktop() {
                 <SectionCTA preloaderDone={isReady} />
               </div>
 
-              {/* FOOTER */}
               <div
                 ref={layer7Ref}
                 className="about-footer-wrap absolute left-0 top-0 w-full z-[100] transform-gpu will-change-transform"
