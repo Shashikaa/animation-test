@@ -7,9 +7,7 @@ import CustomScrollBar from "./CustomScrollBar";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
+if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
 
 interface SmoothScrollProps {
   children: React.ReactNode;
@@ -23,87 +21,77 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-
-    if ("scrollRestoration" in window.history) {
-      window.history.scrollRestoration = "manual";
-    }
+    if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
 
     let instance: any;
-    let tickerCallback: (time: number) => void;
-    let scrollTimeout: NodeJS.Timeout;
+    let tickerCallback: ((time: number) => void) | null = null;
+    let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
+    let destroyed = false;
 
     const initLenis = async () => {
       const Lenis = (await import("lenis")).default;
+      if (destroyed) return;
+
+      const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
       instance = new Lenis({
         wrapper: window,
         content: document.documentElement,
-        lerp: 0.08,
-        duration: 1.2,
+        lerp: isMobile ? 0.06 : 0.08,
         smoothWheel: true,
-        wheelMultiplier: 1.0,
-
-        // ── MOBILE TOUCH CONFIGURATION (Lenis v1.x+) ──
-        syncTouch: true,          // Intercepts native touch & runs smooth inertia
-        syncTouchLerp: 0.08,      // Controls inertia responsiveness on touch devices
-        touchMultiplier: 1.5,     // Adjust touch velocity/flick strength
-        
-        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -9 * t)),
+        wheelMultiplier: isMobile ? 0.85 : 1,
+        syncTouch: true,
+        syncTouchLerp: isMobile ? 0.04 : 0.08,
+        touchMultiplier: isMobile ? 0.75 : 1,
+        easing: (t: number) => 1 - Math.pow(1 - t, 4),
         autoResize: true,
       });
 
       lenisRef.current = instance;
-
-      if (smootherRef) {
-        smootherRef.current = instance;
-      }
+      if (smootherRef) smootherRef.current = instance;
 
       instance.on("scroll", () => {
         ScrollTrigger.update();
         document.documentElement.classList.add("is-scrolling");
-        clearTimeout(scrollTimeout);
+        if (scrollTimeout) clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(() => {
           document.documentElement.classList.remove("is-scrolling");
-        }, 150);
+        }, 120);
       });
 
-      tickerCallback = (time: number) => {
-        instance.raf(time * 1000);
-      };
+      tickerCallback = (time: number) => instance?.raf(time * 1000);
       gsap.ticker.add(tickerCallback);
-      gsap.ticker.lagSmoothing(0);
-
+      gsap.ticker.lagSmoothing(1000, 16);
       onScrollReady?.();
     };
 
     initLenis();
 
     return () => {
-      if (tickerCallback) {
-        gsap.ticker.remove(tickerCallback);
-      }
-      if (lenisRef.current) {
-        lenisRef.current.destroy();
-        lenisRef.current = null;
-      }
-      clearTimeout(scrollTimeout);
+      destroyed = true;
+      if (tickerCallback) gsap.ticker.remove(tickerCallback);
+      if (instance) instance.destroy();
+      lenisRef.current = null;
+      if (smootherRef && smootherRef.current === instance) smootherRef.current = null;
+      if (scrollTimeout) clearTimeout(scrollTimeout);
       document.documentElement.classList.remove("is-scrolling");
     };
   }, [onScrollReady, smootherRef]);
 
   useEffect(() => {
-    if (!lenisRef.current) return;
+    const lenis = lenisRef.current;
+    if (!lenis) return;
 
     if (!preloaderDone) {
-      lenisRef.current.stop();
-    } else {
-      lenisRef.current.start();
-      lenisRef.current.scrollTo(0, { immediate: true });
-
-      setTimeout(() => {
-        ScrollTrigger.refresh();
-      }, 100);
+      lenis.stop();
+      return;
     }
+
+    lenis.start();
+    lenis.scrollTo(0, { immediate: true });
+
+    const timer = setTimeout(() => ScrollTrigger.refresh(), 150);
+    return () => clearTimeout(timer);
   }, [pathname, preloaderDone]);
 
   return (
