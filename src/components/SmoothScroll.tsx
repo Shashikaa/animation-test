@@ -32,31 +32,45 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       const isIOS = /iPhone|iPad|iPod/i.test(ua);
       const isMobileDevice = isAndroid || isIOS;
 
-      // Android-specific Lenis configuration
-      const lenisOptions = isAndroid
+      // Tailored options per platform to balance momentum vs native address bar behavior
+      const lenisOptions = isIOS
         ? {
             wrapper: window,
             content: document.documentElement,
-            lerp: 0.08, // Slightly higher for Android hardware to avoid jitter
+            lerp: 0.1, // Higher responsiveness for iOS touch gestures
             duration: undefined,
             smoothWheel: true,
+            touchMultiplier: 2.2, // Increases momentum on iOS so 1 swipe moves further
             wheelMultiplier: 1.0,
-            touchMultiplier: 0.8, // Reduced multiplier for Android touch events
-            syncTouch: false, // OFF on Android so Chrome doesn't fight Lenis compositor
+            syncTouch: false, // Prevents fighting iOS Safari browser chrome collapse
+            syncTouchLerp: 0.08,
+            easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            autoResize: true,
+          }
+        : isAndroid
+        ? {
+            wrapper: window,
+            content: document.documentElement,
+            lerp: 0.08,
+            duration: undefined,
+            smoothWheel: true,
+            touchMultiplier: 1.5, // Natural scroll multiplier for Android Chrome
+            wheelMultiplier: 1.0,
+            syncTouch: false,
             syncTouchLerp: 0.08,
             easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
             autoResize: true,
           }
         : {
+            // Desktop settings
             wrapper: window,
             content: document.documentElement,
-            lerp: isMobileDevice ? 0.05 : 0.075,
-            duration: isMobileDevice ? 1.2 : undefined,
+            lerp: 0.075,
+            duration: undefined,
             smoothWheel: true,
             wheelMultiplier: 1.0,
-            touchMultiplier: isMobileDevice ? 0.6 : 2.0,
+            touchMultiplier: 1.0,
             syncTouch: true,
-            syncTouchLerp: 0.045,
             easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
             autoResize: true,
           };
@@ -94,7 +108,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   }, [pathname, preloaderDone]);
 
   return (
-    <div className="flex flex-col min-h-[100dvh] w-full relative">
+    <div className="flex flex-col min-h-[100svh] w-full relative">
       <CustomScrollBar />
       {children}
     </div>
