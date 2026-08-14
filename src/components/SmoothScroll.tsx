@@ -32,20 +32,24 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       const Lenis = (await import("lenis")).default;
       if (destroyed) return;
 
-      const isMobile = window.matchMedia("(max-width: 767px)").matches;
+const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
-      instance = new Lenis({
-        wrapper: window,
-        content: document.documentElement,
-        lerp: isMobile ? 0.06 : 0.08,
-        smoothWheel: true,
-        wheelMultiplier: isMobile ? 0.85 : 1,
-        syncTouch: true,
-        syncTouchLerp: isMobile ? 0.04 : 0.08,
-        touchMultiplier: isMobile ? 0.75 : 1,
-        easing: (t: number) => 1 - Math.pow(1 - t, 4),
-        autoResize: true,
-      });
+instance = new Lenis({
+  wrapper: window,
+  content: document.documentElement,
+  // ⚡ Increased mobile lerp from 0.06 to 0.12 (faster catch-up, less lag)
+  lerp: isMobile ? 0.12 : 0.08, 
+  smoothWheel: true,
+  // ⚡ Increased mobile wheelMultiplier from 0.85 to 1.2
+  wheelMultiplier: isMobile ? 1.0 : 1.2, 
+  syncTouch: true,
+  // ⚡ Increased syncTouchLerp from 0.04 to 0.1 (much faster responsiveness)
+  syncTouchLerp: isMobile ? 0.1 : 0.08, 
+  // ⚡ Increased touchMultiplier from 0.75 to 1.5 (travels further per swipe)
+  touchMultiplier: isMobile ? 1.5 : 1, 
+  easing: (t: number) => 1 - Math.pow(1 - t, 4),
+  autoResize: true,
+});
 
       lenisRef.current = instance;
       if (smootherRef) smootherRef.current = instance;
