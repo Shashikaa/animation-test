@@ -25,34 +25,42 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     let instance: any;
     let tickerCallback: ((time: number) => void) | null = null;
+    let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
     let destroyed = false;
 
     const initLenis = async () => {
       const Lenis = (await import("lenis")).default;
       if (destroyed) return;
 
-      const isMobile = window.matchMedia("(max-width: 767px)").matches;
+const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
-      instance = new Lenis({
-        wrapper: window,
-        content: document.documentElement,
-        // Responsive lerp for fluid tracking without dynamic lag
-        lerp: isMobile ? 0.1 : 0.08, 
-        smoothWheel: true,
-        wheelMultiplier: 1.0, 
-        // Set syncTouch to false for native, responsive touch inertia on mobile
-        syncTouch: false, 
-        touchMultiplier: isMobile ? 1.0 : 1.0, 
-        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Exponential drop-off easing for silky coasting
-        autoResize: true,
-      });
+instance = new Lenis({
+  wrapper: window,
+  content: document.documentElement,
+  // 🎯 Balanced lerp: slightly smoother than 0.12, but faster than your original 0.06
+  lerp: isMobile ? 0.09 : 0.08, 
+  smoothWheel: true,
+  // 🎯 Wheel multiplier: lowered back to 1.0 on mobile
+  wheelMultiplier: isMobile ? 1.0 : 1, 
+  syncTouch: true,
+  // 🎯 Balanced touch lag: reduced from 0.1 down to 0.06
+  syncTouchLerp: isMobile ? 0.06 : 0.08, 
+  // 🎯 Balanced swipe distance: lowered from 1.5 down to 1.15
+  touchMultiplier: isMobile ? 1.15 : 1, 
+  easing: (t: number) => 1 - Math.pow(1 - t, 4),
+  autoResize: true,
+});
 
       lenisRef.current = instance;
       if (smootherRef) smootherRef.current = instance;
 
-      // Cleaned: Removed 'is-scrolling' class toggling so the scrollbar remains static and visible
       instance.on("scroll", () => {
         ScrollTrigger.update();
+        document.documentElement.classList.add("is-scrolling");
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          document.documentElement.classList.remove("is-scrolling");
+        }, 120);
       });
 
       tickerCallback = (time: number) => instance?.raf(time * 1000);
@@ -69,6 +77,8 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       if (instance) instance.destroy();
       lenisRef.current = null;
       if (smootherRef && smootherRef.current === instance) smootherRef.current = null;
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      document.documentElement.classList.remove("is-scrolling");
     };
   }, [onScrollReady, smootherRef]);
 
