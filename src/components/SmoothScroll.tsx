@@ -20,7 +20,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   const { preloaderDone, smootherRef } = useSite();
   const pathname = usePathname();
   const lenisRef = useRef<any>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -35,17 +34,19 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     const initLenis = async () => {
       const Lenis = (await import("lenis")).default;
-      const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
       instance = new Lenis({
-        // Binding to a wrapper prevents the window level scroll from hiding browser address bar
-        wrapper: isTouchDevice && wrapperRef.current ? wrapperRef.current : window,
-        content: isTouchDevice && wrapperRef.current ? (wrapperRef.current.firstElementChild as HTMLElement) : document.documentElement,
-        lerp: 0.1,
+        wrapper: window,
+        content: document.documentElement,
+        lerp: 0.055,
+        duration: 1.4,
         smoothWheel: true,
         wheelMultiplier: 1.0,
-        syncTouch: false,
-        touchMultiplier: isTouchDevice ? 1.5 : 1.0,
+        // ── CONTROLLED TOUCH SETTINGS FOR MOBILE ──
+        touchMultiplier: 0.8, // Reduces touch speed boost on fast flicks
+        syncTouch: true,
+        syncTouchLerp: 0.04, // Adds subtle inertia buffer to prevent instant drop
+        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -9 * t)),
         autoResize: true,
       });
 
@@ -67,7 +68,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       tickerCallback = (time: number) => {
         instance.raf(time * 1000);
       };
-
       gsap.ticker.add(tickerCallback);
       gsap.ticker.lagSmoothing(0);
 
@@ -105,12 +105,9 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   }, [pathname, preloaderDone]);
 
   return (
-    <div 
-      ref={wrapperRef}
-      className="mobile-static-viewport flex flex-col min-h-[100dvh] w-full relative overflow-y-auto overflow-x-hidden"
-    >
+    <div className="flex flex-col min-h-[100dvh] w-full relative">
       <CustomScrollBar />
-      <div className="w-full min-h-full">{children}</div>
+      {children}
     </div>
   );
 }
