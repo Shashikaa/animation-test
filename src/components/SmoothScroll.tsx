@@ -1,70 +1,107 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
-import Lenis from 'lenis';
+import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { useSite } from "../app/context/SiteContext";
+import CustomScrollBar from "./CustomScrollBar";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-export default function SmoothScroll({ children }: { children: React.ReactNode }) {
-  const { smootherRef, preloaderDone } = useSite();
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
+
+interface SmoothScrollProps {
+  children: React.ReactNode;
+  onScrollReady?: () => void;
+}
+
+export default function SmoothScroll({ children, onScrollReady }: SmoothScrollProps) {
+  const { preloaderDone, smootherRef } = useSite();
+  const pathname = usePathname();
+  const lenisRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!wrapperRef.current || !contentRef.current) return;
+    if (typeof window === "undefined") return;
+    if ("scrollRestoration" in window.history) window.history.scrollRestoration = "manual";
 
-    // Initialize Lenis targeted at custom wrappers to lock mobile address bar
-    const lenis = new Lenis({
-      wrapper: wrapperRef.current,
-      content: contentRef.current,
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: "vertical",
-      gestureOrientation: "vertical",
-      smoothWheel: true,
-      wheelMultiplier: 1,
-      touchMultiplier: 2,
-      syncTouch: false, // Disables native touch interception lag
-      syncTouchLerp: 0.07,
-      infinite: false,
-    });
+    let instance: any;
+    let tickerCallback: ((time: number) => void) | null = null;
+    let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
+    let destroyed = false;
 
-    smootherRef.current = lenis;
+    const initLenis = async () => {
+      const Lenis = (await import("lenis")).default;
+      if (destroyed) return;
 
-    function raf(time: number) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
+const isMobile = window.matchMedia("(max-width: 767px)").matches;
 
-    const animationId = requestAnimationFrame(raf);
+instance = new Lenis({
+  wrapper: window,
+  content: document.documentElement,
+  // 🎯 Balanced lerp: slightly smoother than 0.12, but faster than your original 0.06
+  lerp: isMobile ? 0.09 : 0.08, 
+  smoothWheel: true,
+  // 🎯 Wheel multiplier: lowered back to 1.0 on mobile
+  wheelMultiplier: isMobile ? 1.0 : 1, 
+
+  // 🎯 Balanced touch lag: reduced from 0.1 down to 0.06
+  syncTouchLerp: isMobile ? 0.06 : 0.08, 
+  // 🎯 Balanced swipe distance: lowered from 1.5 down to 1.15
+  touchMultiplier: isMobile ? 1.15 : 1, 
+  easing: (t: number) => 1 - Math.pow(1 - t, 4),
+  autoResize: true,
+});
+
+      lenisRef.current = instance;
+      if (smootherRef) smootherRef.current = instance;
+
+      instance.on("scroll", () => {
+        ScrollTrigger.update();
+        document.documentElement.classList.add("is-scrolling");
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          document.documentElement.classList.remove("is-scrolling");
+        }, 120);
+      });
+
+      tickerCallback = (time: number) => instance?.raf(time * 1000);
+      gsap.ticker.add(tickerCallback);
+      gsap.ticker.lagSmoothing(1000, 16);
+      onScrollReady?.();
+    };
+
+    initLenis();
 
     return () => {
-      cancelAnimationFrame(animationId);
-      lenis.destroy();
-      smootherRef.current = null;
+      destroyed = true;
+      if (tickerCallback) gsap.ticker.remove(tickerCallback);
+      if (instance) instance.destroy();
+      lenisRef.current = null;
+      if (smootherRef && smootherRef.current === instance) smootherRef.current = null;
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      document.documentElement.classList.remove("is-scrolling");
     };
-  }, [smootherRef]);
+  }, [onScrollReady, smootherRef]);
 
-  // Sync preloader lock state with Lenis
   useEffect(() => {
-    const lenis = smootherRef.current;
+    const lenis = lenisRef.current;
     if (!lenis) return;
 
     if (!preloaderDone) {
       lenis.stop();
-    } else {
-      lenis.start();
+      return;
     }
-  }, [preloaderDone, smootherRef]);
+
+    lenis.start();
+    lenis.scrollTo(0, { immediate: true });
+
+    const timer = setTimeout(() => ScrollTrigger.refresh(), 150);
+    return () => clearTimeout(timer);
+  }, [pathname, preloaderDone]);
 
   return (
-    <div
-      ref={wrapperRef}
-      className="scroll-wrapper fixed inset-0 w-full h-full overflow-hidden"
-      style={{ height: "100vh", width: "100vw" }}
-    >
-      <div ref={contentRef} className="scroll-content min-h-full w-full">
-        {children}
-      </div>
+    <div className="flex flex-col min-h-[100dvh] w-full relative">
+      <CustomScrollBar />
+      {children}
     </div>
   );
 }
