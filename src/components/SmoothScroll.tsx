@@ -10,111 +10,102 @@ interface SmoothScrollProps {
   onScrollReady?: () => void;
 }
 
-export default function SmoothScroll({ children, onScrollReady }: SmoothScrollProps) {
+export default function SmoothScroll({
+  children,
+  onScrollReady,
+}: SmoothScrollProps) {
   const { preloaderDone, smootherRef } = useSite();
   const pathname = usePathname();
-  const locomotiveRef = useRef<any>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+
+  const lenisRef = useRef<any>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !wrapperRef.current || !contentRef.current) return;
+    let lenis: any = null;
+    let cancelled = false;
 
-    if ("scrollRestoration" in window.history) {
-      window.history.scrollRestoration = "manual";
-    }
+    const initLenis = async () => {
+      const LenisModule = await import("lenis");
 
-    // ── Prevent Android Chrome address-bar collapse via touchmove lock ──
-    const preventAndroidBarCollapse = (e: TouchEvent) => {
-      // Prevents native Android browser compositor from hiding the address bar
-      if (e.touches.length === 1) {
-        // Allow inner scrollable elements if needed, otherwise prevent native scroll
-        const target = e.target as HTMLElement;
-        const isScrollableSubContainer = target.closest(".allow-native-scroll");
-        if (!isScrollableSubContainer) {
-          e.preventDefault();
-        }
-      }
-    };
+      if (cancelled) return;
 
-    // Attach non-passive listener to block native browser chrome movement on Android
-    window.addEventListener("touchmove", preventAndroidBarCollapse, { passive: false });
+      const Lenis = LenisModule.default;
 
-    let instance: any;
+      lenis = new Lenis({
+        // ONE smooth-scroll engine.
+        lerp: 0.075,
 
-    const initLocomotive = async () => {
-      const LocomotiveScroll = (await import("locomotive-scroll")).default;
+        smoothWheel: true,
 
-      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      );
+        // Keep wheel movement natural.
+        wheelMultiplier: 1,
 
-      instance = new LocomotiveScroll({
-        lenisOptions: {
-          wrapper: wrapperRef.current!,
-          content: contentRef.current!,
-          lerp: isMobileDevice ? 0.12 : 0.075,
-          duration: isMobileDevice ? 0.8 : undefined,
-          smoothWheel: true,
-          wheelMultiplier: 1.0,
-          touchMultiplier: 1.8,
-          syncTouch: true, // Required on Android so Lenis handles touch delta manually
-          syncTouchLerp: 0.1,
-          easing: isMobileDevice ? undefined : (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-          autoResize: true,
-        },
+        // Touch should feel responsive.
+        touchMultiplier: 1.5,
+
+        syncTouch: true,
+        syncTouchLerp: 0.08,
+
+        autoRaf: true,
+
+        // Smooth easing for wheel input.
+        easing: (t: number) =>
+          Math.min(
+            1,
+            1.001 - Math.pow(2, -10 * t)
+          ),
       });
 
-      locomotiveRef.current = instance;
+      lenisRef.current = lenis;
 
       if (smootherRef) {
-        smootherRef.current = instance.lenisInstance || instance;
+        smootherRef.current = lenis;
       }
 
       onScrollReady?.();
     };
 
-    initLocomotive();
+    initLenis();
 
     return () => {
-      window.removeEventListener("touchmove", preventAndroidBarCollapse);
-      if (locomotiveRef.current) {
-        locomotiveRef.current.destroy();
-        locomotiveRef.current = null;
+      cancelled = true;
+
+      if (lenis) {
+        lenis.destroy();
+      }
+
+      lenisRef.current = null;
+
+      if (smootherRef) {
+        smootherRef.current = null;
       }
     };
-  }, [onScrollReady, smootherRef]);
+  }, [smootherRef, onScrollReady]);
 
   useEffect(() => {
-    if (!locomotiveRef.current) return;
+    const lenis = lenisRef.current;
+
+    if (!lenis) return;
 
     if (!preloaderDone) {
-      locomotiveRef.current.stop();
-    } else {
-      locomotiveRef.current.start();
-      locomotiveRef.current.scrollTo(0, { immediate: true });
+      lenis.stop();
+      return;
     }
+
+    lenis.start();
+
+    // Always return to top when the route changes.
+    requestAnimationFrame(() => {
+      lenis.scrollTo(0, {
+        immediate: true,
+      });
+    });
   }, [pathname, preloaderDone]);
 
   return (
-    <div
-      ref={wrapperRef}
-      id="smooth-wrapper"
-      className="fixed inset-0 w-full h-full overflow-hidden touch-none"
-      style={{
-        touchAction: "none",
-        overscrollBehavior: "none",
-        WebkitOverflowScrolling: "touch",
-      }}
-    >
-      <div 
-        ref={contentRef} 
-        id="smooth-content" 
-        className="flex flex-col min-h-[100lvh] w-full relative will-change-transform"
-      >
-        <CustomScrollBar />
-        {children}
-      </div>
+    <div className="relative flex min-h-[100dvh] w-full flex-col">
+      <CustomScrollBar />
+
+      {children}
     </div>
   );
 }

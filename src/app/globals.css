@@ -45,7 +45,7 @@
   --radius-lg:   16px;
   --radius-full: 9999px;
 
-  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --duration-fast: 150ms;
   --duration-base: 300ms;
@@ -70,53 +70,29 @@
   padding:    0;
 }
 
-/* ─── Strict Static Address Bar Lock (Android & Mobile WebKit) ─── */
 html, body {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  overflow: hidden !important;
-  touch-action: none !important;
-  overscroll-behavior: none !important;
-  -webkit-overscroll-behavior: none !important;
   background-color: #162D24 !important;
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-}
+  
+  scroll-behavior: auto !important; 
+  min-height: 100%;
+  width: 100%;
 
-#smooth-wrapper {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100lvh !important;
-  overflow: hidden !important;
-  touch-action: none !important;
-  overscroll-behavior-y: none !important;
   -webkit-overflow-scrolling: touch;
-}
-
-#smooth-content {
-  width: 100% !important;
-  min-height: 100lvh !important;
-  will-change: transform;
+  touch-action: pan-y !important;
 }
 
 /* ─── Hide native scrollbar on all screens ─────────────────── */
-html, body, #smooth-wrapper {
+html, body {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
 html::-webkit-scrollbar,
-body::-webkit-scrollbar,
-#smooth-wrapper::-webkit-scrollbar { 
+body::-webkit-scrollbar { 
   display: none !important; 
   width: 0 !important; 
   height: 0 !important; 
@@ -127,6 +103,8 @@ body {
   font-family:  var(--font-body);
   font-size:    var(--text-body);
   line-height:  var(--leading-body);
+  overflow-x:   hidden;
+  overflow-y:   auto;
 }
 
 /* ─── Buttery Smooth Scroll & Pinning Enhancements ─────────────── */
@@ -222,7 +200,6 @@ body.preloading header {
   width: 100%;
 }
 
-/* ─── Static Viewport Lock (Prevents address bar resize shifts) ─── */
 .pin-all,
 .pin-all-home,
 .pin-all-contact,
@@ -230,20 +207,20 @@ body.preloading header {
 .pin-all-services,
 .pin-all-subservices,
 .pin-all-single-project {
-  height: 100lvh !important;
-  min-height: 100lvh !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
   width: 100%;
   position: relative;
   overflow: hidden;
 }
 
 .pin-spacer {
-  min-height: 100lvh !important;
+  min-height: 100dvh !important;
   pointer-events: auto !important;
 }
 
 .pin-spacer > div {
-  height: 100lvh !important;
+  height: 100dvh !important;
   max-height: none !important;
 }
 
@@ -473,14 +450,14 @@ button.btn-underline:hover::after,
 /* ─── Stack Track & Viewport Layout Lock ─────────────────────── */
 
 .about-stack-layer {
-  height: 100lvh;
-  max-height: 100lvh;
+  height: 100dvh;
+  max-height: 100dvh;
 }
 
 .about-stack-layer.layer-auto-height {
   height: auto !important;
   max-height: none !important;
-  min-height: 100lvh;
+  min-height: 100dvh;
 }
 
 /* ─── Hardware-Isolated Keyframe Hero Intro ──────────────── */
