@@ -1,6 +1,14 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useRef, MutableRefObject } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  MutableRefObject,
+} from "react";
+import { usePathname } from "next/navigation";
 
 export const PAGES_WITH_OWN_PRELOADER: string[] = [];
 
@@ -11,7 +19,7 @@ interface SiteContextProps {
   setPreloaderDone: (done: boolean) => void;
   hasSeenBrandPreloader: boolean;
   markBrandPreloaderSeen: () => void;
-  smootherRef: MutableRefObject<any> | null;
+  smootherRef: MutableRefObject<any>;
 }
 
 const SiteContext = createContext<SiteContextProps | undefined>(undefined);
@@ -20,16 +28,46 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [preloaderDone, setPreloaderDone] = useState(false);
   const [hasSeenBrandPreloader, setHasSeenBrandPreloader] = useState<boolean>(false);
-  const smootherRef = useRef<any>(null);
 
+  // Reference pointer to Lenis instance created in SmoothScroll.tsx
+  const smootherRef = useRef<any>(null);
+  const pathname = usePathname();
+
+  // Reset Lock States & Trigger Lenis Start on Navigation
+  useEffect(() => {
+    document.body.classList.remove("preloading");
+    document.documentElement.classList.remove("preloading");
+
+    const lenis = smootherRef.current;
+    if (lenis && typeof lenis.start === "function") {
+      lenis.start();
+      requestAnimationFrame(() => {
+        if (typeof lenis.resize === "function") lenis.resize();
+        window.scrollTo(0, 0);
+      });
+    }
+
+    setMenuOpen(false);
+  }, [pathname]);
+
+  // Handle Browser History & Popstate Actions
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setHasSeenBrandPreloader(sessionStorage.getItem("hasSeenBrandPreloader") === "true");
+      setHasSeenBrandPreloader(
+        sessionStorage.getItem("hasSeenBrandPreloader") === "true"
+      );
     }
 
     const handlePopState = () => {
       setPreloaderDone(true);
       document.body.classList.remove("preloading");
+      document.documentElement.classList.remove("preloading");
+
+      const lenis = smootherRef.current;
+      if (lenis) {
+        if (typeof lenis.start === "function") lenis.start();
+        if (typeof lenis.resize === "function") lenis.resize();
+      }
     };
 
     window.addEventListener("popstate", handlePopState);

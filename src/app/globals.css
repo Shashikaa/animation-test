@@ -84,7 +84,7 @@ html, body {
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y !important;
 
-  /* Hide native scrollbar on all screens globally */
+  /* Hide native scrollbar globally */
   scrollbar-width: none;
   -ms-overflow-style: none;
   overflow-x: hidden;
@@ -107,7 +107,7 @@ body {
 
 /* ─── Unified Global Smooth Scroll & Hardware Engine ──────────── */
 
-/* 1. Global Lenis Integration */
+/* 1. Lenis Global Rules */
 html.lenis,
 html.lenis body {
   height: auto;
@@ -123,13 +123,12 @@ body.scroll-locked {
 }
 
 /* 2. Scrolling FPS Optimizations */
-/* Disables pointer-events during scroll to prevent expensive desktop hover calculations */
 html.is-scrolling,
 html.is-scrolling * {
   pointer-events: none !important;
 }
 
-/* 3. Global Overscroll Containment for nested scroll areas */
+/* 3. Global Overscroll Containment */
 [data-lenis-prevent],
 .overflow-y-auto,
 .overflow-auto {
@@ -137,36 +136,32 @@ html.is-scrolling * {
   -webkit-overflow-scrolling: touch;
 }
 
-/* 4. Non-breaking GPU Hardware Layering */
+/* 4. GPU Hardware Acceleration & Parallax Rules */
 [data-parallax],
-.will-animate {
+.will-animate,
+.structural-layer {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
   will-change: transform;
 }
 
-/* Prevent sub-pixel image jitter on scroll transforms */
 img, video {
   image-rendering: -webkit-optimize-contrast;
 }
 
-/* 5. Desktop vs Mobile Specific Tweaks */
-
-/* Desktop Optimizations */
+/* 5. Layout Pinning & Containers */
 @media (min-width: 1025px) {
   section, .scroll-container {
-    contain: content; /* Isolates layout recalculations to single sections */
+    contain: content;
   }
 }
 
-/* Mobile & Tablet Optimizations */
 @media (max-width: 1024px) {
-  /* Prevent horizontal drag shifts on iOS/Android gesture navigation */
   html, body {
     overscroll-behavior-x: none;
   }
 
-  /* Prevent mobile webkit momentum rubber-banding on pinned viewports */
   .pin-all,
   .pin-all-home,
   .pin-all-contact,
@@ -176,7 +171,6 @@ img, video {
   }
 }
 
-/* 6. Global Pins & Viewport Layouts */
 .pin-all,
 .pin-all-home,
 .pin-all-contact,
@@ -562,7 +556,7 @@ button.btn-underline:hover::after,
   animation: none !important;
 }
 
-/* ─── Accessibility: Reduced Motion Override ────────────────── */
+/* ─── Accessibility Override ──────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto !important;
