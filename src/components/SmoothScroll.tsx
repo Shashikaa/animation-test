@@ -27,26 +27,41 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     const initLocomotive = async () => {
       const LocomotiveScroll = (await import("locomotive-scroll")).default;
 
-      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      );
+      const ua = navigator.userAgent;
+      const isAndroid = /Android/i.test(ua);
+      const isIOS = /iPhone|iPad|iPod/i.test(ua);
+      const isMobileDevice = isAndroid || isIOS;
 
-      instance = new LocomotiveScroll({
-        lenisOptions: {
-          wrapper: window,
-          content: document.documentElement,
-          // Mobile settings strictly untouched
-          lerp: isMobileDevice ? 0.16 : 0.075,
-          duration: isMobileDevice ? 0.6 : undefined,
-          smoothWheel: true,
-          wheelMultiplier: 1.0, // Desktop mouse scroll normalized to remove jumps
-          touchMultiplier: 2.0, // Mobile untouched
-          syncTouch: true, // Mobile untouched
-          syncTouchLerp: 0.09, // Mobile untouched
-          easing: isMobileDevice ? undefined : (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-          autoResize: true,
-        },
-      });
+      // Android-specific Lenis configuration
+      const lenisOptions = isAndroid
+        ? {
+            wrapper: window,
+            content: document.documentElement,
+            lerp: 0.08, // Slightly higher for Android hardware to avoid jitter
+            duration: undefined,
+            smoothWheel: true,
+            wheelMultiplier: 1.0,
+            touchMultiplier: 0.8, // Reduced multiplier for Android touch events
+            syncTouch: false, // OFF on Android so Chrome doesn't fight Lenis compositor
+            syncTouchLerp: 0.08,
+            easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            autoResize: true,
+          }
+        : {
+            wrapper: window,
+            content: document.documentElement,
+            lerp: isMobileDevice ? 0.05 : 0.075,
+            duration: isMobileDevice ? 1.2 : undefined,
+            smoothWheel: true,
+            wheelMultiplier: 1.0,
+            touchMultiplier: isMobileDevice ? 0.6 : 2.0,
+            syncTouch: true,
+            syncTouchLerp: 0.045,
+            easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            autoResize: true,
+          };
+
+      instance = new LocomotiveScroll({ lenisOptions });
 
       locomotiveRef.current = instance;
 

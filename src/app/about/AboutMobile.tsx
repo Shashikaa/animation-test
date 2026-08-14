@@ -14,6 +14,8 @@ const SectionFive = dynamic(() => import("@/src/components/About/SectionFive"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
 const clamp = (val: number, min = 0, max = 1) => Math.min(Math.max(val, min), max);
+const lerp = (start: number, end: number, factor: number) => start + (end - start) * factor;
+
 const mapRange = (val: number, inMin: number, inMax: number) => {
   if (inMin === inMax) return 0;
   return clamp((val - inMin) / (inMax - inMin));
@@ -28,6 +30,7 @@ export default function AboutMobile() {
 
   const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
   const rawProgress = useRef(0);
+  const smoothProgress = useRef(0);
   
   const rafId = useRef<number | null>(null);
   const lastSec5Idx = useRef<number>(-1);
@@ -69,14 +72,19 @@ export default function AboutMobile() {
   useEffect(() => {
     if (!shouldLoadRest) return;
 
+    let isRunning = true;
+    smoothProgress.current = rawProgress.current;
+
     const panels = trackRef.current?.querySelectorAll<HTMLElement>(".about-stack-layer");
     const s5Bg = scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
 
-    const render = () => {
-      // Linear progress for 1:1 consistent tactile travel across all viewports
-      const p = rawProgress.current;
+    const renderLoop = () => {
+      if (!isRunning) return;
 
-      // Evenly spaced linear domain intervals (0.14 step width per panel)
+      // Heavy fluid lerp caps max transition speed on aggressive swipes
+      smoothProgress.current = lerp(smoothProgress.current, rawProgress.current, 0.05);
+      const p = smoothProgress.current;
+
       const s1Prog = mapRange(p, 0.00, 0.14);
       const s2Prog = mapRange(p, 0.14, 0.28);
       const s3Prog = mapRange(p, 0.28, 0.42);
@@ -115,6 +123,8 @@ export default function AboutMobile() {
         setIsSectionFiveActive(false);
         triggerSec5Hook(0);
       }
+
+      rafId.current = requestAnimationFrame(renderLoop);
     };
 
     const handleScroll = (e?: any) => {
@@ -144,9 +154,6 @@ export default function AboutMobile() {
       }
 
       rawProgress.current = clamp(relativeScroll / totalScrollable);
-
-      if (rafId.current) cancelAnimationFrame(rafId.current);
-      rafId.current = requestAnimationFrame(render);
     };
 
     const lenis = smootherRef?.current;
@@ -157,9 +164,10 @@ export default function AboutMobile() {
     }
 
     handleScroll();
-    render();
+    rafId.current = requestAnimationFrame(renderLoop);
 
     return () => {
+      isRunning = false;
       if (rafId.current) cancelAnimationFrame(rafId.current);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
@@ -175,7 +183,7 @@ export default function AboutMobile() {
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
-        style={{ height: "700vh" }}
+        style={{ height: "1200vh" }} // Expanded height for smooth readability
       >
         <div
           ref={fixedFrameRef}

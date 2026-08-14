@@ -6,7 +6,7 @@ export default function Appsection() {
       
       {/* ── Background Image ── */}
       <div 
-        className="appsec-bg absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat bg-[url('/appsection-mobile.webp')] lg:bg-[url('/Service1.webp')]"
+        className="appsec-bg absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat bg-[url('/appsec.png')] lg:bg-[url('/Service1.webp')]"
       />
 
       {/* ── Main Content Container ── */}
@@ -40,7 +40,7 @@ Pool Care + keeps you informed and involved from start to finish. Live updates, 
         <div className="appsec-phone-wrapper w-full lg:w-1/2 flex justify-center items-center">
           <div className="w-[360px] md:w-[360px] lg:w-[85%] max-w-[380px]">
             <img 
-              src="/phone-mockup.webp" 
+              src="/app.png" 
               alt="Pool Care Mobile App Mockup" 
               className="w-full h-auto max-h-[55vh] md:max-h-[50vh] lg:!max-h-[60vh] block object-contain !mb-12 !mt-12"
             />

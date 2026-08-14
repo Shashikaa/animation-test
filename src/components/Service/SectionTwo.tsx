@@ -104,7 +104,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
   const activeSlide = slides[state.current];
 
   return (
-    <div className="w-full h-screen relative overflow-hidden bg-[#19211C]">
+    <div className="w-full h-full relative overflow-hidden bg-[#19211C]">
       {/* ── 1. PARALLAX SLIDE BACKGROUNDS ── */}
       <AnimatePresence initial={false} custom={state.direction}>
         <motion.div
