@@ -199,7 +199,7 @@ export default function AboutDesktop() {
      * How quickly animation follows actual scroll.
      */
 const MAX_PROGRESS_SPEED = 1.80;
-const PROGRESS_SMOOTHNESS = 0.60;
+const PROGRESS_SMOOTHNESS = 0.80;
 
     const heroLeft =
       scope.querySelector<HTMLElement>(".about-hero-panel-left");

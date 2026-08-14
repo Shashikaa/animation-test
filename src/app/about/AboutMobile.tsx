@@ -104,14 +104,8 @@ export default function AboutMobile() {
     let isRunning = true;
     let lastTime = performance.now();
 
-    /*
-     * Mobile animation speed control.
-     *
-     * Lower MAX_PROGRESS_SPEED = slower animation.
-     * Higher PROGRESS_SMOOTHNESS = faster response.
-     */
-const MAX_PROGRESS_SPEED = 1.15;
-const PROGRESS_SMOOTHNESS = 0.11;
+    const MAX_PROGRESS_SPEED = 1.15;
+    const PROGRESS_SMOOTHNESS = 0.31;
 
     const render = (time: number) => {
       if (!isRunning) return;
@@ -130,13 +124,7 @@ const PROGRESS_SMOOTHNESS = 0.11;
         current +
         (target - current) * PROGRESS_SMOOTHNESS;
 
-      /*
-       * Maximum animation speed.
-       * Prevents fast mobile flicks from racing
-       * through the animation timeline.
-       */
-      const maxStep =
-        MAX_PROGRESS_SPEED * deltaTime;
+      const maxStep = MAX_PROGRESS_SPEED * deltaTime;
 
       if (Math.abs(next - current) > maxStep) {
         next =
@@ -156,44 +144,20 @@ const PROGRESS_SMOOTHNESS = 0.11;
       const s2Prog = mapRange(p, 0.12, 0.24);
 
       /*
-       * Section 3:
-       * ENTER: 0.24 -> 0.36
-       * EXIT:  0.36 -> 0.48
-       *
-       * No pause / pin after fully revealing.
+       * Section 3 adjusted bounds:
+       * Entrance: 0.24 -> 0.36
+       * Pause/Hold: 0.36 -> 0.40 (prevents immediate abrupt scroll-out on small screens)
+       * Exit: 0.40 -> 0.50
        */
-      const s3EntranceProg = mapRange(
-        p,
-        0.24,
-        0.36
-      );
-
-      const s3ExitProg = mapRange(
-        p,
-        0.36,
-        0.48
-      );
+      const s3EntranceProg = mapRange(p, 0.24, 0.36);
+      const s3ExitProg = mapRange(p, 0.40, 0.50);
 
       /*
-       * Section 5 starts after Section 3 exits.
+       * Section 5 Timeline shifted slightly to align with S3 exit
        */
-      const s5EntranceProg = mapRange(
-        p,
-        0.48,
-        0.60
-      );
-
-      const s5ActiveProg = mapRange(
-        p,
-        0.60,
-        0.82
-      );
-
-      const footerProgress = mapRange(
-        p,
-        0.82,
-        1.00
-      );
+      const s5EntranceProg = mapRange(p, 0.48, 0.60);
+      const s5ActiveProg = mapRange(p, 0.60, 0.82);
+      const footerProgress = mapRange(p, 0.82, 1.00);
 
       // ─────────────────────────────────────
       // PANELS
@@ -202,57 +166,39 @@ const PROGRESS_SMOOTHNESS = 0.11;
       if (panels && panels.length > 0) {
         // Section 1
         if (panels[1]) {
-          const y =
-            (1 - s1Prog) * 100;
-
-          panels[1].style.transform =
-            `translate3d(0, ${y.toFixed(3)}%, 0)`;
+          const y = (1 - s1Prog) * 100;
+          panels[1].style.transform = `translate3d(0, ${y.toFixed(3)}%, 0)`;
         }
 
         // Section 2
         if (panels[2]) {
-          const y =
-            (1 - s2Prog) * 100;
-
-          panels[2].style.transform =
-            `translate3d(0, ${y.toFixed(3)}%, 0)`;
+          const y = (1 - s2Prog) * 100;
+          panels[2].style.transform = `translate3d(0, ${y.toFixed(3)}%, 0)`;
         }
 
-        // Section 3
+        // Section 3 (FIX APPLIED HERE)
         if (panels[3]) {
-          let y =
-            (1 - s3EntranceProg) * 100;
+          let y = (1 - s3EntranceProg) * 100;
 
-          /*
-           * Once Section 3 is fully visible,
-           * immediately start moving it upward.
-           */
           if (s3EntranceProg >= 1) {
-            y = -s3ExitProg * 100;
+            // Overshoot to -110% to ensure 100% offscreen translation on small screens/safari address bar resizes
+            y = -s3ExitProg * 110;
           }
 
-          panels[3].style.transform =
-            `translate3d(0, ${y.toFixed(3)}%, 0)`;
+          panels[3].style.transform = `translate3d(0, ${y.toFixed(3)}%, 0)`;
         }
 
         // Section 4
         if (panels[4]) {
           const visible = p >= 0.36;
-
-          panels[4].style.opacity =
-            visible ? "1" : "0";
-
-          panels[4].style.pointerEvents =
-            visible ? "auto" : "none";
+          panels[4].style.opacity = visible ? "1" : "0";
+          panels[4].style.pointerEvents = visible ? "auto" : "none";
         }
 
         // Section 5
         if (panels[5]) {
-          const y =
-            (1 - s5EntranceProg) * 100;
-
-          panels[5].style.transform =
-            `translate3d(0, ${y.toFixed(3)}%, 0)`;
+          const y = (1 - s5EntranceProg) * 100;
+          panels[5].style.transform = `translate3d(0, ${y.toFixed(3)}%, 0)`;
         }
       }
 
@@ -260,19 +206,12 @@ const PROGRESS_SMOOTHNESS = 0.11;
       // FOOTER
       // ─────────────────────────────────────
 
-      const { vh } =
-        scrollMetricsRef.current;
+      const { vh } = scrollMetricsRef.current;
 
       if (layer7Ref.current) {
-        const footerHeight =
-          layer7Ref.current.offsetHeight || vh;
-
-        const y =
-          vh -
-          footerHeight * footerProgress;
-
-        layer7Ref.current.style.transform =
-          `translate3d(0, ${y.toFixed(2)}px, 0)`;
+        const footerHeight = layer7Ref.current.offsetHeight || vh;
+        const y = vh - footerHeight * footerProgress;
+        layer7Ref.current.style.transform = `translate3d(0, ${y.toFixed(2)}px, 0)`;
       }
 
       // ─────────────────────────────────────
@@ -280,17 +219,8 @@ const PROGRESS_SMOOTHNESS = 0.11;
       // ─────────────────────────────────────
 
       if (s5Bg) {
-        const parallaxProg =
-          mapRange(
-            p,
-            0.48,
-            0.82
-          );
-
-        s5Bg.style.transform =
-          `translate3d(0, ${(
-            -parallaxProg * 50
-          ).toFixed(2)}%, 0)`;
+        const parallaxProg = mapRange(p, 0.48, 0.82);
+        s5Bg.style.transform = `translate3d(0, ${(-parallaxProg * 50).toFixed(2)}%, 0)`;
       }
 
       // ─────────────────────────────────────
@@ -312,153 +242,72 @@ const PROGRESS_SMOOTHNESS = 0.11;
         triggerSec5Hook(0);
       }
 
-      rafId.current =
-        requestAnimationFrame(render);
+      rafId.current = requestAnimationFrame(render);
     };
 
-    // ─────────────────────────────────────
-    // SCROLL
-    // ─────────────────────────────────────
-
     const handleScroll = (e?: any) => {
-      const lenis =
-        smootherRef?.current;
+      const lenis = smootherRef?.current;
+      const scrollY = e?.scroll ?? lenis?.scroll ?? window.scrollY;
 
-      const scrollY =
-        e?.scroll ??
-        lenis?.scroll ??
-        window.scrollY;
-
-      const {
-        totalScrollable,
-        trackTopOffset,
-      } = scrollMetricsRef.current;
+      const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
 
       if (totalScrollable <= 0) return;
 
-      const relativeScroll =
-        scrollY - trackTopOffset;
+      const relativeScroll = scrollY - trackTopOffset;
+      const trackBottom = relativeScroll + totalScrollable;
 
-      const trackBottom =
-        relativeScroll +
-        totalScrollable;
-
-      // Fixed frame
       if (fixedFrameRef.current) {
-        if (
-          relativeScroll >= 0 &&
-          trackBottom >= 0
-        ) {
-          fixedFrameRef.current.style.position =
-            "fixed";
-
-          fixedFrameRef.current.style.top =
-            "0px";
-
-          fixedFrameRef.current.style.bottom =
-            "auto";
+        if (relativeScroll >= 0 && trackBottom >= 0) {
+          fixedFrameRef.current.style.position = "fixed";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
         } else if (trackBottom < 0) {
-          fixedFrameRef.current.style.position =
-            "absolute";
-
-          fixedFrameRef.current.style.top =
-            "auto";
-
-          fixedFrameRef.current.style.bottom =
-            "0px";
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "auto";
+          fixedFrameRef.current.style.bottom = "0px";
         } else {
-          fixedFrameRef.current.style.position =
-            "absolute";
-
-          fixedFrameRef.current.style.top =
-            "0px";
-
-          fixedFrameRef.current.style.bottom =
-            "auto";
+          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.top = "0px";
+          fixedFrameRef.current.style.bottom = "auto";
         }
       }
 
-      /*
-       * IMPORTANT:
-       * Scroll updates the TARGET only.
-       * Animation follows it at controlled speed.
-       */
-      targetProgress.current =
-        clamp(
-          relativeScroll /
-            totalScrollable
-        );
+      targetProgress.current = clamp(relativeScroll / totalScrollable);
     };
 
-    const lenis =
-      smootherRef?.current;
+    const lenis = smootherRef?.current;
 
-    if (
-      lenis &&
-      typeof lenis.on === "function"
-    ) {
-      lenis.on(
-        "scroll",
-        handleScroll
-      );
+    if (lenis && typeof lenis.on === "function") {
+      lenis.on("scroll", handleScroll);
     } else {
-      window.addEventListener(
-        "scroll",
-        handleScroll,
-        { passive: true }
-      );
+      window.addEventListener("scroll", handleScroll, { passive: true });
     }
 
     handleScroll();
 
-    /*
-     * Start animation loop.
-     */
-    rafId.current =
-      requestAnimationFrame(render);
+    rafId.current = requestAnimationFrame(render);
 
     return () => {
       isRunning = false;
 
       if (rafId.current) {
-        cancelAnimationFrame(
-          rafId.current
-        );
+        cancelAnimationFrame(rafId.current);
       }
 
-      if (
-        lenis &&
-        typeof lenis.off === "function"
-      ) {
-        lenis.off(
-          "scroll",
-          handleScroll
-        );
+      if (lenis && typeof lenis.off === "function") {
+        lenis.off("scroll", handleScroll);
       } else {
-        window.removeEventListener(
-          "scroll",
-          handleScroll
-        );
+        window.removeEventListener("scroll", handleScroll);
       }
 
-      if (
-        typeof window !== "undefined"
-      ) {
-        delete (window as any)
-          ._sec5GoTo;
+      if (typeof window !== "undefined") {
+        delete (window as any)._sec5GoTo;
       }
     };
-  }, [
-    shouldLoadRest,
-    smootherRef,
-    triggerSec5Hook,
-  ]);
+  }, [shouldLoadRest, smootherRef, triggerSec5Hook]);
 
   return (
-    <div
-      ref={scopeRef}
-      className="w-full"
-    >
+    <div ref={scopeRef} className="w-full">
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
@@ -478,10 +327,7 @@ const PROGRESS_SMOOTHNESS = 0.11;
               {/* SECTION 1 */}
               <div
                 className="about-stack-layer absolute inset-0 w-full h-dvh z-20 transform-gpu will-change-transform backface-hidden"
-                style={{
-                  transform:
-                    "translate3d(0, 100%, 0)",
-                }}
+                style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionOne />
               </div>
@@ -489,10 +335,7 @@ const PROGRESS_SMOOTHNESS = 0.11;
               {/* SECTION 2 */}
               <div
                 className="about-stack-layer absolute inset-0 w-full h-dvh z-30 transform-gpu will-change-transform backface-hidden"
-                style={{
-                  transform:
-                    "translate3d(0, 100%, 0)",
-                }}
+                style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionTwo />
               </div>
@@ -500,10 +343,7 @@ const PROGRESS_SMOOTHNESS = 0.11;
               {/* SECTION 3 */}
               <div
                 className="about-stack-layer absolute inset-0 w-full h-dvh z-50 transform-gpu will-change-transform backface-hidden"
-                style={{
-                  transform:
-                    "translate3d(0, 100%, 0)",
-                }}
+                style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionThree />
               </div>
@@ -518,24 +358,16 @@ const PROGRESS_SMOOTHNESS = 0.11;
               {/* SECTION 5 */}
               <div
                 className="about-stack-layer absolute inset-0 w-full h-dvh z-[60] transform-gpu will-change-transform backface-hidden"
-                style={{
-                  transform:
-                    "translate3d(0, 100%, 0)",
-                }}
+                style={{ transform: "translate3d(0, 100%, 0)" }}
               >
-                <SectionFive
-                  isActive={isSectionFiveActive}
-                />
+                <SectionFive isActive={isSectionFiveActive} />
               </div>
 
               {/* FOOTER */}
               <div
                 ref={layer7Ref}
                 className="layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[151] will-change-transform backface-hidden"
-                style={{
-                  transform:
-                    "translate3d(0, 100dvh, 0)",
-                }}
+                style={{ transform: "translate3d(0, 100dvh, 0)" }}
               >
                 <Footer />
               </div>
