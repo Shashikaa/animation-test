@@ -68,7 +68,7 @@ export default function CustomScrollBar() {
       const clickY = clientY - rect.top;
       const trackHeight = rect.height;
 
-      const thumbHeight = 10;
+      const thumbHeight = 20; // Matched with h-[20px] in styling
       const maxTranslate = trackHeight - thumbHeight;
 
       let targetTranslate = clickY - thumbHeight / 2;
@@ -117,17 +117,17 @@ export default function CustomScrollBar() {
     <div
       ref={trackRef}
       onPointerDown={handlePointerDown}
-      /* Displayed on mobile + desktop with top layer z-index */
-      className="block fixed top-0 right-0 bottom-0 w-3 z-[9999] cursor-pointer select-none group touch-none"
+      /* Hidden on mobile, displayed on tablets/desktop (md and up) */
+      className="hidden md:block fixed top-0 right-0 bottom-0 w-3 z-[9999] cursor-pointer select-none group touch-none"
     >
       {/* Track background line */}
       <div className="absolute top-0 right-0 bottom-0 w-[1px] bg-white/15 group-hover:bg-white/30 transition-colors" />
 
-      {/* 10px Indicator Thumb */}
+      {/* Indicator Thumb */}
       <div
-        className="absolute right-0 w-1.5 lg:w-1.5 h-[20px] bg-white/55 rounded-full transition-transform duration-75 ease-out will-change-transform"
+        className="absolute right-0 w-1.5 h-[20px] bg-white/55 rounded-full transition-transform duration-75 ease-out will-change-transform"
         style={{
-          transform: `translate3d(0, calc(${progress} * (100vh - 10px)), 0)`,
+          transform: `translate3d(0, calc(${progress} * (100vh - 20px)), 0)`,
         }}
       />
     </div>

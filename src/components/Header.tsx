@@ -249,18 +249,24 @@ export default function Header({
           overflow: "hidden",
         }}
       >
-        <motion.div
-          variants={glassVariants}
-          initial="hidden"
-          animate={showGlass ? "visible" : "hidden"}
-          className="glass-backdrop"
-          style={{
-            position: "absolute", inset: 0, zIndex: 0, transformOrigin: "top",
-            background: "linear-gradient(180deg, rgba(10, 43, 30, 0.45) 0%, rgba(14, 58, 40, 0.45) 100%)",
-            backdropFilter: "blur(42px) saturate(1.3)",
-            WebkitBackdropFilter: "blur(42px) saturate(1.3)",
-          }}
-        />
+<motion.div
+  variants={glassVariants}
+  initial="hidden"
+  animate={showGlass ? "visible" : "hidden"}
+  className="glass-backdrop"
+  style={{
+    position: "absolute",
+    inset: 0,
+    zIndex: 0,
+    transformOrigin: "top",
+    // --- Styles adapted from your CSS ---
+    backdropFilter: "blur(15px)",
+    WebkitBackdropFilter: "blur(15px)",
+    background: "transparent",
+    boxShadow: "0 0 0 1px var(--t-line)",
+    transform: "translateY(0)",
+  }}
+/>
         <Logo
           onClick={onLogoClick}
           href={logoHref}

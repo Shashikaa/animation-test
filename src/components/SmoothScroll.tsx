@@ -24,6 +24,22 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       window.history.scrollRestoration = "manual";
     }
 
+    // ── Prevent Android Chrome address-bar collapse via touchmove lock ──
+    const preventAndroidBarCollapse = (e: TouchEvent) => {
+      // Prevents native Android browser compositor from hiding the address bar
+      if (e.touches.length === 1) {
+        // Allow inner scrollable elements if needed, otherwise prevent native scroll
+        const target = e.target as HTMLElement;
+        const isScrollableSubContainer = target.closest(".allow-native-scroll");
+        if (!isScrollableSubContainer) {
+          e.preventDefault();
+        }
+      }
+    };
+
+    // Attach non-passive listener to block native browser chrome movement on Android
+    window.addEventListener("touchmove", preventAndroidBarCollapse, { passive: false });
+
     let instance: any;
 
     const initLocomotive = async () => {
@@ -35,15 +51,15 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
       instance = new LocomotiveScroll({
         lenisOptions: {
-          /* Target wrapper and content directly instead of window/documentElement */
           wrapper: wrapperRef.current!,
           content: contentRef.current!,
-          lerp: isMobileDevice ? 0.16 : 0.075,
-          duration: isMobileDevice ? 0.6 : undefined,
+          lerp: isMobileDevice ? 0.12 : 0.075,
+          duration: isMobileDevice ? 0.8 : undefined,
           smoothWheel: true,
           wheelMultiplier: 1.0,
-          touchMultiplier: 1.5,
-          syncTouch: false,
+          touchMultiplier: 1.8,
+          syncTouch: true, // Required on Android so Lenis handles touch delta manually
+          syncTouchLerp: 0.1,
           easing: isMobileDevice ? undefined : (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
           autoResize: true,
         },
@@ -61,6 +77,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     initLocomotive();
 
     return () => {
+      window.removeEventListener("touchmove", preventAndroidBarCollapse);
       if (locomotiveRef.current) {
         locomotiveRef.current.destroy();
         locomotiveRef.current = null;
@@ -82,10 +99,19 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   return (
     <div
       ref={wrapperRef}
-      className="fixed inset-0 w-full h-full overflow-y-auto overflow-x-hidden"
-      style={{ WebkitOverflowScrolling: "touch" }}
+      id="smooth-wrapper"
+      className="fixed inset-0 w-full h-full overflow-hidden touch-none"
+      style={{
+        touchAction: "none",
+        overscrollBehavior: "none",
+        WebkitOverflowScrolling: "touch",
+      }}
     >
-      <div ref={contentRef} className="flex flex-col min-h-[100lvh] w-full relative">
+      <div 
+        ref={contentRef} 
+        id="smooth-content" 
+        className="flex flex-col min-h-[100lvh] w-full relative will-change-transform"
+      >
         <CustomScrollBar />
         {children}
       </div>
