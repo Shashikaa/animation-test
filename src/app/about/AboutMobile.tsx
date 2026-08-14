@@ -110,8 +110,8 @@ export default function AboutMobile() {
      * Lower MAX_PROGRESS_SPEED = slower animation.
      * Higher PROGRESS_SMOOTHNESS = faster response.
      */
-    const MAX_PROGRESS_SPEED = 0.72;
-    const PROGRESS_SMOOTHNESS = 0.075;
+const MAX_PROGRESS_SPEED = 1.15;
+const PROGRESS_SMOOTHNESS = 0.11;
 
     const render = (time: number) => {
       if (!isRunning) return;
