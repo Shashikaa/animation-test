@@ -10,101 +10,77 @@ interface SmoothScrollProps {
   onScrollReady?: () => void;
 }
 
-export default function SmoothScroll({
-  children,
-  onScrollReady,
-}: SmoothScrollProps) {
+export default function SmoothScroll({ children, onScrollReady }: SmoothScrollProps) {
   const { preloaderDone, smootherRef } = useSite();
   const pathname = usePathname();
-
-  const lenisRef = useRef<any>(null);
+  const locomotiveRef = useRef<any>(null);
 
   useEffect(() => {
-    let lenis: any = null;
-    let cancelled = false;
+    if (typeof window === "undefined") return;
 
-    const initLenis = async () => {
-      const LenisModule = await import("lenis");
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
 
-      if (cancelled) return;
+    let instance: any;
 
-      const Lenis = LenisModule.default;
+    const initLocomotive = async () => {
+      const LocomotiveScroll = (await import("locomotive-scroll")).default;
 
-      lenis = new Lenis({
-        // ONE smooth-scroll engine.
-        lerp: 0.075,
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
 
-        smoothWheel: true,
-
-        // Keep wheel movement natural.
-        wheelMultiplier: 1,
-
-        // Touch should feel responsive.
-        touchMultiplier: 1.5,
-
-        syncTouch: true,
-        syncTouchLerp: 0.08,
-
-        autoRaf: true,
-
-        // Smooth easing for wheel input.
-        easing: (t: number) =>
-          Math.min(
-            1,
-            1.001 - Math.pow(2, -10 * t)
-          ),
+      instance = new LocomotiveScroll({
+        lenisOptions: {
+          wrapper: window,
+          content: document.documentElement,
+          // Mobile settings strictly untouched
+          lerp: isMobileDevice ? 0.16 : 0.075,
+          duration: isMobileDevice ? 0.6 : undefined,
+          smoothWheel: true,
+          wheelMultiplier: 1.0, // Desktop mouse scroll normalized to remove jumps
+          touchMultiplier: 2.0, // Mobile untouched
+          syncTouch: true, // Mobile untouched
+          syncTouchLerp: 0.09, // Mobile untouched
+          easing: isMobileDevice ? undefined : (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          autoResize: true,
+        },
       });
 
-      lenisRef.current = lenis;
+      locomotiveRef.current = instance;
 
       if (smootherRef) {
-        smootherRef.current = lenis;
+        smootherRef.current = instance.lenisInstance || instance;
       }
 
       onScrollReady?.();
     };
 
-    initLenis();
+    initLocomotive();
 
     return () => {
-      cancelled = true;
-
-      if (lenis) {
-        lenis.destroy();
-      }
-
-      lenisRef.current = null;
-
-      if (smootherRef) {
-        smootherRef.current = null;
+      if (locomotiveRef.current) {
+        locomotiveRef.current.destroy();
+        locomotiveRef.current = null;
       }
     };
-  }, [smootherRef, onScrollReady]);
+  }, [onScrollReady, smootherRef]);
 
   useEffect(() => {
-    const lenis = lenisRef.current;
-
-    if (!lenis) return;
+    if (!locomotiveRef.current) return;
 
     if (!preloaderDone) {
-      lenis.stop();
-      return;
+      locomotiveRef.current.stop();
+    } else {
+      locomotiveRef.current.start();
+      locomotiveRef.current.scrollTo(0, { immediate: true });
     }
-
-    lenis.start();
-
-    // Always return to top when the route changes.
-    requestAnimationFrame(() => {
-      lenis.scrollTo(0, {
-        immediate: true,
-      });
-    });
   }, [pathname, preloaderDone]);
 
   return (
-    <div className="relative flex min-h-[100dvh] w-full flex-col">
+    <div className="flex flex-col min-h-[100dvh] w-full relative">
       <CustomScrollBar />
-
       {children}
     </div>
   );
