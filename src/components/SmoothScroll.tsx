@@ -42,7 +42,7 @@ instance = new Lenis({
   smoothWheel: true,
   // 🎯 Wheel multiplier: lowered back to 1.0 on mobile
   wheelMultiplier: isMobile ? 1.0 : 1, 
-
+  syncTouch: true,
   // 🎯 Balanced touch lag: reduced from 0.1 down to 0.06
   syncTouchLerp: isMobile ? 0.06 : 0.08, 
   // 🎯 Balanced swipe distance: lowered from 1.5 down to 1.15
