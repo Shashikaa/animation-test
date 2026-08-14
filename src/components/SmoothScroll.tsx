@@ -20,6 +20,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   const { preloaderDone, smootherRef } = useSite();
   const pathname = usePathname();
   const lenisRef = useRef<any>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -29,28 +30,22 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     }
 
     let instance: any;
-    let tickerCallback: (time: number, deltaTime: number, frame: number) => void;
+    let tickerCallback: (time: number) => void;
     let scrollTimeout: NodeJS.Timeout;
 
     const initLenis = async () => {
       const Lenis = (await import("lenis")).default;
-
-      // Check if user is on a touch device
-      const isTouchDevice =
-        "ontouchstart" in window || navigator.maxTouchPoints > 0;
+      const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
       instance = new Lenis({
-        wrapper: window,
-        content: document.documentElement,
-        // Increased lerp from 0.055 to 0.1 for faster, snappier responsiveness
+        // Binding to a wrapper prevents the window level scroll from hiding browser address bar
+        wrapper: isTouchDevice && wrapperRef.current ? wrapperRef.current : window,
+        content: isTouchDevice && wrapperRef.current ? (wrapperRef.current.firstElementChild as HTMLElement) : document.documentElement,
         lerp: 0.1,
         smoothWheel: true,
         wheelMultiplier: 1.0,
-        // ── ULTRA-SMOOTH MOBILE & ANDROID SETTINGS ──
-        // Native mobile scrolling is already GPU-accelerated and smooth on 120Hz displays.
-        // syncTouch: false prevents artificial input delay on touch screens.
         syncTouch: false,
-        touchMultiplier: isTouchDevice ? 1.5 : 1.0, // Restores swift flick momentum
+        touchMultiplier: isTouchDevice ? 1.5 : 1.0,
         autoResize: true,
       });
 
@@ -60,7 +55,6 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
         smootherRef.current = instance;
       }
 
-      // Sync Lenis scroll updates with GSAP ScrollTrigger
       instance.on("scroll", () => {
         ScrollTrigger.update();
         document.documentElement.classList.add("is-scrolling");
@@ -70,13 +64,11 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
         }, 150);
       });
 
-      // Synchronize Lenis RAF with GSAP Ticker frame loop
       tickerCallback = (time: number) => {
         instance.raf(time * 1000);
       };
-      
+
       gsap.ticker.add(tickerCallback);
-      // lagSmoothing prevents visual jumps after heavy JS thread stalls
       gsap.ticker.lagSmoothing(0);
 
       onScrollReady?.();
@@ -113,9 +105,12 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   }, [pathname, preloaderDone]);
 
   return (
-    <div className="flex flex-col min-h-[100dvh] w-full relative">
+    <div 
+      ref={wrapperRef}
+      className="mobile-static-viewport flex flex-col min-h-[100dvh] w-full relative overflow-y-auto overflow-x-hidden"
+    >
       <CustomScrollBar />
-      {children}
+      <div className="w-full min-h-full">{children}</div>
     </div>
   );
 }
