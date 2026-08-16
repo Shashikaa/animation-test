@@ -132,7 +132,7 @@ export default function AboutMobile() {
     
     // STRICT MAX SPEED CAP PER FRAME:
     // Lower values (e.g., 0.003 - 0.005) make fast flicks smooth and controlled.
-    const MAX_PROGRESS_DELTA_PER_FRAME = 0.004;
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
 
     let lastTime = performance.now();
 
