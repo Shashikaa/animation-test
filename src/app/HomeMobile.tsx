@@ -59,6 +59,9 @@ export default function HomeMobile() {
   const footerLayerRef = useRef<HTMLDivElement>(null);
 
   const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
+  const lastSizeRef = useRef({ width: 0, height: 0 });
+
+  const currentProgress = useRef(0);
   const targetProgress = useRef(0);
   const rafId = useRef<number | null>(null);
 
@@ -84,6 +87,7 @@ export default function HomeMobile() {
     if (!preloaderDone || !shouldLoadRest) {
       if (lenis && typeof lenis.stop === "function") lenis.stop();
       targetProgress.current = 0;
+      currentProgress.current = 0;
     } else {
       document.body.classList.remove("preloading");
       document.documentElement.classList.remove("preloading");
@@ -120,16 +124,30 @@ export default function HomeMobile() {
     }
   }, [shouldLoadRest]);
 
-  // 2. CACHE METRICS
+  // 2. CACHE METRICS & DYNAMIC HEIGHT CALCULATION
   const updateMetrics = useCallback(() => {
     if (!trackRef.current) return;
-    const rect = trackRef.current.getBoundingClientRect();
+
     const vh = window.innerHeight;
+    const vw = window.innerWidth;
+
+    const appHeight = appSecRef.current?.offsetHeight || vh;
+    const footerHeight = footerLayerRef.current?.offsetHeight || vh;
+    
+    // Total steps: 9.8 total step progress across 6 screen height panels + 2 auto-height panels
+    const totalTrackHeight = vh * 7.8 + appHeight + footerHeight;
+
+    trackRef.current.style.height = `${totalTrackHeight}px`;
+
+    const rect = trackRef.current.getBoundingClientRect();
+
     scrollMetricsRef.current = {
-      totalScrollable: rect.height - vh,
+      totalScrollable: Math.max(0, totalTrackHeight - vh),
       vh,
       trackTopOffset: window.scrollY + rect.top,
     };
+
+    lastSizeRef.current = { width: vw, height: vh };
 
     if (scopeRef.current) {
       domCache.current = {
@@ -158,22 +176,64 @@ export default function HomeMobile() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!shouldLoadRest) return;
-    updateMetrics();
-    window.addEventListener("resize", updateMetrics, { passive: true });
-    return () => window.removeEventListener("resize", updateMetrics);
-  }, [shouldLoadRest, updateMetrics]);
+  const handleResize = useCallback(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const { width, height } = lastSizeRef.current;
 
-  // 3. GPU-ACCELERATED RENDER LOOP
+    // Ignore mobile address bar show/hide dynamic resize shifts
+    const isLikelyAddressBarToggle = vw === width && Math.abs(vh - height) < 150;
+    if (isLikelyAddressBarToggle) return;
+
+    updateMetrics();
+  }, [updateMetrics]);
+
   useEffect(() => {
     if (!shouldLoadRest) return;
+
+    updateMetrics();
+
+    window.addEventListener("resize", handleResize, { passive: true });
+    window.addEventListener("orientationchange", updateMetrics, { passive: true });
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", updateMetrics);
+    };
+  }, [shouldLoadRest, updateMetrics, handleResize]);
+
+  // 3. CONTINUOUS ANIMATION LOOP WITH VELOCITY CAPPING
+  useEffect(() => {
+    if (!shouldLoadRest) return;
+
+    let isRunning = true;
+
+    const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
+const EASE_FACTOR = isAndroid ? 0.1 : 0.5;
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
+
+    let lastTime = performance.now();
 
     const render = () => {
-      const currentProg = targetProgress.current;
-      // Expanded totalSteps from 9.0 to 9.8 to give Sec 2 equal scroll distance/speed
+      if (!isRunning) return;
+
+      const now = performance.now();
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      const dynamicEase = 1 - Math.exp(-EASE_FACTOR * 60 * dt);
+
+      let delta = (targetProgress.current - currentProgress.current) * dynamicEase;
+
+      if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
+        delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
+      }
+
+      currentProgress.current += delta;
+
+      const p = currentProgress.current;
       const totalSteps = 9.8;
-      const stepProgress = currentProg * totalSteps;
+      const stepProgress = p * totalSteps;
       const { vh } = scrollMetricsRef.current;
       const cache = domCache.current;
 
@@ -233,8 +293,7 @@ export default function HomeMobile() {
       if (sec2Ref.current) sec2Ref.current.style.transform = `translate3d(0, ${(1 - s2Prog) * 100}%, 0)`;
       if (heroPanelRef.current && s2Prog > 0) heroPanelRef.current.style.transform = `translate3d(0, ${-s2Prog * 15}%, 0)`;
 
-      // ── Step 2 -> 4.0: SECTION TWO INNER ANIMATIONS (MATCHED SPEED WITH SUB-SERVICES) ──
-      // Expanded step window from 1.2 to 2.0 (Step 2.0 -> Step 4.0)
+      // ── Step 2 -> 4.0: SECTION TWO INNER ANIMATIONS ──
       const s2InnerProg = clamp((stepProgress - 2.0) / 2.0);
       const s2Titles = cache.s2Titles as NodeListOf<HTMLElement>;
       const s2ScrollWrap = cache.s2ScrollWrap as HTMLElement;
@@ -261,7 +320,7 @@ export default function HomeMobile() {
       if (s2Clip2) s2Clip2.style.opacity = clamp((s2InnerProg - 0.45) / 0.30).toFixed(2);
       if (s2Clip3) s2Clip3.style.opacity = clamp((s2InnerProg - 0.70) / 0.30).toFixed(2);
 
-      // ── Step 4.0 -> 5.0: SECTION EIGHT (SHIFTED OFFSET BY +0.8) ──
+      // ── Step 4.0 -> 5.0: SECTION EIGHT ──
       const s8Prog = clamp(stepProgress - 4.0);
       if (sec8Ref.current) {
         sec8Ref.current.style.transform = `translate3d(0, ${(1 - s8Prog) * 100}%, 0)`;
@@ -379,6 +438,8 @@ export default function HomeMobile() {
         footerLayerRef.current.style.opacity = `${footerProgress > 0 ? 1 : 0}`;
         footerLayerRef.current.style.visibility = footerProgress > 0 ? "visible" : "hidden";
       }
+
+      rafId.current = requestAnimationFrame(render);
     };
 
     const handleScroll = (e?: any) => {
@@ -408,9 +469,6 @@ export default function HomeMobile() {
       }
 
       targetProgress.current = clamp(relativeScroll / totalScrollable);
-
-      if (rafId.current) cancelAnimationFrame(rafId.current);
-      rafId.current = requestAnimationFrame(render);
     };
 
     const lenis = smootherRef?.current;
@@ -421,9 +479,10 @@ export default function HomeMobile() {
     }
 
     handleScroll();
-    render();
+    rafId.current = requestAnimationFrame(render);
 
     return () => {
+      isRunning = false;
       if (rafId.current) cancelAnimationFrame(rafId.current);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
@@ -450,19 +509,15 @@ export default function HomeMobile() {
         }
       `}</style>
 
-      <div
-        ref={trackRef}
-        className="home-track-container relative w-full"
-        style={{ height: "1100vh" }}
-      >
+      <div ref={trackRef} className="home-track-container relative w-full">
         <div
           ref={fixedFrameRef}
-          className="fixed top-0 left-0 w-full overflow-hidden bg-black z-10 h-[100dvh]"
+          className="fixed top-0 left-0 w-full overflow-hidden bg-black z-10 h-svh"
         >
           {/* Layer 1: Hero Component */}
           <div
             ref={heroPanelRef}
-            className="hero absolute inset-0 w-full h-[100dvh] z-10 gpu-accelerated transform-gpu will-change-transform"
+            className="hero absolute inset-0 w-full h-svh z-10 transform-gpu will-change-transform backface-hidden"
           >
             <Hero />
           </div>
@@ -472,7 +527,7 @@ export default function HomeMobile() {
               {/* Layer 2: Section Two */}
               <div
                 ref={sec2Ref}
-                className="section-2 about-stack-layer absolute inset-0 w-full h-[100dvh] z-20 gpu-accelerated will-change-transform"
+                className="section-2 about-stack-layer absolute inset-0 w-full h-svh z-20 transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionTwo />
@@ -481,7 +536,7 @@ export default function HomeMobile() {
               {/* Layer 3: Section Eight */}
               <div
                 ref={sec8Ref}
-                className="section-8 about-stack-layer absolute inset-0 w-full h-[100dvh] z-30 gpu-accelerated will-change-transform"
+                className="section-8 about-stack-layer absolute inset-0 w-full h-svh z-30 transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionEight />
@@ -490,7 +545,7 @@ export default function HomeMobile() {
               {/* Layer 4: Section Ten */}
               <div
                 ref={sec10Ref}
-                className="section-10 about-stack-layer absolute inset-0 w-full h-[100dvh] z-40 gpu-accelerated will-change-transform"
+                className="section-10 about-stack-layer absolute inset-0 w-full h-svh z-40 transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)", opacity: 0, visibility: "hidden" }}
               >
                 <SectionTen />
@@ -499,7 +554,7 @@ export default function HomeMobile() {
               {/* Layer 5: Section Seven */}
               <div
                 ref={sec7Ref}
-                className="section-7 about-stack-layer absolute inset-0 w-full h-[100dvh] z-50 gpu-accelerated will-change-transform"
+                className="section-7 about-stack-layer absolute inset-0 w-full h-svh z-50 transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)", opacity: 0, visibility: "hidden" }}
               >
                 <SectionSeven />
@@ -508,8 +563,8 @@ export default function HomeMobile() {
               {/* Layer 6: App Section */}
               <div
                 ref={appSecRef}
-                className="section-appsec layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[60] will-change-transform"
-                style={{ transform: "translate3d(0, 100vh, 0)", opacity: 0, visibility: "hidden" }}
+                className="section-appsec layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[60] will-change-transform backface-hidden"
+                style={{ transform: "translate3d(0, 100svh, 0)", opacity: 0, visibility: "hidden" }}
               >
                 <Appsection />
               </div>
@@ -517,7 +572,7 @@ export default function HomeMobile() {
               {/* Layer 7: Section Nine */}
               <div
                 ref={sec9Ref}
-                className="section-9 about-stack-layer absolute inset-0 w-full h-[100dvh] z-[70] gpu-accelerated will-change-transform"
+                className="section-9 about-stack-layer absolute inset-0 w-full h-svh z-[70] transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)", opacity: 0, visibility: "hidden" }}
               >
                 <SectionNine />
@@ -526,8 +581,8 @@ export default function HomeMobile() {
               {/* Layer 8: Footer */}
               <div
                 ref={footerLayerRef}
-                className="footer layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[126] will-change-transform"
-                style={{ transform: "translate3d(0, 100vh, 0)", opacity: 0, visibility: "hidden" }}
+                className="footer layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[126] will-change-transform backface-hidden"
+                style={{ transform: "translate3d(0, 100svh, 0)", opacity: 0, visibility: "hidden" }}
               >
                 <Footer />
               </div>

@@ -1,8 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef, useEffect, useCallback } from "react";
 import ContactHero from "@/src/components/contact/Hero";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 
@@ -11,7 +11,13 @@ const SectionOne = dynamic(() => import("@/src/components/contact/SectionOne"));
 const FAQSection = dynamic(() => import("@/src/components/contact/FAQSection"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
-const clamp = (val: number, min = 0, max = 1) => Math.min(Math.max(val, min), max);
+const clamp = (val: number, min = 0, max = 1) =>
+  Math.min(Math.max(val, min), max);
+
+const mapRange = (val: number, inMin: number, inMax: number) => {
+  if (inMin === inMax) return 0;
+  return clamp((val - inMin) / (inMax - inMin));
+};
 
 export default function ContactMobile() {
   const scopeRef = useRef<HTMLDivElement>(null);
@@ -24,123 +30,146 @@ export default function ContactMobile() {
   const scrollMetricsRef = useRef({
     totalScrollable: 0,
     vh: 0,
-    h2: 0,
-    h3: 0,
-    dist1: 0,
-    dist2: 0,
-    dist3: 0,
     trackTopOffset: 0,
   });
 
-  const rawProgress = useRef(0);
+  const lastSizeRef = useRef({ width: 0, height: 0 });
+
+  const currentProgress = useRef(0);
+  const targetProgress = useRef(0);
   const rafId = useRef<number | null>(null);
 
   const { smootherRef } = useSite();
-  const { preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
+
+  const { shouldLoadRest } = useHeroIntro(scopeRef, {
     isMobile: true,
     introDurationMs: 2800,
     unlockScrollEarlyMs: 1800,
   });
 
-  useEffect(() => {
-    if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
-      window.history.scrollRestoration = "manual";
-    }
-  }, []);
-
   const updateMetrics = useCallback(() => {
-    if (!trackRef.current || !layer2ContentRef.current || !layer3FooterRef.current) return;
+    if (!trackRef.current) return;
 
     const vh = window.innerHeight;
-    const h2 = layer2ContentRef.current.offsetHeight || vh;
-    const h3 = layer3FooterRef.current.offsetHeight || vh;
+    const vw = window.innerWidth;
 
-    const dist1 = vh;
-    const dist2 = Math.max(0, h2 - vh);
-    const dist3 = h3;
+    const h2 = layer2ContentRef.current?.offsetHeight || vh;
+    const footerHeight = layer3FooterRef.current?.offsetHeight || vh;
 
-    const totalScrollable = dist1 + dist2 + dist3;
-    const totalTrackHeight = totalScrollable + vh;
+    // Distances: Reduced CTA entrance scroll distance to make CTA slide up faster
+    const ctaEntranceDist = vh * 0.55; 
+    const contentScrollDist = Math.max(0, h2 - vh);
+    const footerDist = footerHeight;
 
-    scrollMetricsRef.current = {
-      totalScrollable,
-      vh,
-      h2,
-      h3,
-      dist1,
-      dist2,
-      dist3,
-      trackTopOffset: window.scrollY + trackRef.current.getBoundingClientRect().top,
-    };
-
+    const totalTrackHeight = vh + ctaEntranceDist + contentScrollDist + footerDist;
     trackRef.current.style.height = `${totalTrackHeight}px`;
 
-    const lenis = smootherRef?.current;
-    if (lenis && typeof lenis.resize === "function") {
-      lenis.resize();
-    }
-  }, [smootherRef]);
+    const rect = trackRef.current.getBoundingClientRect();
+
+    scrollMetricsRef.current = {
+      totalScrollable: Math.max(0, totalTrackHeight - vh),
+      vh,
+      trackTopOffset: window.scrollY + rect.top,
+    };
+
+    lastSizeRef.current = { width: vw, height: vh };
+  }, []);
+
+  const handleResize = useCallback(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const { width, height } = lastSizeRef.current;
+
+    const isLikelyAddressBarToggle =
+      vw === width && Math.abs(vh - height) < 150;
+
+    if (isLikelyAddressBarToggle) return;
+
+    updateMetrics();
+  }, [updateMetrics]);
 
   useEffect(() => {
     if (!shouldLoadRest) return;
 
     updateMetrics();
 
-    const resizeObserver = new ResizeObserver(() => {
-      requestAnimationFrame(() => updateMetrics());
+    window.addEventListener("resize", handleResize, { passive: true });
+    window.addEventListener("orientationchange", updateMetrics, {
+      passive: true,
     });
 
-    if (layer2ContentRef.current) resizeObserver.observe(layer2ContentRef.current);
-    if (layer3FooterRef.current) resizeObserver.observe(layer3FooterRef.current);
-
-    window.addEventListener("resize", updateMetrics, { passive: true });
-
     return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener("resize", updateMetrics);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", updateMetrics);
     };
-  }, [shouldLoadRest, updateMetrics]);
+  }, [shouldLoadRest, updateMetrics, handleResize]);
 
   useEffect(() => {
     if (!shouldLoadRest) return;
 
+    let isRunning = true;
+
+    const isAndroid =
+      typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
+      
+const EASE_FACTOR = isAndroid ? 0.1 : 0.5;
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
+
+    let lastTime = performance.now();
+
     const render = () => {
-      const currentProg = rawProgress.current;
-      const { totalScrollable, vh, h2, h3, dist1, dist2, dist3 } = scrollMetricsRef.current;
+      if (!isRunning) return;
 
-      if (totalScrollable <= 0) return;
+      const now = performance.now();
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
 
-      const relativeScroll = currentProg * totalScrollable;
+      const dynamicEase = 1 - Math.exp(-EASE_FACTOR * 60 * dt);
 
-      // Linear motion profile matching About page travel velocity
-      let layer2Y = vh;
-      if (relativeScroll <= dist1) {
-        const p1 = relativeScroll / dist1;
-        layer2Y = vh * (1 - p1);
-      } else if (relativeScroll <= dist1 + dist2) {
-        layer2Y = -(relativeScroll - dist1);
-      } else {
-        layer2Y = -(h2 - vh);
+      let delta =
+        (targetProgress.current - currentProgress.current) * dynamicEase;
+
+      if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
+        delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
       }
 
+      currentProgress.current += delta;
+
+      const p = currentProgress.current;
+
+      const { vh } = scrollMetricsRef.current;
+      const h2 = layer2ContentRef.current?.offsetHeight || vh;
+      const h3 = layer3FooterRef.current?.offsetHeight || vh;
+
+      // Tightened mapRange: 0.0 -> 0.18 gives CTA a fast, responsive 1:1 speed match with the About page stack transitions
+      const contentEntranceProg = mapRange(p, 0.0, 0.18);
+      const contentScrollProg = mapRange(p, 0.18, 0.82);
+      const footerProgress = mapRange(p, 0.82, 1.0);
+
       if (layer2ContentRef.current) {
+        let layer2Y = vh;
+        if (p <= 0.18) {
+          layer2Y = vh * (1 - contentEntranceProg);
+        } else if (p <= 0.82) {
+          layer2Y = -contentScrollProg * Math.max(0, h2 - vh);
+        } else {
+          layer2Y = -(h2 - vh);
+        }
         layer2ContentRef.current.style.transform = `translate3d(0, ${layer2Y}px, 0)`;
       }
 
-      let footerY = vh;
-      if (relativeScroll > dist1 + dist2 && dist3 > 0) {
-        const footerProgress = Math.min((relativeScroll - (dist1 + dist2)) / dist3, 1);
-        footerY = vh - h3 * footerProgress;
+      if (layer3FooterRef.current) {
+        const y = vh - h3 * footerProgress;
+        layer3FooterRef.current.style.transform = `translate3d(0, ${y}px, 0)`;
       }
 
-      if (layer3FooterRef.current) {
-        layer3FooterRef.current.style.transform = `translate3d(0, ${footerY}px, 0)`;
-      }
+      rafId.current = requestAnimationFrame(render);
     };
 
     const handleScroll = (e?: any) => {
       const lenis = smootherRef?.current;
       const scrollY = e?.scroll ?? lenis?.scroll ?? window.scrollY;
+
       const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
 
       if (totalScrollable <= 0) return;
@@ -164,13 +193,11 @@ export default function ContactMobile() {
         }
       }
 
-      rawProgress.current = clamp(relativeScroll / totalScrollable);
-
-      if (rafId.current) cancelAnimationFrame(rafId.current);
-      rafId.current = requestAnimationFrame(render);
+      targetProgress.current = clamp(relativeScroll / totalScrollable);
     };
 
     const lenis = smootherRef?.current;
+
     if (lenis && typeof lenis.on === "function") {
       lenis.on("scroll", handleScroll);
     } else {
@@ -178,10 +205,15 @@ export default function ContactMobile() {
     }
 
     handleScroll();
-    render();
+    rafId.current = requestAnimationFrame(render);
 
     return () => {
-      if (rafId.current) cancelAnimationFrame(rafId.current);
+      isRunning = false;
+
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+      }
+
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
       } else {
@@ -195,9 +227,9 @@ export default function ContactMobile() {
       <div ref={trackRef} className="contact-track-container relative w-full">
         <div
           ref={fixedFrameRef}
-          className="fixed top-0 left-0 w-full overflow-hidden z-10 h-[100dvh]"
+          className="fixed top-0 left-0 w-full overflow-hidden z-10 h-svh"
         >
-          <div className="absolute inset-0 w-full h-[100dvh] z-10 gpu-accelerated">
+          <div className="absolute inset-0 w-full h-svh z-10 transform-gpu will-change-transform backface-hidden">
             <ContactHero isMobile={true} />
           </div>
 
@@ -206,8 +238,8 @@ export default function ContactMobile() {
               <div
                 ref={layer2ContentRef}
                 id="contact-section"
-                className="absolute top-0 left-0 w-full z-20 bg-[#162D24] shadow-[0_-20px_50px_rgba(0,0,0,0.5)] rounded-t-[24px] gpu-accelerated will-change-transform"
-                style={{ transform: "translate3d(0, 100vh, 0)" }}
+                className="absolute top-0 left-0 w-full z-20 bg-[#162D24] shadow-[0_-20px_50px_rgba(0,0,0,0.5)] rounded-t-[24px] transform-gpu will-change-transform backface-hidden"
+                style={{ transform: "translate3d(0, 100svh, 0)" }}
               >
                 <section className="relative w-full pt-4">
                   <SectionCTA />
@@ -222,8 +254,8 @@ export default function ContactMobile() {
 
               <div
                 ref={layer3FooterRef}
-                className="absolute top-0 left-0 w-full z-30 shadow-[0_-20px_50px_rgba(0,0,0,0.6)] rounded-t-[24px] gpu-accelerated will-change-transform"
-                style={{ transform: "translate3d(0, 100vh, 0)" }}
+                className="absolute top-0 left-0 w-full z-30 shadow-[0_-20px_50px_rgba(0,0,0,0.6)] rounded-t-[24px] transform-gpu will-change-transform backface-hidden"
+                style={{ transform: "translate3d(0, 100svh, 0)" }}
               >
                 <Footer />
               </div>

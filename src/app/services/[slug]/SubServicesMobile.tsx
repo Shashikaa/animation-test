@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import SubServiceHero from "@/src/components/Service/SubServiceHero";
 import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
@@ -28,7 +28,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
   const faqSectionRef = useRef<HTMLDivElement>(null);
   const footerLayerRef = useRef<HTMLDivElement>(null);
 
-  // Cached DOM element references
+  // Cached DOM references
   const heroTextWrapRef = useRef<HTMLElement | null>(null);
   const heroTopLayerRef = useRef<HTMLElement | null>(null);
   const heroBgRef = useRef<HTMLElement | null>(null);
@@ -39,7 +39,16 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
   const s10ImgElementRef = useRef<HTMLElement | null>(null);
   const seqContainerRef = useRef<HTMLElement | null>(null);
 
-  const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0, vw: 0 });
+  // Cached layout metrics to eliminate forced reflows during scroll
+  const scrollMetricsRef = useRef({
+    totalScrollable: 0,
+    vh: 0,
+    trackTopOffset: 0,
+  });
+
+  const lastSizeRef = useRef({ width: 0, height: 0 });
+
+  const currentProgress = useRef(0);
   const targetProgress = useRef(0);
   const rafId = useRef<number | null>(null);
 
@@ -50,7 +59,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     unlockScrollEarlyMs: 1800,
   });
 
-  // Prevent scroll jumps on page refresh
+  // Prevent scroll jumps on refresh
   useEffect(() => {
     if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
@@ -66,28 +75,30 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     };
   }, [introDone]);
 
-  // Cache DOM elements
+  // Cache target DOM elements once shouldLoadRest is true
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
-    heroTextWrapRef.current = scopeRef.current.querySelector<HTMLElement>(".hero-text-wrap");
-    heroTopLayerRef.current = scopeRef.current.querySelector<HTMLElement>(".services-hero-top-layer");
-    heroBgRef.current = scopeRef.current.querySelector<HTMLElement>(".service-hero-bg");
+    const scope = scopeRef.current;
+    heroTextWrapRef.current = scope.querySelector<HTMLElement>(".hero-text-wrap");
+    heroTopLayerRef.current = scope.querySelector<HTMLElement>(".services-hero-top-layer");
+    heroBgRef.current = scope.querySelector<HTMLElement>(".service-hero-bg");
 
-    s10ParaTopRef.current = scopeRef.current.querySelector<HTMLElement>(".s10-para-top");
-    s10TitleRef.current = scopeRef.current.querySelector<HTMLElement>(".s10-title");
-    s10ImgInnerWrapRef.current = scopeRef.current.querySelector<HTMLElement>(".s10-img-inner-wrap");
-    s10ImgElementRef.current = scopeRef.current.querySelector<HTMLElement>(".s10-img-element");
-    seqContainerRef.current = scopeRef.current.querySelector<HTMLElement>(".s10-seq-container");
+    s10ParaTopRef.current = scope.querySelector<HTMLElement>(".s10-para-top");
+    s10TitleRef.current = scope.querySelector<HTMLElement>(".s10-title");
+    s10ImgInnerWrapRef.current = scope.querySelector<HTMLElement>(".s10-img-inner-wrap");
+    s10ImgElementRef.current = scope.querySelector<HTMLElement>(".s10-img-element");
+    seqContainerRef.current = scope.querySelector<HTMLElement>(".s10-seq-container");
   }, [shouldLoadRest]);
 
-  // Handle Lenis smooth scrolling setup
+  // Manage smooth scroller state
   useEffect(() => {
     const lenis = smootherRef?.current;
 
     if (!preloaderDone || !shouldLoadRest) {
       if (lenis && typeof lenis.stop === "function") lenis.stop();
       targetProgress.current = 0;
+      currentProgress.current = 0;
     } else {
       document.body.classList.remove("preloading");
       document.documentElement.classList.remove("preloading");
@@ -103,39 +114,96 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // Cache track metrics
+  // Measure dynamic heights and offsets (About Page style logic)
   const updateMetrics = useCallback(() => {
     if (!trackRef.current) return;
-    const rect = trackRef.current.getBoundingClientRect();
+
     const vh = window.innerHeight;
     const vw = window.innerWidth;
+
+    // Calculate dynamic height based on auto-height elements
+    const faqHeight = faqSectionRef.current?.offsetHeight || vh;
+    const footerHeight = footerLayerRef.current?.offsetHeight || vh;
+
+    // 6 Full Viewport Steps + Dynamic Tail Heights for FAQ & Footer
+    const totalTrackHeight = vh * 5 + faqHeight + footerHeight;
+    trackRef.current.style.height = `${totalTrackHeight}px`;
+
+    const rect = trackRef.current.getBoundingClientRect();
+
     scrollMetricsRef.current = {
-      totalScrollable: rect.height - vh,
+      totalScrollable: Math.max(0, totalTrackHeight - vh),
       vh,
-      vw,
       trackTopOffset: window.scrollY + rect.top,
     };
+
+    lastSizeRef.current = { width: vw, height: vh };
   }, []);
 
-  useEffect(() => {
-    if (!shouldLoadRest) return;
-    updateMetrics();
-    window.addEventListener("resize", updateMetrics, { passive: true });
-    return () => window.removeEventListener("resize", updateMetrics);
-  }, [shouldLoadRest, updateMetrics]);
+  const handleResize = useCallback(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const { width, height } = lastSizeRef.current;
 
-  // 60FPS Render Loop with linear physical travel profiles
+    const isLikelyAddressBarToggle = vw === width && Math.abs(vh - height) < 150;
+
+    if (isLikelyAddressBarToggle) return;
+
+    updateMetrics();
+  }, [updateMetrics]);
+
   useEffect(() => {
     if (!shouldLoadRest) return;
+
+    updateMetrics();
+
+    window.addEventListener("resize", handleResize, { passive: true });
+    window.addEventListener("orientationchange", updateMetrics, { passive: true });
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", updateMetrics);
+    };
+  }, [shouldLoadRest, updateMetrics, handleResize]);
+
+  // Smooth Easing & Render Loop with Velocity Cap logic
+  useEffect(() => {
+    if (!shouldLoadRest) return;
+
+    let isRunning = true;
+
+    const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
+const EASE_FACTOR = isAndroid ? 0.1 : 0.5;
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
+
+    let lastTime = performance.now();
 
     const render = () => {
-      const currentProg = targetProgress.current;
+      if (!isRunning) return;
+
+      const now = performance.now();
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      const dynamicEase = 1 - Math.exp(-EASE_FACTOR * 60 * dt);
+
+      let delta = (targetProgress.current - currentProgress.current) * dynamicEase;
+
+      if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
+        delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
+      }
+
+      currentProgress.current += delta;
+
+      const currentProg = currentProgress.current;
       const totalSteps = 7.0;
       const stepProgress = currentProg * totalSteps;
 
       const { vh } = scrollMetricsRef.current;
+      const faqHeight = faqSectionRef.current?.offsetHeight || vh;
+      const footerHeight = footerLayerRef.current?.offsetHeight || vh;
 
-      // --- STEP 1: HERO TOP LAYER CLIP (BOTTOM TO TOP REVEAL) / TEXT FADE (0.0 -> 1.0) ---
+      // STEP 1: Hero Top Layer Clip & Text Fade (0.0 -> 1.0)
       const heroPhase1Prog = clamp(stepProgress / 1.0);
 
       if (heroTextWrapRef.current) {
@@ -145,8 +213,6 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
       }
 
       if (heroTopLayerRef.current) {
-        // Bottom-to-top reveal: inset(top right bottom left)
-        // bottom-inset moves from 0% (full cover) to 100% (completely revealed upward)
         const bottomInset = heroPhase1Prog * 100;
         heroTopLayerRef.current.style.clipPath = `inset(0% 0% ${bottomInset}% 0%)`;
       }
@@ -156,7 +222,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         heroBgRef.current.style.transform = `scale(${bgScale})`;
       }
 
-      // --- STEP 2: SECTION ONE SLIDES UP OVER HERO (1.0 -> 2.0) ---
+      // STEP 2: Section One Slides Up (1.0 -> 2.0)
       const s1Prog = clamp(stepProgress - 1.0);
       if (sectionOneRef.current) {
         sectionOneRef.current.style.transform = `translate3d(0, ${(1 - s1Prog) * 100}%, 0)`;
@@ -166,7 +232,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         heroPanelRef.current.style.transform = `translate3d(0, ${-s1Prog * 15}%, 0)`;
       }
 
-      // --- STEP 3: SECTION ONE FULLSCREEN EXPANSION & TEXT ANIMATIONS (2.0 -> 5.0) ---
+      // STEP 3: Section One Content Expansion (2.0 -> 5.0)
       if (stepProgress < 2.0) {
         if (s10ParaTopRef.current) {
           s10ParaTopRef.current.style.opacity = "1";
@@ -203,7 +269,6 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         if (s10ImgInnerWrapRef.current) {
           const currentRight = (1 - expandProg) * 4;
           const currentBottom = (1 - expandProg) * 10;
-
           s10ImgInnerWrapRef.current.style.right = `${currentRight}vw`;
           s10ImgInnerWrapRef.current.style.bottom = `${currentBottom}vh`;
           s10ImgInnerWrapRef.current.style.width = `calc((100vw - 8vw) + 8vw * ${expandProg})`;
@@ -222,10 +287,9 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         }
       }
 
-      // --- STEP 4: FAQ SECTION REVEAL (5.0 -> 6.0) ---
+      // STEP 4: FAQ Section Reveal (5.0 -> 6.0)
       const faqProg = clamp(stepProgress - 5.0);
       if (faqSectionRef.current) {
-        const faqHeight = faqSectionRef.current.offsetHeight || vh;
         const startY = vh;
         const endY = -(faqHeight - vh);
         const currentY = startY + (endY - startY) * faqProg;
@@ -236,13 +300,14 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         sectionOneRef.current.style.transform = `translate3d(0, ${-faqProg * 15}%, 0)`;
       }
 
-      // --- STEP 5: FOOTER REVEAL (6.0 -> 7.0) ---
+      // STEP 5: Footer Reveal (6.0 -> 7.0)
       const footerProg = clamp(stepProgress - 6.0);
       if (footerLayerRef.current) {
-        const footerHeight = footerLayerRef.current.offsetHeight || vh;
         const translateY = vh - footerHeight * footerProg;
         footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
       }
+
+      rafId.current = requestAnimationFrame(render);
     };
 
     const handleScroll = (e?: any) => {
@@ -272,12 +337,10 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
       }
 
       targetProgress.current = clamp(relativeScroll / totalScrollable);
-
-      if (rafId.current) cancelAnimationFrame(rafId.current);
-      rafId.current = requestAnimationFrame(render);
     };
 
     const lenis = smootherRef?.current;
+
     if (lenis && typeof lenis.on === "function") {
       lenis.on("scroll", handleScroll);
     } else {
@@ -285,10 +348,13 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     }
 
     handleScroll();
-    render();
+    rafId.current = requestAnimationFrame(render);
 
     return () => {
+      isRunning = false;
+
       if (rafId.current) cancelAnimationFrame(rafId.current);
+
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
       } else {
@@ -299,19 +365,15 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
 
   return (
     <div ref={scopeRef} className="w-full bg-[#162D24]">
-      <div
-        ref={trackRef}
-        className="services-track-container relative w-full"
-        style={{ height: "700vh" }}
-      >
+      <div ref={trackRef} className="services-track-container relative w-full">
         <div
           ref={fixedFrameRef}
-          className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-[100dvh]"
+          className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-svh"
         >
           {/* Layer 1: Hero */}
           <div
             ref={heroPanelRef}
-            className="subservice-hero-panel absolute inset-0 w-full h-[100dvh] z-10 gpu-accelerated transform-gpu will-change-transform"
+            className="subservice-hero-panel absolute inset-0 w-full h-svh z-10 transform-gpu will-change-transform backface-hidden"
           >
             <SubServiceHero data={pageData.hero} isMobile={true} />
           </div>
@@ -321,7 +383,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
               {/* Layer 2: Section One */}
               <div
                 ref={sectionOneRef}
-                className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-20 gpu-accelerated will-change-transform"
+                className="about-stack-layer absolute inset-0 w-full h-svh z-20 transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SubServiceSectionOne data={pageData.sectionOne} />
@@ -330,8 +392,8 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
               {/* Layer 3: Dynamic FAQ Section */}
               <div
                 ref={faqSectionRef}
-                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-30 will-change-transform"
-                style={{ transform: "translate3d(0, 100vh, 0)" }}
+                className="layer-auto-height transform-gpu absolute left-0 top-0 w-full z-30 will-change-transform backface-hidden"
+                style={{ transform: "translate3d(0, 100svh, 0)" }}
               >
                 <SubServiceFAQSection data={pageData.sectionTwo} />
               </div>
@@ -339,8 +401,8 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
               {/* Layer 4: Footer */}
               <div
                 ref={footerLayerRef}
-                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[95] will-change-transform"
-                style={{ transform: "translate3d(0, 100vh, 0)" }}
+                className="layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[95] will-change-transform backface-hidden"
+                style={{ transform: "translate3d(0, 100svh, 0)" }}
               >
                 <Footer />
               </div>

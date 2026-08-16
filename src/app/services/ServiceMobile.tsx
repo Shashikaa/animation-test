@@ -27,6 +27,9 @@ export default function ServicesMobile() {
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
 
   const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
+  const lastSizeRef = useRef({ width: 0, height: 0 });
+
+  const currentProgress = useRef(0);
   const targetProgress = useRef(0);
   const rafId = useRef<number | null>(null);
   const lastSec2Idx = useRef<number>(-1);
@@ -59,6 +62,7 @@ export default function ServicesMobile() {
     if (!preloaderDone || !shouldLoadRest) {
       if (lenis && typeof lenis.stop === "function") lenis.stop();
       targetProgress.current = 0;
+      currentProgress.current = 0;
     } else {
       document.body.classList.remove("preloading");
       document.documentElement.classList.remove("preloading");
@@ -74,31 +78,87 @@ export default function ServicesMobile() {
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
+  // Dynamically calculate actual track height to account for auto-height sections
   const updateMetrics = useCallback(() => {
     if (!trackRef.current) return;
-    const rect = trackRef.current.getBoundingClientRect();
+
     const vh = window.innerHeight;
+    const vw = window.innerWidth;
+
+    const appHeight = appSecRef.current?.offsetHeight || vh;
+    const footerHeight = footerLayerRef.current?.offsetHeight || vh;
+    const totalTrackHeight = vh * 5 + appHeight + footerHeight;
+
+    trackRef.current.style.height = `${totalTrackHeight}px`;
+
+    const rect = trackRef.current.getBoundingClientRect();
+
     scrollMetricsRef.current = {
-      totalScrollable: rect.height - vh,
+      totalScrollable: Math.max(0, totalTrackHeight - vh),
       vh,
       trackTopOffset: window.scrollY + rect.top,
     };
+
+    lastSizeRef.current = { width: vw, height: vh };
   }, []);
 
-  useEffect(() => {
-    if (!shouldLoadRest) return;
+  const handleResize = useCallback(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const { width, height } = lastSizeRef.current;
+
+    const isLikelyAddressBarToggle = vw === width && Math.abs(vh - height) < 150;
+    if (isLikelyAddressBarToggle) return;
+
     updateMetrics();
-    window.addEventListener("resize", updateMetrics, { passive: true });
-    return () => window.removeEventListener("resize", updateMetrics);
-  }, [shouldLoadRest, updateMetrics]);
+  }, [updateMetrics]);
 
   useEffect(() => {
     if (!shouldLoadRest) return;
+
+    updateMetrics();
+
+    window.addEventListener("resize", handleResize, { passive: true });
+    window.addEventListener("orientationchange", updateMetrics, { passive: true });
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", updateMetrics);
+    };
+  }, [shouldLoadRest, updateMetrics, handleResize]);
+
+  // Continuous animation loop with velocity clamping
+  useEffect(() => {
+    if (!shouldLoadRest) return;
+
+    let isRunning = true;
+
+    const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
+    const EASE_FACTOR = isAndroid ? 0.1 : 0.5;
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
+
+    let lastTime = performance.now();
 
     const render = () => {
-      const currentProg = targetProgress.current;
+      if (!isRunning) return;
+
+      const now = performance.now();
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      const dynamicEase = 1 - Math.exp(-EASE_FACTOR * 60 * dt);
+
+      let delta = (targetProgress.current - currentProgress.current) * dynamicEase;
+
+      if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
+        delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
+      }
+
+      currentProgress.current += delta;
+
+      const p = currentProgress.current;
       const totalSteps = 7.0;
-      const stepProgress = currentProg * totalSteps;
+      const stepProgress = p * totalSteps;
 
       const { vh } = scrollMetricsRef.current;
 
@@ -137,9 +197,8 @@ export default function ServicesMobile() {
 
       // --- STEP 3: SECTION TWO SLIDES UP OVER SECTION ONE & CYCLES SLIDES (2.0 -> 5.0) ---
       const step3Total = clamp((stepProgress - 2.0) / 3.0, 0, 1);
-      
+
       if (sectionTwoRef.current) {
-        // First 20% of Step 3 smoothly transitions SectionTwo into view, then holds pinned
         const entryProg = clamp(step3Total / 0.2);
         sectionTwoRef.current.style.transform = `translate3d(0, ${(1 - entryProg) * 100}%, 0)`;
       }
@@ -150,7 +209,6 @@ export default function ServicesMobile() {
       if (stepProgress >= 2.0 && stepProgress < 5.0) {
         setIsSectionTwoActive(true);
 
-        // Normalize range [2.0, 5.0) strictly into 3 equal 1.0-unit slices
         const sec2Progress = stepProgress - 2.0;
 
         if (sec2Progress < 1.0) {
@@ -185,6 +243,8 @@ export default function ServicesMobile() {
         const translateY = vh - footerHeight * footerProg;
         footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
       }
+
+      rafId.current = requestAnimationFrame(render);
     };
 
     const handleScroll = (e?: any) => {
@@ -214,9 +274,6 @@ export default function ServicesMobile() {
       }
 
       targetProgress.current = clamp(relativeScroll / totalScrollable);
-
-      if (rafId.current) cancelAnimationFrame(rafId.current);
-      rafId.current = requestAnimationFrame(render);
     };
 
     const lenis = smootherRef?.current;
@@ -227,9 +284,10 @@ export default function ServicesMobile() {
     }
 
     handleScroll();
-    render();
+    rafId.current = requestAnimationFrame(render);
 
     return () => {
+      isRunning = false;
       if (rafId.current) cancelAnimationFrame(rafId.current);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
@@ -242,19 +300,15 @@ export default function ServicesMobile() {
 
   return (
     <div ref={scopeRef} className="w-full bg-[#162D24]">
-      <div
-        ref={trackRef}
-        className="services-track-container relative w-full"
-        style={{ height: "700vh" }}
-      >
+      <div ref={trackRef} className="services-track-container relative w-full">
         <div
           ref={fixedFrameRef}
-          className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-[100dvh]"
+          className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-svh"
         >
           {/* Layer 1: Hero Block */}
           <div
             ref={heroPanelRef}
-            className="services-hero-panel absolute inset-0 w-full h-[100dvh] z-10 gpu-accelerated transform-gpu will-change-transform"
+            className="services-hero-panel absolute inset-0 w-full h-svh z-10 transform-gpu will-change-transform backface-hidden"
           >
             <Hero isMobile={true} />
           </div>
@@ -264,7 +318,7 @@ export default function ServicesMobile() {
               {/* Layer 2: Section One */}
               <div
                 ref={sectionOneRef}
-                className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-20 gpu-accelerated will-change-transform"
+                className="about-stack-layer absolute inset-0 w-full h-svh z-20 transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionOne />
@@ -273,7 +327,7 @@ export default function ServicesMobile() {
               {/* Layer 3: Section Two Context */}
               <div
                 ref={sectionTwoRef}
-                className="about-stack-layer absolute inset-0 w-full h-[100dvh] z-30 gpu-accelerated will-change-transform"
+                className="about-stack-layer absolute inset-0 w-full h-svh z-30 transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionTwo isActive={isSectionTwoActive} />
@@ -282,8 +336,8 @@ export default function ServicesMobile() {
               {/* Layer 4: App Section Wrapper */}
               <div
                 ref={appSecRef}
-                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[35] will-change-transform"
-                style={{ transform: "translate3d(0, 100vh, 0)" }}
+                className="layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[35] will-change-transform backface-hidden"
+                style={{ transform: "translate3d(0, 100svh, 0)" }}
               >
                 <Appsection />
               </div>
@@ -291,8 +345,8 @@ export default function ServicesMobile() {
               {/* Layer 5: Footer Wrapper Frame */}
               <div
                 ref={footerLayerRef}
-                className="layer-auto-height gpu-accelerated absolute left-0 top-0 w-full z-[151] will-change-transform"
-                style={{ transform: "translate3d(0, 100vh, 0)" }}
+                className="layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[151] will-change-transform backface-hidden"
+                style={{ transform: "translate3d(0, 100svh, 0)" }}
               >
                 <Footer />
               </div>

@@ -63,9 +63,14 @@ export default function TermsPage() {
 
         if (!section || !wrapper || !content) return;
 
-        // Calculate precise scrollable distance
+        // Dynamic scrollable distance getter for smooth re-calculation on resize
         const getScrollAmount = () =>
-          content.scrollHeight - wrapper.clientHeight;
+          Math.max(0, content.scrollHeight - wrapper.clientHeight);
+
+        const getThumbTravel = () => {
+          if (!track || !thumb) return 0;
+          return Math.max(0, track.clientHeight - thumb.clientHeight);
+        };
 
         const tl = gsap.timeline({
           scrollTrigger: {
@@ -79,7 +84,7 @@ export default function TermsPage() {
           },
         });
 
-        // 1. Scroll content upward
+        // 1. Scroll content upward smoothly as page pins
         tl.to(
           content,
           {
@@ -89,12 +94,12 @@ export default function TermsPage() {
           0
         );
 
-        // 2. Move thumb down custom track synchronously
+        // 2. Synchronize track thumb movement relative to active scroll
         if (track && thumb) {
           tl.to(
             thumb,
             {
-              y: () => track.clientHeight - thumb.clientHeight,
+              y: () => getThumbTravel(),
               ease: "none",
             },
             0
@@ -103,10 +108,10 @@ export default function TermsPage() {
       });
     }, scopeRef);
 
-    // Refresh after DOM layout stabilization
+    // Refresh triggers after full DOM mount & style evaluation
     const timer = setTimeout(() => {
       ScrollTrigger.refresh();
-    }, 200);
+    }, 250);
 
     return () => {
       clearTimeout(timer);
@@ -116,7 +121,7 @@ export default function TermsPage() {
 
   return (
     <div ref={scopeRef}>
-      <main className="relative w-full bg-[#10221C] h-auto">
+      <main className="relative w-full bg-[#10221C] min-h-svh">
         {/* Fixed Background Image */}
         <div
           className="hero-bg-wrapper fixed inset-0 w-full h-full z-0 pointer-events-none overflow-hidden"
@@ -131,17 +136,17 @@ export default function TermsPage() {
         {/* Full Screen Policy Section */}
         <section
           ref={sectionRef}
-          className="hero relative w-full h-screen bg-transparent overflow-hidden z-10 flex flex-col justify-between"
+          className="hero relative w-full h-svh bg-transparent overflow-hidden z-10 flex flex-col justify-between"
         >
           {/* Main Container */}
-          <div className="section-container relative h-full w-full flex flex-col lg:flex-row justify-between gap-6 lg:gap-16 px-6 lg:px-16 pt-16 lg:pt-20 !pb-4 lg:!pb-20 min-h-0 flex-1">
+          <div className="section-container relative h-full w-full flex flex-col lg:flex-row justify-between gap-6 lg:gap-16 px-6 lg:px-16 pt-16 lg:pt-20 pb-6 lg:pb-20 min-h-0 flex-1">
             {/* Left Column */}
             <div className="w-full lg:w-1/2 flex flex-col justify-between shrink-0">
               <div>
                 <h1 className="font-display text-[#F4EEDF] text-3xl sm:text-5xl lg:text-6xl leading-tight select-none">
                   Terms of Use
                 </h1>
-                <p className="font-body text-[#F4EEDF] !mt-3 lg:!mt-6 max-w-md text-xs sm:text-base leading-relaxed opacity-90">
+                <p className="font-body text-[#F4EEDF] mt-3 lg:mt-6 max-w-md text-xs sm:text-base leading-relaxed opacity-90">
                   These Terms of Use detail the terms, conditions, and service
                   agreements governing our interactions with clients, website
                   visitors, and project partners. Here you can find clear
@@ -194,7 +199,7 @@ export default function TermsPage() {
               >
                 <div
                   ref={scrollContentRef}
-                  className="w-full flex flex-col gap-8 lg:gap-10 text-[#F4EEDF] pb-24"
+                  className="w-full flex flex-col gap-8 lg:gap-10 text-[#F4EEDF] pb-24 transform-gpu will-change-transform"
                 >
                   {policySections.map((item, index) => (
                     <div
@@ -219,13 +224,13 @@ export default function TermsPage() {
               >
                 <div
                   ref={scrollThumbRef}
-                  className="w-full h-10 bg-[#F4EEDF] rounded-full absolute top-0 left-0"
+                  className="w-full h-10 bg-[#F4EEDF] rounded-full absolute top-0 left-0 transform-gpu will-change-transform"
                 />
               </div>
             </div>
 
-            {/* Mobile Contact Info (Pinned at Bottom) */}
-            <div className="flex lg:hidden flex-row gap-2 justify-between items-center font-body text-[#F4EEDF] text-xs pt-0  !mt-4 shrink-0 z-20 w-full">
+            {/* Mobile Contact Info */}
+            <div className="flex lg:hidden flex-row gap-2 justify-between items-center font-body text-[#F4EEDF] text-xs pt-0 mt-4 shrink-0 z-20 w-full">
               <a href="tel:0422630394" className="hover:opacity-75">
                 0422 630 394
               </a>
@@ -252,7 +257,7 @@ export default function TermsPage() {
         </section>
 
         {/* Footer Section */}
-        <div className="footer-section-row relative w-full z-10 bg-transparent !mt-16">
+        <div className="footer-section-row relative w-full z-10 bg-transparent">
           <Footer />
         </div>
       </main>

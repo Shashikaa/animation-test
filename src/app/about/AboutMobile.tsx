@@ -128,7 +128,7 @@ export default function AboutMobile() {
       typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
 
     // Easing & speed cap controls:
-    const EASE_FACTOR = isAndroid ? 0.08 : 0.10;
+const EASE_FACTOR = isAndroid ? 0.1 : 0.5;
     
     // STRICT MAX SPEED CAP PER FRAME:
     // Lower values (e.g., 0.003 - 0.005) make fast flicks smooth and controlled.
