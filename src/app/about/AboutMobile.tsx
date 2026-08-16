@@ -53,12 +53,18 @@ export default function AboutMobile() {
   const updateMetrics = useCallback(() => {
     if (!trackRef.current) return;
 
-    const rect = trackRef.current.getBoundingClientRect();
     const vh = window.innerHeight;
     const vw = window.innerWidth;
 
+    // Dynamically calculate actual track height to account for footer size
+    const footerHeight = layer7Ref.current?.offsetHeight || vh;
+    const totalTrackHeight = vh * 5 + footerHeight;
+    trackRef.current.style.height = `${totalTrackHeight}px`;
+
+    const rect = trackRef.current.getBoundingClientRect();
+
     scrollMetricsRef.current = {
-      totalScrollable: Math.max(0, rect.height - vh),
+      totalScrollable: Math.max(0, totalTrackHeight - vh),
       vh,
       trackTopOffset: window.scrollY + rect.top,
     };
@@ -121,8 +127,12 @@ export default function AboutMobile() {
     const isAndroid =
       typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
 
-    const EASE_FACTOR = isAndroid ? 0.09 : 0.08;
-    const MAX_PROGRESS_DELTA_PER_FRAME = isAndroid ? 0.008 : 0.012;
+    // Easing & speed cap controls:
+    const EASE_FACTOR = isAndroid ? 0.08 : 0.07;
+    
+    // STRICT MAX SPEED CAP PER FRAME:
+    // Lower values (e.g., 0.003 - 0.005) make fast flicks smooth and controlled.
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.004;
 
     let lastTime = performance.now();
 
@@ -138,6 +148,7 @@ export default function AboutMobile() {
       let delta =
         (targetProgress.current - currentProgress.current) * dynamicEase;
 
+      // Cap maximum speed per frame during aggressive swiping
       if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
         delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
       }
@@ -146,6 +157,7 @@ export default function AboutMobile() {
 
       const p = currentProgress.current;
 
+      // Original progress map keyframes
       const s1Prog = mapRange(p, 0.0, 0.12);
       const s2Prog = mapRange(p, 0.12, 0.24);
       const s3EntranceProg = mapRange(p, 0.24, 0.36);
@@ -278,7 +290,6 @@ export default function AboutMobile() {
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
-        style={{ height: "600vh" }}
       >
         <div
           ref={fixedFrameRef}
