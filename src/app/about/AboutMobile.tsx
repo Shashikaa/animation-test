@@ -103,28 +103,50 @@ export default function AboutMobile() {
 
     let isRunning = true;
 
-    // Direct, light smoothing factor (higher = faster response, lower = floatier)
-    const EASE_FACTOR = 0.12; 
+    const isAndroid =
+      typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
+
+    // Smooth base interpolation factor
+    const EASE_FACTOR = isAndroid ? 0.09 : 0.08;
+
+    // 🎯 MAXIMUM ANIMATION SPEED CAP PER FRAME (0.008 = max 0.8% total progress step per 16ms frame)
+    // Adjust this value down (e.g., 0.005) to make animations move slower during fast swipes.
+    const MAX_PROGRESS_DELTA_PER_FRAME = isAndroid ? 0.008 : 0.012;
+
+    let lastTime = performance.now();
 
     const render = () => {
       if (!isRunning) return;
 
-      // Clean single-layer lerp to sync with display refresh rate
-      currentProgress.current += (targetProgress.current - currentProgress.current) * EASE_FACTOR;
-      
+      const now = performance.now();
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      const dynamicEase = 1 - Math.exp(-EASE_FACTOR * 60 * dt);
+
+      // Standard target interpolation step
+      let delta = (targetProgress.current - currentProgress.current) * dynamicEase;
+
+      // 🎯 CLAMP MAXIMUM SPEED: Capping velocity so fast flings don't skip animations
+      if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
+        delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
+      }
+
+      currentProgress.current += delta;
+
       const p = currentProgress.current;
 
       // ─────────────────────────────────────
       // TIMELINE
       // ─────────────────────────────────────
 
-      const s1Prog = mapRange(p, 0.00, 0.12);
+      const s1Prog = mapRange(p, 0.0, 0.12);
       const s2Prog = mapRange(p, 0.12, 0.24);
       const s3EntranceProg = mapRange(p, 0.24, 0.36);
       const s3ExitProg = mapRange(p, 0.36, 0.48);
-      const s5EntranceProg = mapRange(p, 0.48, 0.60);
-      const s5ActiveProg = mapRange(p, 0.60, 0.82);
-      const footerProgress = mapRange(p, 0.82, 1.00);
+      const s5EntranceProg = mapRange(p, 0.48, 0.6);
+      const s5ActiveProg = mapRange(p, 0.6, 0.82);
+      const footerProgress = mapRange(p, 0.82, 1.0);
 
       // ─────────────────────────────────────
       // PANELS
@@ -145,7 +167,7 @@ export default function AboutMobile() {
 
         // Section 3
         if (panels[3]) {
-          const y = (1 - s3EntranceProg) * 100 - (s3ExitProg * 110);
+          const y = (1 - s3EntranceProg) * 100 - s3ExitProg * 110;
           panels[3].style.transform = `translate3d(0, ${y}%, 0)`;
         }
 
@@ -188,7 +210,7 @@ export default function AboutMobile() {
       // SECTION 5 STEPS
       // ─────────────────────────────────────
 
-      if (p >= 0.60 && p < 0.82) {
+      if (p >= 0.6 && p < 0.82) {
         setIsSectionFiveActive(true);
 
         if (s5ActiveProg < 0.33) {
@@ -198,7 +220,7 @@ export default function AboutMobile() {
         } else {
           triggerSec5Hook(2);
         }
-      } else if (p < 0.60) {
+      } else if (p < 0.6) {
         setIsSectionFiveActive(false);
         triggerSec5Hook(0);
       }
@@ -309,9 +331,7 @@ export default function AboutMobile() {
               </div>
 
               {/* SECTION 4 */}
-              <div
-                className="about-stack-layer absolute inset-0 w-full h-dvh z-40 transform-gpu opacity-0 pointer-events-none backface-hidden"
-              >
+              <div className="about-stack-layer absolute inset-0 w-full h-dvh z-40 transform-gpu opacity-0 pointer-events-none backface-hidden">
                 <SectionFour />
               </div>
 

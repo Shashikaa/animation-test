@@ -32,24 +32,23 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       const Lenis = (await import("lenis")).default;
       if (destroyed) return;
 
-const isMobile = window.matchMedia("(max-width: 767px)").matches;
+      const isMobile = window.matchMedia("(max-width: 767px)").matches;
+      const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
 
-instance = new Lenis({
-  wrapper: window,
-  content: document.documentElement,
-  // 🎯 Balanced lerp: slightly smoother than 0.12, but faster than your original 0.06
-  lerp: isMobile ? 0.09 : 0.08, 
-  smoothWheel: true,
-  // 🎯 Wheel multiplier: lowered back to 1.0 on mobile
-  wheelMultiplier: isMobile ? 1.0 : 1, 
-  syncTouch: true,
-  // 🎯 Balanced touch lag: reduced from 0.1 down to 0.06
-  syncTouchLerp: isMobile ? 0.06 : 0.08, 
-  // 🎯 Balanced swipe distance: lowered from 1.5 down to 1.15
-  touchMultiplier: isMobile ? 1.15 : 1, 
-  easing: (t: number) => 1 - Math.pow(1 - t, 4),
-  autoResize: true,
-});
+      instance = new Lenis({
+        wrapper: window,
+        content: document.documentElement,
+        // 🎯 Absorbs fast flicks into buttery smooth motion
+        lerp: isAndroid ? 0.07 : isMobile ? 0.09 : 0.08,
+        smoothWheel: true,
+        wheelMultiplier: isAndroid ? 1.0 : isMobile ? 1.0 : 1,
+        syncTouch: true,
+        syncTouchLerp: isAndroid ? 0.05 : isMobile ? 0.06 : 0.08,
+        // 🎯 Standard multiplier prevents violent travel distance on fast flings
+        touchMultiplier: isAndroid ? 1.1 : isMobile ? 1.15 : 1,
+        easing: (t: number) => 1 - Math.pow(1 - t, 4),
+        autoResize: true,
+      });
 
       lenisRef.current = instance;
       if (smootherRef) smootherRef.current = instance;
