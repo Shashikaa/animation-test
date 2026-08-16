@@ -32,19 +32,23 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
       const Lenis = (await import("lenis")).default;
       if (destroyed) return;
 
+      const ua = navigator.userAgent;
+      const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
       const isMobile = window.matchMedia("(max-width: 767px)").matches;
-      const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
 
       instance = new Lenis({
         wrapper: window,
         content: document.documentElement,
-        lerp: isAndroid ? 0.035 : isMobile ? 0.09 : 0.08,
+        lerp: isMobile ? (isIOS ? 0.08 : 0.12) : 0.09,
         smoothWheel: true,
-        wheelMultiplier: isAndroid ? 0.8 : isMobile ? 1.0 : 1,
-        syncTouch: true,
-        syncTouchLerp: isAndroid ? 0.03 : isMobile ? 0.06 : 0.08,
-        touchMultiplier: isAndroid ? 0.75 : isMobile ? 1.15 : 1,
-        easing: (t: number) => 1 - Math.pow(1 - t, 4),
+        wheelMultiplier: 1.0,
+        // 🎯 Enable syncTouch ONLY on iOS to fix smooth inertia
+        // Keeps syncTouch: false for Android to maintain native touch performance
+        syncTouch: isIOS,
+        syncTouchLerp: 0.075,
+        // 🎯 Higher multiplier for responsive iOS touch, keeping 0.75 for Android
+        touchMultiplier: isIOS ? 1.2 : (isMobile ? 0.75 : 1.0),
+        easing: (t: number) => 1 - Math.pow(1 - t, 3),
         autoResize: true,
       });
 
