@@ -25,30 +25,28 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
 
     let instance: any;
     let tickerCallback: ((time: number) => void) | null = null;
-    let scrollTimeout: ReturnType<typeof window.setTimeout> | null = null;
+    let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
     let destroyed = false;
 
     const initLenis = async () => {
       const Lenis = (await import("lenis")).default;
       if (destroyed) return;
 
-      const ua = navigator.userAgent;
-      const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
       const isMobile = window.matchMedia("(max-width: 767px)").matches;
+      const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
 
       instance = new Lenis({
         wrapper: window,
         content: document.documentElement,
-        lerp: isMobile ? (isIOS ? 0.08 : 0.12) : 0.09,
+        // 🎯 Absorbs fast flicks into buttery smooth motion
+        lerp: isAndroid ? 0.07 : isMobile ? 0.09 : 0.08,
         smoothWheel: true,
-        wheelMultiplier: 1.0,
-        // 🎯 Enable syncTouch ONLY on iOS to fix smooth inertia
-        // Keeps syncTouch: false for Android to maintain native touch performance
-        syncTouch: isIOS,
-        syncTouchLerp: 0.075,
-        // 🎯 Higher multiplier for responsive iOS touch, keeping 0.75 for Android
-        touchMultiplier: isIOS ? 1.2 : (isMobile ? 0.75 : 1.0),
-        easing: (t: number) => 1 - Math.pow(1 - t, 3),
+        wheelMultiplier: isAndroid ? 1.0 : isMobile ? 1.0 : 1,
+        syncTouch: true,
+        syncTouchLerp: isAndroid ? 0.05 : isMobile ? 0.06 : 0.08,
+        // 🎯 Standard multiplier prevents violent travel distance on fast flings
+        touchMultiplier: isAndroid ? 1.1 : isMobile ? 1.15 : 1,
+        easing: (t: number) => 1 - Math.pow(1 - t, 4),
         autoResize: true,
       });
 
