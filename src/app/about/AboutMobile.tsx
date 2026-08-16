@@ -37,6 +37,7 @@ export default function AboutMobile() {
 
   const currentProgress = useRef(0);
   const targetProgress = useRef(0);
+  const smoothedTargetProgress = useRef(0);
   const rafId = useRef<number | null>(null);
   const lastSec5Idx = useRef(-1);
 
@@ -106,12 +107,11 @@ export default function AboutMobile() {
     const isAndroid =
       typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
 
-    // Smooth base interpolation factor
-    const EASE_FACTOR = isAndroid ? 0.09 : 0.08;
+    // Ease factor to maintain steady momentum
+    const EASE_FACTOR = isAndroid ? 0.05 : 0.08;
 
-    // 🎯 MAXIMUM ANIMATION SPEED CAP PER FRAME (0.008 = max 0.8% total progress step per 16ms frame)
-    // Adjust this value down (e.g., 0.005) to make animations move slower during fast swipes.
-    const MAX_PROGRESS_DELTA_PER_FRAME = isAndroid ? 0.008 : 0.012;
+    // Hard velocity cap on animation progress per 16ms frame (0.25% max progress per frame)
+    const MAX_PROGRESS_DELTA_PER_FRAME = isAndroid ? 0.0025 : 0.008;
 
     let lastTime = performance.now();
 
@@ -122,31 +122,50 @@ export default function AboutMobile() {
       const dt = Math.min((now - lastTime) / 1000, 0.1);
       lastTime = now;
 
+      // Filter touch acceleration spikes
+      smoothedTargetProgress.current +=
+        (targetProgress.current - smoothedTargetProgress.current) * (isAndroid ? 0.04 : 0.1);
+
       const dynamicEase = 1 - Math.exp(-EASE_FACTOR * 60 * dt);
 
-      // Standard target interpolation step
-      let delta = (targetProgress.current - currentProgress.current) * dynamicEase;
+      let delta =
+        (smoothedTargetProgress.current - currentProgress.current) * dynamicEase;
 
-      // 🎯 CLAMP MAXIMUM SPEED: Capping velocity so fast flings don't skip animations
+      // Strict velocity clamp
       if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
         delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
       }
 
       currentProgress.current += delta;
-
       const p = currentProgress.current;
 
+      const { vh, totalScrollable } = scrollMetricsRef.current;
+      const footerHeight = layer7Ref.current?.offsetHeight || vh;
+
+      // Dynamically calculate footer scroll fraction based on actual footer pixel height
+      const totalScrollableVh = totalScrollable / (vh || 1);
+      const footerVhRatio = footerHeight / (vh || 1);
+
+      // Proportionally calculate how much of the timeline the footer should consume
+      const footerScrollFraction = Math.min(
+        0.18,
+        totalScrollableVh > 0 ? (footerVhRatio / totalScrollableVh) * 1.1 : 0.1
+      );
+
+      const footerStart = 1.0 - footerScrollFraction;
+      const mainEnd = footerStart;
+
       // ─────────────────────────────────────
-      // TIMELINE
+      // DYNAMIC TIMELINE ALLOCATION
       // ─────────────────────────────────────
 
-      const s1Prog = mapRange(p, 0.0, 0.12);
-      const s2Prog = mapRange(p, 0.12, 0.24);
-      const s3EntranceProg = mapRange(p, 0.24, 0.36);
-      const s3ExitProg = mapRange(p, 0.36, 0.48);
-      const s5EntranceProg = mapRange(p, 0.48, 0.6);
-      const s5ActiveProg = mapRange(p, 0.6, 0.82);
-      const footerProgress = mapRange(p, 0.82, 1.0);
+      const s1Prog = mapRange(p, 0.0, mainEnd * 0.15);
+      const s2Prog = mapRange(p, mainEnd * 0.15, mainEnd * 0.30);
+      const s3EntranceProg = mapRange(p, mainEnd * 0.30, mainEnd * 0.45);
+      const s3ExitProg = mapRange(p, mainEnd * 0.45, mainEnd * 0.60);
+      const s5EntranceProg = mapRange(p, mainEnd * 0.60, mainEnd * 0.75);
+      const s5ActiveProg = mapRange(p, mainEnd * 0.75, mainEnd);
+      const footerProgress = mapRange(p, footerStart, 1.0);
 
       // ─────────────────────────────────────
       // PANELS
@@ -173,7 +192,7 @@ export default function AboutMobile() {
 
         // Section 4
         if (panels[4]) {
-          const visible = p >= 0.36;
+          const visible = p >= mainEnd * 0.45;
           panels[4].style.opacity = visible ? "1" : "0";
           panels[4].style.pointerEvents = visible ? "auto" : "none";
         }
@@ -186,13 +205,10 @@ export default function AboutMobile() {
       }
 
       // ─────────────────────────────────────
-      // FOOTER
+      // FOOTER (PROPORTIONAL SCROLL)
       // ─────────────────────────────────────
 
-      const { vh } = scrollMetricsRef.current;
-
       if (layer7Ref.current) {
-        const footerHeight = layer7Ref.current.offsetHeight || vh;
         const y = vh - footerHeight * footerProgress;
         layer7Ref.current.style.transform = `translate3d(0, ${y}px, 0)`;
       }
@@ -202,7 +218,7 @@ export default function AboutMobile() {
       // ─────────────────────────────────────
 
       if (s5Bg) {
-        const parallaxProg = mapRange(p, 0.48, 0.82);
+        const parallaxProg = mapRange(p, mainEnd * 0.60, mainEnd);
         s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
       }
 
@@ -210,7 +226,7 @@ export default function AboutMobile() {
       // SECTION 5 STEPS
       // ─────────────────────────────────────
 
-      if (p >= 0.6 && p < 0.82) {
+      if (p >= mainEnd * 0.75 && p < mainEnd) {
         setIsSectionFiveActive(true);
 
         if (s5ActiveProg < 0.33) {
@@ -220,7 +236,7 @@ export default function AboutMobile() {
         } else {
           triggerSec5Hook(2);
         }
-      } else if (p < 0.6) {
+      } else if (p < mainEnd * 0.75) {
         setIsSectionFiveActive(false);
         triggerSec5Hook(0);
       }
@@ -293,7 +309,7 @@ export default function AboutMobile() {
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
-        style={{ height: "600vh" }}
+        style={{ height: "480vh" }}
       >
         <div
           ref={fixedFrameRef}
