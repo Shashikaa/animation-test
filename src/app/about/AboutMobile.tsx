@@ -35,13 +35,6 @@ export default function AboutMobile() {
     trackTopOffset: 0,
   });
 
-  // --------------------------------------------------
-  // FIX: track last known viewport size so we can tell
-  // a real resize (rotation / keyboard) apart from an
-  // Android address-bar show/hide, which only changes
-  // window.innerHeight by a small amount and leaves the
-  // width untouched.
-  // --------------------------------------------------
   const lastSizeRef = useRef({ width: 0, height: 0 });
 
   const currentProgress = useRef(0);
@@ -73,12 +66,6 @@ export default function AboutMobile() {
     lastSizeRef.current = { width: vw, height: vh };
   }, []);
 
-  // --------------------------------------------------
-  // FIX: filtered resize handler. Ignores height-only
-  // changes under ~150px (address bar toggling), only
-  // re-measures on real width changes or big height
-  // jumps (rotation, keyboard, etc).
-  // --------------------------------------------------
   const handleResize = useCallback(() => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -125,23 +112,16 @@ export default function AboutMobile() {
     if (!shouldLoadRest) return;
 
     const panels =
-      trackRef.current?.querySelectorAll<HTMLElement>(
-        ".about-stack-layer"
-      );
+      trackRef.current?.querySelectorAll<HTMLElement>(".about-stack-layer");
 
-    const s5Bg =
-      scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
+    const s5Bg = scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
 
     let isRunning = true;
 
     const isAndroid =
       typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
 
-    // Smooth base interpolation factor
     const EASE_FACTOR = isAndroid ? 0.09 : 0.08;
-
-    // 🎯 MAXIMUM ANIMATION SPEED CAP PER FRAME (0.008 = max 0.8% total progress step per 16ms frame)
-    // Adjust this value down (e.g., 0.005) to make animations move slower during fast swipes.
     const MAX_PROGRESS_DELTA_PER_FRAME = isAndroid ? 0.008 : 0.012;
 
     let lastTime = performance.now();
@@ -155,10 +135,9 @@ export default function AboutMobile() {
 
       const dynamicEase = 1 - Math.exp(-EASE_FACTOR * 60 * dt);
 
-      // Standard target interpolation step
-      let delta = (targetProgress.current - currentProgress.current) * dynamicEase;
+      let delta =
+        (targetProgress.current - currentProgress.current) * dynamicEase;
 
-      // 🎯 CLAMP MAXIMUM SPEED: Capping velocity so fast flings don't skip animations
       if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
         delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
       }
@@ -166,10 +145,6 @@ export default function AboutMobile() {
       currentProgress.current += delta;
 
       const p = currentProgress.current;
-
-      // ─────────────────────────────────────
-      // TIMELINE
-      // ─────────────────────────────────────
 
       const s1Prog = mapRange(p, 0.0, 0.12);
       const s2Prog = mapRange(p, 0.12, 0.24);
@@ -179,46 +154,33 @@ export default function AboutMobile() {
       const s5ActiveProg = mapRange(p, 0.6, 0.82);
       const footerProgress = mapRange(p, 0.82, 1.0);
 
-      // ─────────────────────────────────────
-      // PANELS
-      // ─────────────────────────────────────
-
       if (panels && panels.length > 0) {
-        // Section 1
         if (panels[1]) {
           const y = (1 - s1Prog) * 100;
           panels[1].style.transform = `translate3d(0, ${y}%, 0)`;
         }
 
-        // Section 2
         if (panels[2]) {
           const y = (1 - s2Prog) * 100;
           panels[2].style.transform = `translate3d(0, ${y}%, 0)`;
         }
 
-        // Section 3
         if (panels[3]) {
           const y = (1 - s3EntranceProg) * 100 - s3ExitProg * 110;
           panels[3].style.transform = `translate3d(0, ${y}%, 0)`;
         }
 
-        // Section 4
         if (panels[4]) {
           const visible = p >= 0.36;
           panels[4].style.opacity = visible ? "1" : "0";
           panels[4].style.pointerEvents = visible ? "auto" : "none";
         }
 
-        // Section 5
         if (panels[5]) {
           const y = (1 - s5EntranceProg) * 100;
           panels[5].style.transform = `translate3d(0, ${y}%, 0)`;
         }
       }
-
-      // ─────────────────────────────────────
-      // FOOTER
-      // ─────────────────────────────────────
 
       const { vh } = scrollMetricsRef.current;
 
@@ -228,18 +190,10 @@ export default function AboutMobile() {
         layer7Ref.current.style.transform = `translate3d(0, ${y}px, 0)`;
       }
 
-      // ─────────────────────────────────────
-      // SECTION 5 BACKGROUND
-      // ─────────────────────────────────────
-
       if (s5Bg) {
         const parallaxProg = mapRange(p, 0.48, 0.82);
         s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
       }
-
-      // ─────────────────────────────────────
-      // SECTION 5 STEPS
-      // ─────────────────────────────────────
 
       if (p >= 0.6 && p < 0.82) {
         setIsSectionFiveActive(true);
@@ -330,14 +284,12 @@ export default function AboutMobile() {
           ref={fixedFrameRef}
           className="fixed top-0 left-0 w-full overflow-hidden z-10 h-svh"
         >
-          {/* HERO */}
           <div className="about-stack-layer absolute inset-0 w-full h-svh z-10 transform-gpu will-change-transform backface-hidden">
             <Hero isMobile={true} />
           </div>
 
           {shouldLoadRest && (
             <>
-              {/* SECTION 1 */}
               <div
                 className="about-stack-layer absolute inset-0 w-full h-svh z-20 transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
@@ -345,7 +297,6 @@ export default function AboutMobile() {
                 <SectionOne />
               </div>
 
-              {/* SECTION 2 */}
               <div
                 className="about-stack-layer absolute inset-0 w-full h-svh z-30 transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
@@ -353,7 +304,6 @@ export default function AboutMobile() {
                 <SectionTwo />
               </div>
 
-              {/* SECTION 3 */}
               <div
                 className="about-stack-layer absolute inset-0 w-full h-svh z-50 transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
@@ -361,12 +311,10 @@ export default function AboutMobile() {
                 <SectionThree />
               </div>
 
-              {/* SECTION 4 */}
               <div className="about-stack-layer absolute inset-0 w-full h-svh z-40 transform-gpu opacity-0 pointer-events-none backface-hidden">
                 <SectionFour />
               </div>
 
-              {/* SECTION 5 */}
               <div
                 className="about-stack-layer absolute inset-0 w-full h-svh z-[60] transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
@@ -374,7 +322,6 @@ export default function AboutMobile() {
                 <SectionFive isActive={isSectionFiveActive} />
               </div>
 
-              {/* FOOTER */}
               <div
                 ref={layer7Ref}
                 className="layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[151] will-change-transform backface-hidden"
