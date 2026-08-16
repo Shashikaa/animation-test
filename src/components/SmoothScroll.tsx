@@ -9,6 +9,14 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
+
+  // --------------------------------------------------
+  // FIX: Stop ScrollTrigger from refreshing every time
+  // the Android address bar shows/hides mid-scroll.
+  // --------------------------------------------------
+  ScrollTrigger.config({
+    ignoreMobileResize: true,
+  });
 }
 
 interface SmoothScrollProps {

@@ -35,6 +35,15 @@ export default function AboutMobile() {
     trackTopOffset: 0,
   });
 
+  // --------------------------------------------------
+  // FIX: track last known viewport size so we can tell
+  // a real resize (rotation / keyboard) apart from an
+  // Android address-bar show/hide, which only changes
+  // window.innerHeight by a small amount and leaves the
+  // width untouched.
+  // --------------------------------------------------
+  const lastSizeRef = useRef({ width: 0, height: 0 });
+
   const currentProgress = useRef(0);
   const targetProgress = useRef(0);
   const rafId = useRef<number | null>(null);
@@ -53,29 +62,51 @@ export default function AboutMobile() {
 
     const rect = trackRef.current.getBoundingClientRect();
     const vh = window.innerHeight;
+    const vw = window.innerWidth;
 
     scrollMetricsRef.current = {
       totalScrollable: Math.max(0, rect.height - vh),
       vh,
       trackTopOffset: window.scrollY + rect.top,
     };
+
+    lastSizeRef.current = { width: vw, height: vh };
   }, []);
+
+  // --------------------------------------------------
+  // FIX: filtered resize handler. Ignores height-only
+  // changes under ~150px (address bar toggling), only
+  // re-measures on real width changes or big height
+  // jumps (rotation, keyboard, etc).
+  // --------------------------------------------------
+  const handleResize = useCallback(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const { width, height } = lastSizeRef.current;
+
+    const isLikelyAddressBarToggle =
+      vw === width && Math.abs(vh - height) < 150;
+
+    if (isLikelyAddressBarToggle) return;
+
+    updateMetrics();
+  }, [updateMetrics]);
 
   useEffect(() => {
     if (!shouldLoadRest) return;
 
     updateMetrics();
 
-    window.addEventListener("resize", updateMetrics, { passive: true });
+    window.addEventListener("resize", handleResize, { passive: true });
     window.addEventListener("orientationchange", updateMetrics, {
       passive: true,
     });
 
     return () => {
-      window.removeEventListener("resize", updateMetrics);
+      window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", updateMetrics);
     };
-  }, [shouldLoadRest, updateMetrics]);
+  }, [shouldLoadRest, updateMetrics, handleResize]);
 
   const triggerSec5Hook = useCallback((nextIdx: number) => {
     if (nextIdx === lastSec5Idx.current) return;
@@ -297,10 +328,10 @@ export default function AboutMobile() {
       >
         <div
           ref={fixedFrameRef}
-          className="fixed top-0 left-0 w-full overflow-hidden z-10 h-dvh"
+          className="fixed top-0 left-0 w-full overflow-hidden z-10 h-svh"
         >
           {/* HERO */}
-          <div className="about-stack-layer absolute inset-0 w-full h-dvh z-10 transform-gpu will-change-transform backface-hidden">
+          <div className="about-stack-layer absolute inset-0 w-full h-svh z-10 transform-gpu will-change-transform backface-hidden">
             <Hero isMobile={true} />
           </div>
 
@@ -308,7 +339,7 @@ export default function AboutMobile() {
             <>
               {/* SECTION 1 */}
               <div
-                className="about-stack-layer absolute inset-0 w-full h-dvh z-20 transform-gpu will-change-transform backface-hidden"
+                className="about-stack-layer absolute inset-0 w-full h-svh z-20 transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionOne />
@@ -316,7 +347,7 @@ export default function AboutMobile() {
 
               {/* SECTION 2 */}
               <div
-                className="about-stack-layer absolute inset-0 w-full h-dvh z-30 transform-gpu will-change-transform backface-hidden"
+                className="about-stack-layer absolute inset-0 w-full h-svh z-30 transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionTwo />
@@ -324,20 +355,20 @@ export default function AboutMobile() {
 
               {/* SECTION 3 */}
               <div
-                className="about-stack-layer absolute inset-0 w-full h-dvh z-50 transform-gpu will-change-transform backface-hidden"
+                className="about-stack-layer absolute inset-0 w-full h-svh z-50 transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionThree />
               </div>
 
               {/* SECTION 4 */}
-              <div className="about-stack-layer absolute inset-0 w-full h-dvh z-40 transform-gpu opacity-0 pointer-events-none backface-hidden">
+              <div className="about-stack-layer absolute inset-0 w-full h-svh z-40 transform-gpu opacity-0 pointer-events-none backface-hidden">
                 <SectionFour />
               </div>
 
               {/* SECTION 5 */}
               <div
-                className="about-stack-layer absolute inset-0 w-full h-dvh z-[60] transform-gpu will-change-transform backface-hidden"
+                className="about-stack-layer absolute inset-0 w-full h-svh z-[60] transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionFive isActive={isSectionFiveActive} />
@@ -347,7 +378,7 @@ export default function AboutMobile() {
               <div
                 ref={layer7Ref}
                 className="layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[151] will-change-transform backface-hidden"
-                style={{ transform: "translate3d(0, 100dvh, 0)" }}
+                style={{ transform: "translate3d(0, 100svh, 0)" }}
               >
                 <Footer />
               </div>
