@@ -56,10 +56,8 @@ export default function AboutMobile() {
     const vh = window.innerHeight;
     const vw = window.innerWidth;
 
-    // Calculate footer height dynamically; default to vh if not mounted yet
+    // Dynamically set track height based on actual footer height instead of flat 600vh
     const footerHeight = layer7Ref.current?.offsetHeight || vh;
-
-    // 5 full sections (Hero + S1 + S2 + S3/4 + S5) = 5 * vh + actual Footer height
     const totalTrackHeight = vh * 5 + footerHeight;
     trackRef.current.style.height = `${totalTrackHeight}px`;
 
@@ -129,6 +127,7 @@ export default function AboutMobile() {
     const isAndroid =
       typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
 
+    // Kept original animation limits and ease factors
     const EASE_FACTOR = isAndroid ? 0.09 : 0.08;
     const MAX_PROGRESS_DELTA_PER_FRAME = isAndroid ? 0.008 : 0.012;
 
@@ -154,13 +153,14 @@ export default function AboutMobile() {
 
       const p = currentProgress.current;
 
-      const s1Prog = mapRange(p, 0.0, 0.15);
-      const s2Prog = mapRange(p, 0.15, 0.30);
-      const s3EntranceProg = mapRange(p, 0.30, 0.45);
-      const s3ExitProg = mapRange(p, 0.45, 0.60);
-      const s5EntranceProg = mapRange(p, 0.60, 0.75);
-      const s5ActiveProg = mapRange(p, 0.75, 0.88);
-      const footerProgress = mapRange(p, 0.88, 1.0);
+      // Kept exact original keyframes
+      const s1Prog = mapRange(p, 0.0, 0.12);
+      const s2Prog = mapRange(p, 0.12, 0.24);
+      const s3EntranceProg = mapRange(p, 0.24, 0.36);
+      const s3ExitProg = mapRange(p, 0.36, 0.48);
+      const s5EntranceProg = mapRange(p, 0.48, 0.6);
+      const s5ActiveProg = mapRange(p, 0.6, 0.82);
+      const footerProgress = mapRange(p, 0.82, 1.0);
 
       if (panels && panels.length > 0) {
         if (panels[1]) {
@@ -179,7 +179,7 @@ export default function AboutMobile() {
         }
 
         if (panels[4]) {
-          const visible = p >= 0.45;
+          const visible = p >= 0.36;
           panels[4].style.opacity = visible ? "1" : "0";
           panels[4].style.pointerEvents = visible ? "auto" : "none";
         }
@@ -199,11 +199,11 @@ export default function AboutMobile() {
       }
 
       if (s5Bg) {
-        const parallaxProg = mapRange(p, 0.60, 0.88);
+        const parallaxProg = mapRange(p, 0.48, 0.82);
         s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
       }
 
-      if (p >= 0.75 && p < 0.88) {
+      if (p >= 0.6 && p < 0.82) {
         setIsSectionFiveActive(true);
 
         if (s5ActiveProg < 0.33) {
@@ -213,7 +213,7 @@ export default function AboutMobile() {
         } else {
           triggerSec5Hook(2);
         }
-      } else if (p < 0.75) {
+      } else if (p < 0.6) {
         setIsSectionFiveActive(false);
         triggerSec5Hook(0);
       }
