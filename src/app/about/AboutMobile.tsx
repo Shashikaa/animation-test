@@ -53,18 +53,12 @@ export default function AboutMobile() {
   const updateMetrics = useCallback(() => {
     if (!trackRef.current) return;
 
+    const rect = trackRef.current.getBoundingClientRect();
     const vh = window.innerHeight;
     const vw = window.innerWidth;
 
-    // Dynamically set track height based on actual footer height instead of flat 600vh
-    const footerHeight = layer7Ref.current?.offsetHeight || vh;
-    const totalTrackHeight = vh * 5 + footerHeight;
-    trackRef.current.style.height = `${totalTrackHeight}px`;
-
-    const rect = trackRef.current.getBoundingClientRect();
-
     scrollMetricsRef.current = {
-      totalScrollable: Math.max(0, totalTrackHeight - vh),
+      totalScrollable: Math.max(0, rect.height - vh),
       vh,
       trackTopOffset: window.scrollY + rect.top,
     };
@@ -127,7 +121,6 @@ export default function AboutMobile() {
     const isAndroid =
       typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
 
-    // Kept original animation limits and ease factors
     const EASE_FACTOR = isAndroid ? 0.09 : 0.08;
     const MAX_PROGRESS_DELTA_PER_FRAME = isAndroid ? 0.008 : 0.012;
 
@@ -153,7 +146,6 @@ export default function AboutMobile() {
 
       const p = currentProgress.current;
 
-      // Kept exact original keyframes
       const s1Prog = mapRange(p, 0.0, 0.12);
       const s2Prog = mapRange(p, 0.12, 0.24);
       const s3EntranceProg = mapRange(p, 0.24, 0.36);
@@ -286,6 +278,7 @@ export default function AboutMobile() {
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
+        style={{ height: "600vh" }}
       >
         <div
           ref={fixedFrameRef}
