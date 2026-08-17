@@ -56,8 +56,8 @@ export default function AboutMobile() {
     const vh = window.innerHeight;
     const vw = window.innerWidth;
 
-    // Dynamically calculate actual track height to account for footer size
-    const footerHeight = layer7Ref.current?.offsetHeight || vh;
+    // Use exact footer element height once rendered
+    const footerHeight = layer7Ref.current?.getBoundingClientRect().height || vh;
     const totalTrackHeight = vh * 5 + footerHeight;
     trackRef.current.style.height = `${totalTrackHeight}px`;
 
@@ -77,13 +77,24 @@ export default function AboutMobile() {
     const vh = window.innerHeight;
     const { width, height } = lastSizeRef.current;
 
+    // Ignore minor height shifts triggered by mobile browser address bar toggles
     const isLikelyAddressBarToggle =
-      vw === width && Math.abs(vh - height) < 150;
+      width > 0 && vw === width && Math.abs(vh - height) < 120;
 
     if (isLikelyAddressBarToggle) return;
 
     updateMetrics();
   }, [updateMetrics]);
+
+  // Recalculate metrics when footer loads and mounts dynamically
+  useEffect(() => {
+    if (!shouldLoadRest || !layer7Ref.current) return;
+
+    const observer = new ResizeObserver(() => updateMetrics());
+    observer.observe(layer7Ref.current);
+
+    return () => observer.disconnect();
+  }, [shouldLoadRest, updateMetrics]);
 
   useEffect(() => {
     if (!shouldLoadRest) return;
@@ -127,12 +138,9 @@ export default function AboutMobile() {
     const isAndroid =
       typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
 
-    // Easing & speed cap controls:
-const EASE_FACTOR = isAndroid ? 0.1 : 0.5;
-    
-    // STRICT MAX SPEED CAP PER FRAME:
-    // Lower values (e.g., 0.003 - 0.005) make fast flicks smooth and controlled.
-    const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
+    // Dynamic smoothing based on device hardware capability
+    const LERP_FACTOR = isAndroid ? 0.8 : 0.9;
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.035;
 
     let lastTime = performance.now();
 
@@ -143,12 +151,11 @@ const EASE_FACTOR = isAndroid ? 0.1 : 0.5;
       const dt = Math.min((now - lastTime) / 1000, 0.1);
       lastTime = now;
 
-      const dynamicEase = 1 - Math.exp(-EASE_FACTOR * 60 * dt);
+      const dynamicEase = 1 - Math.exp(-LERP_FACTOR * 60 * (dt / 0.0166));
 
       let delta =
         (targetProgress.current - currentProgress.current) * dynamicEase;
 
-      // Cap maximum speed per frame during aggressive swiping
       if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
         delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
       }
@@ -157,7 +164,6 @@ const EASE_FACTOR = isAndroid ? 0.1 : 0.5;
 
       const p = currentProgress.current;
 
-      // Original progress map keyframes
       const s1Prog = mapRange(p, 0.0, 0.12);
       const s2Prog = mapRange(p, 0.12, 0.24);
       const s3EntranceProg = mapRange(p, 0.24, 0.36);
@@ -259,9 +265,10 @@ const EASE_FACTOR = isAndroid ? 0.1 : 0.5;
 
     if (lenis && typeof lenis.on === "function") {
       lenis.on("scroll", handleScroll);
-    } else {
-      window.addEventListener("scroll", handleScroll, { passive: true });
     }
+    
+    // Always attach standard scroll as fallback
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     handleScroll();
     rafId.current = requestAnimationFrame(render);
@@ -275,9 +282,8 @@ const EASE_FACTOR = isAndroid ? 0.1 : 0.5;
 
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
-      } else {
-        window.removeEventListener("scroll", handleScroll);
       }
+      window.removeEventListener("scroll", handleScroll);
 
       if (typeof window !== "undefined") {
         delete (window as any)._sec5GoTo;
