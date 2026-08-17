@@ -25,7 +25,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
         </div>
       </div>
 
-      {/* Desktop Layout */}
+      {/* Desktop Layout Inner */}
       <div
         className="hidden lg:flex section-container cta-inner-desktop"
         style={{
@@ -39,6 +39,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
           maxWidth: 1440,
           padding: "40px 48px",
           margin: "0 auto",
+          opacity: "var(--cta-inner-opacity, 1)",
         }}
       >
         <div
@@ -78,7 +79,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
         </div>
       </div>
 
-      {/* Mobile Layout */}
+      {/* Mobile Layout Inner */}
       <div
         className="flex lg:hidden cta-inner-mobile min-h-[100dvh] h-auto w-full !pt-12 !pb-16"
         style={{
@@ -90,6 +91,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
           paddingLeft: "20px",
           paddingRight: "20px",
           margin: 0,
+          opacity: "var(--cta-inner-opacity, 1)",
         }}
       >
         <h2

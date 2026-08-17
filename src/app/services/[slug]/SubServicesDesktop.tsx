@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useCallback } from "react";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
-import { restoreTextReveal } from "@/src/app/utils/useTextReveal";
+import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal";
 import SubServiceHero from "@/src/components/Service/SubServiceHero";
 import SubServiceSectionOne from "@/src/components/Service/SubServiceSectionOne";
 import SubServiceFAQSection from "@/src/components/Service/SubServiceFAQSection";
@@ -20,6 +20,41 @@ const TOTAL_SCROLL_STEPS = 10;
 // QUADRATIC EASING MATCHING ABOUT DESKTOP
 const easeOutQuad = (t: number) => t * (2 - t);
 
+// Utility for DOM text line splitting matching About/Projects implementation
+function executeDesktopSplitting(selector: string) {
+  const elements = document.querySelectorAll<HTMLElement>(selector);
+  elements.forEach((element) => {
+    if (!element || element.dataset.splitComplete === "true") return;
+
+    const rawText = element.textContent || "";
+    const linesArray = rawText
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    element.innerHTML = "";
+    linesArray.forEach((lineText) => {
+      const wrapper = document.createElement("span");
+      wrapper.className = "custom-line-wrap";
+      wrapper.style.display = "block";
+      wrapper.style.overflow = "hidden";
+      wrapper.style.position = "relative";
+
+      const inner = document.createElement("span");
+      inner.className = "custom-line-inner";
+      inner.style.display = "block";
+      inner.style.transform = "translate3d(0, 100%, 0)";
+      inner.style.opacity = "0";
+      inner.textContent = lineText;
+
+      wrapper.appendChild(inner);
+      element.appendChild(wrapper);
+    });
+
+    element.dataset.splitComplete = "true";
+  });
+}
+
 export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps) {
   const scopeRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -35,8 +70,9 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     trackTopOffset: 0,
     totalScrollable: 0,
   });
-  
+
   const targetProgress = useRef(0);
+  const revealedSections = useRef<Set<string>>(new Set());
   const rafId = useRef<number | null>(null);
 
   const { smootherRef } = useSite();
@@ -46,7 +82,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     unlockScrollEarlyMs: 1800,
   });
 
-  // ── 1. UNLOCK LENIS / SCROLL ──
+  // ── 1. UNLOCK LENIS / SCROLL (MATCHING ABOUT LOGIC) ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -68,7 +104,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // ── 2. CACHE METRICS (PREVENT LAYOUT THRASHING) ──
+  // ── 2. CACHE METRICS ──
   const measure = useCallback(() => {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
@@ -98,15 +134,51 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     };
   }, [shouldLoadRest, measure]);
 
+  // ── 3. TEXT REVEAL LOGIC (EXACT ABOUT TRIGGER IMPLEMENTATION) ──
+  const triggerPlayOnceTextReveal = useCallback((
+    containerSelector: string,
+    currentStepProg: number,
+    triggerThreshold: number
+  ) => {
+    if (!scopeRef.current) return;
+
+    const key = containerSelector;
+    if (revealedSections.current.has(key)) return;
+
+    if (currentStepProg >= triggerThreshold) {
+      revealedSections.current.add(key);
+
+      const lineInners = scopeRef.current.querySelectorAll<HTMLElement>(
+        `${containerSelector} .gs-line-inner, ${containerSelector} .custom-line-inner`
+      );
+
+      lineInners.forEach((el, idx) => {
+        el.style.transition = `transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s, opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s`;
+        el.style.transform = "translate3d(0, 0%, 0)";
+        el.style.opacity = "1";
+      });
+    }
+  }, []);
+
+  // Prepare custom line splitting & setup text reveal instances
   useEffect(() => {
+    if (!shouldLoadRest || !scopeRef.current) return;
+
+    // Split custom paragraphs into line-wrap structures matching About desktop
+    executeDesktopSplitting(".scroll-para-1");
+    executeDesktopSplitting(".reveal-text");
+    executeDesktopSplitting(".services-faq-wrap .reveal-text");
+
     return () => {
       if (scopeRef.current) {
+        restoreTextReveal(scopeRef.current, ".scroll-para-1");
+        restoreTextReveal(scopeRef.current, ".reveal-text");
         restoreTextReveal(scopeRef.current, ".services-faq-wrap .reveal-text");
       }
     };
-  }, []);
+  }, [shouldLoadRest]);
 
-  // ── 3. ULTRA-SMOOTH CONTINUOUS LERP RENDER ENGINE (ABOUT DESKTOP PARITY) ──
+  // ── 4. CONTINUOUS LERP RENDER ENGINE ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
@@ -114,7 +186,6 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     let isRunning = true;
     let currentProgress = targetProgress.current;
 
-    // Cache static elements
     const heroTextWrap = scope.querySelector<HTMLElement>(".hero-text-wrap");
     const heroTopLayer = scope.querySelector<HTMLElement>(".services-hero-top-layer");
     const heroBtn = scope.querySelector<HTMLElement>(".hero-btn");
@@ -127,7 +198,6 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     const s10SeqContainer = scope.querySelector<HTMLElement>(".s10-seq-container");
     const faqWrap = scope.querySelector<HTMLElement>(".services-faq-wrap");
 
-    // Hardware promote animated elements
     [
       heroTextWrap,
       heroTopLayer,
@@ -144,15 +214,14 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     ].forEach((el) => {
       if (el) {
         el.style.willChange = "transform, opacity, clip-path";
+        el.style.transform = "translate3d(0, 0, 0)";
       }
     });
 
     const renderTransforms = () => {
       if (!isRunning) return;
 
-      // CONTINUOUS SILKY PHYSICS LERP INERTIA (Matching AboutDesktop)
       currentProgress += (targetProgress.current - currentProgress) * 0.08;
-
       const stepProgress = currentProgress * (TOTAL_SCROLL_STEPS - 1);
       const { ctaHeight, footerHeight, vh } = dimensionsRef.current;
 
@@ -189,7 +258,11 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
         heroBg.style.transform = `translate3d(${xPerc}%, 0, 0) scale3d(${scaleVal}, ${scaleVal}, 1)`;
       }
 
-      // STEP 3: DESKTOP IMAGE EXPAND FROM MAX-500PX CONTAINER TO FULLSCREEN (STEPS 1.8 -> 3.2)
+      // ── TRIGGER TEXT REVEALS AT EXACT STEP THRESHOLDS ──
+      // Section One Heading / Top Paragraph
+      triggerPlayOnceTextReveal(".section-one-wrap", stepProgress, 0.95);
+
+      // STEP 3: DESKTOP IMAGE EXPAND (STEPS 1.8 -> 3.2)
       const expandProg = easeOutQuad(Math.min(Math.max((stepProgress - 1.8) / 1.4, 0), 1));
 
       if (s10ParaTop && s10Title) {
@@ -207,8 +280,8 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
           s10ImgInnerWrap.style.width = "min(500px, 38vw)";
           s10ImgInnerWrap.style.height = "clamp(300px, 28vh, 420px)";
         } else {
-          const currentRight = ((1 - expandProg) * 8).toFixed(2);   // 8vw -> 0vw
-          const currentBottom = ((1 - expandProg) * 10).toFixed(2); // 10vh -> 0vh
+          const currentRight = ((1 - expandProg) * 8).toFixed(2);
+          const currentBottom = ((1 - expandProg) * 10).toFixed(2);
 
           s10ImgInnerWrap.style.right = `${currentRight}vw`;
           s10ImgInnerWrap.style.bottom = `${currentBottom}vh`;
@@ -230,6 +303,9 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
         s10SeqContainer.style.transform = `translate3d(0, ${translateY}px, 0)`;
       }
 
+      // Trigger paragraph reveal inside the sequential container
+      triggerPlayOnceTextReveal(".s10-seq-container", stepProgress, 3.6);
+
       // STEP 5: FAQ SECTION SLIDE UP (STEPS 6.2 -> 7.5)
       const faqProg = easeOutQuad(Math.min(Math.max((stepProgress - 6.2) / 1.3, 0), 1));
 
@@ -237,8 +313,12 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
         faqWrap.style.visibility = stepProgress >= 6.0 ? "visible" : "hidden";
         if (stepProgress < 8.5) {
           faqWrap.style.transform = `translate3d(0, ${((1 - faqProg) * 100).toFixed(2)}%, 0)`;
+          faqWrap.style.opacity = "1";
         }
       }
+
+      // Trigger FAQ section title and text reveals
+      triggerPlayOnceTextReveal(".services-faq-wrap", stepProgress, 6.4);
 
       // STEP 6: LAYER CTA SLIDE (STEPS 7.5 -> 8.5)
       const ctaProgress = easeOutQuad(Math.min(Math.max((stepProgress - 7.5) / 1.0, 0), 1));
@@ -251,8 +331,13 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
         layerCTA.current.style.transform = `translate3d(0, ${currentY.toFixed(2)}px, 0)`;
       }
 
-      // STEP 7: LAYER FOOTER SLIDE (STEPS 8.5 -> 9.0)
+      // STEP 7: LAYER FOOTER & CTA FADE OUT (STEPS 8.5 -> 9.0)
       const footerProgress = easeOutQuad(Math.min(Math.max((stepProgress - 8.5) / 0.5, 0), 1));
+
+      if (layerCTA.current) {
+        const innerOpacity = (1 - footerProgress).toFixed(3);
+        layerCTA.current.style.setProperty("--cta-inner-opacity", innerOpacity);
+      }
 
       if (layerFooter.current) {
         layerFooter.current.style.visibility = stepProgress >= 8.3 ? "visible" : "hidden";
@@ -262,12 +347,18 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
         layerFooter.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
       }
 
-      if (faqWrap && footerProgress > 0) {
-        const faqScale = (1.0 - footerProgress * 0.08).toFixed(4);
-        faqWrap.style.transform = `translate3d(0, 0%, 0) scale3d(${faqScale}, ${faqScale}, 1)`;
+      if (faqWrap) {
+        if (footerProgress > 0) {
+          const upperOpacity = (1 - footerProgress).toFixed(3);
+          const faqScale = (1.0 - footerProgress * 0.08).toFixed(4);
+          faqWrap.style.opacity = upperOpacity;
+          faqWrap.style.transform = `translate3d(0, 0%, 0) scale3d(${faqScale}, ${faqScale}, 1)`;
+        } else if (stepProgress >= 7.5 && stepProgress < 8.5) {
+          faqWrap.style.opacity = "1";
+          faqWrap.style.transform = "translate3d(0, 0%, 0) scale3d(1, 1, 1)";
+        }
       }
 
-      // Keep animation loop active endlessly to ensure momentum physics smoothly settle
       rafId.current = requestAnimationFrame(renderTransforms);
     };
 
@@ -318,7 +409,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
         window.removeEventListener("scroll", handleScroll);
       }
     };
-  }, [shouldLoadRest, smootherRef]);
+  }, [shouldLoadRest, smootherRef, triggerPlayOnceTextReveal]);
 
   const isReady = preloaderDone && introDone;
 
@@ -354,7 +445,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
 
               {/* Layer 3: FAQ slide overlay */}
               <div
-                className="services-faq-wrap absolute inset-0 w-full h-full z-30 overflow-hidden structural-layer transform-gpu will-change-transform"
+                className="services-faq-wrap absolute inset-0 w-full h-full z-30 overflow-hidden bg-black structural-layer transform-gpu will-change-transform"
                 style={{
                   visibility: "hidden",
                   transform: "translate3d(0, 100%, 0)",

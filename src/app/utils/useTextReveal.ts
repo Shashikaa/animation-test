@@ -20,14 +20,12 @@ function splitIntoLines(el: HTMLElement): HTMLElement[] {
 
   el.dataset.originalHtml = el.innerHTML;
 
-  // Temporarily reset inline styles to measure line coordinates accurately
   const prevTransform = el.style.transform;
   el.style.transform = "none";
 
   const textContent = el.textContent || "";
   const words = textContent.trim().split(/\s+/);
 
-  // Wrap each word in an inline container to read line bounds
   el.innerHTML = words
     .map(
       (word) =>
@@ -59,7 +57,6 @@ function splitIntoLines(el: HTMLElement): HTMLElement[] {
     lineInner.className =
       "gs-line-inner block transform-gpu will-change-transform";
     
-    // Hardware acceleration optimization hints
     lineInner.style.backfaceVisibility = "hidden";
     lineInner.style.webkitBackfaceVisibility = "hidden";
 
@@ -124,7 +121,7 @@ export function useTextReveal(
 }
 
 /**
- * Helper to smoothly animate text reveal on demand (e.g. scroll triggers).
+ * Helper to smoothly animate text reveal on demand.
  */
 export function animateTextReveal(
   container: HTMLElement,

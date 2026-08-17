@@ -15,6 +15,41 @@ const TOTAL_SCROLL_STEPS = 12;
 
 const easeOutQuad = (t: number) => t * (2 - t);
 
+// Utility for DOM text line splitting matching parent implementations
+function executeDesktopSplitting(selector: string) {
+  const elements = document.querySelectorAll<HTMLElement>(selector);
+  elements.forEach((element) => {
+    if (!element || element.dataset.splitComplete === "true") return;
+
+    const rawText = element.textContent || "";
+    const linesArray = rawText
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    element.innerHTML = "";
+    linesArray.forEach((lineText) => {
+      const wrapper = document.createElement("span");
+      wrapper.className = "custom-line-wrap";
+      wrapper.style.display = "block";
+      wrapper.style.overflow = "hidden";
+      wrapper.style.position = "relative";
+
+      const inner = document.createElement("span");
+      inner.className = "custom-line-inner";
+      inner.style.display = "block";
+      inner.style.transform = "translate3d(0, 100%, 0)";
+      inner.style.opacity = "0";
+      inner.textContent = lineText;
+
+      wrapper.appendChild(inner);
+      element.appendChild(wrapper);
+    });
+
+    element.dataset.splitComplete = "true";
+  });
+}
+
 export default function ServicesDesktop() {
   const scopeRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -97,9 +132,40 @@ export default function ServicesDesktop() {
     };
   }, [shouldLoadRest, measure]);
 
-  // Text Reveal Preparation
+  // ── 3. TEXT REVEAL LOGIC & PREPARATION ──
+  const triggerPlayOnceTextReveal = useCallback((
+    containerSelector: string,
+    currentStepProg: number,
+    triggerThreshold: number
+  ) => {
+    if (!scopeRef.current) return;
+
+    const key = containerSelector;
+    if (revealedSections.current.has(key)) return;
+
+    if (currentStepProg >= triggerThreshold) {
+      revealedSections.current.add(key);
+
+      const lineInners = scopeRef.current.querySelectorAll<HTMLElement>(
+        `${containerSelector} .gs-line-inner, ${containerSelector} .custom-line-inner`
+      );
+
+      lineInners.forEach((el, idx) => {
+        el.style.transition = `transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s, opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s`;
+        el.style.transform = "translate3d(0, 0%, 0)";
+        el.style.opacity = "1";
+      });
+    }
+  }, []);
+
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
+
+    // Split paragraphs across all animated sections
+    executeDesktopSplitting(".scroll-para-1");
+    executeDesktopSplitting(".section-one-wrap .reveal-text");
+    executeDesktopSplitting(".services-section-two-wrap .reveal-text");
+    executeDesktopSplitting(".services-appsec-wrap .reveal-text");
 
     useTextReveal(scopeRef, ".section-one-wrap .reveal-text");
     useTextReveal(scopeRef, ".services-section-two-wrap .reveal-text");
@@ -107,6 +173,7 @@ export default function ServicesDesktop() {
 
     return () => {
       if (scopeRef.current) {
+        restoreTextReveal(scopeRef.current, ".scroll-para-1");
         restoreTextReveal(
           scopeRef.current,
           [
@@ -119,22 +186,6 @@ export default function ServicesDesktop() {
     };
   }, [shouldLoadRest]);
 
-  // Trigger Play-Once Text Reveal Helper
-  const triggerPlayOnceTextReveal = useCallback((containerSelector: string) => {
-    if (!scopeRef.current || revealedSections.current.has(containerSelector)) return;
-
-    revealedSections.current.add(containerSelector);
-    const lineInners = scopeRef.current.querySelectorAll<HTMLElement>(
-      `${containerSelector} .gs-line-inner, ${containerSelector} .custom-line-inner`
-    );
-
-    lineInners.forEach((el, idx) => {
-      el.style.transition = `transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s, opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s`;
-      el.style.transform = "translate3d(0, 0%, 0)";
-      el.style.opacity = "1";
-    });
-  }, []);
-
   // SectionTwo Slide Trigger Hook
   const triggerSec2Hook = useCallback((targetIdx: number) => {
     if (targetIdx !== lastSec2Idx.current) {
@@ -145,11 +196,13 @@ export default function ServicesDesktop() {
     }
   }, []);
 
-  // ── 3. EASED GPU TRANSFORM RENDERING LOOP ──
+  // ── 4. CONTINUOUS LERP RENDER ENGINE ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
     const scope = scopeRef.current;
+    let isRunning = true;
+    let currentProgress = targetProgress.current;
 
     const heroTextWrap = scope.querySelector<HTMLElement>(".hero-text-wrap");
     const heroTopLayer = scope.querySelector<HTMLElement>(".services-hero-top-layer");
@@ -157,86 +210,106 @@ export default function ServicesDesktop() {
     const secOneWrap = scope.querySelector<HTMLElement>(".section-one-wrap");
     const heroBg = scope.querySelector<HTMLElement>(".service-hero-bg");
     const glassCard = scope.querySelector<HTMLElement>(".s1-glass-card");
-
     const secTwoWrap = scope.querySelector<HTMLElement>(".services-section-two-wrap");
     const s2DesktopSec = scope.querySelector<HTMLElement>(".s2-desktop-section");
-
     const appSecWrap = scope.querySelector<HTMLElement>(".services-appsec-wrap");
 
+    // Hardware-promote key nodes
+    [
+      heroTextWrap,
+      heroTopLayer,
+      heroBtn,
+      secOneWrap,
+      heroBg,
+      glassCard,
+      secTwoWrap,
+      s2DesktopSec,
+      appSecWrap,
+      layerCTA.current,
+      layerFooter.current,
+    ].forEach((el) => {
+      if (el) {
+        el.style.willChange = "transform, opacity, clip-path";
+        el.style.transform = "translate3d(0, 0, 0)";
+      }
+    });
+
     const renderTransforms = () => {
-      const currentProg = targetProgress.current;
-      const stepProgress = currentProg * (TOTAL_SCROLL_STEPS - 1);
+      if (!isRunning) return;
+
+      // CONTINUOUS LERP INERTIA (Smoothing step jumps)
+      currentProgress += (targetProgress.current - currentProgress) * 0.08;
+
+      const stepProgress = currentProgress * (TOTAL_SCROLL_STEPS - 1);
       const { ctaHeight, footerHeight, vh } = scrollMetricsRef.current;
 
-      // ── STEP 1: HERO HOLD & TOP LAYER NARROW (STEPS 0.0 -> 0.8) ──
+      // STEP 1: HERO HOLD & TOP LAYER NARROW (STEPS 0.0 -> 0.8)
       const heroProg = easeOutQuad(Math.min(Math.max(stepProgress / 0.8, 0), 1));
 
       if (heroTextWrap) {
         heroTextWrap.style.transformOrigin = "left bottom";
-        heroTextWrap.style.transform = `translate3d(0, ${heroProg * 60}px, 0) scale3d(${1 - heroProg * 0.25}, ${1 - heroProg * 0.25}, 1)`;
+        heroTextWrap.style.transform = `translate3d(0, ${(heroProg * 60).toFixed(2)}px, 0) scale3d(${(1 - heroProg * 0.25).toFixed(4)}, ${(1 - heroProg * 0.25).toFixed(4)}, 1)`;
       }
 
       if (heroTopLayer) {
-        heroTopLayer.style.width = `${100 - heroProg * 40}%`;
+        heroTopLayer.style.width = `${(100 - heroProg * 40).toFixed(2)}%`;
       }
 
       if (heroBtn) {
         const btnProg = easeOutQuad(Math.min(Math.max(stepProgress / 0.05, 0), 1));
-        heroBtn.style.opacity = `${1 - btnProg}`;
+        heroBtn.style.opacity = `${(1 - btnProg).toFixed(2)}`;
         heroBtn.style.pointerEvents = btnProg >= 1 ? "none" : "auto";
       }
 
-      // ── STEP 2: SECTION ONE CLIP REVEAL & TEXT REVEAL (STEPS 0.8 -> 2.2) ──
+      // STEP 2: SECTION ONE CLIP REVEAL & TEXT REVEAL (STEPS 0.8 -> 2.2)
       const s1Prog = easeOutQuad(Math.min(Math.max((stepProgress - 0.8) / 1.4, 0), 1));
 
       if (secOneWrap) {
-        const clipVal = (1 - s1Prog) * 100;
+        const clipVal = ((1 - s1Prog) * 100).toFixed(2);
         const clipValue = `inset(${clipVal}% 0% 0% 0%)`;
         secOneWrap.style.clipPath = clipValue;
         secOneWrap.style.setProperty("-webkit-clip-path", clipValue);
       }
 
-      if (s1Prog >= 0.3) {
-        triggerPlayOnceTextReveal(".section-one-wrap");
-      }
+      triggerPlayOnceTextReveal(".section-one-wrap", stepProgress, 1.1);
 
       if (heroBg) {
-        const xPerc = -s1Prog * 8;
-        const scaleVal = 1.0 + s1Prog * 0.6;
+        const xPerc = (-s1Prog * 8).toFixed(2);
+        const scaleVal = (1.0 + s1Prog * 0.6).toFixed(4);
         heroBg.style.transform = `translate3d(${xPerc}%, 0, 0) scale3d(${scaleVal}, ${scaleVal}, 1)`;
       }
 
       if (glassCard) {
         const cardProg = easeOutQuad(Math.min(Math.max((stepProgress - 1.2) / 0.8, 0), 1));
-        glassCard.style.opacity = `${cardProg}`;
-        glassCard.style.transform = `translate3d(${(1 - cardProg) * 40}px, 0, 0)`;
+        glassCard.style.opacity = `${cardProg.toFixed(2)}`;
+        glassCard.style.transform = `translate3d(${((1 - cardProg) * 40).toFixed(2)}px, 0, 0)`;
       }
 
-      // ── STEP 3: VERTICAL SLIDE UP FOR SECTION TWO (STEPS 2.5 -> 3.8) ──
+      // STEP 3: VERTICAL SLIDE UP FOR SECTION TWO (STEPS 2.5 -> 3.8)
       const rawS2Prog = Math.min(Math.max((stepProgress - 2.5) / 1.3, 0), 1);
       const s2SlideProg = easeOutQuad(rawS2Prog);
 
       if (secTwoWrap) {
         secTwoWrap.style.visibility = stepProgress >= 2.3 ? "visible" : "hidden";
-        secTwoWrap.style.transform = `translate3d(0, ${(1 - s2SlideProg) * 100}%, 0)`;
+        if (stepProgress < 6.8) {
+          secTwoWrap.style.transform = `translate3d(0, ${((1 - s2SlideProg) * 100).toFixed(2)}%, 0)`;
+        }
       }
 
       if (s2DesktopSec) {
         s2DesktopSec.style.visibility = stepProgress >= 2.3 ? "visible" : "hidden";
       }
 
-      if (secOneWrap) {
+      if (secOneWrap && stepProgress < 2.5) {
         secOneWrap.style.transform = `translate3d(0, 0%, 0) scale3d(1, 1, 1)`;
       }
 
-      if (s2SlideProg >= 0.3) {
-        triggerPlayOnceTextReveal(".services-section-two-wrap");
-      }
+      triggerPlayOnceTextReveal(".services-section-two-wrap", stepProgress, 2.9);
 
       if (glassCard && stepProgress >= 2.5) {
         const cardOutProg = easeOutQuad(Math.min(Math.max((stepProgress - 2.5) / 0.6, 0), 1));
-        glassCard.style.opacity = `${1 - cardOutProg}`;
-        glassCard.style.transform = `translate3d(0, ${-cardOutProg * 50}px, 0)`;
+        glassCard.style.opacity = `${(1 - cardOutProg).toFixed(2)}`;
+        glassCard.style.transform = `translate3d(0, ${(-cardOutProg * 50).toFixed(2)}px, 0)`;
       }
 
       if (stepProgress >= 2.8 && stepProgress < 6.8) {
@@ -245,8 +318,7 @@ export default function ServicesDesktop() {
         setIsSectionTwoActive(false);
       }
 
-      // ── STEP 4: BALANCED & SYNCHRONIZED SECTION TWO SLIDE INDEXING ──
-      // Window is Step 3.8 to Step 6.8 (3 full scroll steps divided evenly into 1.0 step increments)
+      // STEP 4: BALANCED & SYNCHRONIZED SECTION TWO SLIDE INDEXING
       if (stepProgress < 4.8) {
         triggerSec2Hook(0);
       } else if (stepProgress >= 4.8 && stepProgress < 5.8) {
@@ -255,23 +327,23 @@ export default function ServicesDesktop() {
         triggerSec2Hook(2);
       }
 
-      // ── STEP 5: APP SECTION REVEAL OVER SECTION TWO (STEPS 6.8 -> 8.2) ──
+      // STEP 5: APP SECTION REVEAL OVER SECTION TWO (STEPS 6.8 -> 8.2)
       const appProg = easeOutQuad(Math.min(Math.max((stepProgress - 6.8) / 1.4, 0), 1));
 
       if (appSecWrap) {
         appSecWrap.style.visibility = stepProgress >= 6.6 ? "visible" : "hidden";
-        appSecWrap.style.transform = `translate3d(0, ${(1 - appProg) * 100}%, 0)`;
+        if (stepProgress < 9.8) {
+          appSecWrap.style.transform = `translate3d(0, ${((1 - appProg) * 100).toFixed(2)}%, 0)`;
+        }
       }
 
-      if (secTwoWrap && appProg > 0) {
+      if (secTwoWrap && appProg > 0 && stepProgress < 6.8) {
         secTwoWrap.style.transform = `translate3d(0, 0%, 0) scale3d(1, 1, 1)`;
       }
 
-      if (appProg >= 0.3) {
-        triggerPlayOnceTextReveal(".services-appsec-wrap");
-      }
+      triggerPlayOnceTextReveal(".services-appsec-wrap", stepProgress, 7.2);
 
-      // ── STEP 6: LAYER CTA SLIDE (STEPS 8.5 -> 9.8) ──
+      // STEP 6: LAYER CTA SLIDE (STEPS 8.5 -> 9.8)
       const ctaProgress = easeOutQuad(Math.min(Math.max((stepProgress - 8.5) / 1.3, 0), 1));
 
       if (layerCTA.current) {
@@ -279,24 +351,34 @@ export default function ServicesDesktop() {
         const startY = vh;
         const endY = -(ctaHeight - vh);
         const currentY = startY + (endY - startY) * ctaProgress;
-        layerCTA.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
+        layerCTA.current.style.transform = `translate3d(0, ${currentY.toFixed(2)}px, 0)`;
       }
 
-      // ── STEP 7: LAYER FOOTER SLIDE (STEPS 9.8 -> 11.0) ──
+      // STEP 7: LAYER FOOTER & CTA FADE OUT (STEPS 9.8 -> 11.0)
       const footerProgress = easeOutQuad(Math.min(Math.max((stepProgress - 9.8) / 1.2, 0), 1));
+
+      if (layerCTA.current) {
+        const innerOpacity = (1 - footerProgress).toFixed(3);
+        layerCTA.current.style.setProperty("--cta-inner-opacity", innerOpacity);
+      }
 
       if (layerFooter.current) {
         layerFooter.current.style.visibility = stepProgress >= 9.6 ? "visible" : "hidden";
         const startY = vh;
         const endY = vh - footerHeight;
         const translateY = startY + (endY - startY) * footerProgress;
-        layerFooter.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
+        layerFooter.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
       }
 
+      const upperOpacity = (1 - footerProgress).toFixed(3);
+
       if (appSecWrap && footerProgress > 0) {
-        const appScale = 1.0 - footerProgress * 0.05;
+        const appScale = (1.0 - footerProgress * 0.08).toFixed(4);
+        appSecWrap.style.opacity = upperOpacity;
         appSecWrap.style.transform = `translate3d(0, 0%, 0) scale3d(${appScale}, ${appScale}, 1)`;
       }
+
+      rafId.current = requestAnimationFrame(renderTransforms);
     };
 
     const handleScroll = (e?: any) => {
@@ -325,9 +407,6 @@ export default function ServicesDesktop() {
       }
 
       targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
-
-      if (rafId.current) cancelAnimationFrame(rafId.current);
-      rafId.current = requestAnimationFrame(renderTransforms);
     };
 
     const lenis = smootherRef?.current;
@@ -338,9 +417,10 @@ export default function ServicesDesktop() {
     }
 
     handleScroll();
-    renderTransforms();
+    rafId.current = requestAnimationFrame(renderTransforms);
 
     return () => {
+      isRunning = false;
       if (rafId.current) cancelAnimationFrame(rafId.current);
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);

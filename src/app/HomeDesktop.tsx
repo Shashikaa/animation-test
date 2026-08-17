@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useSite } from "./context/SiteContext";
+import { useHeroIntro } from "./utils/useHeroIntro";
 
 import Hero from "../components/Home/Hero";
 import SectionTwo from "../components/Home/SectionTwo";
@@ -20,18 +21,27 @@ import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
 
 const TOTAL_SCROLL_STEPS = 18;
 
-// QUADRATIC EASING MATCHES THE ULTRA-SMOOTH FLUID INERTIA
+// Quadratic easing curve matching fluid inertia
 const easeOutQuad = (t: number) => t * (2 - t);
+const clamp = (v: number, min = 0, max = 1) => Math.min(Math.max(v, min), max);
 
+/**
+ * Text-splitting helper to split lines into animated span wrappers
+ * (Home-specific hero markup — unrelated to the scroll/reveal system, left untouched)
+ */
 function executeDesktopSplitting(selector: string) {
+  if (typeof document === "undefined") return;
   const element = document.querySelector(selector) as HTMLElement;
   if (!element || element.dataset.splitComplete === "true") return;
 
   const rawText = element.textContent || "";
-  const linesArray = rawText.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+  const linesArray = rawText
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
 
   const fragment = document.createDocumentFragment();
-  linesArray.forEach(lineText => {
+  linesArray.forEach((lineText) => {
     const wrapper = document.createElement("span");
     wrapper.className = "custom-line-wrap";
     wrapper.style.display = "block";
@@ -60,21 +70,41 @@ export default function HomeDesktop() {
   const layerCTA = useRef<HTMLDivElement>(null);
   const layerFooter = useRef<HTMLDivElement>(null);
 
-  const dimensionsRef = useRef({ ctaHeight: 0, footerHeight: 0, vh: 0, vw: 0, trackTopOffset: 0, totalScrollable: 0 });
+  const dimensionsRef = useRef({
+    ctaHeight: 0,
+    footerHeight: 0,
+    vh: 0,
+    vw: 0,
+    trackTopOffset: 0,
+    totalScrollable: 0,
+  });
+
+  // NEW: same resize-debounce pattern as About, avoids re-measuring on
+  // trivial height changes (e.g. mobile browser chrome show/hide)
+  const lastSizeRef = useRef({ width: 0, height: 0 });
+
   const s9TargetRectRef = useRef<{ deltaX: number; deltaY: number } | null>(null);
-  
+
   const targetProgress = useRef(0);
-  const currentProgressRef = useRef(0);
+  const smoothProgress = useRef(0); // renamed from currentProgressRef to match About's naming
   const rafId = useRef<number | null>(null);
   const revealedSections = useRef<Set<string>>(new Set());
 
   const context = useSite();
   const smootherRef = context?.smootherRef;
-  const preloaderDone = context?.preloaderDone ?? false;
-  
-  const [introDone, setIntroDone] = useState(false);
 
-  // ── 1. INITIAL SPLITTING & HERO INTRO SIMULATION ──
+  // NEW: intro/preloader state now comes from the shared useHeroIntro hook
+  // (same hook About uses) instead of context.preloaderDone + a local timer.
+  // ⚠️ introDurationMs/unlockScrollEarlyMs are guesses based on Home's old
+  // 200ms post-preloader delay — tune these against your actual hero intro
+  // animation length if the timing feels off.
+  const { introDone, preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
+    isMobile: false,
+    introDurationMs: 200,
+    unlockScrollEarlyMs: 0,
+  });
+
+  // ── 1. INITIAL SPLITTING (Home-specific hero markup) ──
   useEffect(() => {
     executeDesktopSplitting(".hero-title");
     executeDesktopSplitting(".hero-right-text");
@@ -91,16 +121,13 @@ export default function HomeDesktop() {
       s9Flight.style.visibility = "hidden";
       s9Flight.style.opacity = "0";
     }
+  }, []);
 
-    if (preloaderDone) {
-      const timer = setTimeout(() => {
-        setIntroDone(true);
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [preloaderDone]);
-
-  // ── 2. SCROLL LOCK CONTROL & LENIS UNLOCK ──
+  // ── 2. LENIS SYNC (driven by useHeroIntro's readiness flags) ──
+  // NOTE: manual document/body overflow locking removed here — in the About
+  // page that responsibility lives inside useHeroIntro itself. If Home relied
+  // on this effect to hard-lock scroll during intro and useHeroIntro doesn't
+  // do that internally, that's the one behavior to double check.
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -108,16 +135,10 @@ export default function HomeDesktop() {
     const isFullyReady = preloaderDone && introDone;
 
     if (!isFullyReady) {
-      document.documentElement.style.overflow = "hidden";
-      document.body.style.overflow = "hidden";
       if (lenis && typeof lenis.stop === "function") lenis.stop();
-      window.scrollTo(0, 0);
       targetProgress.current = 0;
-      currentProgressRef.current = 0;
+      smoothProgress.current = 0;
     } else {
-      document.documentElement.style.overflow = "";
-      document.body.style.overflow = "";
-
       if (lenis) {
         if (typeof lenis.resize === "function") lenis.resize();
         if (typeof lenis.start === "function") lenis.start();
@@ -127,24 +148,20 @@ export default function HomeDesktop() {
         window.dispatchEvent(new Event("scroll"));
       });
     }
-
-    return () => {
-      document.documentElement.style.overflow = "";
-      document.body.style.overflow = "";
-    };
   }, [preloaderDone, introDone, smootherRef]);
 
-  // ── 3. CACHE METRICS TO PREVENT LAYOUT THRASHING ──
+  // ── 3. METRIC CACHING (PREVENTING LAYOUT THRASHING) ──
   const measure = useCallback(() => {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
     const vh = window.innerHeight;
+    const vw = window.innerWidth;
 
     dimensionsRef.current = {
       ctaHeight: layerCTA.current?.offsetHeight || vh,
       footerHeight: layerFooter.current?.offsetHeight || layerFooter.current?.scrollHeight || vh,
       vh,
-      vw: window.innerWidth,
+      vw,
       trackTopOffset: window.scrollY + rect.top,
       totalScrollable: rect.height - vh,
     };
@@ -164,7 +181,21 @@ export default function HomeDesktop() {
         };
       }
     }
+
+    lastSizeRef.current = { width: vw, height: vh };
   }, []);
+
+  // NEW: debounced resize handler (same pattern as About) — skips re-measure
+  // for sub-150px height changes so mobile URL-bar collapse doesn't retrigger it
+  const handleResize = useCallback(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const { width, height } = lastSizeRef.current;
+
+    if (vw === width && Math.abs(vh - height) < 150) return;
+
+    measure();
+  }, [measure]);
 
   useEffect(() => {
     if (!preloaderDone || !introDone) return;
@@ -175,38 +206,45 @@ export default function HomeDesktop() {
     if (layerCTA.current) resizeObserver.observe(layerCTA.current);
     if (layerFooter.current) resizeObserver.observe(layerFooter.current);
 
-    window.addEventListener("resize", measure, { passive: true });
+    window.addEventListener("resize", handleResize, { passive: true });
     return () => {
       resizeObserver.disconnect();
-      window.removeEventListener("resize", measure);
+      window.removeEventListener("resize", handleResize);
     };
-  }, [preloaderDone, introDone, measure]);
+  }, [preloaderDone, introDone, measure, handleResize]);
 
   // ── 4. TEXT REVEALS HOOK & TRIGGER LOGIC ──
-  const triggerPlayOnceTextReveal = useCallback((containerSelector: string, currentStepProg: number, triggerThreshold: number) => {
-    if (!scopeRef.current) return;
+  // Renamed from triggerPlayOnceTextReveal → triggerProgressTextReveal to match
+  // About's naming convention. Internal reveal mechanics (selectors, the
+  // "revealed" class, transition timing) are byte-for-byte unchanged so the
+  // actual on-screen animation is identical to before.
+  const triggerProgressTextReveal = useCallback(
+    (containerSelector: string, currentStepProg: number, triggerThreshold: number) => {
+      if (!scopeRef.current) return;
 
-    const key = containerSelector;
-    if (revealedSections.current.has(key)) return;
+      const key = containerSelector;
+      if (revealedSections.current.has(key)) return;
 
-    if (currentStepProg >= triggerThreshold) {
-      revealedSections.current.add(key);
+      if (currentStepProg >= triggerThreshold) {
+        revealedSections.current.add(key);
 
-      const targetSection = scopeRef.current.querySelector<HTMLElement>(containerSelector);
-      if (targetSection) {
-        targetSection.classList.add("revealed");
+        const targetSection = scopeRef.current.querySelector<HTMLElement>(containerSelector);
+        if (targetSection) {
+          targetSection.classList.add("revealed");
+        }
+
+        const selectors = `${containerSelector} .gs-line-inner, ${containerSelector} .custom-line-inner, ${containerSelector} .reveal-text > *`;
+        const elements = scopeRef.current.querySelectorAll<HTMLElement>(selectors);
+
+        elements.forEach((el, idx) => {
+          el.style.transition = `transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s, opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s`;
+          el.style.transform = "translate3d(0, 0px, 0)";
+          el.style.opacity = "1";
+        });
       }
-
-      const selectors = `${containerSelector} .gs-line-inner, ${containerSelector} .custom-line-inner, ${containerSelector} .reveal-text > *`;
-      const elements = scopeRef.current.querySelectorAll<HTMLElement>(selectors);
-
-      elements.forEach((el, idx) => {
-        el.style.transition = `transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s, opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s`;
-        el.style.transform = "translate3d(0, 0px, 0)";
-        el.style.opacity = "1";
-      });
-    }
-  }, []);
+    },
+    []
+  );
 
   useEffect(() => {
     if (!preloaderDone || !introDone || !scopeRef.current) return;
@@ -223,42 +261,50 @@ export default function HomeDesktop() {
             ".section-8 .reveal-text",
             ".section-7 .reveal-text",
             ".section-appsec .reveal-text",
-            ".s9-para-desktop", 
-            ".s9-para-mobile"
+            ".s9-para-desktop",
+            ".s9-para-mobile",
           ].join(",")
         );
       }
     };
   }, [preloaderDone, introDone]);
 
-  // ── 5. ULTRA-SMOOTH CONTINUOUS LERP RENDER ENGINE ──
+  // ── 5. UNIFIED RAF RENDER ENGINE ──
   useEffect(() => {
     if (!preloaderDone || !introDone || !scopeRef.current) return;
 
     const scope = scopeRef.current;
     let isRunning = true;
+    let lastTime = performance.now();
 
-    // Direct Pre-Hide for late sections on load to prevent flashes
+    // NEW: frame-rate independent dynamic easing + max-delta clamp,
+    // replacing the old flat LERP_FACTOR = 0.075 lerp.
+    const EASE_FACTOR = 0.15;
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.008;
+
+    // Direct Pre-Hide to eliminate flash of unstyled content
     const s8TextElements = scope.querySelectorAll<HTMLElement>(".section-8 .reveal-text");
-    s8TextElements.forEach(el => { el.style.opacity = "0"; });
+    s8TextElements.forEach((el) => {
+      el.style.opacity = "0";
+    });
 
     const s10TextElements = scope.querySelectorAll<HTMLElement>(
       ".section-10 .s10-title, .section-10 .s10-title-sub, .section-10 .s10-para-top, .section-10 .s10-content-wrap, .section-10 .reveal-text"
     );
-    s10TextElements.forEach(el => { 
-      el.style.opacity = "0"; 
+    s10TextElements.forEach((el) => {
+      el.style.opacity = "0";
       el.style.visibility = "hidden";
     });
 
     const s9TextElements = scope.querySelectorAll<HTMLElement>(
       ".s9-global-flight-container, .s9-para-desktop"
     );
-    s9TextElements.forEach(el => { 
-      el.style.opacity = "0"; 
+    s9TextElements.forEach((el) => {
+      el.style.opacity = "0";
       el.style.visibility = "hidden";
     });
 
-    // Element Query Cache
+    // Cache DOM Element Handles once
     const heroEl = scope.querySelector<HTMLElement>(".hero");
     const heroBg = scope.querySelector<HTMLElement>(".hero-bg");
     const heroLeftInitial = scope.querySelector<HTMLElement>(".hero-left-initial");
@@ -306,30 +352,39 @@ export default function HomeDesktop() {
       ".section-10 .s10-title, .section-10 .s10-title-sub, .section-10 .s10-para-top, .section-10 .reveal-text, .section-10 .gs-line-inner, .section-10 .custom-line-inner"
     );
 
-    // Promote elements to hardware layers
-    [s2Frame1, s2Frame2, s2ScrollContent, s9LeftSide, s9RightSide, s9BgLeft, s9BgRight, s9FlightWrapper, appSecBg].forEach(el => {
+    const ctaInner = scope.querySelector<HTMLElement>(".section-cta .cta-inner-desktop");
+
+    // Promote complex layers to composite GPU layers
+    [s2Frame1, s2Frame2, s2ScrollContent, s9LeftSide, s9RightSide, s9BgLeft, s9BgRight, s9FlightWrapper, appSecBg].forEach((el) => {
       if (el) {
         el.style.willChange = "transform, opacity, clip-path";
         el.style.transform = "translate3d(0, 0, 0)";
       }
     });
 
-    const ctaInner = scope.querySelector<HTMLElement>(".section-cta .cta-inner-desktop");
-
-    const renderTransforms = () => {
+    const renderTransforms = (time: number) => {
       if (!isRunning) return;
 
-      // UNIFORM LERP MATCHING LENIS / SMOOTHSCROLL ENGINE (0.075)
-      const diff = targetProgress.current - currentProgressRef.current;
-      currentProgressRef.current += diff * 0.075;
+      // Frame-rate independent smoothing (same mechanism as About page)
+      const dt = Math.min((time - lastTime) / 1000, 0.1);
+      lastTime = time;
 
-      const stepProgress = currentProgressRef.current * (TOTAL_SCROLL_STEPS - 1);
+      const dynamicEase = 1 - Math.exp(-EASE_FACTOR * 60 * dt);
+      let delta = (targetProgress.current - smoothProgress.current) * dynamicEase;
+
+      if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
+        delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
+      }
+
+      smoothProgress.current = clamp(smoothProgress.current + delta);
+
+      const stepProgress = smoothProgress.current * (TOTAL_SCROLL_STEPS - 1);
       const { ctaHeight, footerHeight, vh } = dimensionsRef.current;
 
       // ── 1. HERO PHASE 1 & 2 (STEPS 0 -> 2.5) ──
-      const heroPhase1 = easeOutQuad(Math.min(Math.max(stepProgress / 1.2, 0), 1));
+      const heroPhase1 = easeOutQuad(clamp(stepProgress / 1.2));
       if (heroBg) {
-        const bgScale = (1.0 + heroPhase1 * 0.15 + easeOutQuad(Math.min(Math.max((stepProgress - 1.2) / 1.3, 0), 1)) * 0.15).toFixed(4);
+        const bgScale = (1.0 + heroPhase1 * 0.15 + easeOutQuad(clamp((stepProgress - 1.2) / 1.3)) * 0.15).toFixed(4);
         heroBg.style.transform = `translate3d(0,0,0) scale3d(${bgScale}, ${bgScale}, 1)`;
       }
 
@@ -343,14 +398,14 @@ export default function HomeDesktop() {
       }
 
       if (heroRightInners) {
-        const rTextInProg = easeOutQuad(Math.min(Math.max((stepProgress - 0.1) / 0.8, 0), 1));
-        const rTextOutProg = easeOutQuad(Math.min(Math.max((stepProgress - 1.0) / 0.4, 0), 1));
+        const rTextInProg = easeOutQuad(clamp((stepProgress - 0.1) / 0.8));
+        const rTextOutProg = easeOutQuad(clamp((stepProgress - 1.0) / 0.4));
         heroRightInners.forEach((inner, i) => {
           if (rTextOutProg > 0) {
             inner.style.opacity = `${1 - rTextOutProg}`;
             inner.style.transform = `translate3d(0, ${-rTextOutProg * 20}px, 0)`;
           } else {
-            const indyProg = Math.min(Math.max((rTextInProg - i * 0.04) / 0.7, 0), 1);
+            const indyProg = clamp((rTextInProg - i * 0.04) / 0.7);
             inner.style.opacity = `${indyProg}`;
             inner.style.transform = `translate3d(0, ${(1 - indyProg) * 100}%, 0)`;
           }
@@ -358,19 +413,19 @@ export default function HomeDesktop() {
       }
 
       // Hero Secondary Text
-      const heroSecProg = easeOutQuad(Math.min(Math.max((stepProgress - 1.2) / 1.3, 0), 1));
+      const heroSecProg = easeOutQuad(clamp((stepProgress - 1.2) / 1.3));
       if (heroSecWrap) {
         heroSecWrap.style.visibility = stepProgress >= 1.2 && stepProgress < 3.2 ? "visible" : "hidden";
         heroSecWrap.style.opacity = stepProgress >= 1.2 && stepProgress < 3.2 ? "1" : "0";
         if (stepProgress < 2.5) {
           heroSecWrap.style.transform = `translate3d(0, ${-heroSecProg * 50}vh, 0)`;
         } else {
-          const exitProg = easeOutQuad(Math.min(Math.max((stepProgress - 2.5) / 0.7, 0), 1));
+          const exitProg = easeOutQuad(clamp((stepProgress - 2.5) / 0.7));
           heroSecWrap.style.transform = `translate3d(0, ${-50 - exitProg * 60}vh, 0)`;
         }
       }
 
-      const heroBtnProg = easeOutQuad(Math.min(Math.max((stepProgress - 2.0) / 0.5, 0), 1));
+      const heroBtnProg = easeOutQuad(clamp((stepProgress - 2.0) / 0.5));
       if (heroContactBtn) heroContactBtn.style.opacity = `${1 - heroBtnProg}`;
       if (heroScrollInd) heroScrollInd.style.opacity = `${1 - heroBtnProg}`;
 
@@ -387,14 +442,13 @@ export default function HomeDesktop() {
       }
 
       // ── 2. SECTION 2 ENTRANCE & INNER SEQUENCING (STEPS 2.5 -> 5.5) ──
-      const s2ArriveProg = easeOutQuad(Math.min(Math.max((stepProgress - 2.5) / 1.2, 0), 1));
+      const s2ArriveProg = easeOutQuad(clamp((stepProgress - 2.5) / 1.2));
       if (secTwo) {
         secTwo.style.visibility = stepProgress >= 2.0 && stepProgress < 6.7 ? "visible" : "hidden";
         secTwo.style.transform = `translate3d(0, ${((1 - s2ArriveProg) * 100).toFixed(3)}%, 0)`;
       }
 
-      // Inner animations wait until section 2 is fully revealed (step 3.7)
-      const s2TextFadeProg = easeOutQuad(Math.min(Math.max((stepProgress - 3.7) / 0.5, 0), 1));
+      const s2TextFadeProg = easeOutQuad(clamp((stepProgress - 3.7) / 0.5));
       [s2TitleMain, s2TitleSub, s2BodyText].forEach((el) => {
         if (el) {
           el.style.opacity = `${(1 - s2TextFadeProg).toFixed(3)}`;
@@ -402,8 +456,8 @@ export default function HomeDesktop() {
         }
       });
 
-      const s2Frame1InProg = easeOutQuad(Math.min(Math.max((stepProgress - 4.1) / 0.9, 0), 1));
-      const s2Frame1OutProg = easeOutQuad(Math.min(Math.max((stepProgress - 5.0) / 0.5, 0), 1));
+      const s2Frame1InProg = easeOutQuad(clamp((stepProgress - 4.1) / 0.9));
+      const s2Frame1OutProg = easeOutQuad(clamp((stepProgress - 5.0) / 0.5));
       if (s2Frame1) {
         if (s2Frame1OutProg > 0) {
           s2Frame1.style.clipPath = `inset(0% 0% ${(s2Frame1OutProg * 100).toFixed(2)}% 0%)`;
@@ -412,13 +466,13 @@ export default function HomeDesktop() {
         }
       }
 
-      const s2Frame2Prog = easeOutQuad(Math.min(Math.max((stepProgress - 4.9) / 0.6, 0), 1));
+      const s2Frame2Prog = easeOutQuad(clamp((stepProgress - 4.9) / 0.6));
       if (s2Frame2) {
         s2Frame2.style.clipPath = `inset(${((1 - s2Frame2Prog) * 100).toFixed(2)}% 0% 0% 0%)`;
       }
 
-      const s2ScrollInProg = easeOutQuad(Math.min(Math.max((stepProgress - 4.1) / 0.8, 0), 1));
-      const s2ScrollPhase2 = easeOutQuad(Math.min(Math.max((stepProgress - 4.9) / 0.6, 0), 1));
+      const s2ScrollInProg = easeOutQuad(clamp((stepProgress - 4.1) / 0.8));
+      const s2ScrollPhase2 = easeOutQuad(clamp((stepProgress - 4.9) / 0.6));
       if (s2ScrollContent) {
         const yPercent = (1 - s2ScrollInProg) * 100 - s2ScrollPhase2 * 50;
         s2ScrollContent.style.transform = `translate3d(0, ${yPercent.toFixed(2)}%, 0)`;
@@ -426,7 +480,7 @@ export default function HomeDesktop() {
       }
 
       // ── 3. SECTION 8 (STEPS 5.5 -> 7.0) ──
-      const s8ArriveProg = easeOutQuad(Math.min(Math.max((stepProgress - 5.5) / 1.2, 0), 1));
+      const s8ArriveProg = easeOutQuad(clamp((stepProgress - 5.5) / 1.2));
       if (secEight) {
         secEight.style.visibility = stepProgress >= 5.2 && stepProgress < 8.2 ? "visible" : "hidden";
         secEight.style.transform = `translate3d(0, ${((1 - s8ArriveProg) * 100).toFixed(3)}%, 0)`;
@@ -434,17 +488,16 @@ export default function HomeDesktop() {
       if (s8BgImg) {
         s8BgImg.style.transform = `translate3d(0, ${(1 - s8ArriveProg) * 20}%, 0)`;
       }
-      triggerPlayOnceTextReveal(".section-8", stepProgress, 5.8);
+      triggerProgressTextReveal(".section-8", stepProgress, 5.8);
 
-      // ── 4. SECTION 10 ──
-      const s10ArriveProg = easeOutQuad(Math.min(Math.max((stepProgress - 7.0) / 1.2, 0), 1));
+      // ── 4. SECTION 10 (STEPS 7.0 -> 10.7) ──
+      const s10ArriveProg = easeOutQuad(clamp((stepProgress - 7.0) / 1.2));
       if (secTen) {
         secTen.style.visibility = stepProgress >= 7.0 && stepProgress < 10.7 ? "visible" : "hidden";
         secTen.style.transform = `translate3d(0, ${((1 - s10ArriveProg) * 100).toFixed(3)}%, 0)`;
       }
 
-      // Inner scroll content/text movements wait until step 8.2 (after full reveal)
-      const s10ScrollProg = easeOutQuad(Math.min(Math.max((stepProgress - 8.2) / 1.2, 0), 1));
+      const s10ScrollProg = easeOutQuad(clamp((stepProgress - 8.2) / 1.2));
 
       allS10TextNodes.forEach((el) => {
         if (stepProgress >= 7.0 && stepProgress < 10.7) {
@@ -475,8 +528,8 @@ export default function HomeDesktop() {
         s10BgImg.style.transform = `translate3d(0, ${bgParallaxY}%, 0) scale3d(${bgScale}, ${bgScale}, 1)`;
       }
 
-      // ── 5. SECTION 7 ──
-      const s7ArriveProg = easeOutQuad(Math.min(Math.max((stepProgress - 9.5) / 1.2, 0), 1));
+      // ── 5. SECTION 7 (STEPS 9.5 -> 12.7) ──
+      const s7ArriveProg = easeOutQuad(clamp((stepProgress - 9.5) / 1.2));
       if (secSeven) {
         secSeven.style.visibility = stepProgress >= 9.2 && stepProgress < 12.7 ? "visible" : "hidden";
         secSeven.style.transform = `translate3d(0, ${((1 - s7ArriveProg) * 100).toFixed(3)}%, 0)`;
@@ -487,23 +540,22 @@ export default function HomeDesktop() {
         s7BgImg.style.transform = `translate3d(0, ${bgCounterY}%, 0)`;
       }
 
-      triggerPlayOnceTextReveal(".section-7", stepProgress, 9.8);
+      triggerProgressTextReveal(".section-7", stepProgress, 9.8);
 
-      // ── 6. APPSECTION ──
-      const appSecArriveProg = easeOutQuad(Math.min(Math.max((stepProgress - 11.5) / 1.2, 0), 1));
+      // ── 6. APPSECTION (STEPS 11.5 -> 14.7) ──
+      const appSecArriveProg = easeOutQuad(clamp((stepProgress - 11.5) / 1.2));
       if (secAppSec) {
         secAppSec.style.visibility = stepProgress >= 11.2 && stepProgress < 14.7 ? "visible" : "hidden";
         secAppSec.style.transform = `translate3d(0, ${((1 - appSecArriveProg) * 100).toFixed(3)}%, 0)`;
       }
       if (appSecPhone) {
-        const phoneProg = easeOutQuad(Math.min(Math.max((stepProgress - 11.6) / 0.8, 0), 1));
+        const phoneProg = easeOutQuad(clamp((stepProgress - 11.6) / 0.8));
         appSecPhone.style.transform = `translate3d(0, ${(1 - phoneProg) * 40}%, 0)`;
       }
-      triggerPlayOnceTextReveal(".section-appsec", stepProgress, 11.8);
+      triggerProgressTextReveal(".section-appsec", stepProgress, 11.8);
 
       // ── 7. SECTION 9 & FLYING TEXT (STEPS 13.5 -> 15.7) ──
-      // Section 9 arrival finishes at step 14.7 (13.5 + 1.2)
-      const s9ArriveProg = easeOutQuad(Math.min(Math.max((stepProgress - 13.5) / 1.2, 0), 1));
+      const s9ArriveProg = easeOutQuad(clamp((stepProgress - 13.5) / 1.2));
       if (secNine) {
         secNine.style.visibility = stepProgress >= 13.2 ? "visible" : "hidden";
       }
@@ -521,8 +573,7 @@ export default function HomeDesktop() {
       if (s9BgLeft) s9BgLeft.style.transform = `translate3d(0,0,0) scale3d(${s9BgScale}, ${s9BgScale}, 1)`;
       if (s9BgRight) s9BgRight.style.transform = `translate3d(0,0,0) scale3d(${s9BgScale}, ${s9BgScale}, 1)`;
 
-      // Flight ONLY starts after Section 9 finishes its arrival transition (at step 14.7)
-      const flyProg = Math.min(Math.max((stepProgress - 14.7) / 1.0, 0), 1);
+      const flyProg = clamp((stepProgress - 14.7) / 1.0);
 
       if (s9NativeTitle1) s9NativeTitle1.style.opacity = flyProg > 0 ? "0" : "1";
       if (s9NativeTitle2) s9NativeTitle2.style.opacity = flyProg > 0 ? "0" : "1";
@@ -538,7 +589,7 @@ export default function HomeDesktop() {
       }
 
       if (s9ParaDesktop) {
-        const paraProg = easeOutQuad(Math.min(Math.max((stepProgress - 14.7) / 1.0, 0), 1));
+        const paraProg = easeOutQuad(clamp((stepProgress - 14.7) / 1.0));
         if (stepProgress >= 14.7) {
           s9ParaDesktop.style.visibility = "visible";
           s9ParaDesktop.style.opacity = `${paraProg.toFixed(3)}`;
@@ -549,8 +600,8 @@ export default function HomeDesktop() {
         }
       }
 
-      // ── 8. CTA REVEAL ──
-      const ctaArriveProg = easeOutQuad(Math.min(Math.max((stepProgress - 15.7) / 0.8, 0), 1));
+      // ── 8. CTA REVEAL (STEPS 15.7 -> 16.5) ──
+      const ctaArriveProg = easeOutQuad(clamp((stepProgress - 15.7) / 0.8));
       if (layerCTA.current) {
         const startY = vh;
         const endY = -(ctaHeight - vh);
@@ -564,8 +615,8 @@ export default function HomeDesktop() {
         ctaInner.style.transform = "translate3d(0, 0px, 0)";
       }
 
-      // ── 9. FOOTER REVEAL ──
-      const footerArriveProg = easeOutQuad(Math.min(Math.max((stepProgress - 16.5) / 0.5, 0), 1));
+      // ── 9. FOOTER REVEAL (STEPS 16.5+) ──
+      const footerArriveProg = easeOutQuad(clamp((stepProgress - 16.5) / 0.5));
       if (layerFooter.current) {
         const startY = vh;
         const endY = vh - footerHeight;
@@ -602,7 +653,7 @@ export default function HomeDesktop() {
         }
       }
 
-      targetProgress.current = Math.min(Math.max(relativeScroll / totalScrollable, 0), 1);
+      targetProgress.current = clamp(relativeScroll / totalScrollable);
     };
 
     const lenis = smootherRef?.current;
@@ -624,7 +675,7 @@ export default function HomeDesktop() {
         window.removeEventListener("scroll", handleScroll);
       }
     };
-  }, [preloaderDone, introDone, smootherRef, triggerPlayOnceTextReveal]);
+  }, [preloaderDone, introDone, smootherRef, triggerProgressTextReveal]);
 
   return (
     <div ref={scopeRef} className="home-desktop-scope w-full bg-black opacity-100 visible">
@@ -666,42 +717,42 @@ export default function HomeDesktop() {
             <Hero />
           </div>
 
-          <div 
+          <div
             className="section-2 absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu z-[95]"
             style={{ visibility: "hidden" }}
           >
             <SectionTwo />
           </div>
 
-          <div 
+          <div
             className="section-8 absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu z-[99]"
             style={{ visibility: "hidden" }}
           >
             <SectionEight preloaderDone={preloaderDone} />
           </div>
 
-          <div 
+          <div
             className="section-10 absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu z-[100]"
             style={{ visibility: "hidden" }}
           >
             <SectionTen />
           </div>
 
-          <div 
+          <div
             className="section-7 absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu z-[105]"
             style={{ visibility: "hidden" }}
           >
             <SectionSeven />
           </div>
 
-          <div 
+          <div
             className="section-appsec absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu z-[110]"
             style={{ visibility: "hidden" }}
           >
             <Appsection />
           </div>
 
-          <div 
+          <div
             className="section-9 absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu z-[115]"
             style={{ visibility: "hidden" }}
           >

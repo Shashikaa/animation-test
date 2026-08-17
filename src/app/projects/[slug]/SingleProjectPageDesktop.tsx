@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import ProjectScrollHero from "@/src/components/Projects/ProjectScrollHero";
 import ProjectInfoSlide from "@/src/components/Projects/ProjectInfoSlide";
 import Appsection from "@/src/components/Projects/Appsection";
@@ -10,12 +10,18 @@ import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import { useSite } from "@/src/app/context/SiteContext";
 import { FullServiceData } from "./data";
 
-// QUADRATIC EASING MATCHING HOME DESKTOP
+// Quadratic Easing
 const easeOutQuad = (t: number) => t * (2 - t);
 
 type SubServicesDesktopProps = {
   pageData: FullServiceData;
 };
+
+declare global {
+  interface Window {
+    _projectInfoGoTo?: (index: number) => void;
+  }
+}
 
 export default function SingleProjectPageDesktop({ pageData }: SubServicesDesktopProps) {
   const scopeRef = useRef<HTMLDivElement>(null);
@@ -50,14 +56,14 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     unlockScrollEarlyMs: 1800,
   });
 
-  const infoSlides = pageData.slides || [];
+  const infoSlides = useMemo(() => pageData.slides || [], [pageData.slides]);
   const infoSlidesCount = infoSlides.length;
 
   const triggerInfoHook = useCallback((nextIdx: number) => {
     if (nextIdx !== lastInfoIdx.current) {
       lastInfoIdx.current = nextIdx;
-      if (typeof window !== "undefined" && (window as any)._projectInfoGoTo) {
-        (window as any)._projectInfoGoTo(nextIdx);
+      if (typeof window !== "undefined" && typeof window._projectInfoGoTo === "function") {
+        window._projectInfoGoTo(nextIdx);
       }
     }
   }, []);
@@ -116,7 +122,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     };
   }, [shouldLoadRest, updateMetrics]);
 
-  // ── 3. ULTRA-SMOOTH CONTINUOUS LERP RENDER ENGINE (HOMEDESKTOP PARITY) ──
+  // ── 3. CONTINUOUS LERP RENDER ENGINE ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
@@ -124,11 +130,10 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     let isRunning = true;
     let currentProgress = targetProgress.current;
 
-    // Cache element references inside the closure
     const heroTextWrap = scope.querySelector<HTMLElement>(".hero-text-wrap");
     const phoneWrapper = scope.querySelector<HTMLElement>(".appsec-phone-wrapper");
 
-    // Hardware promote element layers for ultra-smooth GPU composition
+    // Hardware accelerate element layers for GPU composition
     [
       heroPanelRef.current,
       projectInfoRef.current,
@@ -137,7 +142,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
       footerLayerRef.current,
     ].forEach((el) => {
       if (el) {
-        el.style.willChange = "transform, opacity, clip-path";
+        el.style.willChange = "transform, opacity, filter, clip-path";
         el.style.transform = "translate3d(0, 0, 0)";
       }
     });
@@ -145,7 +150,6 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     const renderTransforms = () => {
       if (!isRunning) return;
 
-      // CONTINUOUS SILKY PHYSICS LERP INERTIA
       currentProgress += (targetProgress.current - currentProgress) * 0.08;
 
       const subSlidesSteps = Math.max(0, infoSlidesCount - 1);
@@ -155,7 +159,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
 
       const { vh, appHeight, faqHeight, footerHeight } = scrollMetricsRef.current;
 
-      // STEP 1: Hero Text Fade Out + Project Info Slide-Up (0.0 -> 1.0)
+      // STEP 1: Hero Text Fade Out + Project Info Slide-Up
       const infoProg = easeOutQuad(Math.min(Math.max(stepProgress, 0), 1));
 
       if (heroTextWrap) {
@@ -232,7 +236,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
         faqSectionRef.current.style.transform = `translate3d(0, ${currentY.toFixed(2)}px, 0)`;
       }
 
-      // STEP 5: Footer Reveal
+      // STEP 5: Footer Reveal & Inner Section Fade-Outs
       const footerStartStep = faqStartStep + 1.0;
       const footerProg = easeOutQuad(Math.min(Math.max(stepProgress - footerStartStep, 0), 1));
 
@@ -243,7 +247,22 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
         footerLayerRef.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
       }
 
-      // Keep RAF loop running continuously for momentum smoothing
+      // Fade out FAQ inner content cleanly as footer enters (matching contact page style)
+      const faqContent = faqSectionRef.current?.querySelector<HTMLElement>(
+        ".faq-content, .faq-inner-wrap, .faq-section-inner, [class*='faq'] > div"
+      );
+      if (faqContent) {
+        faqContent.style.opacity = (1 - footerProg).toFixed(3);
+      }
+
+      // Fade out background layers as footer slides up
+      if (appSectionRef.current) {
+        appSectionRef.current.style.opacity = (1 - footerProg).toFixed(3);
+      }
+      if (projectInfoRef.current) {
+        projectInfoRef.current.style.opacity = (1 - footerProg).toFixed(3);
+      }
+
       rafId.current = requestAnimationFrame(renderTransforms);
     };
 
@@ -293,11 +312,10 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
       } else {
         window.removeEventListener("scroll", handleScroll);
       }
-      if (typeof window !== "undefined") delete (window as any)._projectInfoGoTo;
+      if (typeof window !== "undefined") delete window._projectInfoGoTo;
     };
   }, [shouldLoadRest, smootherRef, infoSlidesCount, infoSlides, triggerInfoHook]);
 
-  // Scaled height prevents the layout track from feeling too long/short
   const containerHeightVh = 400 + infoSlidesCount * 100;
 
   return (

@@ -16,20 +16,23 @@ type ContactProps = {
 
 const TOTAL_SCROLL_STEPS = 10;
 
-// QUADRATIC EASING MATCHES THE MOBILE ULTRA-SMOOTH INERTIA
+// Quadratic Easing matching About component setup
 const easeOutQuad = (t: number) => t * (2 - t);
 
+// Utility for DOM text line splitting matching About implementation
 function executeDesktopSplitting(selector: string) {
-  const elements = document.querySelectorAll(selector);
+  const elements = document.querySelectorAll<HTMLElement>(selector);
   elements.forEach((element) => {
-    const htmlElement = element as HTMLElement;
-    if (!htmlElement || htmlElement.dataset.splitComplete === "true") return;
+    if (!element || element.dataset.splitComplete === "true") return;
 
-    const rawText = htmlElement.textContent || "";
-    const linesArray = rawText.split("\n").map(line => line.trim()).filter(line => line.length > 0);
+    const rawText = element.textContent || "";
+    const linesArray = rawText
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
 
-    htmlElement.innerHTML = "";
-    linesArray.forEach(lineText => {
+    element.innerHTML = "";
+    linesArray.forEach((lineText) => {
       const wrapper = document.createElement("span");
       wrapper.className = "custom-line-wrap";
       wrapper.style.display = "block";
@@ -42,10 +45,10 @@ function executeDesktopSplitting(selector: string) {
       inner.textContent = lineText;
 
       wrapper.appendChild(inner);
-      htmlElement.appendChild(wrapper);
+      element.appendChild(wrapper);
     });
 
-    htmlElement.dataset.splitComplete = "true";
+    element.dataset.splitComplete = "true";
   });
 }
 
@@ -80,7 +83,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     unlockScrollEarlyMs: 1800,
   });
 
-  // ── 1. UNLOCK LENIS / SCROLL ──
+  // ── 1. UNLOCK LENIS / SCROLL (MATCHING ABOUT LOGIC) ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -102,7 +105,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // ── 2. CACHE METRICS TO PREVENT LAYOUT THRASHING ──
+  // ── 2. CACHE METRICS ──
   const measure = useCallback(() => {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
@@ -134,7 +137,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     };
   }, [shouldLoadRest, measure]);
 
-  // ── 3. TEXT REVEALS ──
+  // ── 3. TEXT REVEAL LOGIC (EXACT ABOUT implementation) ──
   const triggerPlayOnceTextReveal = useCallback((
     containerSelector: string,
     currentStepProg: number,
@@ -163,18 +166,21 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
+    // Apply text splitting and hook text reveals exactly like About
     executeDesktopSplitting(".scroll-para-1");
+    useTextReveal(scopeRef, ".reveal-text");
     useTextReveal(scopeRef, ".section-one-wrapper .reveal-text");
 
     return () => {
       if (scopeRef.current) {
         restoreTextReveal(scopeRef.current, ".scroll-para-1");
+        restoreTextReveal(scopeRef.current, ".reveal-text");
         restoreTextReveal(scopeRef.current, ".section-one-wrapper .reveal-text");
       }
     };
   }, [shouldLoadRest]);
 
-  // ── 4. ULTRA-SMOOTH CONTINUOUS LERP RENDER ENGINE (HOMEDESKTOP PARITY) ──
+  // ── 4. CONTINUOUS LERP RENDER ENGINE (MATCHING ABOUT SCROLL LOGIC) ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
@@ -191,7 +197,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     const parallaxImg = scope.querySelector<HTMLElement>(".parallax-img-asset");
     const secTwo = scope.querySelector<HTMLElement>(".section-two-wrapper");
 
-    // Promote elements for hardware composition
+    // Promote elements for hardware acceleration
     [secOne, parallaxImg, secTwo, layerCTA.current, layerFooter.current].forEach((el) => {
       if (el) {
         el.style.willChange = "transform, opacity";
@@ -202,13 +208,13 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     const renderTransforms = () => {
       if (!isRunning) return;
 
-      // CONTINUOUS SILKY PHYSICS LERP INERTIA
+      // Inertial Lerp calculation (identical to About smoothing factor)
       currentProgress += (targetProgress.current - currentProgress) * 0.08;
 
       const stepProgress = currentProgress * (TOTAL_SCROLL_STEPS - 1);
       const { sec1Height, ctaHeight, footerHeight, vh } = dimensionsRef.current;
 
-      // ── STEP 1: HERO TEXT, PARAGRAPH & BACKGROUND TRANSLATE ──
+      // ── STEP 1: HERO TEXT, PARAGRAPH & BACKGROUND ──
       const heroFadeOutProg = easeOutQuad(Math.min(Math.max(stepProgress / 0.4, 0), 1));
 
       if (heroTextWrap) {
@@ -231,7 +237,6 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
         });
       }
 
-      // Hero background scale AND translate upward
       const heroBgProg = easeOutQuad(Math.min(Math.max(stepProgress / 1.0, 0), 1));
       if (heroBgs && heroBgs.length > 0) {
         const scaleVal = (1.0 + heroBgProg * 0.05).toFixed(4);
@@ -241,7 +246,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
         });
       }
 
-      // ── STEP 2: SECTION ONE FULL HEIGHT REVEAL (STEPS 1.0 -> 3.0) ──
+      // ── STEP 2: SECTION ONE SLIDE & REVEAL (STEPS 1.0 -> 3.0) ──
       const s1Start = 1.0;
       const s1Prog = easeOutQuad(Math.min(Math.max((stepProgress - s1Start) / 2.0, 0), 1));
 
@@ -256,9 +261,10 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
         parallaxImg.style.transform = `translate3d(0, ${imgY}%, 0)`;
       }
 
+      // Play text reveal based on step threshold
       triggerPlayOnceTextReveal(".section-one-wrapper", stepProgress, 1.5);
 
-      // ── STEP 3: SECTION TWO SLIDES OVER SECTION ONE (STEPS 3.5 -> 5.5) ──
+      // ── STEP 3: SECTION TWO SLIDE (STEPS 3.5 -> 5.5) ──
       const s2Start = 3.5;
       const s2Prog = easeOutQuad(Math.min(Math.max((stepProgress - s2Start) / 2.0, 0), 1));
 
@@ -281,8 +287,15 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
         layerCTA.current.style.transform = `translate3d(0, ${currentY.toFixed(2)}px, 0)`;
       }
 
-      // ── STEP 5: LAYER FOOTER SLIDE (STEPS 7.8 -> 9.0) ──
+      // ── STEP 5: LAYER FOOTER & CTA FADE OUT (STEPS 7.8 -> 9.0 - EXACT ABOUT LOGIC) ──
       const footerProgress = easeOutQuad(Math.min(Math.max((stepProgress - 7.8) / 1.2, 0), 1));
+
+      if (layerCTA.current) {
+        // Sets CSS variable matching SectionCTA's internal opacity styling in About
+        const innerOpacity = (1 - footerProgress).toFixed(3);
+        layerCTA.current.style.setProperty("--cta-inner-opacity", innerOpacity);
+      }
+
       if (layerFooter.current) {
         const startY = vh;
         const endY = vh - footerHeight;
@@ -290,7 +303,16 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
         layerFooter.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
       }
 
-      // Keep RAF loop running continuously for fluid momentum inertia
+      // Smooth opacity decrease on prior sections as footer rises
+      const upperOpacity = (1 - footerProgress).toFixed(3);
+
+      if (secTwo) {
+        secTwo.style.opacity = upperOpacity;
+      }
+      if (secOne) {
+        secOne.style.opacity = upperOpacity;
+      }
+
       rafId.current = requestAnimationFrame(renderTransforms);
     };
 

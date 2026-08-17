@@ -41,11 +41,11 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
         // 🎯 Absorbs fast flicks into buttery smooth motion
         lerp: isAndroid ? 0.07 : isMobile ? 0.07 : 0.08,
         smoothWheel: true,
-        wheelMultiplier: isAndroid ? 1.0 : isMobile ? 0.8 : 1,
+        wheelMultiplier: isAndroid ? 1.0 : isMobile ? 1 : 1.2,
         syncTouch: true,
         syncTouchLerp: isAndroid ? 0.05 : isMobile ? 0.06 : 0.08,
         // 🎯 Standard multiplier prevents violent travel distance on fast flings
-        touchMultiplier: isAndroid ? 1.1 : isMobile ? 0.9 : 1,
+        touchMultiplier: isAndroid ? 1.4 : isMobile ? 1 : 1,
         easing: (t: number) => 1 - Math.pow(1 - t, 4),
         autoResize: true,
       });
