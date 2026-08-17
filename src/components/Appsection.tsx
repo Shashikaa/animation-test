@@ -6,7 +6,7 @@ export default function Appsection() {
       
       {/* ── Background Image ── */}
       <div 
-        className="appsec-bg absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat bg-[url('/appsec.png')] lg:bg-[url('/Service1.webp')]"
+        className="appsec-bg absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat bg-[url('/appsec.png')] lg:bg-[url('/appbg.png')]"
       />
 
       {/* ── Main Content Container ── */}

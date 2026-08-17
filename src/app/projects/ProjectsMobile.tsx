@@ -172,7 +172,7 @@ export default function ProjectsMobile() {
       typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
 
     // Dynamic easing and delta capping matching AboutMobile
-const EASE_FACTOR = isAndroid ? 0.1 : 0.5;
+const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
 
     let lastTime = performance.now();

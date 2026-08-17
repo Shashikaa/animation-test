@@ -6,7 +6,7 @@ export default function Appsection() {
       
       {/* ── Background Image ── */}
       <div 
-        className="appsec-bg absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat bg-[url('/appsec.png')] lg:bg-[url('/Service1.webp')]"
+        className="appsec-bg absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat bg-[url('/appsec.png')] lg:bg-[url('/appbg.png')]"
       />
 
       {/* ── Main Content Container ── */}
@@ -15,11 +15,11 @@ export default function Appsection() {
         {/* Title */}
         <div className="w-full lg:w-1/2 flex flex-col justify-between items-start text-left lg:h-[450px]">
           <div className="flex flex-col gap-2 w-full">
-            <span className="hidden lg:inline-block text-[#F4EEDF] text-xs md:text-[14px] font-normal">
+            <span className="hidden lg:inline-block text-[#F4EEDF] text-xs md:text-[14px] font-normal reveal-text">
               Pool Care +
             </span>
             <h2 
-              className="text-[#F4EEDF] !font-[100] text-3xl md:text-5xl lg:text-6xl !max-w-[520px] sm:max-w-none !mb-4"
+              className="text-[#F4EEDF] !font-[100] text-3xl md:text-5xl lg:text-6xl !max-w-[520px] sm:max-w-none !mb-4 reveal-text"
               style={{ fontFamily: "var(--font-display)" }}
             >
               Stay Updated at Every Stage
@@ -27,7 +27,7 @@ export default function Appsection() {
           </div>
 
           <div className="hidden lg:flex flex-col items-center w-full gap-6">
-            <p className="font-body text-[#F4EEDF] text-sm md:text-base  self-start !max-w-[520px]">
+            <p className="font-body text-[#F4EEDF] text-sm md:text-base  self-start !max-w-[520px] reveal-text">
               Pool Care+ keeps you informed and involved from start to finish. Track progress, receive live updates, and follow each stage of your pool project — all in one place.
             </p>
           </div>

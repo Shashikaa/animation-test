@@ -133,8 +133,7 @@ export default function HomeMobile() {
 
     const appHeight = appSecRef.current?.offsetHeight || vh;
     const footerHeight = footerLayerRef.current?.offsetHeight || vh;
-    
-    // Total steps: 9.8 total step progress across 6 screen height panels + 2 auto-height panels
+
     const totalTrackHeight = vh * 7.8 + appHeight + footerHeight;
 
     trackRef.current.style.height = `${totalTrackHeight}px`;
@@ -181,7 +180,6 @@ export default function HomeMobile() {
     const vh = window.innerHeight;
     const { width, height } = lastSizeRef.current;
 
-    // Ignore mobile address bar show/hide dynamic resize shifts
     const isLikelyAddressBarToggle = vw === width && Math.abs(vh - height) < 150;
     if (isLikelyAddressBarToggle) return;
 
@@ -207,9 +205,8 @@ export default function HomeMobile() {
     if (!shouldLoadRest) return;
 
     let isRunning = true;
-
     const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
-const EASE_FACTOR = isAndroid ? 0.1 : 0.5;
+    const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
 
     let lastTime = performance.now();
@@ -293,13 +290,17 @@ const EASE_FACTOR = isAndroid ? 0.1 : 0.5;
       if (sec2Ref.current) sec2Ref.current.style.transform = `translate3d(0, ${(1 - s2Prog) * 100}%, 0)`;
       if (heroPanelRef.current && s2Prog > 0) heroPanelRef.current.style.transform = `translate3d(0, ${-s2Prog * 15}%, 0)`;
 
-      // ── Step 2 -> 4.0: SECTION TWO INNER ANIMATIONS ──
+      // ── Step 2 -> 4.0: SECTION TWO INNER ANIMATIONS & BACKGROUND CLIPS ──
       const s2InnerProg = clamp((stepProgress - 2.0) / 2.0);
       const s2Titles = cache.s2Titles as NodeListOf<HTMLElement>;
       const s2ScrollWrap = cache.s2ScrollWrap as HTMLElement;
-      const s2Clip1 = cache.s2Clip1 as HTMLElement;
-      const s2Clip2 = cache.s2Clip2 as HTMLElement;
-      const s2Clip3 = cache.s2Clip3 as HTMLElement;
+      let s2Clip1 = cache.s2Clip1 as HTMLElement;
+      let s2Clip2 = cache.s2Clip2 as HTMLElement;
+      let s2Clip3 = cache.s2Clip3 as HTMLElement;
+
+      if (!s2Clip1 && sec2Ref.current) cache.s2Clip1 = s2Clip1 = sec2Ref.current.querySelector(".s2-mob-clip-bg-1") as HTMLElement;
+      if (!s2Clip2 && sec2Ref.current) cache.s2Clip2 = s2Clip2 = sec2Ref.current.querySelector(".s2-mob-clip-bg-2") as HTMLElement;
+      if (!s2Clip3 && sec2Ref.current) cache.s2Clip3 = s2Clip3 = sec2Ref.current.querySelector(".s2-mob-clip-bg-3") as HTMLElement;
 
       const titleFadeOut = clamp(s2InnerProg / 0.15);
       if (s2Titles) {
@@ -316,9 +317,24 @@ const EASE_FACTOR = isAndroid ? 0.1 : 0.5;
         s2ScrollWrap.style.pointerEvents = scrollInProg > 0.1 ? "auto" : "none";
       }
 
-      if (s2Clip1) s2Clip1.style.opacity = clamp((s2InnerProg - 0.20) / 0.30).toFixed(2);
-      if (s2Clip2) s2Clip2.style.opacity = clamp((s2InnerProg - 0.45) / 0.30).toFixed(2);
-      if (s2Clip3) s2Clip3.style.opacity = clamp((s2InnerProg - 0.70) / 0.30).toFixed(2);
+      // Smooth Dynamic Clip-Path Revelations
+      const clip1Prog = clamp((s2InnerProg - 0.15) / 0.25);
+      if (s2Clip1) {
+        const insetBottom = (100 - clip1Prog * 100).toFixed(2);
+        s2Clip1.style.clipPath = `inset(0% 0% ${insetBottom}% 0%)`;
+      }
+
+      const clip2Prog = clamp((s2InnerProg - 0.45) / 0.25);
+      if (s2Clip2) {
+        const insetBottom = (100 - clip2Prog * 100).toFixed(2);
+        s2Clip2.style.clipPath = `inset(0% 0% ${insetBottom}% 0%)`;
+      }
+
+      const clip3Prog = clamp((s2InnerProg - 0.75) / 0.25);
+      if (s2Clip3) {
+        const insetBottom = (100 - clip3Prog * 100).toFixed(2);
+        s2Clip3.style.clipPath = `inset(0% 0% ${insetBottom}% 0%)`;
+      }
 
       // ── Step 4.0 -> 5.0: SECTION EIGHT ──
       const s8Prog = clamp(stepProgress - 4.0);

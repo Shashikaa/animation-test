@@ -173,7 +173,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     let isRunning = true;
 
     const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
-const EASE_FACTOR = isAndroid ? 0.1 : 0.5;
+const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
 
     let lastTime = performance.now();

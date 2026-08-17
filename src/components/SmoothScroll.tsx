@@ -41,7 +41,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
         // 🎯 Absorbs fast flicks into buttery smooth motion
         lerp: isAndroid ? 0.07 : isMobile ? 1 : 0.08,
         smoothWheel: true,
-        wheelMultiplier: isAndroid ? 1.0 : isMobile ? 1 : 1.2,
+        wheelMultiplier: isAndroid ? 1.4 : isMobile ? 1.4 : 1.2,
         syncTouch: true,
         syncTouchLerp: isAndroid ? 0.05 : isMobile ? 0.06 : 0.08,
         // 🎯 Standard multiplier prevents violent travel distance on fast flings

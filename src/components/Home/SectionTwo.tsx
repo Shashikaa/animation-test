@@ -1,26 +1,23 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
-import dynamic from "next/dynamic";
+import { useRef, useEffect } from "react";
 
-const LiquidCanvas = dynamic(() => import("../LiquidCanvas"), {
-  ssr: false,
-});
+const SECTION_TWO_IMAGES = [
+  "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1600&q=82",
+  "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=1600&q=82",
+  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1400&q=80",
+];
 
 export default function SectionTwo() {
   const sectionRef = useRef<HTMLElement>(null);
-  const [mounted, setMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize, { passive: true });
-    return () => window.removeEventListener("resize", handleResize);
+    // Start downloading the reveal images as soon as Section 2 mounts.
+    SECTION_TWO_IMAGES.forEach((src) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = src;
+    });
   }, []);
 
   return (
@@ -34,100 +31,84 @@ export default function SectionTwo() {
       }}
     >
       <link rel="preload" href="/sectiontwo.webp" as="image" type="image/webp" />
-      <link rel="preload" href="/hero.webp" as="image" type="image/webp" />
-      <link rel="preload" href="/pool-new.webp" as="image" type="image/webp" />
-      <link rel="preload" href="/pool.webp" as="image" type="image/webp" />
 
-      {/* BASE BACKGROUND LAYER (IMAGE 1) */}
+      {/* BASE BACKGROUND LAYER */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none transform-gpu">
-        {/* Mobile / Tablet Background */}
-        <img
-          src="/PremiumPool.webp"
-          alt="Background layer mobile"
-          decoding="async"
-          className="block lg:hidden w-full h-full object-cover"
-          style={{
-            willChange: "transform",
-            transform: "translate3d(0,0,0)",
-            backfaceVisibility: "hidden",
-          }}
-        />
-
-        {/* Desktop Background */}
         <img
           src="/sectiontwo.webp"
-          alt="Background layer desktop"
+          alt="Background layer base"
+          loading="eager"
+          fetchPriority="high"
           decoding="async"
-          className="hidden lg:block w-full h-full object-cover"
+          className="w-full h-full object-cover"
           style={{
-            willChange: "transform",
             transform: "translate3d(0,0,0)",
             backfaceVisibility: "hidden",
           }}
         />
       </div>
 
-      {/* MOBILE BACKGROUND LAYER 2 */}
+      {/* MOBILE BACKGROUND LAYER 2 (ONLINE DESKTOP IMAGE 1) */}
       <div
         className="s2-mob-clip-bg-1 lg:hidden absolute inset-0 z-[1] overflow-hidden pointer-events-none transform-gpu"
         style={{
           opacity: 1,
-          clipPath: "inset(0 0 100% 0)",
+          clipPath: "inset(0% 100% 0% 0%)",
           willChange: "clip-path",
           backfaceVisibility: "hidden",
         }}
       >
         <img
-          src="/hero.webp"
-          alt="Background layer 2"
+          src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1600&q=82"
+          alt="Background layer 2 - Premium Overview"
           decoding="async"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="absolute inset-0 bg-black/40" />
       </div>
 
-      {/* MOBILE BACKGROUND LAYER 3 */}
+      {/* MOBILE BACKGROUND LAYER 3 (ONLINE DESKTOP IMAGE 2) */}
       <div
         className="s2-mob-clip-bg-2 lg:hidden absolute inset-0 z-[2] overflow-hidden pointer-events-none transform-gpu"
         style={{
           opacity: 1,
-          clipPath: "inset(0 0 100% 0)",
+          clipPath: "inset(0% 100% 0% 0%)",
           willChange: "clip-path",
           backfaceVisibility: "hidden",
         }}
       >
         <img
-          src="/pool-new.webp"
-          alt="Background layer 3"
+          src="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=1600&q=82"
+          alt="Background layer 3 - Structural Layout"
           decoding="async"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="absolute inset-0 bg-black/40" />
       </div>
 
-      {/* MOBILE BACKGROUND LAYER 4 */}
+      {/* MOBILE BACKGROUND LAYER 4 (DESKTOP HERO IMAGE) */}
       <div
         className="s2-mob-clip-bg-3 lg:hidden absolute inset-0 z-[3] overflow-hidden pointer-events-none transform-gpu"
         style={{
           opacity: 1,
-          clipPath: "inset(0 0 100% 0)",
+          clipPath: "inset(0% 100% 0% 0%)",
           willChange: "clip-path",
           backfaceVisibility: "hidden",
         }}
       >
         <img
-          src="/pool.webp"
-          alt="Background layer 4"
+          src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1400&q=80"
+          alt="Background layer 4 - Architectural details"
           decoding="async"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="absolute inset-0 bg-black/40" />
       </div>
 
       {/* CONTENT BLOCK OVERLAY (FIRST FRAME TEXT) */}
       <div className="section-container absolute inset-0 z-10 h-full flex flex-col justify-end pointer-events-none transform-gpu">
         <div className="s2-body flex flex-col items-end text-right gap-2 lg:gap-3 p-4 md:p-8 !mb-6">
-          <p className="text-[#F4EEDF] font-body text-sm md:text-base leading-relaxed text-right w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px]">
+          <p className="s2-body-text text-[#F4EEDF] font-body text-sm md:text-base leading-relaxed text-right w-full max-w-[260px] md:max-w-[280px] lg:max-w-[340px]">
             From renovations to new builds, we design and construct pools that combine style, functionality, and durability.
           </p>
         </div>
@@ -160,8 +141,10 @@ export default function SectionTwo() {
           >
             <div className="w-full h-full relative overflow-hidden shadow-2xl">
               <img
-                src="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7"
+                src="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=1600&q=82"
                 alt="Premium pool design structural layout"
+                loading="eager"
+                fetchPriority="high"
                 decoding="async"
                 className="w-full h-full object-cover"
                 style={{ transform: "translate3d(0,0,0)" }}
@@ -180,8 +163,10 @@ export default function SectionTwo() {
           >
             <div className="w-full h-full relative overflow-hidden shadow-2xl">
               <img
-                src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914"
+                src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1600&q=82"
                 alt="Figma layout premium overview pool"
+                loading="eager"
+                fetchPriority="high"
                 decoding="async"
                 className="w-full h-full object-cover"
                 style={{ transform: "translate3d(0,0,0)" }}
@@ -208,8 +193,9 @@ export default function SectionTwo() {
         </p>
         <div className="w-full aspect-[4/3] max-w-[340px] overflow-hidden !mt-[40px] transform-gpu">
           <img
-            src="/hero.webp"
+            src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1400&q=80"
             alt="Architectural swimming details"
+            loading="eager"
             decoding="async"
             className="w-full h-full object-cover"
             style={{ transform: "translate3d(0,0,0)" }}

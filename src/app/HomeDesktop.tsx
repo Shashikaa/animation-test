@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useSite } from "./context/SiteContext";
 import { useHeroIntro } from "./utils/useHeroIntro";
@@ -19,7 +19,7 @@ const Appsection = dynamic(() => import("../components/Appsection"), { ssr: fals
 
 import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
 
-const TOTAL_SCROLL_STEPS = 18;
+const TOTAL_SCROLL_STEPS = 16.5;
 
 // Quadratic easing curve matching fluid inertia
 const easeOutQuad = (t: number) => t * (2 - t);
@@ -98,7 +98,7 @@ export default function HomeDesktop() {
   // ⚠️ introDurationMs/unlockScrollEarlyMs are guesses based on Home's old
   // 200ms post-preloader delay — tune these against your actual hero intro
   // animation length if the timing feels off.
-  const { introDone, preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
+  const { introDone, preloaderDone } = useHeroIntro(scopeRef, {
     isMobile: false,
     introDurationMs: 200,
     unlockScrollEarlyMs: 0,
@@ -277,8 +277,7 @@ export default function HomeDesktop() {
     let isRunning = true;
     let lastTime = performance.now();
 
-    // NEW: frame-rate independent dynamic easing + max-delta clamp,
-    // replacing the old flat LERP_FACTOR = 0.075 lerp.
+    // Match About page global scroll feel exactly.
     const EASE_FACTOR = 0.15;
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.008;
 
@@ -329,13 +328,11 @@ export default function HomeDesktop() {
     const s10BgImg = scope.querySelector<HTMLElement>(".s10-bg-img");
     const s10ContentWrap = scope.querySelector<HTMLElement>(".s10-content-wrap");
 
-    const secSeven = scope.querySelector<HTMLElement>(".section-7");
+    const s7AppLayer = scope.querySelector<HTMLElement>(".section-7-app-layer");
     const s7BgImg = scope.querySelector<HTMLElement>(".s7-bg-img");
 
-    const secAppSec = scope.querySelector<HTMLElement>(".section-appsec");
     const appSecBg = scope.querySelector<HTMLElement>(".appsec-bg");
     const appSecContent = scope.querySelector<HTMLElement>(".appsec-content");
-    const appSecPhone = scope.querySelector<HTMLElement>(".appsec-phone-wrapper");
 
     const secNine = scope.querySelector<HTMLElement>(".section-9");
     const s9LeftSide = scope.querySelector<HTMLElement>(".s9-left-side");
@@ -355,7 +352,7 @@ export default function HomeDesktop() {
     const ctaInner = scope.querySelector<HTMLElement>(".section-cta .cta-inner-desktop");
 
     // Promote complex layers to composite GPU layers
-    [s2Frame1, s2Frame2, s2ScrollContent, s9LeftSide, s9RightSide, s9BgLeft, s9BgRight, s9FlightWrapper, appSecBg].forEach((el) => {
+    [s2Frame1, s2Frame2, s2ScrollContent, s7AppLayer, s9LeftSide, s9RightSide, s9BgLeft, s9BgRight, s9FlightWrapper, appSecBg].forEach((el) => {
       if (el) {
         el.style.willChange = "transform, opacity, clip-path";
         el.style.transform = "translate3d(0, 0, 0)";
@@ -365,7 +362,7 @@ export default function HomeDesktop() {
     const renderTransforms = (time: number) => {
       if (!isRunning) return;
 
-      // Frame-rate independent smoothing (same mechanism as About page)
+      // Same frame-rate independent smoothing used by the About page.
       const dt = Math.min((time - lastTime) / 1000, 0.1);
       lastTime = time;
 
@@ -441,23 +438,25 @@ export default function HomeDesktop() {
         }
       }
 
-      // ── 2. SECTION 2 ENTRANCE & INNER SEQUENCING (STEPS 2.5 -> 5.5) ──
-      const s2ArriveProg = easeOutQuad(clamp((stepProgress - 2.5) / 1.2));
+      // ── 2. SECTION 2 — DIRECTLY LINKED TO PAGE SCROLL ──
+      // Do not ease these again: Lenis already provides the smooth scroll feel.
+      const s2ArriveProg = clamp((stepProgress - 2.5) / 1.0);
       if (secTwo) {
-        secTwo.style.visibility = stepProgress >= 2.0 && stepProgress < 6.7 ? "visible" : "hidden";
+        secTwo.style.visibility = stepProgress >= 2.0 && stepProgress < 7.0 ? "visible" : "hidden";
         secTwo.style.transform = `translate3d(0, ${((1 - s2ArriveProg) * 100).toFixed(3)}%, 0)`;
       }
 
-      const s2TextFadeProg = easeOutQuad(clamp((stepProgress - 3.7) / 0.5));
+      // Initial title/subtitle/body exit together.
+      const s2TextFadeProg = clamp((stepProgress - 3.55) / 0.55);
       [s2TitleMain, s2TitleSub, s2BodyText].forEach((el) => {
-        if (el) {
-          el.style.opacity = `${(1 - s2TextFadeProg).toFixed(3)}`;
-          el.style.transform = `translate3d(0, ${(-s2TextFadeProg * 35).toFixed(2)}px, 0)`;
-        }
+        if (!el) return;
+        el.style.opacity = `${(1 - s2TextFadeProg).toFixed(3)}`;
+        el.style.transform = `translate3d(0, ${(-s2TextFadeProg * 30).toFixed(2)}px, 0)`;
       });
 
-      const s2Frame1InProg = easeOutQuad(clamp((stepProgress - 4.1) / 0.9));
-      const s2Frame1OutProg = easeOutQuad(clamp((stepProgress - 5.0) / 0.5));
+      // First/top right image reveals, then clips away.
+      const s2Frame1InProg = clamp((stepProgress - 3.85) / 0.7);
+      const s2Frame1OutProg = clamp((stepProgress - 4.75) / 0.7);
       if (s2Frame1) {
         if (s2Frame1OutProg > 0) {
           s2Frame1.style.clipPath = `inset(0% 0% ${(s2Frame1OutProg * 100).toFixed(2)}% 0%)`;
@@ -466,17 +465,19 @@ export default function HomeDesktop() {
         }
       }
 
-      const s2Frame2Prog = easeOutQuad(clamp((stepProgress - 4.9) / 0.6));
+      // Underneath/right image begins slightly before image 1 finishes.
+      const s2Frame2Prog = clamp((stepProgress - 4.55) / 0.75);
       if (s2Frame2) {
         s2Frame2.style.clipPath = `inset(${((1 - s2Frame2Prog) * 100).toFixed(2)}% 0% 0% 0%)`;
       }
 
-      const s2ScrollInProg = easeOutQuad(clamp((stepProgress - 4.1) / 0.8));
-      const s2ScrollPhase2 = easeOutQuad(clamp((stepProgress - 4.9) / 0.6));
+      // Left inner content uses the same scroll progress — no secondary inertia.
+      const s2ScrollInProg = clamp((stepProgress - 3.85) / 0.75);
+      const s2ScrollPhase2 = clamp((stepProgress - 4.6) / 0.85);
       if (s2ScrollContent) {
         const yPercent = (1 - s2ScrollInProg) * 100 - s2ScrollPhase2 * 50;
         s2ScrollContent.style.transform = `translate3d(0, ${yPercent.toFixed(2)}%, 0)`;
-        s2ScrollContent.style.opacity = "1";
+        s2ScrollContent.style.opacity = stepProgress >= 3.75 ? "1" : "0";
       }
 
       // ── 3. SECTION 8 (STEPS 5.5 -> 7.0) ──
@@ -528,36 +529,46 @@ export default function HomeDesktop() {
         s10BgImg.style.transform = `translate3d(0, ${bgParallaxY}%, 0) scale3d(${bgScale}, ${bgScale}, 1)`;
       }
 
-      // ── 5. SECTION 7 (STEPS 9.5 -> 12.7) ──
-      const s7ArriveProg = easeOutQuad(clamp((stepProgress - 9.5) / 1.2));
-      if (secSeven) {
-        secSeven.style.visibility = stepProgress >= 9.2 && stepProgress < 12.7 ? "visible" : "hidden";
-        secSeven.style.transform = `translate3d(0, ${((1 - s7ArriveProg) * 100).toFixed(3)}%, 0)`;
+      // ── 5 + 6. SECTION 7 + APPSECTION AS ONE CONTINUOUS 200VH LAYER ──
+      // Phase A: starts as soon as Section 10 finishes its visible inner movement.
+      const s7ArriveProg = easeOutQuad(clamp((stepProgress - 9.4) / 1.2));
+
+      // Phase B: begins immediately when Section 7 finishes; keep moving the SAME layer
+      // upward by another viewport. Section 7 leaves through the top while
+      // Appsection, which sits directly below it, slides into view.
+      const appStackProg = easeOutQuad(clamp((stepProgress - 10.6) / 1.4));
+
+      if (s7AppLayer) {
+        // Keep this layer alive underneath Section 9 until Section 9 has covered it.
+        s7AppLayer.style.visibility =
+          stepProgress >= 9.1 && stepProgress < 13.4 ? "visible" : "hidden";
+
+        const layerYVh =
+          (1 - s7ArriveProg) * 100 -
+          appStackProg * 100;
+
+        s7AppLayer.style.transform =
+          `translate3d(0, ${layerYVh.toFixed(3)}vh, 0)`;
       }
 
+      // Preserve the existing Section 7 background counter-motion during
+      // its first reveal. Once Appsection starts coming in, the whole stack
+      // naturally moves together.
       if (s7BgImg) {
         const bgCounterY = -(1 - s7ArriveProg) * 100;
-        s7BgImg.style.transform = `translate3d(0, ${bgCounterY}%, 0)`;
+        s7BgImg.style.transform = `translate3d(0, ${bgCounterY.toFixed(3)}%, 0)`;
       }
 
-      triggerProgressTextReveal(".section-7", stepProgress, 9.8);
+      triggerProgressTextReveal(".section-7", stepProgress, 9.7);
 
-      // ── 6. APPSECTION (STEPS 11.5 -> 14.7) ──
-      const appSecArriveProg = easeOutQuad(clamp((stepProgress - 11.5) / 1.2));
-      if (secAppSec) {
-        secAppSec.style.visibility = stepProgress >= 11.2 && stepProgress < 14.7 ? "visible" : "hidden";
-        secAppSec.style.transform = `translate3d(0, ${((1 - appSecArriveProg) * 100).toFixed(3)}%, 0)`;
-      }
-      if (appSecPhone) {
-        const phoneProg = easeOutQuad(clamp((stepProgress - 11.6) / 0.8));
-        appSecPhone.style.transform = `translate3d(0, ${(1 - phoneProg) * 40}%, 0)`;
-      }
-      triggerProgressTextReveal(".section-appsec", stepProgress, 11.8);
+      // No separate Appsection entrance/phone animation anymore.
+      // Its content can reveal once enough of the second viewport is visible.
+      triggerProgressTextReveal(".section-appsec", stepProgress, 11.05);
 
-      // ── 7. SECTION 9 & FLYING TEXT (STEPS 13.5 -> 15.7) ──
-      const s9ArriveProg = easeOutQuad(clamp((stepProgress - 13.5) / 1.2));
+      // ── 7. SECTION 9 & FLYING TEXT — CONTINUOUS, NO DEAD SCROLL ──
+      const s9ArriveProg = easeOutQuad(clamp((stepProgress - 12.0) / 1.2));
       if (secNine) {
-        secNine.style.visibility = stepProgress >= 13.2 ? "visible" : "hidden";
+        secNine.style.visibility = stepProgress >= 11.8 ? "visible" : "hidden";
       }
 
       if (appSecContent) appSecContent.style.opacity = `${(1 - s9ArriveProg).toFixed(3)}`;
@@ -573,7 +584,7 @@ export default function HomeDesktop() {
       if (s9BgLeft) s9BgLeft.style.transform = `translate3d(0,0,0) scale3d(${s9BgScale}, ${s9BgScale}, 1)`;
       if (s9BgRight) s9BgRight.style.transform = `translate3d(0,0,0) scale3d(${s9BgScale}, ${s9BgScale}, 1)`;
 
-      const flyProg = clamp((stepProgress - 14.7) / 1.0);
+      const flyProg = clamp((stepProgress - 13.2) / 1.0);
 
       if (s9NativeTitle1) s9NativeTitle1.style.opacity = flyProg > 0 ? "0" : "1";
       if (s9NativeTitle2) s9NativeTitle2.style.opacity = flyProg > 0 ? "0" : "1";
@@ -589,8 +600,8 @@ export default function HomeDesktop() {
       }
 
       if (s9ParaDesktop) {
-        const paraProg = easeOutQuad(clamp((stepProgress - 14.7) / 1.0));
-        if (stepProgress >= 14.7) {
+        const paraProg = easeOutQuad(clamp((stepProgress - 13.2) / 1.0));
+        if (stepProgress >= 13.2) {
           s9ParaDesktop.style.visibility = "visible";
           s9ParaDesktop.style.opacity = `${paraProg.toFixed(3)}`;
           s9ParaDesktop.style.transform = `translate3d(0, ${((1 - paraProg) * 20).toFixed(2)}px, 0)`;
@@ -600,13 +611,13 @@ export default function HomeDesktop() {
         }
       }
 
-      // ── 8. CTA REVEAL (STEPS 15.7 -> 16.5) ──
-      const ctaArriveProg = easeOutQuad(clamp((stepProgress - 15.7) / 0.8));
+      // ── 8. CTA REVEAL — STARTS IMMEDIATELY AFTER SECTION 9 ──
+      const ctaArriveProg = easeOutQuad(clamp((stepProgress - 14.2) / 0.8));
       if (layerCTA.current) {
         const startY = vh;
         const endY = -(ctaHeight - vh);
         const currentY = startY + (endY - startY) * ctaArriveProg;
-        layerCTA.current.style.visibility = stepProgress >= 15.5 ? "visible" : "hidden";
+        layerCTA.current.style.visibility = stepProgress >= 14.0 ? "visible" : "hidden";
         layerCTA.current.style.transform = `translate3d(0, ${currentY.toFixed(2)}px, 0)`;
       }
 
@@ -615,13 +626,13 @@ export default function HomeDesktop() {
         ctaInner.style.transform = "translate3d(0, 0px, 0)";
       }
 
-      // ── 9. FOOTER REVEAL (STEPS 16.5+) ──
-      const footerArriveProg = easeOutQuad(clamp((stepProgress - 16.5) / 0.5));
+      // ── 9. FOOTER REVEAL — FINAL TRACK MOVEMENT, NO TRAILING DEAD SCROLL ──
+      const footerArriveProg = easeOutQuad(clamp((stepProgress - 15.0) / 0.5));
       if (layerFooter.current) {
         const startY = vh;
         const endY = vh - footerHeight;
         const translateY = startY + (endY - startY) * footerArriveProg;
-        layerFooter.current.style.visibility = stepProgress >= 16.2 ? "visible" : "hidden";
+        layerFooter.current.style.visibility = stepProgress >= 14.8 ? "visible" : "hidden";
         layerFooter.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
       }
 
@@ -692,8 +703,11 @@ export default function HomeDesktop() {
           visibility: hidden;
         }
 
+        .section-2,
         .s2-right-img-frame,
         .s2-right-img-frame-under,
+        .s2-scroll-content,
+        .section-7-app-layer,
         .s9-left-side,
         .s9-right-side,
         .s9-bg-img-left,
@@ -738,18 +752,23 @@ export default function HomeDesktop() {
             <SectionTen />
           </div>
 
+          {/* SECTION 7 + APPSECTION: ONE CONTINUOUS 200VH LAYER */}
           <div
-            className="section-7 absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu z-[105]"
-            style={{ visibility: "hidden" }}
+            className="section-7-app-layer absolute left-0 top-0 h-[200vh] w-full structural-layer will-change-transform transform-gpu z-[105]"
+            style={{
+              visibility: "hidden",
+              transform: "translate3d(0, 100vh, 0)",
+            }}
           >
-            <SectionSeven />
-          </div>
+            {/* First viewport */}
+            <div className="section-7 absolute left-0 top-0 h-[100vh] w-full overflow-hidden">
+              <SectionSeven />
+            </div>
 
-          <div
-            className="section-appsec absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu z-[110]"
-            style={{ visibility: "hidden" }}
-          >
-            <Appsection />
+            {/* Second viewport, directly underneath Section 7 */}
+            <div className="section-appsec absolute left-0 top-[100vh] h-[100vh] w-full overflow-hidden">
+              <Appsection />
+            </div>
           </div>
 
           <div
