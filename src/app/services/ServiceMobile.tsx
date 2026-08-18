@@ -78,7 +78,7 @@ export default function ServicesMobile() {
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // Dynamically calculate actual track height to account for auto-height sections
+  // Dynamic track height calculation
   const updateMetrics = useCallback(() => {
     if (!trackRef.current) return;
 
@@ -87,7 +87,9 @@ export default function ServicesMobile() {
 
     const appHeight = appSecRef.current?.offsetHeight || vh;
     const footerHeight = footerLayerRef.current?.offsetHeight || vh;
-    const totalTrackHeight = vh * 5 + appHeight + footerHeight;
+
+    // Total track height = 1.0 Hero + 1.0 Sec1 + 2.0 Sec2 + AppHeight + FooterHeight
+    const totalTrackHeight = vh * 4.0 + appHeight + footerHeight;
 
     trackRef.current.style.height = `${totalTrackHeight}px`;
 
@@ -127,15 +129,14 @@ export default function ServicesMobile() {
     };
   }, [shouldLoadRest, updateMetrics, handleResize]);
 
-  // Continuous animation loop with velocity clamping
   useEffect(() => {
     if (!shouldLoadRest) return;
 
     let isRunning = true;
 
     const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
-const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
-    const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
+    const EASE_FACTOR = isAndroid ? 0.08 : 0.08;
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.01;
 
     let lastTime = performance.now();
 
@@ -157,7 +158,9 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
       currentProgress.current += delta;
 
       const p = currentProgress.current;
-      const totalSteps = 7.0;
+
+      // Total timeline steps: Hero (1.0) + Sec1 (1.0) + Sec2 (2.0) + App (1.0) + Footer (1.0) = 6.0
+      const totalSteps = 6.0;
       const stepProgress = p * totalSteps;
 
       const { vh } = scrollMetricsRef.current;
@@ -186,7 +189,7 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
         serviceHeroBg.style.transform = `translate3d(0, ${-120 * step1Prog}px, 0)`;
       }
 
-      // --- STEP 2: SECTION ONE SLIDES UP DIRECTLY OVER HERO (1.0 -> 2.0) ---
+      // --- STEP 2: SECTION ONE SLIDES UP OVER HERO (1.0 -> 2.0) ---
       const step2Prog = clamp(stepProgress - 1.0);
       if (sectionOneRef.current) {
         sectionOneRef.current.style.transform = `translate3d(0, ${(1 - step2Prog) * 100}%, 0)`;
@@ -195,36 +198,40 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
         heroPanelRef.current.style.transform = `translate3d(0, ${-step2Prog * 15}%, 0)`;
       }
 
-      // --- STEP 3: SECTION TWO SLIDES UP OVER SECTION ONE & CYCLES SLIDES (2.0 -> 5.0) ---
-      const step3Total = clamp((stepProgress - 2.0) / 3.0, 0, 1);
+      // --- STEP 3: SECTION TWO SLIDES UP & CYCLES SLIDES (2.0 -> 4.0) ---
+      // Entry phase happens from 2.0 -> 3.0 (1.0 vh distance)
+      const entryProg = clamp(stepProgress - 2.0);
 
       if (sectionTwoRef.current) {
-        const entryProg = clamp(step3Total / 0.2);
         sectionTwoRef.current.style.transform = `translate3d(0, ${(1 - entryProg) * 100}%, 0)`;
       }
-      if (sectionOneRef.current && step3Total > 0) {
-        sectionOneRef.current.style.transform = `translate3d(0, ${-step3Total * 15}%, 0)`;
+      if (sectionOneRef.current && entryProg > 0) {
+        sectionOneRef.current.style.transform = `translate3d(0, ${-entryProg * 15}%, 0)`;
       }
 
-      if (stepProgress >= 2.0 && stepProgress < 5.0) {
+      if (stepProgress >= 2.0 && stepProgress < 4.0) {
         setIsSectionTwoActive(true);
 
-        const sec2Progress = stepProgress - 2.0;
-
-        if (sec2Progress < 1.0) {
+        // Hold Slide 0 while SectionTwo is sliding up into full view (2.0 -> 3.0)
+        if (stepProgress < 3.0) {
           triggerSec2Hook(0);
-        } else if (sec2Progress < 2.0) {
-          triggerSec2Hook(1);
         } else {
-          triggerSec2Hook(2);
+          // Trigger Slide 1 and Slide 2 ONLY after SectionTwo is fully visible (3.0 -> 4.0)
+          const slideCycleProg = stepProgress - 3.0; // range [0.0, 1.0]
+
+          if (slideCycleProg < 0.5) {
+            triggerSec2Hook(1);
+          } else {
+            triggerSec2Hook(2);
+          }
         }
       } else if (stepProgress < 2.0) {
         setIsSectionTwoActive(false);
         triggerSec2Hook(0);
       }
 
-      // --- STEP 4: APP SECTION SLIDES UP OVER SECTION TWO (5.0 -> 6.0) ---
-      const appProg = clamp(stepProgress - 5.0);
+      // --- STEP 4: APP SECTION SLIDES UP (4.0 -> 5.0) ---
+      const appProg = clamp(stepProgress - 4.0);
       if (appSecRef.current) {
         const appHeight = appSecRef.current.offsetHeight || vh;
         const startY = vh;
@@ -236,8 +243,8 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
         sectionTwoRef.current.style.transform = `translate3d(0, ${-appProg * 15}%, 0)`;
       }
 
-      // --- STEP 5: FOOTER REVEAL (6.0 -> 7.0) ---
-      const footerProg = clamp(stepProgress - 6.0);
+      // --- STEP 5: FOOTER REVEAL (5.0 -> 6.0) ---
+      const footerProg = clamp(stepProgress - 5.0);
       if (footerLayerRef.current) {
         const footerHeight = footerLayerRef.current.offsetHeight || vh;
         const translateY = vh - footerHeight * footerProg;
