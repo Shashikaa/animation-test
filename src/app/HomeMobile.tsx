@@ -70,8 +70,8 @@ export default function HomeMobile() {
   const { smootherRef } = useSite();
   const { preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
     isMobile: true,
-    introDurationMs: 2800,
-    unlockScrollEarlyMs: 1800,
+    introDurationMs: 0,
+    unlockScrollEarlyMs: 0,
   });
 
   useEffect(() => {
