@@ -112,7 +112,7 @@ export default function ContactMobile() {
     const isAndroid =
       typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
       
-const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
+    const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
 
     let lastTime = performance.now();
@@ -139,9 +139,7 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
 
       const { vh } = scrollMetricsRef.current;
       const h2 = layer2ContentRef.current?.offsetHeight || vh;
-      const h3 = layer3FooterRef.current?.offsetHeight || vh;
 
-      // Tightened mapRange: 0.0 -> 0.18 gives CTA a fast, responsive 1:1 speed match with the About page stack transitions
       const contentEntranceProg = mapRange(p, 0.0, 0.18);
       const contentScrollProg = mapRange(p, 0.18, 0.82);
       const footerProgress = mapRange(p, 0.82, 1.0);
@@ -159,6 +157,7 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
       }
 
       if (layer3FooterRef.current) {
+        const h3 = layer3FooterRef.current?.offsetHeight || vh;
         const y = vh - h3 * footerProgress;
         layer3FooterRef.current.style.transform = `translate3d(0, ${y}px, 0)`;
       }

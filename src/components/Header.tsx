@@ -169,7 +169,21 @@ export default function Header({
   const handleContactBtnClick = () => {
     if (typeof window !== "undefined" && window.location.pathname === "/contact") {
       const lenis = smootherRef?.current || (window as any).lenis || (window as any).__lenis;
-      const targetScrollY = window.innerHeight;
+      const vh = window.innerHeight;
+
+      // Find the track container to calculate scroll distance relative to track length
+      const trackEl = document.querySelector(".contact-track-container") as HTMLElement;
+      let targetScrollY = vh * 0.55;
+
+      if (trackEl) {
+        const totalTrackHeight = trackEl.offsetHeight;
+        const totalScrollable = totalTrackHeight - vh;
+
+        // 0.18 corresponds to progress where SectionCTA docks at top (layer2Y = 0)
+        if (totalScrollable > 0) {
+          targetScrollY = totalScrollable * 0.18;
+        }
+      }
 
       if (lenis && typeof lenis.scrollTo === "function") {
         lenis.scrollTo(targetScrollY, { duration: 1.2 });
@@ -249,24 +263,23 @@ export default function Header({
           overflow: "hidden",
         }}
       >
-<motion.div
-  variants={glassVariants}
-  initial="hidden"
-  animate={showGlass ? "visible" : "hidden"}
-  className="glass-backdrop"
-  style={{
-    position: "absolute",
-    inset: 0,
-    zIndex: 0,
-    transformOrigin: "top",
-    // --- Glass Styles ---
-    backdropFilter: "blur(15px)",
-    WebkitBackdropFilter: "blur(15px)",
-    background: "transparent",
-    borderBottom: "1px solid rgba(255, 255, 255, 0.15)", // <--- White translucent border
-    transform: "translateY(0)",
-  }}
-/>
+        <motion.div
+          variants={glassVariants}
+          initial="hidden"
+          animate={showGlass ? "visible" : "hidden"}
+          className="glass-backdrop"
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 0,
+            transformOrigin: "top",
+            backdropFilter: "blur(15px)",
+            WebkitBackdropFilter: "blur(15px)",
+            background: "transparent",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.15)",
+            transform: "translateY(0)",
+          }}
+        />
         <Logo
           onClick={onLogoClick}
           href={logoHref}
@@ -279,7 +292,7 @@ export default function Header({
             className="header-contact-btn"
             aria-label="Contact us"
           >
-            Contact
+            Inquire
           </button>
           <MenuIcon onClick={onMenuClick} />
         </div>

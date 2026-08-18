@@ -8,13 +8,7 @@ const CARDS = [
     href: "mailto:admin@grandpools.com.au",
     isExternal: false,
   },
-  {
-    title: "Call Us",
-    description: "Contact us directly. Our representative will share any information you need regarding pools.",
-    value: "0422 630 394",
-    href: "tel:0422630394",
-    isExternal: false,
-  },
+
   {
     title: "Follow Us",
     description: "Explore our latest pool designs, project updates, and inspiration on Instagram.",

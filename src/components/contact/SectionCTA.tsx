@@ -92,7 +92,7 @@ export default function SectionCTA({
 
       {/* Mobile Layout */}
       <div
-        className="flex lg:hidden cta-inner-mobile min-h-screen h-auto !pt-12 !pb-16"
+        className="flex lg:hidden  min-h-screen h-auto !pt-12 !pb-16"
         style={{
           position: "relative",
           zIndex: 10,

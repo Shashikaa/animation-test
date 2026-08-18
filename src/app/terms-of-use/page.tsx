@@ -18,7 +18,7 @@ const policySections = [
   {
     title: "Intellectual Property Rights",
     content:
-      "All custom pool designs, imagery, brand copy, architectural renderings, and digital media hosted on this site are the exclusive intellectual property of Grand Pools Australia. Unauthorised copying, distribution, or reproduction is strictly prohibited.",
+      "All custom pool designs, imagery, brand copy, architectural renderings, and digital media hosted on this site are the exclusive intellectual property of Grand Pools. Unauthorised copying, distribution, or reproduction is strictly prohibited.",
   },
   {
     title: "Privacy Policy & Data Collection",
@@ -139,20 +139,45 @@ export default function TermsPage() {
           className="hero relative w-full h-svh bg-transparent overflow-hidden z-10 flex flex-col justify-between"
         >
           {/* Main Container */}
-          <div className="section-container relative h-full w-full flex flex-col lg:flex-row justify-between gap-6 lg:gap-16 px-6 lg:px-16 pt-16 lg:pt-20 pb-6 lg:pb-20 min-h-0 flex-1">
-            {/* Left Column */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-between shrink-0">
+          <div className="section-container relative h-full w-full flex flex-col lg:flex-row justify-between gap-6 lg:gap-16 px-6 lg:px-16 pt-12 lg:pt-20 pb-8 lg:pb-20 min-h-0 flex-1">
+            
+            {/* Left Column (Header & Integrated Contact) */}
+            <div className="w-full lg:w-1/2 flex flex-col justify-between shrink-0 gap-4 lg:gap-0">
               <div>
                 <h1 className="font-display text-[#F4EEDF] text-3xl sm:text-5xl lg:text-6xl leading-tight select-none">
                   Terms of Use
                 </h1>
-                <p className="font-body text-[#F4EEDF] mt-3 lg:mt-6 max-w-md text-xs sm:text-base leading-relaxed opacity-90">
+                <p className="font-body text-[#F4EEDF] mt-2 lg:mt-6 max-w-md text-xs sm:text-base leading-relaxed opacity-90">
                   These Terms of Use detail the terms, conditions, and service
                   agreements governing our interactions with clients, website
-                  visitors, and project partners. Here you can find clear
-                  information about engagement rules, client obligations,
-                  intellectual property rights, and legal responsibilities.
+                  visitors, and project partners.
                 </p>
+              </div>
+
+              {/* Mobile Inline Contact Info Bar */}
+              <div className="flex lg:hidden flex-wrap items-center gap-x-4 gap-y-2 pt-2 border-t border-[#F4EEDF]/20 font-body text-[#F4EEDF] text-xs opacity-90">
+  
+           
+                <a
+                  href="mailto:hello@grandpools.com.au"
+                  className="hover:underline transition-all duration-200"
+                >
+                  hello@grandpools.com.au
+                </a>
+             
+                <a
+                  href="https://www.instagram.com/grandpools_aus/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="inline-flex items-center hover:opacity-75 transition-opacity duration-200"
+                >
+                  <img
+                    src="/ig.svg"
+                    alt="Instagram"
+                    className="w-3.5 h-3.5 object-contain"
+                  />
+                </a>
               </div>
 
               {/* Desktop Contact Details */}
@@ -162,12 +187,7 @@ export default function TermsPage() {
                     Terms & Legal Inquiries
                   </h3>
                 </div>
-                <a
-                  href="tel:0422630394"
-                  className="hover:opacity-75 transition-opacity duration-200 w-fit"
-                >
-                  0422 630 394
-                </a>
+
                 <a
                   href="mailto:hello@grandpools.com.au"
                   className="hover:opacity-75 transition-opacity duration-200 w-fit"
@@ -199,7 +219,7 @@ export default function TermsPage() {
               >
                 <div
                   ref={scrollContentRef}
-                  className="w-full flex flex-col gap-8 lg:gap-10 text-[#F4EEDF] pb-24 transform-gpu will-change-transform"
+                  className="w-full flex flex-col gap-6 sm:gap-8 lg:gap-10 text-[#F4EEDF] pb-24 transform-gpu will-change-transform"
                 >
                   {policySections.map((item, index) => (
                     <div
@@ -227,31 +247,6 @@ export default function TermsPage() {
                   className="w-full h-10 bg-[#F4EEDF] rounded-full absolute top-0 left-0 transform-gpu will-change-transform"
                 />
               </div>
-            </div>
-
-            {/* Mobile Contact Info */}
-            <div className="flex lg:hidden flex-row gap-2 justify-between items-center font-body text-[#F4EEDF] text-xs pt-0 mt-4 shrink-0 z-20 w-full">
-              <a href="tel:0422630394" className="hover:opacity-75">
-                0422 630 394
-              </a>
-              <a
-                href="mailto:hello@grandpools.com.au"
-                className="hover:opacity-75"
-              >
-                hello@grandpools.com.au
-              </a>
-              <a
-                href="https://www.instagram.com/grandpools_aus/"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-              >
-                <img
-                  src="/ig.svg"
-                  alt="Instagram"
-                  className="w-4 h-4 object-contain"
-                />
-              </a>
             </div>
           </div>
         </section>

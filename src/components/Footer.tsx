@@ -100,7 +100,7 @@ export default function Footer() {
           width: "100%",
           /* Exact Figma linear gradient from top-left (#162D24) to bottom-right (#094146) */
           background: "linear-gradient(135deg, #162D24 0%, #094146 100%)",
-          borderTop: "1px solid rgba(255, 255, 255, 0.15)",
+
          
           transform: "translate3d(0, 0, 0)",
           WebkitTransform: "translate3d(0, 0, 0)",
@@ -221,20 +221,7 @@ export default function Footer() {
           {/* Col 3 — Contact Info & Social Icons */}
           <div className="responsive-socials-container" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
             <div className="desktop-only-contacts !text-[14px] md:!text-[16px]" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-              <a
-                href="tel:0422630394"
-                style={{
-                  color: "#F4EBE4",
-                  textDecoration: "none",
-                  fontFamily: "var(--font-body)",
-                  textAlign: "right",
-                  transition: "opacity 0.2s ease",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
-              >
-                0422 630 394
-              </a>
+
               <a
                 href="mailto:admin@grandpools.com.au"
                 style={{
@@ -286,9 +273,7 @@ export default function Footer() {
               <BottomLink href="/privacy-policy">Privacy Policy</BottomLink>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12, textAlign: "right"}}>
-              <a href="tel:0422630394" style={{ color: "#F4EBE4", textDecoration: "none", fontFamily: "var(--font-body)" }}>
-                0422 630 394
-              </a>
+
               <a href="mailto:admin@grandpools.com.au" style={{ color: "#F4EBE4" , textDecoration: "none", fontFamily: "var(--font-body)" }}>
                 admin@grandpools.com.au
               </a>

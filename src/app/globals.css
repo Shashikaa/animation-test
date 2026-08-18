@@ -208,11 +208,8 @@ img, video {
 html.preloading,
 body.preloading {
   overflow: hidden !important;
-  height: 100vh !important;
-  position: fixed !important;
   width: 100% !important;
   touch-action: none !important;
-  -webkit-overflow-scrolling: auto !important;
   background: linear-gradient(135deg, #162D24 0%, #094146 100%) !important;
   background-color: #162D24 !important;
 }

@@ -6,7 +6,7 @@ export default function SectionTwo() {
 
       {/* ── Full bleed background image ── */}
       <div
-        className="s2-bg absolute inset-0 bg-cover bg-center will-change-transform bg-[url('/pool-house.webp')] lg:bg-[url('/pool-house.webp')]"
+        className="s2-bg absolute inset-0 bg-cover bg-center will-change-transform bg-[url('/aboutsec3.webp')] lg:bg-[url('/aboutsec3.webp')]"
       />
 {/* ── Black Overlay ── */}
       <div 

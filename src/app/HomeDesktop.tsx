@@ -19,7 +19,7 @@ const Appsection = dynamic(() => import("../components/Appsection"), { ssr: fals
 
 import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
 
-const TOTAL_SCROLL_STEPS = 16.5;
+const TOTAL_SCROLL_STEPS = 16.8;
 
 // Quadratic easing curve matching fluid inertia
 const easeOutQuad = (t: number) => t * (2 - t);
@@ -565,10 +565,11 @@ export default function HomeDesktop() {
       // Its content can reveal once enough of the second viewport is visible.
       triggerProgressTextReveal(".section-appsec", stepProgress, 11.05);
 
-      // ── 7. SECTION 9 & FLYING TEXT — CONTINUOUS, NO DEAD SCROLL ──
-      const s9ArriveProg = easeOutQuad(clamp((stepProgress - 12.0) / 1.2));
+      // ── 7. SECTION 9 & FLYING TEXT — SMALL DEAD SCROLL BEFORE SECTION 9 ──
+      // Appsection finishes around 12.0. Hold it briefly before Section 9 starts.
+      const s9ArriveProg = easeOutQuad(clamp((stepProgress - 12.3) / 1.2));
       if (secNine) {
-        secNine.style.visibility = stepProgress >= 11.8 ? "visible" : "hidden";
+        secNine.style.visibility = stepProgress >= 12.1 ? "visible" : "hidden";
       }
 
       if (appSecContent) appSecContent.style.opacity = `${(1 - s9ArriveProg).toFixed(3)}`;
@@ -584,7 +585,7 @@ export default function HomeDesktop() {
       if (s9BgLeft) s9BgLeft.style.transform = `translate3d(0,0,0) scale3d(${s9BgScale}, ${s9BgScale}, 1)`;
       if (s9BgRight) s9BgRight.style.transform = `translate3d(0,0,0) scale3d(${s9BgScale}, ${s9BgScale}, 1)`;
 
-      const flyProg = clamp((stepProgress - 13.2) / 1.0);
+      const flyProg = clamp((stepProgress - 13.5) / 1.0);
 
       if (s9NativeTitle1) s9NativeTitle1.style.opacity = flyProg > 0 ? "0" : "1";
       if (s9NativeTitle2) s9NativeTitle2.style.opacity = flyProg > 0 ? "0" : "1";
@@ -600,8 +601,8 @@ export default function HomeDesktop() {
       }
 
       if (s9ParaDesktop) {
-        const paraProg = easeOutQuad(clamp((stepProgress - 13.2) / 1.0));
-        if (stepProgress >= 13.2) {
+        const paraProg = easeOutQuad(clamp((stepProgress - 13.5) / 1.0));
+        if (stepProgress >= 13.5) {
           s9ParaDesktop.style.visibility = "visible";
           s9ParaDesktop.style.opacity = `${paraProg.toFixed(3)}`;
           s9ParaDesktop.style.transform = `translate3d(0, ${((1 - paraProg) * 20).toFixed(2)}px, 0)`;
@@ -612,12 +613,12 @@ export default function HomeDesktop() {
       }
 
       // ── 8. CTA REVEAL — STARTS IMMEDIATELY AFTER SECTION 9 ──
-      const ctaArriveProg = easeOutQuad(clamp((stepProgress - 14.2) / 0.8));
+      const ctaArriveProg = easeOutQuad(clamp((stepProgress - 14.5) / 0.8));
       if (layerCTA.current) {
         const startY = vh;
         const endY = -(ctaHeight - vh);
         const currentY = startY + (endY - startY) * ctaArriveProg;
-        layerCTA.current.style.visibility = stepProgress >= 14.0 ? "visible" : "hidden";
+        layerCTA.current.style.visibility = stepProgress >= 14.3 ? "visible" : "hidden";
         layerCTA.current.style.transform = `translate3d(0, ${currentY.toFixed(2)}px, 0)`;
       }
 
@@ -627,12 +628,12 @@ export default function HomeDesktop() {
       }
 
       // ── 9. FOOTER REVEAL — FINAL TRACK MOVEMENT, NO TRAILING DEAD SCROLL ──
-      const footerArriveProg = easeOutQuad(clamp((stepProgress - 15.0) / 0.5));
+      const footerArriveProg = easeOutQuad(clamp((stepProgress - 15.3) / 0.5));
       if (layerFooter.current) {
         const startY = vh;
         const endY = vh - footerHeight;
         const translateY = startY + (endY - startY) * footerArriveProg;
-        layerFooter.current.style.visibility = stepProgress >= 14.8 ? "visible" : "hidden";
+        layerFooter.current.style.visibility = stepProgress >= 15.1 ? "visible" : "hidden";
         layerFooter.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
       }
 

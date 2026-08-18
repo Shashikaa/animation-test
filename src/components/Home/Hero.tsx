@@ -42,17 +42,7 @@ export default function Hero({ onReady }: HeroProps) {
         <div className="hero-overlay absolute inset-0 bg-black/30 pointer-events-none z-[21]" />
       </div>
 
-      {/* Modern Studio-Style Vertical Progress Bar (Mobile/Tablet) */}
-      <div className="hero-progress-wrapper absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 z-[100] flex items-center gap-3 pointer-events-none lg:hidden">
-        <div className="relative flex flex-col items-center">
-          <div className="w-1.5 h-1.5 rounded-full bg-[#F4EEDF] shadow-[0_0_12px_#F4EEDF]" />
-          <div className="relative w-[2px] h-36 sm:h-44 bg-black/80 my-1 rounded-full overflow-hidden shadow-[0_0_8px_rgba(0,0,0,0.9)]">
-            <div className="absolute inset-0 bg-white/20" />
-            <div className="hero-progress-bar-fill relative w-full h-full bg-[#F4EEDF] origin-top scale-y-0 shadow-[0_0_10px_#F4EEDF]" />
-          </div>
-          <div className="w-1 h-1 rounded-full bg-[#F4EEDF]/40" />
-        </div>
-      </div>
+
 
       {/* Main Container Layer */}
       <div className="section-container relative h-full w-full flex flex-col justify-end items-start lg:flex-row lg:items-end lg:justify-between !pb-[100px] md:!pb-[140px] lg:!pb-30 gap-8 z-30">

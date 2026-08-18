@@ -99,13 +99,12 @@ export default function ThankYou() {
 
           {/* Underlined Button */}
           <motion.div variants={itemVariants} className="flex justify-center w-full">
-            <Link
-              href="/"
-              className="hero-contact-btn group btn-underline   font-body"
-            >
-              Back to Home
-
-            </Link>
+<a
+  href="/"
+  className="hero-contact-btn group btn-underline font-body"
+>
+  Back to Home
+</a>
           </motion.div>
         </motion.div>
       </section>

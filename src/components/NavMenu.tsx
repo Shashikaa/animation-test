@@ -343,13 +343,7 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
           >
             <div className="font-body !mb-6">
               <p className="!m-0 !mb-3 !text-[20px]">
-                <a
-                  href="tel:0422630394"
-                  className="!no-underline hover:!opacity-70 active:!opacity-50 active:!scale-95 !transition-all !duration-200 !inline-block"
-                  style={{ color: "#F4EEDF" }}
-                >
-                  0422 630 394
-                </a>
+
               </p>
             </div>
 
@@ -530,13 +524,7 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
             >
               <div className="font-body !mb-6" style={{ color: LOGO_COLOR }}>
                 <p className="!m-0 !text-[18px] !font-medium">
-                  <a
-                    href="tel:0422630394"
-                    className="!no-underline hover:!opacity-70 active:!opacity-50 !transition-opacity !duration-200"
-                    style={{ color: LOGO_COLOR }}
-                  >
-                    0422 630 394
-                  </a>
+
                 </p>
               </div>
               <div className="!flex !items-center !gap-4">
