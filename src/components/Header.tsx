@@ -292,7 +292,7 @@ export default function Header({
             className="header-contact-btn"
             aria-label="Contact us"
           >
-            Inquire
+            Enquire
           </button>
           <MenuIcon onClick={onMenuClick} />
         </div>
