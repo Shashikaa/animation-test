@@ -4,7 +4,8 @@ import { usePathname } from "next/navigation";
 import { useSite } from "../app/context/SiteContext"; 
 
 const SOCIAL_LINKS = [
-  { label: "Instagram", href: "https://www.instagram.com/grandpools_aus/", src: "/ig.svg" },
+  { label: "Email", href: "mailto:admin@grandpools.com.au", src: "/email.svg", size: 24 },
+  { label: "Instagram", href: "https://www.instagram.com/grandpools_aus/", src: "/ig.svg", size: 27 },
 ];
 
 export default function Footer() {
@@ -98,18 +99,13 @@ export default function Footer() {
         className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[20px] !pt-[30px] md:!pt-[40px] shadow-2xl overflow-hidden"
         style={{
           width: "100%",
-          /* Exact Figma linear gradient from top-left (#162D24) to bottom-right (#094146) */
           background: "linear-gradient(135deg, #162D24 0%, #094146 100%)",
-
-         
           transform: "translate3d(0, 0, 0)",
           WebkitTransform: "translate3d(0, 0, 0)",
           isolation: "isolate",
         }}
       >
-        {/* ══════════════════════════════════════
-            ROW 1: Logo Left-Aligned & Resized (Linked to Home)
-        ══════════════════════════════════════ */}
+        {/* ROW 1: Logo */}
         <div
           style={{
             width: "100%",
@@ -147,9 +143,7 @@ export default function Footer() {
           </a>
         </div>
 
-        {/* ══════════════════════════════════════
-            ROW 2: Link Column Grid (Space-Between Layout)
-        ══════════════════════════════════════ */}
+        {/* ROW 2: Link Column Grid */}
         <div
           className="responsive-row-2"
           style={{
@@ -160,12 +154,12 @@ export default function Footer() {
             marginBottom: 48,
           }}
         >
-          {/* Wrapper around Col 1 & Col 2 */}
+          {/* Navigation Links */}
           <div 
             className="responsive-links-container flex flex-row justify-between lg:w-[60%] !text-[14px] md:!text-[16px]" 
             style={{ display: "flex", flexDirection: "row" }}
           >
-            {/* Col 1 — Main Nav links */}
+            {/* Col 1 — Main Nav */}
             <nav style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
               {[
                 { item: "Home", href: "/" },
@@ -192,7 +186,7 @@ export default function Footer() {
               ))}
             </nav>
 
-            {/* Col 2 — Service Capabilities list */}
+            {/* Col 2 — Services Nav */}
             <nav className="flex flex-col !items-end lg:!items-start gap-3">
               {[
                 { item: "Residential Pools Construction", href: "/services/residential-pools-construction" },
@@ -218,30 +212,11 @@ export default function Footer() {
             </nav>
           </div>
 
-          {/* Col 3 — Contact Info & Social Icons */}
+          {/* Col 3 — Social Icons */}
           <div className="responsive-socials-container" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-            <div className="desktop-only-contacts !text-[14px] md:!text-[16px]" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-
-              <a
-                href="mailto:admin@grandpools.com.au"
-                style={{
-                  color: "#F4EBE4",
-                  textDecoration: "none",
-                  fontFamily: "var(--font-body)",
-                  textAlign: "right",
-                  transition: "opacity 0.2s ease",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
-              >
-                admin@grandpools.com.au
-              </a>
-            </div>
-
-            {/* Social Icons row */}
-            <div style={{ display: "flex", alignItems: "center", gap: 52, marginTop: 12 }}>
-              {SOCIAL_LINKS.map(({ label, href, src }) => (
-                <SocialLink key={label} href={href} label={label} src={src} size={24} />
+            <div style={{ display: "flex", alignItems: "center", gap: 24, marginTop: 12 }}>
+              {SOCIAL_LINKS.map(({ label, href, src, size }) => (
+                <SocialLink key={label} href={href} label={label} src={src} size={size} />
               ))}
             </div>
           </div>
@@ -253,51 +228,36 @@ export default function Footer() {
           className="w-full"
         />
 
-        {/* ══════════════════════════════════════
-            ROW 3: Legal Terms & Author Attribution
-        ══════════════════════════════════════ */}
+        {/* ROW 3: Desktop 3-Item Space-Between Bottom Row */}
         <div
           className="responsive-bottom-row !text-[14px] md:!text-[16px]"
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            flexWrap: "wrap",
-            gap: 16,
+            width: "100%",
           }}
         >
-          {/* Mobile Split Layout */}
-          <div className="mobile-only-row-4" style={{ display: "none", justifyContent: "space-between", alignItems: "flex-start", width: "100%" }}>
-            <div className="!text-[14px] md:!text-[16px]" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <BottomLink href="/terms-of-use">Terms of Use</BottomLink>
-              <BottomLink href="/privacy-policy">Privacy Policy</BottomLink>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 12, textAlign: "right"}}>
-
-              <a href="mailto:admin@grandpools.com.au" style={{ color: "#F4EBE4" , textDecoration: "none", fontFamily: "var(--font-body)" }}>
-                admin@grandpools.com.au
-              </a>
-            </div>
+          {/* Mobile Split Layout (Hidden on Desktop) */}
+          <div className="mobile-only-row-4" style={{ display: "none", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+            <BottomLink href="/terms-of-use">Terms of Use</BottomLink>
+            <BottomLink href="/privacy-policy">Privacy Policy</BottomLink>
           </div>
 
-          {/* Desktop Order Elements */}
+          {/* Item 1 (Desktop): Copyright */}
           <span className="desktop-only-row-4" style={{ color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
             © 2026 Grand Pools. All Rights Reserved.
           </span>
 
+          {/* Item 2 (Desktop): Terms & Privacy Links */}
           <div className="desktop-only-row-4 !text-[14px] md:!text-[16px]" style={{ display: "flex", gap: 24, alignItems: "center" }}>
             <BottomLink href="/terms-of-use">Terms of Use</BottomLink>
             <BottomLink href="/privacy-policy">Privacy Policy</BottomLink>
           </div>
 
-          {/* Dynamic bottom attribution block */}
-          <div className="responsive-attribution !text-[14px] md:!text-[16px] !pt-4" style={{ display: "contents" }}>
-            <span
-              style={{
-                color: "#F4EBE4",
-                fontFamily: "var(--font-body)",
-              }}
-            >
+          {/* Item 3 (Desktop): Design & Development */}
+          <div className="responsive-attribution !text-[14px] md:!text-[16px]">
+            <span style={{ color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
               Design &amp; Development by{" "}
               <a
                 href="https://tactik.com.au/"
@@ -311,12 +271,11 @@ export default function Footer() {
               </a>
             </span>
 
-            {/* Mobile copy block */}
+            {/* Mobile Copy Block (Hidden on Desktop) */}
             <span className="mobile-only-row-4 mobile-copy-text !text-[14px] md:!text-[16px] !text-center" style={{ display: "none", color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
               © 2026 Grand Pools. All Rights Reserved.
             </span>
           </div>
-
         </div>
       </div>
     </footer>
@@ -325,13 +284,13 @@ export default function Footer() {
 
 /* ── Helper components ── */
 
-function SocialLink({ href, label, src, size = 20 }: { href: string; label: string; src: string; size?: number }) {
+function SocialLink({ href, label, src, size = 24 }: { href: string; label: string; src: string; size?: number }) {
   return (
     <a
       href={href}
       aria-label={label}
-      target="_blank"
-      rel="noopener noreferrer"
+      target={href.startsWith("http") ? "_blank" : undefined}
+      rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
       style={{
         display: "flex",
         alignItems: "center",

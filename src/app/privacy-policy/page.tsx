@@ -139,45 +139,20 @@ export default function PrivacyPolicyPage() {
           className="hero relative w-full h-svh bg-transparent overflow-hidden z-10 flex flex-col justify-between"
         >
           {/* Main Container */}
-          <div className="section-container relative h-full w-full flex flex-col lg:flex-row justify-between gap-6 lg:gap-16 px-6 lg:px-16 pt-12 lg:pt-20 pb-8 lg:pb-20 min-h-0 flex-1">
-            
-            {/* Left Column (Header & Integrated Contact) */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-between shrink-0 gap-4 lg:gap-0">
+          <div className="section-container relative h-full w-full flex flex-col lg:flex-row justify-between gap-6 lg:gap-16 px-6 lg:px-16 pt-16 lg:pt-20 pb-6 lg:pb-20 min-h-0 flex-1">
+            {/* Left Column */}
+            <div className="w-full lg:w-1/2 flex flex-col justify-between shrink-0">
               <div>
                 <h1 className="font-display text-[#F4EEDF] text-3xl sm:text-5xl lg:text-6xl leading-tight select-none">
                   Privacy Policy
                 </h1>
-                <p className="font-body text-[#F4EEDF] mt-2 lg:mt-6 max-w-md text-xs sm:text-base leading-relaxed opacity-90">
+                <p className="font-body text-[#F4EEDF] mt-3 lg:mt-6 max-w-md text-xs sm:text-base leading-relaxed opacity-90">
                   This Privacy Policy outlines our commitment to privacy, data
                   protection, and transparency for all clients and website
                   visitors. Here you can find clear information about how Grand
                   Pools handles personal data, client communications,
                   third-party integrations, and cookie policies.
                 </p>
-              </div>
-
-              {/* Mobile Inline Contact Info Bar */}
-              <div className="flex lg:hidden flex-wrap items-center gap-x-4 gap-y-2 pt-2 border-t border-[#F4EEDF]/20 font-body text-[#F4EEDF] text-xs opacity-90">
-    
-                <a
-                  href="mailto:hello@grandpools.com.au"
-                  className="hover:underline transition-all duration-200"
-                >
-                  hello@grandpools.com.au
-                </a>
-                <a
-                  href="https://www.instagram.com/grandpools_aus/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram"
-                  className="inline-flex items-center hover:opacity-75 transition-opacity duration-200"
-                >
-                  <img
-                    src="/ig.svg"
-                    alt="Instagram"
-                    className="w-3.5 h-3.5 object-contain"
-                  />
-                </a>
               </div>
 
               {/* Desktop Contact Details */}
@@ -187,26 +162,34 @@ export default function PrivacyPolicyPage() {
                     Legal & Privacy Inquiries
                   </h3>
                 </div>
-   
-                <a
-                  href="mailto:hello@grandpools.com.au"
-                  className="hover:opacity-75 transition-opacity duration-200 w-fit"
-                >
-                  hello@grandpools.com.au
-                </a>
-                <a
-                  href="https://www.instagram.com/grandpools_aus/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram"
-                  className="mt-1 hover:opacity-75 transition-opacity duration-200 w-fit"
-                >
-                  <img
-                    src="/ig.svg"
-                    alt="Instagram"
-                    className="w-5 h-5 object-contain"
-                  />
-                </a>
+
+                {/* Icons Row */}
+                <div className="flex items-center gap-4">
+                  <a
+                    href="mailto:admin@grandpools.com.au"
+                    aria-label="Email"
+                    className="hover:opacity-75 transition-opacity duration-200"
+                  >
+                    <img
+                      src="/email.svg"
+                      alt="Email"
+                      className="w-5 h-5 object-contain"
+                    />
+                  </a>
+                  <a
+                    href="https://www.instagram.com/grandpools_aus/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Instagram"
+                    className="hover:opacity-75 transition-opacity duration-200"
+                  >
+                    <img
+                      src="/ig.svg"
+                      alt="Instagram"
+                      className="w-6 h-6 object-contain"
+                    />
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -219,7 +202,7 @@ export default function PrivacyPolicyPage() {
               >
                 <div
                   ref={scrollContentRef}
-                  className="w-full flex flex-col gap-6 sm:gap-8 lg:gap-10 text-[#F4EEDF] pb-24 transform-gpu will-change-transform"
+                  className="w-full flex flex-col gap-8 lg:gap-10 text-[#F4EEDF] pb-24 transform-gpu will-change-transform"
                 >
                   {policySections.map((item, index) => (
                     <div
@@ -246,6 +229,40 @@ export default function PrivacyPolicyPage() {
                   ref={scrollThumbRef}
                   className="w-full h-10 bg-[#F4EEDF] rounded-full absolute top-0 left-0 transform-gpu will-change-transform"
                 />
+              </div>
+            </div>
+
+            {/* Mobile Contact Info */}
+            <div className="flex lg:hidden flex-col gap-3 font-body text-[#F4EEDF] pt-0 !mt-4 shrink-0 z-20 w-full">
+              <h3 className="text-xs sm:text-sm font-bold tracking-wide text-[#F4EEDF]">
+                Legal & Privacy Inquiries
+              </h3>
+              {/* Left-Aligned Icons Row */}
+              <div className="flex items-center gap-4">
+                <a
+                  href="mailto:admin@grandpools.com.au"
+                  aria-label="Email"
+                  className="hover:opacity-75 transition-opacity duration-200"
+                >
+                  <img
+                    src="/email.svg"
+                    alt="Email"
+                    className="w-4 h-4 object-contain"
+                  />
+                </a>
+                <a
+                  href="https://www.instagram.com/grandpools_aus/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="hover:opacity-75 transition-opacity duration-200"
+                >
+                  <img
+                    src="/ig.svg"
+                    alt="Instagram"
+                    className="w-5 h-5 object-contain"
+                  />
+                </a>
               </div>
             </div>
           </div>
