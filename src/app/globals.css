@@ -2,9 +2,9 @@
 
 /* ─── Tailwind v4 Theme ──────────────────────────────────────── */
 @theme {
-  --font-display:   var(--font-display), Georgia, serif;
+  --font-display: var(--font-display), Georgia, serif;
   --font-cormorant: var(--font-cormorant), Georgia, serif;
-  --font-body:      var(--font-body), sans-serif;
+  --font-body: var(--font-body), sans-serif;
   --breakpoint-lg: 1025px;
 }
 
@@ -12,40 +12,40 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --muted:      #6b6b6b;
-  --muted-bg:   #f5f5f5;
-  --border:     #e5e5e5;
-  --accent:     #171717;
+  --muted: #6b6b6b;
+  --muted-bg: #f5f5f5;
+  --border: #e5e5e5;
+  --accent: #171717;
 
   --text-display: 40px;
-  --text-body:    16px;
-  --text-sm:      14px;
-  --text-xs:      12px;
+  --text-body: 16px;
+  --text-sm: 14px;
+  --text-xs: 12px;
 
   --leading-display: 1.15;
-  --leading-body:    1.2;
+  --leading-body: 1.2;
 
-  --space-1:  4px;
-  --space-2:  8px;
-  --space-3:  12px;
-  --space-4:  16px;
-  --space-5:  24px;
-  --space-6:  32px;
-  --space-7:  48px;
-  --space-8:  64px;
-  --space-9:  96px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
   --space-10: 128px;
 
   --container-max: 1280px;
   --container-pad: var(--space-6);
-  --section-py:    var(--space-9);
+  --section-py: var(--space-9);
 
-  --radius-sm:   4px;
-  --radius-md:   8px;
-  --radius-lg:   16px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
   --radius-full: 9999px;
 
-  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --duration-fast: 150ms;
   --duration-base: 300ms;
@@ -56,58 +56,55 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
-    --muted:      #888888;
-    --muted-bg:   #1a1a1a;
-    --border:     #2a2a2a;
-    --accent:     #ededed;
+    --muted: #888888;
+    --muted-bg: #1a1a1a;
+    --border: #2a2a2a;
+    --accent: #ededed;
   }
 }
 
 /* ─── Reset & Core Document Rules ────────────────────────────── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
-  margin:     0;
-  padding:    0;
+  margin: 0;
+  padding: 0;
 }
 
-html, body {
-  background-color: #162D24 !important;
+html,
+body {
+  background-color: #162d24 !important;
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  
-  scroll-behavior: auto !important; 
+  scroll-behavior: auto !important;
   min-height: 100%;
   width: 100%;
-
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y !important;
-
-  /* Hide native scrollbar on all screens globally */
   scrollbar-width: none;
   -ms-overflow-style: none;
   overflow-x: hidden;
 }
 
 html::-webkit-scrollbar,
-body::-webkit-scrollbar { 
-  display: none !important; 
-  width: 0 !important; 
-  height: 0 !important; 
+body::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 body {
-  color:        var(--foreground);
-  font-family:  var(--font-body);
-  font-size:    var(--text-body);
-  line-height:  var(--leading-body);
-  overflow-y:   auto;
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  overflow-y: auto;
 }
 
-/* ─── Unified Global Smooth Scroll & Hardware Engine ──────────── */
-
-/* 1. Global Lenis Integration */
+/* ─── Unified Global Smooth Scroll & Hardware Engine ─────────── */
 html.lenis,
 html.lenis body {
   height: auto;
@@ -122,14 +119,11 @@ body.scroll-locked {
   overflow: hidden !important;
 }
 
-/* 2. Scrolling FPS Optimizations */
-/* Disables pointer-events during scroll to prevent expensive desktop hover calculations */
 html.is-scrolling,
 html.is-scrolling * {
   pointer-events: none !important;
 }
 
-/* 3. Global Overscroll Containment for nested scroll areas */
 [data-lenis-prevent],
 .overflow-y-auto,
 .overflow-auto {
@@ -137,7 +131,6 @@ html.is-scrolling * {
   -webkit-overflow-scrolling: touch;
 }
 
-/* 4. Non-breaking GPU Hardware Layering */
 [data-parallax],
 .will-animate {
   backface-visibility: hidden;
@@ -145,28 +138,24 @@ html.is-scrolling * {
   will-change: transform;
 }
 
-/* Prevent sub-pixel image jitter on scroll transforms */
-img, video {
+img,
+video {
   image-rendering: -webkit-optimize-contrast;
 }
 
-/* 5. Desktop vs Mobile Specific Tweaks */
-
-/* Desktop Optimizations */
 @media (min-width: 1025px) {
-  section, .scroll-container {
-    contain: content; /* Isolates layout recalculations to single sections */
+  section,
+  .scroll-container {
+    contain: content;
   }
 }
 
-/* Mobile & Tablet Optimizations */
 @media (max-width: 1024px) {
-  /* Prevent horizontal drag shifts on iOS/Android gesture navigation */
-  html, body {
+  html,
+  body {
     overscroll-behavior-x: none;
   }
 
-  /* Prevent mobile webkit momentum rubber-banding on pinned viewports */
   .pin-all,
   .pin-all-home,
   .pin-all-contact,
@@ -176,7 +165,7 @@ img, video {
   }
 }
 
-/* 6. Global Pins & Viewport Layouts */
+/* ─── Global Pins ────────────────────────────────────────────── */
 .pin-all,
 .pin-all-home,
 .pin-all-contact,
@@ -210,22 +199,22 @@ body.preloading {
   overflow: hidden !important;
   width: 100% !important;
   touch-action: none !important;
-  background: linear-gradient(135deg, #162D24 0%, #094146 100%) !important;
-  background-color: #162D24 !important;
+  background: linear-gradient(135deg, #162d24 0%, #094146 100%) !important;
+  background-color: #162d24 !important;
 }
 
-html.preloading .about-pin, 
-.contact-pin-master, 
-.master-viewport, 
-.pin-all-projects, 
-.services-hero-master, 
-.services-pin-master,
-body.preloading .about-pin, 
-.contact-pin-master, 
-.master-viewport, 
-.pin-all-projects, 
-.services-hero-master, 
-.services-pin-master {
+html.preloading .about-pin,
+html.preloading .contact-pin-master,
+html.preloading .master-viewport,
+html.preloading .pin-all-projects,
+html.preloading .services-hero-master,
+html.preloading .services-pin-master,
+body.preloading .about-pin,
+body.preloading .contact-pin-master,
+body.preloading .master-viewport,
+body.preloading .pin-all-projects,
+body.preloading .services-hero-master,
+body.preloading .services-pin-master {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
@@ -247,7 +236,19 @@ body.preloading header {
   width: 100%;
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: none !important;
+}
+
+html:not(.preloading) .home-desktop-scope,
+body:not(.preloading) .home-desktop-scope {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+html:not(.preloading) .home-desktop-scope .hero,
+body:not(.preloading) .home-desktop-scope .hero {
+  opacity: 1;
+  visibility: visible;
 }
 
 .scroll-container {
@@ -256,107 +257,193 @@ body.preloading header {
 }
 
 /* ─── Typography Classes ─────────────────────────────────────── */
-.font-display   { font-family: var(--font-display);   font-weight: 100; }
-.font-cormorant { font-family: var(--font-cormorant); font-weight: 400; }
-.font-body      { font-family: var(--font-body);      font-weight: 400; }
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 100;
+}
+
+.font-cormorant {
+  font-family: var(--font-cormorant);
+  font-weight: 400;
+}
+
+.font-body {
+  font-family: var(--font-body);
+  font-weight: 400;
+}
 
 .text-display {
-  font-family:    var(--font-display);
-  font-size:      var(--text-display);
-  line-height:    var(--leading-display);
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  line-height: var(--leading-display);
   letter-spacing: 0;
 }
 
 .text-cormorant {
-  font-family:    var(--font-cormorant);
-  font-size:      var(--text-display);
-  line-height:    var(--leading-display);
+  font-family: var(--font-cormorant);
+  font-size: var(--text-display);
+  line-height: var(--leading-display);
   letter-spacing: 0;
-  font-weight:    400;
+  font-weight: 400;
 }
 
-.text-cormorant-light    { font-family: var(--font-cormorant); font-weight: 300; }
-.text-cormorant-regular  { font-family: var(--font-cormorant); font-weight: 400; }
-.text-cormorant-medium   { font-family: var(--font-cormorant); font-weight: 500; }
-.text-cormorant-semibold { font-family: var(--font-cormorant); font-weight: 600; }
-.text-cormorant-bold     { font-family: var(--font-cormorant); font-weight: 700; }
-.text-cormorant-italic   { font-family: var(--font-cormorant); font-style: italic; }
+.text-cormorant-light {
+  font-family: var(--font-cormorant);
+  font-weight: 300;
+}
+
+.text-cormorant-regular {
+  font-family: var(--font-cormorant);
+  font-weight: 400;
+}
+
+.text-cormorant-medium {
+  font-family: var(--font-cormorant);
+  font-weight: 500;
+}
+
+.text-cormorant-semibold {
+  font-family: var(--font-cormorant);
+  font-weight: 600;
+}
+
+.text-cormorant-bold {
+  font-family: var(--font-cormorant);
+  font-weight: 700;
+}
+
+.text-cormorant-italic {
+  font-family: var(--font-cormorant);
+  font-style: italic;
+}
 
 .text-body {
-  font-family:    var(--font-body);
-  font-size:      var(--text-body);
-  line-height:    var(--leading-body);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
   letter-spacing: 0;
-  font-weight:    400;
+  font-weight: 400;
 }
 
-.text-muted { color: var(--muted); }
+.text-muted {
+  color: var(--muted);
+}
 
 /* ─── Layout & Utilities ─────────────────────────────────────── */
 .container {
-  width:          100%;
-  max-width:      var(--container-max);
-  margin-inline:  auto;
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
   padding-inline: var(--container-pad);
 }
 
-.section { padding-block: var(--section-py); }
-.row     { display: flex; align-items: center; }
-.stack   { display: flex; flex-direction: column; }
+.section {
+  padding-block: var(--section-py);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+}
 
 .section-container {
-  width:          100%;
-  margin:         0 auto;
+  width: 100%;
+  margin: 0 auto;
   padding-inline: 65px;
-  padding-block:  85px;
+  padding-block: 85px;
 }
 
 @media (max-width: 1025px) {
   .section-container {
     padding-inline: 30px;
-    padding-block:  75px;
+    padding-block: 75px;
   }
 }
 
 @media (max-width: 767px) {
   .section-container {
     padding-inline: 20px;
-    padding-block:  65px;
+    padding-block: 65px;
   }
 }
 
-.border       { border: 1px solid var(--border); }
-.border-t     { border-top: 1px solid var(--border); }
-.border-b     { border-bottom: 1px solid var(--border); }
-.rounded-sm   { border-radius: var(--radius-sm); }
-.rounded-md   { border-radius: var(--radius-md); }
-.rounded-lg   { border-radius: var(--radius-lg); }
-.rounded-full { border-radius: var(--radius-full); }
+.border {
+  border: 1px solid var(--border);
+}
 
-.transition      { transition: all var(--duration-base) var(--ease-out); }
-.transition-fast { transition: all var(--duration-fast) var(--ease-out); }
+.border-t {
+  border-top: 1px solid var(--border);
+}
 
-h2, h1 {
-  font-size:   72px;
+.border-b {
+  border-bottom: 1px solid var(--border);
+}
+
+.rounded-sm {
+  border-radius: var(--radius-sm);
+}
+
+.rounded-md {
+  border-radius: var(--radius-md);
+}
+
+.rounded-lg {
+  border-radius: var(--radius-lg);
+}
+
+.rounded-full {
+  border-radius: var(--radius-full);
+}
+
+.transition {
+  transition: all var(--duration-base) var(--ease-out);
+}
+
+.transition-fast {
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+h2,
+h1 {
+  font-size: 72px;
   line-height: 1.15;
 }
 
 p {
-  font-size:   16px;
+  font-size: 16px;
   line-height: var(--leading-body);
 }
 
 @media (max-width: 1024px) {
-  h2, h1 { font-size: 56px; line-height: 1.3; }
-  p  { font-size: 16px; }
+  h2,
+  h1 {
+    font-size: 56px;
+    line-height: 1.3;
+  }
+
+  p {
+    font-size: 16px;
+  }
 }
 
 @media (max-width: 767px) {
-  h2, h1 { font-size: 42px; line-height: 1.3; }
-  p  { font-size: 16px; }
+  h2,
+  h1 {
+    font-size: 42px;
+    line-height: 1.3;
+  }
+
+  p {
+    font-size: 16px;
+  }
 }
 
-/* ─── Text Reveals & Line Splitting Animations ──────────────── */
+/* ─── Text Reveals ───────────────────────────────────────────── */
 .reveal-text {
   perspective: 1000px;
   backface-visibility: hidden;
@@ -400,7 +487,7 @@ html.page-404 #fade-preloader-root {
   pointer-events: none !important;
 }
 
-/* ─── Button Underline Animations ───────────────────────────── */
+/* ─── Button Underline ───────────────────────────────────────── */
 a.btn-underline,
 button.btn-underline,
 .btn-underline {
@@ -411,7 +498,7 @@ button.btn-underline,
   font-size: 14px !important;
   font-weight: 500 !important;
   text-transform: uppercase !important;
-  color: #F4EEDF !important;
+  color: #f4eedf !important;
   text-decoration: none !important;
   flex-shrink: 0 !important;
   transition: opacity 0.2s ease !important;
@@ -432,7 +519,7 @@ button.btn-underline::after,
   right: 0 !important;
   bottom: 0 !important;
   height: 1px !important;
-  background-color: #F4EEDF !important;
+  background-color: #f4eedf !important;
   transition: transform 0.2s ease !important;
 }
 
@@ -454,7 +541,7 @@ button.btn-underline:hover::after,
   will-change: transform;
 }
 
-/* ─── Stack Track & Viewport Layout Lock ─────────────────────── */
+/* ─── Stack Track ────────────────────────────────────────────── */
 .about-stack-layer {
   height: 100dvh;
   max-height: 100dvh;
@@ -466,11 +553,12 @@ button.btn-underline:hover::after,
   min-height: 100dvh;
 }
 
-/* ─── Hardware-Isolated Keyframe Hero Intro ──────────────── */
+/* ─── Hero Intro Animations ──────────────────────────────────── */
 @keyframes heroZoomOutDesktop {
   0% {
     transform: translate3d(0, 0, 0) scale3d(1.35, 1.35, 1);
   }
+
   100% {
     transform: translate3d(0, 0, 0) scale3d(1.1, 1.1, 1);
   }
@@ -480,6 +568,7 @@ button.btn-underline:hover::after,
   0% {
     transform: translate3d(0, 0, 0) scale3d(1.3, 1.3, 1);
   }
+
   100% {
     transform: translate3d(0, 0, 0) scale3d(1.1, 1.1, 1);
   }
@@ -490,6 +579,7 @@ button.btn-underline:hover::after,
     opacity: 0;
     transform: translate3d(0, 45px, 0);
   }
+
   100% {
     opacity: 1;
     transform: translate3d(0, 0, 0);
@@ -522,7 +612,8 @@ button.btn-underline:hover::after,
 .hero-animate-active .hero-bg-target,
 .hero-animate-active .about-hero-bg,
 .hero-animate-active .contact-hero-bg {
-  animation: heroZoomOutDesktop 2800ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  animation: heroZoomOutDesktop 2800ms cubic-bezier(0.16, 1, 0.3, 1)
+    forwards !important;
 }
 
 @media (max-width: 767px) {
@@ -535,7 +626,8 @@ button.btn-underline:hover::after,
 }
 
 .hero-animate-active .hero-text-target {
-  animation: heroTextReveal 1800ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  animation: heroTextReveal 1800ms cubic-bezier(0.16, 1, 0.3, 1)
+    forwards !important;
 }
 
 .hero-animate-active .hero-title-target {
@@ -559,18 +651,18 @@ button.btn-underline:hover::after,
   animation: none !important;
 }
 
-/* ─── Accessibility: Reduced Motion Override ────────────────── */
+/* ─── Accessibility ──────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto !important;
   }
-  
+
   *,
   *::before,
   *::after {
-    animation-duration:        0.01ms !important;
+    animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration:       0.01ms !important;
-    scroll-behavior:           auto !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
