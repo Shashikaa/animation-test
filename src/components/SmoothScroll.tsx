@@ -45,7 +45,7 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
         syncTouch: true,
         syncTouchLerp: isAndroid ? 0.05 : isMobile ? 0.06 : 0.08,
         // 🎯 Standard multiplier prevents violent travel distance on fast flings
-        touchMultiplier: isAndroid ? 1.4 : isMobile ? 1.2 : 1,
+        touchMultiplier: isAndroid ? 1.5 : isMobile ? 1.4 : 1,
         easing: (t: number) => 1 - Math.pow(1 - t, 4),
         autoResize: true,
       });
