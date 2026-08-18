@@ -70,7 +70,10 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     totalScrollable: 0,
   });
 
+  const lastSizeRef = useRef({ width: 0, height: 0 });
+
   const targetProgress = useRef(0);
+  const smoothProgress = useRef(0);
   const revealedSections = useRef<Set<string>>(new Set());
   const rafId = useRef<number | null>(null);
 
@@ -90,6 +93,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     if (!preloaderDone || !shouldLoadRest) {
       if (lenis && typeof lenis.stop === "function") lenis.stop();
       targetProgress.current = 0;
+      smoothProgress.current = 0;
     } else {
       document.body.classList.remove("preloading");
       document.documentElement.classList.remove("preloading");
@@ -110,6 +114,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
     const vh = window.innerHeight;
+    const vw = window.innerWidth;
 
     dimensionsRef.current = {
       sec1Height: sectionOneRef.current?.offsetHeight || vh,
@@ -119,7 +124,19 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
       trackTopOffset: window.scrollY + rect.top,
       totalScrollable: rect.height - vh,
     };
+
+    lastSizeRef.current = { width: vw, height: vh };
   }, []);
+
+  const handleResize = useCallback(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const { width, height } = lastSizeRef.current;
+
+    if (vw === width && Math.abs(vh - height) < 150) return;
+
+    measure();
+  }, [measure]);
 
   useEffect(() => {
     if (!shouldLoadRest) return;
@@ -130,12 +147,15 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     if (layerCTA.current) resizeObserver.observe(layerCTA.current);
     if (layerFooter.current) resizeObserver.observe(layerFooter.current);
 
-    window.addEventListener("resize", measure, { passive: true });
+    window.addEventListener("resize", handleResize, { passive: true });
+    window.addEventListener("orientationchange", measure, { passive: true });
+
     return () => {
       resizeObserver.disconnect();
-      window.removeEventListener("resize", measure);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", measure);
     };
-  }, [shouldLoadRest, measure]);
+  }, [shouldLoadRest, measure, handleResize]);
 
   // ── 3. TEXT REVEAL LOGIC (EXACT ABOUT implementation) ──
   const triggerPlayOnceTextReveal = useCallback((
@@ -186,7 +206,10 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
     const scope = scopeRef.current;
     let isRunning = true;
-    let currentProgress = targetProgress.current;
+    let lastTime = performance.now();
+
+    const EASE_FACTOR = 0.15;
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.008;
 
     // Cache element references inside closure
     const heroTextWrap = scope.querySelector<HTMLElement>(".hero-text-wrap");
@@ -205,11 +228,26 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
       }
     });
 
-    const renderTransforms = () => {
+    const renderTransforms = (time: number) => {
       if (!isRunning) return;
 
-      // Inertial Lerp calculation (identical to About smoothing factor)
-      currentProgress += (targetProgress.current - currentProgress) * 0.08;
+      const dt = Math.min((time - lastTime) / 1000, 0.1);
+      lastTime = time;
+
+      const dynamicEase = 1 - Math.exp(-EASE_FACTOR * 60 * dt);
+      let delta =
+        (targetProgress.current - smoothProgress.current) * dynamicEase;
+
+      if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
+        delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
+      }
+
+      smoothProgress.current = Math.min(
+        Math.max(smoothProgress.current + delta, 0),
+        1
+      );
+
+      const currentProgress = smoothProgress.current;
 
       const stepProgress = currentProgress * (TOTAL_SCROLL_STEPS - 1);
       const { sec1Height, ctaHeight, footerHeight, vh } = dimensionsRef.current;

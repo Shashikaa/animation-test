@@ -45,7 +45,10 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     footerHeight: 0,
   });
 
+  const lastSizeRef = useRef({ width: 0, height: 0 });
+
   const targetProgress = useRef(0);
+  const smoothProgress = useRef(0);
   const rafId = useRef<number | null>(null);
   const lastInfoIdx = useRef<number>(-1);
 
@@ -75,6 +78,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     if (!preloaderDone || !shouldLoadRest) {
       if (lenis && typeof lenis.stop === "function") lenis.stop();
       targetProgress.current = 0;
+      smoothProgress.current = 0;
     } else {
       document.body.classList.remove("preloading");
       document.documentElement.classList.remove("preloading");
@@ -95,6 +99,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
     const vh = window.innerHeight;
+    const vw = window.innerWidth;
 
     scrollMetricsRef.current = {
       totalScrollable: rect.height - vh,
@@ -104,7 +109,19 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
       faqHeight: faqSectionRef.current?.offsetHeight || vh,
       footerHeight: footerLayerRef.current?.offsetHeight || vh,
     };
+
+    lastSizeRef.current = { width: vw, height: vh };
   }, []);
+
+  const handleResize = useCallback(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const { width, height } = lastSizeRef.current;
+
+    if (vw === width && Math.abs(vh - height) < 150) return;
+
+    updateMetrics();
+  }, [updateMetrics]);
 
   useEffect(() => {
     if (!shouldLoadRest) return;
@@ -115,12 +132,15 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     if (faqSectionRef.current) resizeObserver.observe(faqSectionRef.current);
     if (footerLayerRef.current) resizeObserver.observe(footerLayerRef.current);
 
-    window.addEventListener("resize", updateMetrics, { passive: true });
+    window.addEventListener("resize", handleResize, { passive: true });
+    window.addEventListener("orientationchange", updateMetrics, { passive: true });
+
     return () => {
       resizeObserver.disconnect();
-      window.removeEventListener("resize", updateMetrics);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", updateMetrics);
     };
-  }, [shouldLoadRest, updateMetrics]);
+  }, [shouldLoadRest, updateMetrics, handleResize]);
 
   // ── 3. CONTINUOUS LERP RENDER ENGINE ──
   useEffect(() => {
@@ -128,7 +148,10 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
 
     const scope = scopeRef.current;
     let isRunning = true;
-    let currentProgress = targetProgress.current;
+    let lastTime = performance.now();
+
+    const EASE_FACTOR = 0.15;
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.008;
 
     const heroTextWrap = scope.querySelector<HTMLElement>(".hero-text-wrap");
     const phoneWrapper = scope.querySelector<HTMLElement>(".appsec-phone-wrapper");
@@ -147,10 +170,26 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
       }
     });
 
-    const renderTransforms = () => {
+    const renderTransforms = (time: number) => {
       if (!isRunning) return;
 
-      currentProgress += (targetProgress.current - currentProgress) * 0.08;
+      const dt = Math.min((time - lastTime) / 1000, 0.1);
+      lastTime = time;
+
+      const dynamicEase = 1 - Math.exp(-EASE_FACTOR * 60 * dt);
+      let delta =
+        (targetProgress.current - smoothProgress.current) * dynamicEase;
+
+      if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
+        delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
+      }
+
+      smoothProgress.current = Math.min(
+        Math.max(smoothProgress.current + delta, 0),
+        1
+      );
+
+      const currentProgress = smoothProgress.current;
 
       const subSlidesSteps = Math.max(0, infoSlidesCount - 1);
       const PAUSE_BUFFER = 0.5;

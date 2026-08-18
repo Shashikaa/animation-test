@@ -44,11 +44,33 @@ export default function AboutMobile() {
 
   const { smootherRef } = useSite();
 
-  const { shouldLoadRest } = useHeroIntro(scopeRef, {
+  const { preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
     isMobile: true,
     introDurationMs: 2800,
     unlockScrollEarlyMs: 1800,
   });
+
+  useEffect(() => {
+    const lenis = smootherRef?.current;
+
+    if (!preloaderDone || !shouldLoadRest) {
+      if (lenis && typeof lenis.stop === "function") lenis.stop();
+      targetProgress.current = 0;
+      currentProgress.current = 0;
+    } else {
+      document.body.classList.remove("preloading");
+      document.documentElement.classList.remove("preloading");
+
+      if (lenis) {
+        if (typeof lenis.resize === "function") lenis.resize();
+        if (typeof lenis.start === "function") lenis.start();
+      }
+
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event("scroll"));
+      });
+    }
+  }, [preloaderDone, shouldLoadRest, smootherRef]);
 
   const updateMetrics = useCallback(() => {
     if (!trackRef.current) return;

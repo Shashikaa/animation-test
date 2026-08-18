@@ -29,6 +29,8 @@ export default function ContactDesktop() {
     vh: 0,
   });
 
+  const lastSizeRef = useRef({ width: 0, height: 0 });
+
   const targetProgress = useRef(0);
   const smoothProgress = useRef(0);
   const revealedElements = useRef<Set<string>>(new Set());
@@ -37,6 +39,8 @@ export default function ContactDesktop() {
   const { smootherRef } = useSite();
   const { preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
     isMobile: false,
+    introDurationMs: 2800,
+    unlockScrollEarlyMs: 1800,
   });
 
   // ── 1. UNLOCK SCROLL & CONTROL LENIS ──
@@ -68,6 +72,7 @@ export default function ContactDesktop() {
 
     const rect = trackRef.current.getBoundingClientRect();
     const vh = window.innerHeight;
+    const vw = window.innerWidth;
     const cardContainer = scopeRef.current?.querySelector(".contact-cards-container");
 
     const scrollDistance = cardContainer
@@ -80,7 +85,19 @@ export default function ContactDesktop() {
       trackTopOffset: window.scrollY + rect.top,
       totalScrollable: rect.height - vh,
     };
+
+    lastSizeRef.current = { width: vw, height: vh };
   }, []);
+
+  const handleResize = useCallback(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const { width, height } = lastSizeRef.current;
+
+    if (vw === width && Math.abs(vh - height) < 150) return;
+
+    measure();
+  }, [measure]);
 
   useEffect(() => {
     if (!shouldLoadRest) return;
@@ -89,12 +106,15 @@ export default function ContactDesktop() {
     const resizeObserver = new ResizeObserver(() => measure());
     if (trackRef.current) resizeObserver.observe(trackRef.current);
 
-    window.addEventListener("resize", measure, { passive: true });
+    window.addEventListener("resize", handleResize, { passive: true });
+    window.addEventListener("orientationchange", measure, { passive: true });
+
     return () => {
       resizeObserver.disconnect();
-      window.removeEventListener("resize", measure);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", measure);
     };
-  }, [shouldLoadRest, measure]);
+  }, [shouldLoadRest, measure, handleResize]);
 
   // ── 3. TEXT REVEAL HELPER FUNCTIONS ──
   const triggerProgressTextReveal = useCallback(

@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconMark } from "./IconMark";
 import { HEADER_LOGO_SCALE, LOGO_COLOR, LOGO_ICON_W, LOGO_ICON_H, LOGO_GAP } from "./Preloader";
@@ -70,11 +69,16 @@ function PoolsSVG({ width, height }: { width: number; height: number }) {
   );
 }
 
-function SharedLogoMarkup({ onClose }: { onClose?: () => void }) {
+function SharedLogoMarkup() {
+  const handleLogoClick = () => {
+    document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
+  };
+
   return (
-    <Link
+    <a
       href="/"
-      onClick={onClose}
+      onClick={handleLogoClick}
       id="header-logo-inner"
       aria-label="Grand Pools — go to homepage"
       className="active:opacity-80 active:scale-95 transition-all duration-150"
@@ -104,7 +108,7 @@ function SharedLogoMarkup({ onClose }: { onClose?: () => void }) {
           <PoolsSVG width={202 * HEADER_LOGO_SCALE} height={30 * HEADER_LOGO_SCALE} />
         </span>
       </span>
-    </Link>
+    </a>
   );
 }
 
@@ -301,7 +305,7 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
           `}</style>
 
           <div id="nav-header-bar" className="!flex !items-center !justify-between !w-full">
-            <SharedLogoMarkup onClose={onClose} />
+            <SharedLogoMarkup />
             <CloseButton onClick={onClose} />
           </div>
 
@@ -321,7 +325,6 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
                       label={label}
                       href={href}
                       isActive={hoveredIndex === i}
-                      onClose={onClose}
                       onMouseEnter={() => setHoveredIndex(i)}
                       isMobile
                     />
@@ -480,7 +483,7 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
 
           <div className="!relative !flex !flex-col !justify-between !pb-12 !w-full !h-full !z-10">
             <div id="nav-header-bar-desktop" className="!flex !items-center !justify-between !w-full">
-              <SharedLogoMarkup onClose={onClose} />
+              <SharedLogoMarkup />
             </div>
 
             <div className="!my-auto !py-8 !px-5 md:!px-[30px] lg:!px-[55px]">
@@ -499,8 +502,7 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
                         label={label}
                         href={href}
                         isActive={hoveredIndex === i}
-                        onClose={onClose}
-                        onMouseEnter={() => handleMouseEnter(i)}
+                          onMouseEnter={() => handleMouseEnter(i)}
                       />
                     </motion.div>
                   </div>
@@ -561,37 +563,34 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
     : <DesktopMenu open={open} onClose={onClose} />;
 }
 
-// ── FIXED NAV LINK IMPLEMENTATION ──
+// ── NAV LINK: DIRECT BROWSER NAVIGATION (same behavior as Footer) ──
 function NavLink({
-  label, href, isActive, onClose, onMouseEnter, isMobile = false,
+  label,
+  href,
+  isActive,
+  onMouseEnter,
+  isMobile = false,
 }: {
-  label: string; href: string; isActive: boolean; onClose: () => void;
-  onMouseEnter: () => void; isMobile?: boolean;
+  label: string;
+  href: string;
+  isActive: boolean;
+  onMouseEnter: () => void;
+  isMobile?: boolean;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
   const isCurrentPage = pathname === href;
   const [isTouched, setIsTouched] = useState(false);
   const highlighted = isActive || isCurrentPage || isTouched;
 
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    
-    // Release document overflow lock immediately
-    onClose();
+  const handleClick = () => {
+    // Release any menu/body scroll locks immediately.
+    // Do NOT call onClose() here and do NOT wait for an exit animation.
     document.body.style.overflow = "";
-
-    // Reset scroll position to top prior to page navigation
-    window.scrollTo(0, 0);
-
-    // Force route push via router to trigger clean page mount
-    if (pathname !== href) {
-      router.push(href);
-    }
+    document.documentElement.style.overflow = "";
   };
 
   return (
-    <Link
+    <a
       href={href}
       onClick={handleClick}
       onMouseEnter={onMouseEnter}
@@ -617,6 +616,6 @@ function NavLink({
       >
         {label}
       </span>
-    </Link>
+    </a>
   );
 }

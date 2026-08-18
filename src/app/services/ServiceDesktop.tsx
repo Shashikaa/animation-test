@@ -66,7 +66,10 @@ export default function ServicesDesktop() {
     totalScrollable: 0,
   });
 
+  const lastSizeRef = useRef({ width: 0, height: 0 });
+
   const targetProgress = useRef(0);
+  const smoothProgress = useRef(0);
   const rafId = useRef<number | null>(null);
   const lastSec2Idx = useRef<number>(-1);
   const revealedSections = useRef<Set<string>>(new Set());
@@ -87,6 +90,7 @@ export default function ServicesDesktop() {
     if (!preloaderDone || !shouldLoadRest) {
       if (lenis && typeof lenis.stop === "function") lenis.stop();
       targetProgress.current = 0;
+      smoothProgress.current = 0;
     } else {
       document.body.classList.remove("preloading");
       document.documentElement.classList.remove("preloading");
@@ -107,6 +111,7 @@ export default function ServicesDesktop() {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
     const vh = window.innerHeight;
+    const vw = window.innerWidth;
 
     scrollMetricsRef.current = {
       ctaHeight: layerCTA.current?.offsetHeight || vh,
@@ -115,7 +120,19 @@ export default function ServicesDesktop() {
       trackTopOffset: window.scrollY + rect.top,
       totalScrollable: rect.height - vh,
     };
+
+    lastSizeRef.current = { width: vw, height: vh };
   }, []);
+
+  const handleResize = useCallback(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const { width, height } = lastSizeRef.current;
+
+    if (vw === width && Math.abs(vh - height) < 150) return;
+
+    measure();
+  }, [measure]);
 
   useEffect(() => {
     if (!shouldLoadRest) return;
@@ -125,12 +142,15 @@ export default function ServicesDesktop() {
     if (layerCTA.current) resizeObserver.observe(layerCTA.current);
     if (layerFooter.current) resizeObserver.observe(layerFooter.current);
 
-    window.addEventListener("resize", measure, { passive: true });
+    window.addEventListener("resize", handleResize, { passive: true });
+    window.addEventListener("orientationchange", measure, { passive: true });
+
     return () => {
       resizeObserver.disconnect();
-      window.removeEventListener("resize", measure);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", measure);
     };
-  }, [shouldLoadRest, measure]);
+  }, [shouldLoadRest, measure, handleResize]);
 
   // ── 3. TEXT REVEAL LOGIC & PREPARATION ──
   const triggerPlayOnceTextReveal = useCallback((
@@ -202,7 +222,10 @@ export default function ServicesDesktop() {
 
     const scope = scopeRef.current;
     let isRunning = true;
-    let currentProgress = targetProgress.current;
+    let lastTime = performance.now();
+
+    const EASE_FACTOR = 0.15;
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.008;
 
     const heroTextWrap = scope.querySelector<HTMLElement>(".hero-text-wrap");
     const heroTopLayer = scope.querySelector<HTMLElement>(".services-hero-top-layer");
@@ -234,11 +257,26 @@ export default function ServicesDesktop() {
       }
     });
 
-    const renderTransforms = () => {
+    const renderTransforms = (time: number) => {
       if (!isRunning) return;
 
-      // CONTINUOUS LERP INERTIA (Smoothing step jumps)
-      currentProgress += (targetProgress.current - currentProgress) * 0.08;
+      const dt = Math.min((time - lastTime) / 1000, 0.1);
+      lastTime = time;
+
+      const dynamicEase = 1 - Math.exp(-EASE_FACTOR * 60 * dt);
+      let delta =
+        (targetProgress.current - smoothProgress.current) * dynamicEase;
+
+      if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
+        delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
+      }
+
+      smoothProgress.current = Math.min(
+        Math.max(smoothProgress.current + delta, 0),
+        1
+      );
+
+      const currentProgress = smoothProgress.current;
 
       const stepProgress = currentProgress * (TOTAL_SCROLL_STEPS - 1);
       const { ctaHeight, footerHeight, vh } = scrollMetricsRef.current;
