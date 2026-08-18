@@ -199,7 +199,6 @@ export default function ServicesMobile() {
       }
 
       // --- STEP 3: SECTION TWO SLIDES UP & CYCLES SLIDES (2.0 -> 4.0) ---
-      // Entry phase happens from 2.0 -> 3.0 (1.0 vh distance)
       const entryProg = clamp(stepProgress - 2.0);
 
       if (sectionTwoRef.current) {
@@ -212,18 +211,15 @@ export default function ServicesMobile() {
       if (stepProgress >= 2.0 && stepProgress < 4.0) {
         setIsSectionTwoActive(true);
 
-        // Hold Slide 0 while SectionTwo is sliding up into full view (2.0 -> 3.0)
-        if (stepProgress < 3.0) {
+        // Slide 0 remains active while sliding up (2.0 -> 3.0) and during buffer (3.0 -> 3.25)
+        if (stepProgress < 3.25) {
           triggerSec2Hook(0);
+        } else if (stepProgress < 3.65) {
+          // Slide 1 stays active across equal scroll distance (3.25 -> 3.65)
+          triggerSec2Hook(1);
         } else {
-          // Trigger Slide 1 and Slide 2 ONLY after SectionTwo is fully visible (3.0 -> 4.0)
-          const slideCycleProg = stepProgress - 3.0; // range [0.0, 1.0]
-
-          if (slideCycleProg < 0.5) {
-            triggerSec2Hook(1);
-          } else {
-            triggerSec2Hook(2);
-          }
+          // Slide 2 stays active until Section Two begins exiting (3.65 -> 4.0)
+          triggerSec2Hook(2);
         }
       } else if (stepProgress < 2.0) {
         setIsSectionTwoActive(false);
