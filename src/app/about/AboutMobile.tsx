@@ -44,7 +44,7 @@ export default function AboutMobile() {
 
   const { smootherRef } = useSite();
 
-  const { preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
+  const { shouldLoadRest } = useHeroIntro(scopeRef, {
     isMobile: true,
     introDurationMs: 2800,
     unlockScrollEarlyMs: 1800,
@@ -56,6 +56,7 @@ export default function AboutMobile() {
     const vh = window.innerHeight;
     const vw = window.innerWidth;
 
+    // Dynamically calculate actual track height to account for footer size
     const footerHeight = layer7Ref.current?.offsetHeight || vh;
     const totalTrackHeight = vh * 5 + footerHeight;
     trackRef.current.style.height = `${totalTrackHeight}px`;
@@ -114,14 +115,11 @@ export default function AboutMobile() {
   }, []);
 
   useEffect(() => {
-    if (!shouldLoadRest) {
-      currentProgress.current = 0;
-      targetProgress.current = 0;
-      return;
-    }
+    if (!shouldLoadRest) return;
 
     const panels =
       trackRef.current?.querySelectorAll<HTMLElement>(".about-stack-layer");
+
     const s5Bg = scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
 
     let isRunning = true;
@@ -129,7 +127,11 @@ export default function AboutMobile() {
     const isAndroid =
       typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
 
-    const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
+    // Easing & speed cap controls:
+const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
+    
+    // STRICT MAX SPEED CAP PER FRAME:
+    // Lower values (e.g., 0.003 - 0.005) make fast flicks smooth and controlled.
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
 
     let lastTime = performance.now();
@@ -146,6 +148,7 @@ export default function AboutMobile() {
       let delta =
         (targetProgress.current - currentProgress.current) * dynamicEase;
 
+      // Cap maximum speed per frame during aggressive swiping
       if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
         delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
       }
@@ -154,6 +157,7 @@ export default function AboutMobile() {
 
       const p = currentProgress.current;
 
+      // Original progress map keyframes
       const s1Prog = mapRange(p, 0.0, 0.12);
       const s2Prog = mapRange(p, 0.12, 0.24);
       const s3EntranceProg = mapRange(p, 0.24, 0.36);
@@ -259,6 +263,7 @@ export default function AboutMobile() {
       window.addEventListener("scroll", handleScroll, { passive: true });
     }
 
+    handleScroll();
     rafId.current = requestAnimationFrame(render);
 
     return () => {

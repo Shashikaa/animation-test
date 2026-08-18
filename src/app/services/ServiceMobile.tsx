@@ -71,9 +71,14 @@ export default function ServicesMobile() {
         if (typeof lenis.resize === "function") lenis.resize();
         if (typeof lenis.start === "function") lenis.start();
       }
+
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event("scroll"));
+      });
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
+  // Dynamically calculate actual track height to account for auto-height sections
   const updateMetrics = useCallback(() => {
     if (!trackRef.current) return;
 
@@ -122,17 +127,14 @@ export default function ServicesMobile() {
     };
   }, [shouldLoadRest, updateMetrics, handleResize]);
 
+  // Continuous animation loop with velocity clamping
   useEffect(() => {
-    if (!shouldLoadRest) {
-      currentProgress.current = 0;
-      targetProgress.current = 0;
-      return;
-    }
+    if (!shouldLoadRest) return;
 
     let isRunning = true;
 
     const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
-    const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
+const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
 
     let lastTime = performance.now();
@@ -160,6 +162,7 @@ export default function ServicesMobile() {
 
       const { vh } = scrollMetricsRef.current;
 
+      // --- STEP 1: COMPRESS HERO TOP LAYER (0.0 -> 1.0) ---
       const heroTextWrap = scopeRef.current?.querySelector<HTMLElement>(".hero-text-wrap");
       const heroBtn = scopeRef.current?.querySelector<HTMLElement>(".hero-btn");
       const heroTopLayer = scopeRef.current?.querySelector<HTMLElement>(".services-hero-top-layer");
@@ -183,6 +186,7 @@ export default function ServicesMobile() {
         serviceHeroBg.style.transform = `translate3d(0, ${-120 * step1Prog}px, 0)`;
       }
 
+      // --- STEP 2: SECTION ONE SLIDES UP DIRECTLY OVER HERO (1.0 -> 2.0) ---
       const step2Prog = clamp(stepProgress - 1.0);
       if (sectionOneRef.current) {
         sectionOneRef.current.style.transform = `translate3d(0, ${(1 - step2Prog) * 100}%, 0)`;
@@ -191,6 +195,7 @@ export default function ServicesMobile() {
         heroPanelRef.current.style.transform = `translate3d(0, ${-step2Prog * 15}%, 0)`;
       }
 
+      // --- STEP 3: SECTION TWO SLIDES UP OVER SECTION ONE & CYCLES SLIDES (2.0 -> 5.0) ---
       const step3Total = clamp((stepProgress - 2.0) / 3.0, 0, 1);
 
       if (sectionTwoRef.current) {
@@ -218,6 +223,7 @@ export default function ServicesMobile() {
         triggerSec2Hook(0);
       }
 
+      // --- STEP 4: APP SECTION SLIDES UP OVER SECTION TWO (5.0 -> 6.0) ---
       const appProg = clamp(stepProgress - 5.0);
       if (appSecRef.current) {
         const appHeight = appSecRef.current.offsetHeight || vh;
@@ -230,6 +236,7 @@ export default function ServicesMobile() {
         sectionTwoRef.current.style.transform = `translate3d(0, ${-appProg * 15}%, 0)`;
       }
 
+      // --- STEP 5: FOOTER REVEAL (6.0 -> 7.0) ---
       const footerProg = clamp(stepProgress - 6.0);
       if (footerLayerRef.current) {
         const footerHeight = footerLayerRef.current.offsetHeight || vh;
@@ -276,6 +283,7 @@ export default function ServicesMobile() {
       window.addEventListener("scroll", handleScroll, { passive: true });
     }
 
+    handleScroll();
     rafId.current = requestAnimationFrame(render);
 
     return () => {
@@ -297,6 +305,7 @@ export default function ServicesMobile() {
           ref={fixedFrameRef}
           className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-svh"
         >
+          {/* Layer 1: Hero Block */}
           <div
             ref={heroPanelRef}
             className="services-hero-panel absolute inset-0 w-full h-svh z-10 transform-gpu will-change-transform backface-hidden"
@@ -306,6 +315,7 @@ export default function ServicesMobile() {
 
           {shouldLoadRest && (
             <>
+              {/* Layer 2: Section One */}
               <div
                 ref={sectionOneRef}
                 className="about-stack-layer absolute inset-0 w-full h-svh z-20 transform-gpu will-change-transform backface-hidden"
@@ -314,6 +324,7 @@ export default function ServicesMobile() {
                 <SectionOne />
               </div>
 
+              {/* Layer 3: Section Two Context */}
               <div
                 ref={sectionTwoRef}
                 className="about-stack-layer absolute inset-0 w-full h-svh z-30 transform-gpu will-change-transform backface-hidden"
@@ -322,6 +333,7 @@ export default function ServicesMobile() {
                 <SectionTwo isActive={isSectionTwoActive} />
               </div>
 
+              {/* Layer 4: App Section Wrapper */}
               <div
                 ref={appSecRef}
                 className="layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[35] will-change-transform backface-hidden"
@@ -330,6 +342,7 @@ export default function ServicesMobile() {
                 <Appsection />
               </div>
 
+              {/* Layer 5: Footer Wrapper Frame */}
               <div
                 ref={footerLayerRef}
                 className="layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[151] will-change-transform backface-hidden"

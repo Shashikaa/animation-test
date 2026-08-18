@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconMark } from "./IconMark";
@@ -171,7 +171,6 @@ function ImagePanel({ activeIndex }: { activeIndex: number }) {
   );
 }
 
-// ── OPTIMIZED LUXURY EASINGS & UNIFIED EXIT VARIANTS ──
 const EASE_LUXURY_IN  = [0.16, 1, 0.3, 1] as const;
 const EASE_LUXURY_OUT = [0.7, 0, 0.2, 1] as const;
 
@@ -242,13 +241,12 @@ const bottomVariants = {
   },
 };
 
-// ── MOBILE MENU ──────────────────────────────────────────
+// ── MOBILE MENU ──
 function MobileMenu({ open, onClose }: NavMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const pathname = usePathname();
 
-  // FIX 1: Auto-close whenever the route/pathname changes (including back button)
   useEffect(() => {
     if (open) onClose();
   }, [pathname]);
@@ -342,9 +340,7 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
             className="!px-6 md:!px-10 !pb-[100px]"
           >
             <div className="font-body !mb-6">
-              <p className="!m-0 !mb-3 !text-[20px]">
-
-              </p>
+              <p className="!m-0 !mb-3 !text-[20px]"></p>
             </div>
 
             <div className="!flex !items-center !gap-4">
@@ -368,11 +364,10 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
   );
 }
 
-// ── DESKTOP/TABLET MENU ───────────────────────────────────
+// ── DESKTOP/TABLET MENU ──
 function DesktopMenu({ open, onClose }: NavMenuProps) {
   const pathname = usePathname();
 
-  // FIX 1: Auto-close whenever the route/pathname changes (including back button)
   useEffect(() => {
     if (open) onClose();
   }, [pathname]);
@@ -483,7 +478,6 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
             className="!absolute !top-4 !right-8 lg:!right-14 !z-[30]" 
           />
 
-          {/* ── LEFT PANEL ── */}
           <div className="!relative !flex !flex-col !justify-between !pb-12 !w-full !h-full !z-10">
             <div id="nav-header-bar-desktop" className="!flex !items-center !justify-between !w-full">
               <SharedLogoMarkup onClose={onClose} />
@@ -523,9 +517,7 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
               className="!px-5 md:!px-[30px] lg:!px-[55px]"
             >
               <div className="font-body !mb-6" style={{ color: LOGO_COLOR }}>
-                <p className="!m-0 !text-[18px] !font-medium">
-
-                </p>
+                <p className="!m-0 !text-[18px] !font-medium"></p>
               </div>
               <div className="!flex !items-center !gap-4">
                 {SOCIAL_LINKS.map(({ label, href, src }) => (
@@ -544,7 +536,6 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
             </motion.div>
           </div>
 
-          {/* ── RIGHT PANEL (Desktops only) ── */}
           <div className="!hidden lg:!block !relative !w-full !h-full !overflow-hidden">
             <ImagePanel activeIndex={activeIndex} />
           </div>
@@ -554,7 +545,6 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
   );
 }
 
-// ── ROOT EXPORT ──
 export default function NavMenu({ open, onClose }: NavMenuProps) {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -571,7 +561,7 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
     : <DesktopMenu open={open} onClose={onClose} />;
 }
 
-// ── NAV LINK (FIX 2: Uses Next.js Link instead of plain <a>) ──
+// ── FIXED NAV LINK IMPLEMENTATION ──
 function NavLink({
   label, href, isActive, onClose, onMouseEnter, isMobile = false,
 }: {
@@ -579,14 +569,31 @@ function NavLink({
   onMouseEnter: () => void; isMobile?: boolean;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const isCurrentPage = pathname === href;
   const [isTouched, setIsTouched] = useState(false);
   const highlighted = isActive || isCurrentPage || isTouched;
 
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    
+    // Release document overflow lock immediately
+    onClose();
+    document.body.style.overflow = "";
+
+    // Reset scroll position to top prior to page navigation
+    window.scrollTo(0, 0);
+
+    // Force route push via router to trigger clean page mount
+    if (pathname !== href) {
+      router.push(href);
+    }
+  };
+
   return (
     <Link
       href={href}
-      onClick={onClose}
+      onClick={handleClick}
       onMouseEnter={onMouseEnter}
       onFocus={onMouseEnter}
       onTouchStart={() => {
