@@ -37,7 +37,7 @@ export default function SectionThree() {
       <div className="section-container relative z-[2] h-full flex flex-col justify-between pb-10 md:pb-14 lg:pb-16">
         <div className="flex flex-col md:!mt-24">
           <h2 className="s3-reveal-top reveal-text font-display text-[#F4EEDF] leading-[1.2] !font-[100]">
-            Built on Trust <br />
+            Building Relationships <br />
           </h2>
           <p className="s3-reveal-top reveal-text font-body text-[#F4EEDF] text-sm md:text-base !mt-3">
             Driven by Excellence

@@ -10,30 +10,26 @@ export default function Appsection() {
       />
 
       {/* ── Main Content Container ── */}
-      <div className="appsec-content section-container relative z-10 w-full flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 md:gap-15 lg:gap-20">
+      <div className="appsec-content section-container relative z-10 w-full flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 lg:gap-20">
         
-        {/* Left Column (Desktop Layout Swapped) */}
+        {/* Title */}
         <div className="w-full lg:w-1/2 flex flex-col justify-between items-start text-left lg:h-[450px]">
-          
-          {/* Paragraph Moved to Top for Desktop */}
-          <div className="hidden lg:flex flex-col items-center w-full gap-6">
-            <p className="font-body text-[#F4EEDF] text-sm md:text-base max-w-[360px] self-start">
-Pool Care + keeps you informed and involved from start to finish. Live updates, progress tracking and everything you need, all in one place.            </p>
-          </div>
-
-          {/* Subtitle & Title Moved to Bottom for Desktop */}
           <div className="flex flex-col gap-2 w-full">
-            <span className="hidden lg:inline-block text-[#F4EEDF] text-xs md:text-[14px] font-normal">
-              Pool Care +
+            <span className="hidden lg:inline-block text-[#F4EEDF] text-xs md:text-[14px] font-normal reveal-text">
+             Grand Pools+
             </span>
             <h2 
-              className="text-[#F4EEDF] !font-[100] text-3xl md:text-5xl lg:text-6xl max-w-[320px] sm:max-w-none !mb-4"
+              className="text-[#F4EEDF] !font-[100] text-3xl md:text-5xl lg:text-6xl !max-w-[450px] sm:max-w-none !mb-4 reveal-text"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              Your Pool Journey Clearly Tracked
+              Follow Your Pool Journey
             </h2>
           </div>
 
+          <div className="hidden lg:flex flex-col items-center w-full gap-6">
+            <p className="font-body text-[#F4EEDF] text-sm md:text-base  self-start !max-w-[450px] reveal-text">
+Once your pool is completed, Grand Pools' Pool Care+ will show you how to use and look after your pools, as well as contain your equipment and warranty register. All in one place.            </p>
+          </div>
         </div>
 
         {/* Device Mockup */}
@@ -50,16 +46,16 @@ Pool Care + keeps you informed and involved from start to finish. Live updates, 
         {/* Mobile Info Block */}
         <div className="flex flex-col items-center lg:hidden w-full text-center">
           <span className="text-[#F4EEDF] text-sm md:text-[16px] font-medium tracking-wide self-start text-left !mb-4">
-            Pool Care +
+            Grand Pools+
           </span>
 
-          <p className="font-body text-[#F4EEDF] text-sm md:text-base leading-relaxed self-start text-left !mb-12  ">
-Pool Care + keeps you informed and involved from start to finish. Live updates, progress tracking and everything you need, all in one place.          </p>
+          <p className="font-body text-[#F4EEDF] text-sm md:text-base leading-relaxed text-left !mb-12">
+Once your pool is completed, Grand Pools' Pool Care+ will show you how to use and look after your pools, as well as contain your equipment and warranty register. All in one place.          </p>
 
           <a
             href="#"
 
-            className="group btn-underline font-body mt-2 md:!mt-12"
+            className="group btn-underline font-body mt-2"
           >
             DOWNLOAD
 

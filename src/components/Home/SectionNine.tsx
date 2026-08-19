@@ -65,7 +65,7 @@ export default function SectionNine() {
             </h2>
           </div>
 
-          <div className="h-10 w-full block clear-both" />
+          <div className="h-4 w-full block clear-both" />
 
           {/* Content Paragraph Framework */}
           <p className="s9-para-desktop max-w-[460px] text-[#F4EEDF] text-right opacity-0 pointer-events-auto !leading-[1.2] !pr-4">

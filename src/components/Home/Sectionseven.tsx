@@ -18,7 +18,7 @@ export default function SectionSeven() {
       <div
         className="s7-bg-img absolute bg-cover bg-center hidden lg:block"
         style={{
-          backgroundImage: "url('/team-photo.webp')",
+          backgroundImage: "url('/meetexpert.webp')",
           top: 0, left: 0, width: "100%", height: "120%",
           willChange: "transform",
         }}
@@ -28,7 +28,7 @@ export default function SectionSeven() {
       <div
         className="s7-mob-bg absolute bg-cover bg-center block lg:hidden"
         style={{
-          backgroundImage: "url('/sectionseven-mobile.webp')",
+          backgroundImage: "url('/mobilesection7.jpg')",
           top: 0, left: 0, width: "100%", height: "100%",
           transform: "scale(1.35)",
           transformOrigin: "center center",

@@ -9,19 +9,36 @@ import Hero from "../components/Home/Hero";
 import SectionTwo from "../components/Home/SectionTwo";
 import Footer from "../components/Footer";
 
-const SectionCTA = dynamic(() => import("../components/SectionCTA"), { ssr: false });
-const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { ssr: false });
-const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
-const SectionNine = dynamic(() => import("../components/Home/SectionNine"), { ssr: false });
-const SectionTen = dynamic(() => import("../components/Home/SectionTen"), { ssr: false });
-const Appsection = dynamic(() => import("../components/Appsection"), { ssr: false });
+const SectionCTA = dynamic(() => import("../components/SectionCTA"), {
+  ssr: false,
+});
+const SectionSeven = dynamic(
+  () => import("../components/Home/Sectionseven"),
+  { ssr: false }
+);
+const SectionEight = dynamic(
+  () => import("../components/Home/Sectioneight"),
+  { ssr: false }
+);
+const SectionNine = dynamic(
+  () => import("../components/Home/SectionNine"),
+  { ssr: false }
+);
+const SectionTen = dynamic(
+  () => import("../components/Home/SectionTen"),
+  { ssr: false }
+);
+const Appsection = dynamic(() => import("../components/Appsection"), {
+  ssr: false,
+});
 
 import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
 
 const TOTAL_SCROLL_STEPS = 16.8;
 
 const easeOutQuad = (t: number) => t * (2 - t);
-const clamp = (v: number, min = 0, max = 1) => Math.min(Math.max(v, min), max);
+const clamp = (v: number, min = 0, max = 1) =>
+  Math.min(Math.max(v, min), max);
 
 function executeDesktopSplitting(selector: string) {
   if (typeof document === "undefined") return;
@@ -101,7 +118,8 @@ export default function HomeDesktop() {
     executeDesktopSplitting(".hero-right-text");
     executeDesktopSplitting(".hero-secondary-para");
 
-    const heroRightText = document.querySelector<HTMLElement>(".hero-right-text");
+    const heroRightText =
+      document.querySelector<HTMLElement>(".hero-right-text");
 
     if (heroRightText) {
       heroRightText.style.visibility = "hidden";
@@ -315,10 +333,13 @@ export default function HomeDesktop() {
 
     const heroEl = scope.querySelector<HTMLElement>(".hero");
     const heroBg = scope.querySelector<HTMLElement>(".hero-bg");
-    const heroLeftInitial = scope.querySelector<HTMLElement>(".hero-left-initial");
-    const heroRightText = scope.querySelector<HTMLElement>(".hero-right-text");
-    const heroRightInners =
-      scope.querySelectorAll<HTMLElement>(".hero-right-text .custom-line-inner");
+    const heroLeftInitial =
+      scope.querySelector<HTMLElement>(".hero-left-initial");
+    const heroRightText =
+      scope.querySelector<HTMLElement>(".hero-right-text");
+    const heroRightInners = scope.querySelectorAll<HTMLElement>(
+      ".hero-right-text .custom-line-inner"
+    );
     const heroSecWrap =
       scope.querySelector<HTMLElement>(".hero-secondary-text-wrap");
     const heroContactBtn =
@@ -350,19 +371,23 @@ export default function HomeDesktop() {
     const s7BgImg = scope.querySelector<HTMLElement>(".s7-bg-img");
 
     const appSecBg = scope.querySelector<HTMLElement>(".appsec-bg");
-    const appSecContent = scope.querySelector<HTMLElement>(".appsec-content");
+    const appSecContent =
+      scope.querySelector<HTMLElement>(".appsec-content");
 
     const secNine = scope.querySelector<HTMLElement>(".section-9");
     const s9LeftSide = scope.querySelector<HTMLElement>(".s9-left-side");
     const s9RightSide = scope.querySelector<HTMLElement>(".s9-right-side");
     const s9BgLeft = scope.querySelector<HTMLElement>(".s9-bg-img-left");
     const s9BgRight = scope.querySelector<HTMLElement>(".s9-bg-img-right");
-    const s9NativeTitle1 =
-      scope.querySelector<HTMLElement>(".s9-native-title-wrapper-1");
-    const s9NativeTitle2 =
-      scope.querySelector<HTMLElement>(".s9-native-title-wrapper-2");
-    const s9GlobalFlight =
-      scope.querySelector<HTMLElement>(".s9-global-flight-container");
+    const s9NativeTitle1 = scope.querySelector<HTMLElement>(
+      ".s9-native-title-wrapper-1"
+    );
+    const s9NativeTitle2 = scope.querySelector<HTMLElement>(
+      ".s9-native-title-wrapper-2"
+    );
+    const s9GlobalFlight = scope.querySelector<HTMLElement>(
+      ".s9-global-flight-container"
+    );
     const s9FlightWrapper =
       scope.querySelector<HTMLElement>(".s9-flight-wrapper");
     const s9ParaDesktop =
@@ -435,15 +460,21 @@ export default function HomeDesktop() {
 
       if (heroRightText) {
         heroRightText.style.visibility =
-          stepProgress >= 0.1 && stepProgress < 1.4 ? "visible" : "hidden";
+          stepProgress >= 0.1 && stepProgress < 1.4
+            ? "visible"
+            : "hidden";
 
         heroRightText.style.opacity =
           stepProgress >= 0.1 && stepProgress < 1.4 ? "1" : "0";
       }
 
       if (heroRightInners) {
-        const rTextInProg = easeOutQuad(clamp((stepProgress - 0.1) / 0.8));
-        const rTextOutProg = easeOutQuad(clamp((stepProgress - 1.0) / 0.4));
+        const rTextInProg = easeOutQuad(
+          clamp((stepProgress - 0.1) / 0.8)
+        );
+        const rTextOutProg = easeOutQuad(
+          clamp((stepProgress - 1.0) / 0.4)
+        );
 
         heroRightInners.forEach((inner, i) => {
           if (rTextOutProg > 0) {
@@ -452,7 +483,9 @@ export default function HomeDesktop() {
               -rTextOutProg * 20
             }px, 0)`;
           } else {
-            const indyProg = clamp((rTextInProg - i * 0.04) / 0.7);
+            const indyProg = clamp(
+              (rTextInProg - i * 0.04) / 0.7
+            );
 
             inner.style.opacity = `${indyProg}`;
             inner.style.transform = `translate3d(0, ${
@@ -462,11 +495,15 @@ export default function HomeDesktop() {
         });
       }
 
-      const heroSecProg = easeOutQuad(clamp((stepProgress - 1.2) / 1.3));
+      const heroSecProg = easeOutQuad(
+        clamp((stepProgress - 1.2) / 1.3)
+      );
 
       if (heroSecWrap) {
         heroSecWrap.style.visibility =
-          stepProgress >= 1.2 && stepProgress < 3.2 ? "visible" : "hidden";
+          stepProgress >= 1.2 && stepProgress < 3.2
+            ? "visible"
+            : "hidden";
 
         heroSecWrap.style.opacity =
           stepProgress >= 1.2 && stepProgress < 3.2 ? "1" : "0";
@@ -476,7 +513,9 @@ export default function HomeDesktop() {
             -heroSecProg * 50
           }vh, 0)`;
         } else {
-          const exitProg = easeOutQuad(clamp((stepProgress - 2.5) / 0.7));
+          const exitProg = easeOutQuad(
+            clamp((stepProgress - 2.5) / 0.7)
+          );
 
           heroSecWrap.style.transform = `translate3d(0, ${
             -50 - exitProg * 60
@@ -484,10 +523,15 @@ export default function HomeDesktop() {
         }
       }
 
-      const heroBtnProg = easeOutQuad(clamp((stepProgress - 2.0) / 0.5));
+      const heroBtnProg = easeOutQuad(
+        clamp((stepProgress - 2.0) / 0.5)
+      );
 
-      if (heroContactBtn) heroContactBtn.style.opacity = `${1 - heroBtnProg}`;
-      if (heroScrollInd) heroScrollInd.style.opacity = `${1 - heroBtnProg}`;
+      if (heroContactBtn)
+        heroContactBtn.style.opacity = `${1 - heroBtnProg}`;
+
+      if (heroScrollInd)
+        heroScrollInd.style.opacity = `${1 - heroBtnProg}`;
 
       if (heroEl) {
         if (stepProgress < 2.5) {
@@ -505,7 +549,9 @@ export default function HomeDesktop() {
 
       if (secTwo) {
         secTwo.style.visibility =
-          stepProgress >= 2.0 && stepProgress < 7.0 ? "visible" : "hidden";
+          stepProgress >= 2.0 && stepProgress < 7.0
+            ? "visible"
+            : "hidden";
 
         secTwo.style.transform = `translate3d(0, ${(
           (1 - s2ArriveProg) *
@@ -513,7 +559,9 @@ export default function HomeDesktop() {
         ).toFixed(3)}%, 0)`;
       }
 
-      const s2TextFadeProg = clamp((stepProgress - 3.55) / 0.55);
+      const s2TextFadeProg = clamp(
+        (stepProgress - 3.55) / 0.55
+      );
 
       [s2TitleMain, s2TitleSub, s2BodyText].forEach((el) => {
         if (!el) return;
@@ -524,8 +572,12 @@ export default function HomeDesktop() {
         ).toFixed(2)}px, 0)`;
       });
 
-      const s2Frame1InProg = clamp((stepProgress - 3.85) / 0.7);
-      const s2Frame1OutProg = clamp((stepProgress - 4.75) / 0.7);
+      const s2Frame1InProg = clamp(
+        (stepProgress - 3.85) / 0.7
+      );
+      const s2Frame1OutProg = clamp(
+        (stepProgress - 4.75) / 0.7
+      );
 
       if (s2Frame1) {
         if (s2Frame1OutProg > 0) {
@@ -540,7 +592,9 @@ export default function HomeDesktop() {
         }
       }
 
-      const s2Frame2Prog = clamp((stepProgress - 4.55) / 0.75);
+      const s2Frame2Prog = clamp(
+        (stepProgress - 4.55) / 0.75
+      );
 
       if (s2Frame2) {
         s2Frame2.style.clipPath = `inset(${(
@@ -549,25 +603,35 @@ export default function HomeDesktop() {
         ).toFixed(2)}% 0% 0% 0%)`;
       }
 
-      const s2ScrollInProg = clamp((stepProgress - 3.85) / 0.75);
-      const s2ScrollPhase2 = clamp((stepProgress - 4.6) / 0.85);
+      const s2ScrollInProg = clamp(
+        (stepProgress - 3.85) / 0.75
+      );
+      const s2ScrollPhase2 = clamp(
+        (stepProgress - 4.6) / 0.85
+      );
 
       if (s2ScrollContent) {
         const yPercent =
-          (1 - s2ScrollInProg) * 100 - s2ScrollPhase2 * 50;
+          (1 - s2ScrollInProg) * 100 -
+          s2ScrollPhase2 * 50;
 
         s2ScrollContent.style.transform = `translate3d(0, ${yPercent.toFixed(
           2
         )}%, 0)`;
 
-        s2ScrollContent.style.opacity = stepProgress >= 3.75 ? "1" : "0";
+        s2ScrollContent.style.opacity =
+          stepProgress >= 3.75 ? "1" : "0";
       }
 
-      const s8ArriveProg = easeOutQuad(clamp((stepProgress - 5.5) / 1.2));
+      const s8ArriveProg = easeOutQuad(
+        clamp((stepProgress - 5.5) / 1.2)
+      );
 
       if (secEight) {
         secEight.style.visibility =
-          stepProgress >= 5.2 && stepProgress < 8.2 ? "visible" : "hidden";
+          stepProgress >= 5.2 && stepProgress < 8.2
+            ? "visible"
+            : "hidden";
 
         secEight.style.transform = `translate3d(0, ${(
           (1 - s8ArriveProg) *
@@ -581,13 +645,21 @@ export default function HomeDesktop() {
         }%, 0)`;
       }
 
-      triggerProgressTextReveal(".section-8", stepProgress, 5.8);
+      triggerProgressTextReveal(
+        ".section-8",
+        stepProgress,
+        5.8
+      );
 
-      const s10ArriveProg = easeOutQuad(clamp((stepProgress - 7.0) / 1.2));
+      const s10ArriveProg = easeOutQuad(
+        clamp((stepProgress - 7.0) / 1.2)
+      );
 
       if (secTen) {
         secTen.style.visibility =
-          stepProgress >= 7.0 && stepProgress < 10.7 ? "visible" : "hidden";
+          stepProgress >= 7.0 && stepProgress < 10.7
+            ? "visible"
+            : "hidden";
 
         secTen.style.transform = `translate3d(0, ${(
           (1 - s10ArriveProg) *
@@ -595,15 +667,25 @@ export default function HomeDesktop() {
         ).toFixed(3)}%, 0)`;
       }
 
-      const s10ScrollProg = easeOutQuad(clamp((stepProgress - 8.2) / 1.2));
+      const s10ScrollProg = easeOutQuad(
+        clamp((stepProgress - 8.2) / 1.2)
+      );
 
       allS10TextNodes.forEach((el) => {
         if (stepProgress >= 7.0 && stepProgress < 10.7) {
           el.style.setProperty("opacity", "1", "important");
-          el.style.setProperty("visibility", "visible", "important");
+          el.style.setProperty(
+            "visibility",
+            "visible",
+            "important"
+          );
         } else {
           el.style.setProperty("opacity", "0", "important");
-          el.style.setProperty("visibility", "hidden", "important");
+          el.style.setProperty(
+            "visibility",
+            "hidden",
+            "important"
+          );
         }
 
         el.style.transform = `translate3d(0, ${
@@ -617,30 +699,56 @@ export default function HomeDesktop() {
         s10ContentWrap.style.transform = `translate3d(0, ${cardY}vh, 0)`;
 
         if (stepProgress >= 7.0 && stepProgress < 10.7) {
-          s10ContentWrap.style.setProperty("opacity", "1", "important");
-          s10ContentWrap.style.setProperty("visibility", "visible", "important");
+          s10ContentWrap.style.setProperty(
+            "opacity",
+            "1",
+            "important"
+          );
+          s10ContentWrap.style.setProperty(
+            "visibility",
+            "visible",
+            "important"
+          );
         } else {
-          s10ContentWrap.style.setProperty("opacity", "0", "important");
-          s10ContentWrap.style.setProperty("visibility", "hidden", "important");
+          s10ContentWrap.style.setProperty(
+            "opacity",
+            "0",
+            "important"
+          );
+          s10ContentWrap.style.setProperty(
+            "visibility",
+            "hidden",
+            "important"
+          );
         }
       }
 
       if (s10BgImg) {
-        const bgScale = (1.1 + s10ScrollProg * 0.1).toFixed(4);
+        const bgScale = (
+          1.1 +
+          s10ScrollProg * 0.1
+        ).toFixed(4);
         const bgParallaxY = -s10ScrollProg * 10;
 
         s10BgImg.style.transform = `translate3d(0, ${bgParallaxY}%, 0) scale3d(${bgScale}, ${bgScale}, 1)`;
       }
 
-      const s7ArriveProg = easeOutQuad(clamp((stepProgress - 9.4) / 1.2));
-      const appStackProg = easeOutQuad(clamp((stepProgress - 10.6) / 1.4));
+      const s7ArriveProg = easeOutQuad(
+        clamp((stepProgress - 9.4) / 1.2)
+      );
+      const appStackProg = easeOutQuad(
+        clamp((stepProgress - 10.6) / 1.4)
+      );
 
       if (s7AppLayer) {
         s7AppLayer.style.visibility =
-          stepProgress >= 9.1 && stepProgress < 13.4 ? "visible" : "hidden";
+          stepProgress >= 9.1 && stepProgress < 13.4
+            ? "visible"
+            : "hidden";
 
         const layerYVh =
-          (1 - s7ArriveProg) * 100 - appStackProg * 100;
+          (1 - s7ArriveProg) * 100 -
+          appStackProg * 100;
 
         s7AppLayer.style.transform = `translate3d(0, ${layerYVh.toFixed(
           3
@@ -648,17 +756,28 @@ export default function HomeDesktop() {
       }
 
       if (s7BgImg) {
-        const bgCounterY = -(1 - s7ArriveProg) * 100;
+        const bgCounterY =
+          -(1 - s7ArriveProg) * 100;
 
         s7BgImg.style.transform = `translate3d(0, ${bgCounterY.toFixed(
           3
         )}%, 0)`;
       }
 
-      triggerProgressTextReveal(".section-7", stepProgress, 9.7);
-      triggerProgressTextReveal(".section-appsec", stepProgress, 11.05);
+      triggerProgressTextReveal(
+        ".section-7",
+        stepProgress,
+        9.7
+      );
+      triggerProgressTextReveal(
+        ".section-appsec",
+        stepProgress,
+        11.05
+      );
 
-      const s9ArriveProg = easeOutQuad(clamp((stepProgress - 12.3) / 1.2));
+      const s9ArriveProg = easeOutQuad(
+        clamp((stepProgress - 12.3) / 1.2)
+      );
 
       if (secNine) {
         secNine.style.visibility =
@@ -666,15 +785,30 @@ export default function HomeDesktop() {
       }
 
       if (appSecContent) {
-        appSecContent.style.opacity = `${(1 - s9ArriveProg).toFixed(3)}`;
+        appSecContent.style.opacity = `${(
+          1 - s9ArriveProg
+        ).toFixed(3)}`;
       }
 
+      /*
+       * UPDATED:
+       * Keep Appsection background large during Section 9.
+       * Before it went 1.25 -> 1.00 and moved 12%.
+       * Now it only goes 1.25 -> 1.17 and moves 3%.
+       */
       if (appSecBg) {
-        const scaleVal = (1.25 - s9ArriveProg * 0.25).toFixed(4);
+        const scaleVal = (
+          1.25 -
+          s9ArriveProg * 0.08
+        ).toFixed(4);
 
-        appSecBg.style.transform = `translate3d(0, ${(
-          s9ArriveProg * 12
-        ).toFixed(2)}%, 0) scale3d(${scaleVal}, ${scaleVal}, 1)`;
+        const moveY = (
+          s9ArriveProg * 3
+        ).toFixed(2);
+
+        appSecBg.style.transform =
+          `translate3d(0, ${moveY}%, 0) ` +
+          `scale3d(${scaleVal}, ${scaleVal}, 1)`;
       }
 
       if (s9LeftSide) {
@@ -691,7 +825,10 @@ export default function HomeDesktop() {
         ).toFixed(3)}%, 0)`;
       }
 
-      const s9BgScale = (1.1 - s9ArriveProg * 0.1).toFixed(4);
+      const s9BgScale = (
+        1.1 -
+        s9ArriveProg * 0.1
+      ).toFixed(4);
 
       if (s9BgLeft) {
         s9BgLeft.style.transform = `translate3d(0,0,0) scale3d(${s9BgScale}, ${s9BgScale}, 1)`;
@@ -701,30 +838,49 @@ export default function HomeDesktop() {
         s9BgRight.style.transform = `translate3d(0,0,0) scale3d(${s9BgScale}, ${s9BgScale}, 1)`;
       }
 
-      const flyProg = clamp((stepProgress - 13.5) / 1.0);
+      const flyProg = clamp(
+        (stepProgress - 13.5) / 1.0
+      );
 
-      if (s9NativeTitle1) s9NativeTitle1.style.opacity = flyProg > 0 ? "0" : "1";
-      if (s9NativeTitle2) s9NativeTitle2.style.opacity = flyProg > 0 ? "0" : "1";
+      if (s9NativeTitle1)
+        s9NativeTitle1.style.opacity =
+          flyProg > 0 ? "0" : "1";
+
+      if (s9NativeTitle2)
+        s9NativeTitle2.style.opacity =
+          flyProg > 0 ? "0" : "1";
 
       if (s9GlobalFlight) {
-        s9GlobalFlight.style.visibility = flyProg > 0 ? "visible" : "hidden";
-        s9GlobalFlight.style.opacity = flyProg > 0 ? "1" : "0";
+        s9GlobalFlight.style.visibility =
+          flyProg > 0 ? "visible" : "hidden";
+        s9GlobalFlight.style.opacity =
+          flyProg > 0 ? "1" : "0";
       }
 
-      if (s9FlightWrapper && flyProg > 0 && s9TargetRectRef.current) {
-        const { deltaX, deltaY } = s9TargetRectRef.current;
+      if (
+        s9FlightWrapper &&
+        flyProg > 0 &&
+        s9TargetRectRef.current
+      ) {
+        const { deltaX, deltaY } =
+          s9TargetRectRef.current;
 
         s9FlightWrapper.style.transform = `translate3d(${(
           deltaX * flyProg
-        ).toFixed(2)}px, ${(deltaY * flyProg).toFixed(2)}px, 0)`;
+        ).toFixed(2)}px, ${(
+          deltaY * flyProg
+        ).toFixed(2)}px, 0)`;
       }
 
       if (s9ParaDesktop) {
-        const paraProg = easeOutQuad(clamp((stepProgress - 13.5) / 1.0));
+        const paraProg = easeOutQuad(
+          clamp((stepProgress - 13.5) / 1.0)
+        );
 
         if (stepProgress >= 13.5) {
           s9ParaDesktop.style.visibility = "visible";
-          s9ParaDesktop.style.opacity = `${paraProg.toFixed(3)}`;
+          s9ParaDesktop.style.opacity =
+            `${paraProg.toFixed(3)}`;
           s9ParaDesktop.style.transform = `translate3d(0, ${(
             (1 - paraProg) *
             20
@@ -735,14 +891,17 @@ export default function HomeDesktop() {
         }
       }
 
-      const ctaArriveProg = easeOutQuad(clamp((stepProgress - 14.5) / 0.8));
+      const ctaArriveProg = easeOutQuad(
+        clamp((stepProgress - 14.5) / 0.8)
+      );
 
       if (layerCTA.current) {
         const startY = vh;
         const endY = -(ctaHeight - vh);
 
         const currentY =
-          startY + (endY - startY) * ctaArriveProg;
+          startY +
+          (endY - startY) * ctaArriveProg;
 
         layerCTA.current.style.visibility =
           stepProgress >= 14.3 ? "visible" : "hidden";
@@ -754,17 +913,21 @@ export default function HomeDesktop() {
 
       if (ctaInner) {
         ctaInner.style.opacity = "1";
-        ctaInner.style.transform = "translate3d(0, 0px, 0)";
+        ctaInner.style.transform =
+          "translate3d(0, 0px, 0)";
       }
 
-      const footerArriveProg = easeOutQuad(clamp((stepProgress - 15.3) / 0.5));
+      const footerArriveProg = easeOutQuad(
+        clamp((stepProgress - 15.3) / 0.5)
+      );
 
       if (layerFooter.current) {
         const startY = vh;
         const endY = vh - footerHeight;
 
         const translateY =
-          startY + (endY - startY) * footerArriveProg;
+          startY +
+          (endY - startY) * footerArriveProg;
 
         layerFooter.current.style.visibility =
           stepProgress >= 15.1 ? "visible" : "hidden";
@@ -774,37 +937,56 @@ export default function HomeDesktop() {
         )}px, 0)`;
       }
 
-      rafId.current = requestAnimationFrame(renderTransforms);
+      rafId.current =
+        requestAnimationFrame(renderTransforms);
     };
 
     const handleScroll = (e?: any) => {
       const scrollY =
-        e?.scroll !== undefined ? e.scroll : window.scrollY;
+        e?.scroll !== undefined
+          ? e.scroll
+          : window.scrollY;
 
-      const { totalScrollable, trackTopOffset } = dimensionsRef.current;
+      const {
+        totalScrollable,
+        trackTopOffset,
+      } = dimensionsRef.current;
 
       if (totalScrollable <= 0) return;
 
-      const relativeScroll = scrollY - trackTopOffset;
-      const trackBottom = relativeScroll + totalScrollable;
+      const relativeScroll =
+        scrollY - trackTopOffset;
+      const trackBottom =
+        relativeScroll + totalScrollable;
 
       if (fixedFrameRef.current) {
-        if (relativeScroll >= 0 && trackBottom >= 0) {
-          fixedFrameRef.current.style.position = "fixed";
+        if (
+          relativeScroll >= 0 &&
+          trackBottom >= 0
+        ) {
+          fixedFrameRef.current.style.position =
+            "fixed";
           fixedFrameRef.current.style.top = "0px";
-          fixedFrameRef.current.style.bottom = "auto";
+          fixedFrameRef.current.style.bottom =
+            "auto";
         } else if (trackBottom < 0) {
-          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.position =
+            "absolute";
           fixedFrameRef.current.style.top = "auto";
-          fixedFrameRef.current.style.bottom = "0px";
+          fixedFrameRef.current.style.bottom =
+            "0px";
         } else {
-          fixedFrameRef.current.style.position = "absolute";
+          fixedFrameRef.current.style.position =
+            "absolute";
           fixedFrameRef.current.style.top = "0px";
-          fixedFrameRef.current.style.bottom = "auto";
+          fixedFrameRef.current.style.bottom =
+            "auto";
         }
       }
 
-      targetProgress.current = clamp(relativeScroll / totalScrollable);
+      targetProgress.current = clamp(
+        relativeScroll / totalScrollable
+      );
     };
 
     const lenis = smootherRef?.current;
@@ -812,11 +994,16 @@ export default function HomeDesktop() {
     if (lenis && typeof lenis.on === "function") {
       lenis.on("scroll", handleScroll);
     } else {
-      window.addEventListener("scroll", handleScroll, { passive: true });
+      window.addEventListener(
+        "scroll",
+        handleScroll,
+        { passive: true }
+      );
     }
 
     handleScroll();
-    rafId.current = requestAnimationFrame(renderTransforms);
+    rafId.current =
+      requestAnimationFrame(renderTransforms);
 
     return () => {
       isRunning = false;
@@ -825,10 +1012,16 @@ export default function HomeDesktop() {
         cancelAnimationFrame(rafId.current);
       }
 
-      if (lenis && typeof lenis.off === "function") {
+      if (
+        lenis &&
+        typeof lenis.off === "function"
+      ) {
         lenis.off("scroll", handleScroll);
       } else {
-        window.removeEventListener("scroll", handleScroll);
+        window.removeEventListener(
+          "scroll",
+          handleScroll
+        );
       }
     };
   }, [
@@ -839,7 +1032,10 @@ export default function HomeDesktop() {
   ]);
 
   return (
-    <div ref={scopeRef} className="home-desktop-scope w-full bg-black opacity-100 visible">
+    <div
+      ref={scopeRef}
+      className="home-desktop-scope w-full bg-black opacity-100 visible"
+    >
       <style jsx global>{`
         .section-10 .s10-title,
         .section-10 .s10-title-sub,
@@ -871,7 +1067,9 @@ export default function HomeDesktop() {
       <div
         ref={trackRef}
         className="home-track-container relative w-full"
-        style={{ height: `${TOTAL_SCROLL_STEPS * 100}vh` }}
+        style={{
+          height: `${TOTAL_SCROLL_STEPS * 100}vh`,
+        }}
       >
         <div
           ref={fixedFrameRef}
@@ -892,7 +1090,9 @@ export default function HomeDesktop() {
             className="section-8 absolute inset-0 h-full w-full structural-layer will-change-transform transform-gpu z-[99]"
             style={{ visibility: "hidden" }}
           >
-            <SectionEight preloaderDone={preloaderDone} />
+            <SectionEight
+              preloaderDone={preloaderDone}
+            />
           </div>
 
           <div
@@ -906,7 +1106,8 @@ export default function HomeDesktop() {
             className="section-7-app-layer absolute left-0 top-0 h-[200vh] w-full structural-layer will-change-transform transform-gpu z-[105]"
             style={{
               visibility: "hidden",
-              transform: "translate3d(0, 100vh, 0)",
+              transform:
+                "translate3d(0, 100vh, 0)",
             }}
           >
             <div className="section-7 absolute left-0 top-0 h-[100vh] w-full overflow-hidden">
@@ -929,18 +1130,22 @@ export default function HomeDesktop() {
             ref={layerCTA}
             className="section-cta absolute left-0 top-0 w-full z-[120] will-change-transform transform-gpu"
             style={{
-              transform: "translate3d(0, 100vh, 0)",
+              transform:
+                "translate3d(0, 100vh, 0)",
               visibility: "hidden",
             }}
           >
-            <SectionCTA preloaderDone={preloaderDone} />
+            <SectionCTA
+              preloaderDone={preloaderDone}
+            />
           </div>
 
           <div
             ref={layerFooter}
             className="footer absolute left-0 top-0 w-full z-[125] will-change-transform transform-gpu"
             style={{
-              transform: "translate3d(0, 100vh, 0)",
+              transform:
+                "translate3d(0, 100vh, 0)",
               visibility: "hidden",
             }}
           >

@@ -56,8 +56,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
               className="font-display"
               style={{ color: "#F4EEDF", fontWeight: 100, margin: 0 }}
             >
-              Ready to Build Your Dream
-            </h2>
+Ready to Dive in            </h2>
           </div>
           <p
             className="font-body"
@@ -102,7 +101,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
             marginBottom: 20,
           }}
         >
-          Ready to Build Your Dream
+          Ready to Dive in
         </h2>
 
         <p

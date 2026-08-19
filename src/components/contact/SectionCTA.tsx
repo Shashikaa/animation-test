@@ -67,8 +67,7 @@ export default function SectionCTA({
               className="font-display"
               style={{ color: "#F4EEDF", fontWeight: 100, margin: 0 }}
             >
-              Ready to Build Your Dream
-            </h2>
+Ready to Dive in            </h2>
           </div>
           <p
             className="font-body"
@@ -112,8 +111,7 @@ export default function SectionCTA({
             marginBottom: 28,
           }}
         >
-          Ready to Build Your Dream
-        </h2>
+Ready to Dive in        </h2>
 
         <p
           className="font-body max-w-[500px]"
