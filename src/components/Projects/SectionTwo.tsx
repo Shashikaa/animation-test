@@ -3,6 +3,7 @@
 import { useRef, useState, useCallback, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { GRAND_POOLS_DATA } from "@/src/app/projects/[slug]/data"; // Update path if needed
+import Link from "next/link";
 
 // Map the keys from GRAND_POOLS_DATA into the array structure needed for SectionTwo
 const PROJECTS = Object.entries(GRAND_POOLS_DATA).map(([key, data]) => ({
@@ -236,12 +237,12 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               paddingBottom: "35px",
             }}
           >
-            <a
+            <Link
               href={PROJECTS[current].slug}
               className="group btn-underline font-body"
             >
               LEARN MORE
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -342,12 +343,12 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               paddingBottom: "55px",
             }}
           >
-            <a
+            <Link
               href={PROJECTS[current].slug}
               className="group btn-underline font-body"
             >
               LEARN MORE
-            </a>
+            </Link>
           </div>
         </div>
       </section>

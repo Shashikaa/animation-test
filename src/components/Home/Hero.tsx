@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 
 interface HeroProps {
@@ -79,12 +80,13 @@ export default function Hero({ onReady }: HeroProps) {
           </div>
 
           {/* Action Button */}
-          <a
-            href="/projects"
-            className="hero-contact-btn group btn-underline font-body ml-0 lg:ml-10"
-          >
-            See Our Projects
-          </a>
+<Link
+  href="/projects"
+  prefetch={true}
+  className="hero-contact-btn group btn-underline font-body ml-0 lg:ml-10"
+>
+  See Our Projects
+</Link>
         </div>
       </div>
 

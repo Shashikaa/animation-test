@@ -7,8 +7,8 @@ type FadePreloaderProps = {
   onComplete?: () => void;
 };
 
-const HOLD_DURATION_MS = 290;
-const EXIT_DURATION_MS = 280;
+const HOLD_DURATION_MS = 490;
+const EXIT_DURATION_MS = 380;
 
 export default function FadePreloader({
   onExitStart,
@@ -47,42 +47,26 @@ export default function FadePreloader({
         transition: `opacity ${EXIT_DURATION_MS}ms cubic-bezier(0.16, 1, 0.3, 1)`,
       }}
     >
-      <svg
-        className="h-full w-full object-cover"
-        width="1920"
-        height="1080"
-        viewBox="0 0 1920 1080"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        preserveAspectRatio="xMidYMid slice"
-      >
-        <rect width="1920" height="1080" fill="url(#paint0_linear_6224_4460)" />
-        <rect width="1920" height="1080" fill="url(#paint1_linear_6224_4460)" />
-        <defs>
-          <linearGradient
-            id="paint0_linear_6224_4460"
-            x1="0"
-            y1="0"
-            x2="1899.94"
-            y2="1059.79"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stopColor="#162D24" />
-            <stop offset="1" stopColor="#094146" />
-          </linearGradient>
-          <linearGradient
-            id="paint1_linear_6224_4460"
-            x1="0"
-            y1="0"
-            x2="1899.94"
-            y2="1059.79"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stopColor="#162D24" />
-            <stop offset="1" stopColor="#094146" />
-          </linearGradient>
-        </defs>
-      </svg>
+      <style>{`
+        @keyframes gradientShift {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+        .animated-gradient-bg {
+          background: linear-gradient(-45deg, #162D24, #0E5A53, #094146, #162D24);
+          background-size: 400% 400%;
+          animation: gradientShift 3s ease infinite;
+        }
+      `}</style>
+
+      <div className="h-full w-full animated-gradient-bg" />
     </div>
   );
 }

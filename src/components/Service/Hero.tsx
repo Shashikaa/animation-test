@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 interface HeroProps {
   hideText?: boolean;
@@ -84,12 +85,12 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
       {/* BUTTON LAYER: Left on mobile/tablet, Right on desktop */}
       {!hideText && (
         <div className="hero-btn  absolute z-50 pointer-events-auto block left-[20px] bottom-12 md:left-[30px] lg:!left-auto lg:!right-[60px] lg:bottom-[90px] transform-gpu">
-          <a
+          <Link
             href="/contact"
             className="group btn-underline font-body "
           >
             CONTACT US
-          </a>
+          </Link>
         </div>
       )}
     </div>

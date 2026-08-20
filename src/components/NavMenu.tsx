@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconMark } from "./IconMark";
@@ -69,15 +70,17 @@ function PoolsSVG({ width, height }: { width: number; height: number }) {
   );
 }
 
-function SharedLogoMarkup() {
+function SharedLogoMarkup({ onClose }: { onClose?: () => void }) {
   const handleLogoClick = () => {
     document.body.style.overflow = "";
     document.documentElement.style.overflow = "";
+    if (onClose) onClose();
   };
 
   return (
-    <a
+    <Link
       href="/"
+      prefetch={true}
       onClick={handleLogoClick}
       id="header-logo-inner"
       aria-label="Grand Pools — go to homepage"
@@ -108,7 +111,7 @@ function SharedLogoMarkup() {
           <PoolsSVG width={202 * HEADER_LOGO_SCALE} height={30 * HEADER_LOGO_SCALE} />
         </span>
       </span>
-    </a>
+    </Link>
   );
 }
 
@@ -262,8 +265,17 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
   }, [onClose]);
 
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (open) {
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    }
+    return () => { 
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
   }, [open]);
 
   return (
@@ -305,7 +317,7 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
           `}</style>
 
           <div id="nav-header-bar" className="!flex !items-center !justify-between !w-full">
-            <SharedLogoMarkup />
+            <SharedLogoMarkup onClose={onClose} />
             <CloseButton onClick={onClose} />
           </div>
 
@@ -326,6 +338,7 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
                       href={href}
                       isActive={hoveredIndex === i}
                       onMouseEnter={() => setHoveredIndex(i)}
+                      onCloseMenu={onClose}
                       isMobile
                     />
                   </motion.div>
@@ -432,8 +445,17 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
   }, [open, onClose]);
 
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (open) {
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    }
+    return () => { 
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
   }, [open]);
 
   return (
@@ -483,7 +505,7 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
 
           <div className="!relative !flex !flex-col !justify-between !pb-12 !w-full !h-full !z-10">
             <div id="nav-header-bar-desktop" className="!flex !items-center !justify-between !w-full">
-              <SharedLogoMarkup />
+              <SharedLogoMarkup onClose={onClose} />
             </div>
 
             <div className="!my-auto !py-8 !px-5 md:!px-[30px] lg:!px-[55px]">
@@ -502,7 +524,8 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
                         label={label}
                         href={href}
                         isActive={hoveredIndex === i}
-                          onMouseEnter={() => handleMouseEnter(i)}
+                        onMouseEnter={() => handleMouseEnter(i)}
+                        onCloseMenu={onClose}
                       />
                     </motion.div>
                   </div>
@@ -563,18 +586,20 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
     : <DesktopMenu open={open} onClose={onClose} />;
 }
 
-// ── NAV LINK: DIRECT BROWSER NAVIGATION (same behavior as Footer) ──
+// ── NAV LINK: NEXT.JS LINK WITH ROUTE PREFETCHING & SCROLL UNLOCK ──
 function NavLink({
   label,
   href,
   isActive,
   onMouseEnter,
+  onCloseMenu,
   isMobile = false,
 }: {
   label: string;
   href: string;
   isActive: boolean;
   onMouseEnter: () => void;
+  onCloseMenu?: () => void;
   isMobile?: boolean;
 }) {
   const pathname = usePathname();
@@ -583,15 +608,15 @@ function NavLink({
   const highlighted = isActive || isCurrentPage || isTouched;
 
   const handleClick = () => {
-    // Release any menu/body scroll locks immediately.
-    // Do NOT call onClose() here and do NOT wait for an exit animation.
     document.body.style.overflow = "";
     document.documentElement.style.overflow = "";
+    if (onCloseMenu) onCloseMenu();
   };
 
   return (
-    <a
+    <Link
       href={href}
+      prefetch={true}
       onClick={handleClick}
       onMouseEnter={onMouseEnter}
       onFocus={onMouseEnter}
@@ -616,6 +641,6 @@ function NavLink({
       >
         {label}
       </span>
-    </a>
+    </Link>
   );
 }

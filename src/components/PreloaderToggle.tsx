@@ -25,7 +25,7 @@ export default function PreloaderToggle() {
       }
 
       if (
-        currentPath === "/terms" ||
+        currentPath === "/terms-of-use" ||
         currentPath === "/privacy-policy" ||
         currentPath === "/not-found"
       ) {

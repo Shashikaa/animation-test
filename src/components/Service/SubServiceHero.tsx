@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 export interface TabContent {
   label: string;
@@ -124,9 +125,9 @@ export default function SubServiceHero({ data, hideText = false }: HeroProps) {
                 </div>
 
                 {/* Contact Us Button */}
-                <a href="/contact" className="btn-underline   hero-btn lg:ml-10">
+                <Link href="/contact" className="btn-underline   hero-btn lg:ml-10">
                   CONTACT US
-                </a>
+                </Link>
               </div>
             </div>
           )}

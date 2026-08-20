@@ -397,9 +397,6 @@ export default function HomeDesktop() {
       ".section-10 .s10-title, .section-10 .s10-title-sub, .section-10 .s10-para-top, .section-10 .reveal-text, .section-10 .gs-line-inner, .section-10 .custom-line-inner"
     );
 
-    const ctaInner =
-      scope.querySelector<HTMLElement>(".section-cta .cta-inner-desktop");
-
     [
       s2Frame1,
       s2Frame2,
@@ -911,15 +908,17 @@ export default function HomeDesktop() {
         )}px, 0)`;
       }
 
-      if (ctaInner) {
-        ctaInner.style.opacity = "1";
-        ctaInner.style.transform =
-          "translate3d(0, 0px, 0)";
-      }
-
       const footerArriveProg = easeOutQuad(
         clamp((stepProgress - 15.3) / 0.5)
       );
+
+      if (layerCTA.current) {
+        const innerOpacity = (1 - footerArriveProg).toFixed(3);
+        layerCTA.current.style.setProperty(
+          "--cta-inner-opacity",
+          innerOpacity
+        );
+      }
 
       if (layerFooter.current) {
         const startY = vh;

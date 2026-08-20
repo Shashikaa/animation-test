@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { IconMark } from "./IconMark";
 import SubmitRequestModal from "./SubmitRequestModal";
 import { useSite } from "@/src/app/context/SiteContext";
+import Link from "next/link";
 
 export const LOGO_COLOR        = "#F4EEDF";
 export const LOGO_ICON_W       = 160;
@@ -81,7 +82,7 @@ function Logo({
   logoVisible?: boolean;
 }) {
   return (
-    <a
+    <Link
       href={href}
       onClick={onClick}
       aria-label="Grand Pools — go to homepage"
@@ -113,7 +114,7 @@ function Logo({
           <PoolsSVG width={202 * HEADER_LOGO_SCALE} height={30 * HEADER_LOGO_SCALE} />
         </span>
       </span>
-    </a>
+    </Link>
   );
 }
 

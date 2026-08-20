@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import FAQAccordion, { FAQItem } from "../FAQAccordion";
 
 export interface SectionTwoData {
@@ -46,12 +47,12 @@ export default function SubServiceFAQSection({ data }: FAQSectionProps) {
 
         {/* Contact Us Button - Relative in flow for mobile (with mt-10 gap), Absolute for Desktop */}
         <div className="!mt-14 mb-6 lg:m-0 lg:absolute lg:bottom-16 lg:left-auto lg:right-18 z-30">
-          <a
+          <Link
             href="/contact"
             className="group btn-underline font-body"
           >
             CONTACT US
-          </a>
+          </Link>
         </div>
 
       </div>

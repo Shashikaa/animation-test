@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation"; 
 import { useSite } from "../app/context/SiteContext"; 
 
@@ -8,15 +9,29 @@ const SOCIAL_LINKS = [
   { label: "Instagram", href: "https://www.instagram.com/grandpools_aus/", src: "/ig.svg", size: 27 },
 ];
 
+const MAIN_NAV = [
+  { item: "Home", href: "/" },
+  { item: "About Us", href: "/about" },
+  { item: "Services", href: "/services" },
+  { item: "Projects", href: "/projects" },
+  { item: "Contact Us", href: "/contact" },
+];
+
+const SERVICES_NAV = [
+  { item: "Residential Pools Construction", href: "/services/residential-pools-construction" },
+  { item: "Pool Equipment & Installation", href: "/services/pool-equipment-and-installation" },
+  { item: "Commercial Pool Construction", href: "/services/commercial-pool-construction" },
+];
+
 export default function Footer() {
   const { smootherRef } = useSite();
   const pathname = usePathname();
 
-  // Force full reload if user clicks logo while on home page
+  // Force full reload if user clicks logo while already on the home page
   const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (pathname === "/") {
       e.preventDefault();
-      window.location.href = "/";
+      window.location.reload();
     }
   };
 
@@ -29,7 +44,6 @@ export default function Footer() {
         boxSizing: "border-box",
       }}
     >
-      {/* Dynamic Style Injection for Mobile and Tablet Layouts Only */}
       <style jsx global>{`
         @media (max-width: 1023px) {
           .responsive-row-2 {
@@ -74,7 +88,6 @@ export default function Footer() {
           }
         }
 
-        /* Mobile Screen Centering Fix Only (< 768px) */
         @media (max-width: 767px) {
           .responsive-attribution {
             flex-direction: column !important;
@@ -94,7 +107,6 @@ export default function Footer() {
         }
       `}</style>
 
-      {/* Figma Linear Gradient Container (#162D24 -> #094146) */}
       <div 
         className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[20px] !pt-[30px] md:!pt-[40px] shadow-2xl overflow-hidden"
         style={{
@@ -118,7 +130,7 @@ export default function Footer() {
             zIndex: 20,
           }}
         >
-          <a 
+          <Link 
             href="/" 
             onClick={handleLogoClick}
             style={{ 
@@ -140,7 +152,7 @@ export default function Footer() {
                 pointerEvents: "auto",
               }}
             />
-          </a>
+          </Link>
         </div>
 
         {/* ROW 2: Link Column Grid */}
@@ -161,14 +173,8 @@ export default function Footer() {
           >
             {/* Col 1 — Main Nav */}
             <nav style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
-              {[
-                { item: "Home", href: "/" },
-                { item: "About Us", href: "/about" },
-                { item: "Services", href: "/services" },
-                { item: "Projects", href: "/projects" },
-                { item: "Contact Us", href: "/contact" },
-              ].map(({ item, href }) => (
-                <a
+              {MAIN_NAV.map(({ item, href }) => (
+                <Link
                   key={item}
                   href={href}
                   style={{
@@ -182,18 +188,14 @@ export default function Footer() {
                   onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
                 >
                   {item}
-                </a>
+                </Link>
               ))}
             </nav>
 
             {/* Col 2 — Services Nav */}
             <nav className="flex flex-col !items-end lg:!items-start gap-3">
-              {[
-                { item: "Residential Pools Construction", href: "/services/residential-pools-construction" },
-                { item: "Pool Equipment & Installation", href: "/services/pool-equipment-and-installation" },
-                { item: "Commercial Pool Construction", href: "/services/commercial-pool-construction" },
-              ].map(({ item, href }) => (
-                <a
+              {SERVICES_NAV.map(({ item, href }) => (
+                <Link
                   key={item}
                   href={href}
                   style={{
@@ -207,7 +209,7 @@ export default function Footer() {
                   onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
                 >
                   {item}
-                </a>
+                </Link>
               ))}
             </nav>
           </div>
@@ -228,7 +230,7 @@ export default function Footer() {
           className="w-full"
         />
 
-        {/* ROW 3: Desktop 3-Item Space-Between Bottom Row */}
+        {/* ROW 3: Bottom Row */}
         <div
           className="responsive-bottom-row !text-[14px] md:!text-[16px]"
           style={{
@@ -238,24 +240,24 @@ export default function Footer() {
             width: "100%",
           }}
         >
-          {/* Mobile Split Layout (Hidden on Desktop) */}
+          {/* Mobile Split Layout */}
           <div className="mobile-only-row-4" style={{ display: "none", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
             <BottomLink href="/terms-of-use">Terms of Use</BottomLink>
             <BottomLink href="/privacy-policy">Privacy Policy</BottomLink>
           </div>
 
-          {/* Item 1 (Desktop): Copyright */}
+          {/* Desktop Copyright */}
           <span className="desktop-only-row-4" style={{ color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
             © 2026 Grand Pools. All Rights Reserved.
           </span>
 
-          {/* Item 2 (Desktop): Terms & Privacy Links */}
+          {/* Desktop Links */}
           <div className="desktop-only-row-4 !text-[14px] md:!text-[16px]" style={{ display: "flex", gap: 24, alignItems: "center" }}>
             <BottomLink href="/terms-of-use">Terms of Use</BottomLink>
             <BottomLink href="/privacy-policy">Privacy Policy</BottomLink>
           </div>
 
-          {/* Item 3 (Desktop): Design & Development */}
+          {/* Desktop Attribution */}
           <div className="responsive-attribution !text-[14px] md:!text-[16px]">
             <span style={{ color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
               Design &amp; Development by{" "}
@@ -271,7 +273,6 @@ export default function Footer() {
               </a>
             </span>
 
-            {/* Mobile Copy Block (Hidden on Desktop) */}
             <span className="mobile-only-row-4 mobile-copy-text !text-[14px] md:!text-[16px] !text-center" style={{ display: "none", color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
               © 2026 Grand Pools. All Rights Reserved.
             </span>
@@ -281,8 +282,6 @@ export default function Footer() {
     </footer>
   );
 }
-
-/* ── Helper components ── */
 
 function SocialLink({ href, label, src, size = 24 }: { href: string; label: string; src: string; size?: number }) {
   return (
@@ -319,7 +318,7 @@ function SocialLink({ href, label, src, size = 24 }: { href: string; label: stri
 
 function BottomLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a
+    <Link
       href={href}
       style={{
         color: "#F4EBE4",
@@ -331,6 +330,6 @@ function BottomLink({ href, children }: { href: string; children: React.ReactNod
       onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
     >
       {children}
-    </a>
+    </Link>
   );
 }
