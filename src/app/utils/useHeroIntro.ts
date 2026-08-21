@@ -9,6 +9,8 @@ interface UseHeroIntroOptions {
   unlockScrollEarlyMs?: number;
 }
 
+// useHeroIntro.ts
+
 export function useHeroIntro(
   scopeRef: RefObject<HTMLElement | null>,
   options: UseHeroIntroOptions = {}
@@ -20,10 +22,15 @@ export function useHeroIntro(
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.history.scrollRestoration) {
+
+    if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
+
+    // Force strict native zero-reset on mount
     window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   }, []);
 
   useEffect(() => {
@@ -65,10 +72,15 @@ export function useHeroIntro(
 
     // 2. Smoothly enable Lenis scroll listening
     const unlockScrollTimer = setTimeout(() => {
-      if (lenis && typeof lenis.start === "function") {
-        lenis.start();
+      if (lenis) {
+        // Zero out Lenis target scroll position before starting on iOS
+        if (typeof lenis.scrollTo === "function") {
+          lenis.scrollTo(0, { immediate: true });
+        }
+        if (typeof lenis.start === "function") {
+          lenis.start();
+        }
       }
-      window.dispatchEvent(new Event("scroll"));
     }, unlockScrollEarlyMs);
 
     // 3. Mark keyframe sequence finished & replace with static styles
@@ -78,14 +90,14 @@ export function useHeroIntro(
         scopeRef.current.classList.remove("hero-animate-active");
         scopeRef.current.classList.add("hero-animate-done");
       }
-      
-      // Idle-schedule Lenis resize so it doesn't cause main thread drop
+
+      // iOS Safari Fix: Use double requestAnimationFrame instead of requestIdleCallback
       if (lenis && typeof lenis.resize === "function") {
-        if ("requestIdleCallback" in window) {
-          window.requestIdleCallback(() => lenis.resize(), { timeout: 400 });
-        } else {
-          requestAnimationFrame(() => lenis.resize());
-        }
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            lenis.resize();
+          });
+        });
       }
     }, introDurationMs + 100);
 

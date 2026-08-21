@@ -608,13 +608,13 @@ export default function HomeDesktop() {
       );
 
       if (s2ScrollContent) {
-        const yPercent =
+        const yVh =
           (1 - s2ScrollInProg) * 100 -
           s2ScrollPhase2 * 50;
 
-        s2ScrollContent.style.transform = `translate3d(0, ${yPercent.toFixed(
+        s2ScrollContent.style.transform = `translate3d(0, ${yVh.toFixed(
           2
-        )}%, 0)`;
+        )}vh, 0)`;
 
         s2ScrollContent.style.opacity =
           stepProgress >= 3.75 ? "1" : "0";

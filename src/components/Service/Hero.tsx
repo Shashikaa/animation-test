@@ -20,7 +20,7 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
       <div className="absolute inset-y-0 right-0 w-full lg:w-[57.5%] z-0 text-[#F4EEDF]">
         <div className="relative w-full h-full p-6 md:p-12 lg:p-16">
           {/* Paragraph 1: High/Center-Left Position */}
-          <div className="absolute bottom-[260px] md:bottom-[280px] lg:top-[35%] left-6 md:left-12 lg:!left-87 max-w-[290px] md:max-w-[310px]">
+          <div className="absolute bottom-[260px] md:bottom-[280px] lg:top-[35%] left-6 md:left-12 lg:!left-[37%]  max-w-[290px] md:max-w-[310px]">
             <p className="text-[14px] md:text-[16px] leading-relaxed font-light">
               From stunning pool renovations to high-end commercial builds, 
               we deliver tailored solutions with precision and care.

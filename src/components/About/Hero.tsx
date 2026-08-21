@@ -40,7 +40,7 @@ export default function Hero({ isMobile = false }: HeroProps) {
               className="hero-text-target hero-title-target text-[#F4EEDF] !font-[100]"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              Designing Pools
+More Than Just a Pool
             </h1>
             <p className="hero-text-target hero-desc-target text-[#F4EEDF]">
               Creating Experiences
@@ -77,8 +77,7 @@ export default function Hero({ isMobile = false }: HeroProps) {
                 className="hero-text-target hero-title-target text-[#F4EEDF] !font-[100]"
                 style={{ fontFamily: "var(--font-display)" }}
               >
-                Designing Pools
-              </h1>
+More Than Just a Pool              </h1>
               <p className="hero-text-target hero-desc-target text-[#F4EEDF]">
                 Creating Experiences
               </p>
