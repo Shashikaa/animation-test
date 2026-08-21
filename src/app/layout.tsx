@@ -56,17 +56,13 @@ const canelaText = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-
-title: {
-  default: "Grand Pools",
-  template: "Grand Pools - %s",
-},
-
+  title: {
+    default: "Grand Pools",
+    template: "Grand Pools - %s",
+  },
   description:
     "Grand Pools designs and builds custom swimming pools in Melbourne. Discover thoughtfully crafted pools combining style, quality and functionality.",
-
   applicationName: "Grand Pools",
-
   keywords: [
     "pool builders Melbourne",
     "custom pools Melbourne",
@@ -77,17 +73,13 @@ title: {
     "pool design Melbourne",
     "Grand Pools",
   ],
-
   authors: [{ name: "Grand Pools", url: SITE_URL }],
   creator: "Grand Pools",
   publisher: "Grand Pools",
-
   category: "Swimming Pool Construction",
-
   alternates: {
     canonical: "/",
   },
-
   openGraph: {
     type: "website",
     locale: "en_AU",
@@ -105,7 +97,6 @@ title: {
       },
     ],
   },
-
   twitter: {
     card: "summary_large_image",
     title: "Grand Pools | Custom Pool Builders Melbourne",
@@ -113,7 +104,6 @@ title: {
       "Custom swimming pools designed and built for beautiful Melbourne homes.",
     images: ["/og-image.jpg"],
   },
-
   robots: {
     index: true,
     follow: true,
@@ -125,7 +115,6 @@ title: {
       "max-video-preview": -1,
     },
   },
-
   icons: {
     icon: [
       { url: "/favicon.ico" },
@@ -133,9 +122,7 @@ title: {
     ],
     apple: "/apple-icon.png",
   },
-
   manifest: "/site.webmanifest",
-
   other: {
     "geo.region": "AU-VIC",
     "geo.placename": "Melbourne",
@@ -207,7 +194,7 @@ export default function RootLayout({
     <html
       lang="en-AU"
       className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased`}
-      style={{ backgroundColor: "#162D24", minHeight: "100vh" }}
+      style={{ backgroundColor: "#162D24" }}
       suppressHydrationWarning
     >
       <head>
@@ -217,7 +204,6 @@ export default function RootLayout({
             __html: JSON.stringify(businessSchema).replace(/</g, "\\u003c"),
           }}
         />
-
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -225,15 +211,14 @@ export default function RootLayout({
           }}
         />
 
+        {/* inline layout locking strategy */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
               html, body {
-                background: #162D24 !important;
                 background-color: #162D24 !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                min-height: 100vh !important;
               }
 
               @font-face {
@@ -244,15 +229,6 @@ export default function RootLayout({
               html.preloading,
               body.preloading {
                 overflow: hidden !important;
-                min-height: 100vh !important;
-              }
-
-              html.preloading .site-root,
-              body.preloading .site-root,
-              html.preloading .home-desktop-scope {
-                opacity: 0 !important;
-                visibility: hidden !important;
-                pointer-events: none !important;
               }
 
               html:not(.show-brand-preloader) #brand-preloader-root {
@@ -280,22 +256,15 @@ export default function RootLayout({
 
                   document.documentElement.classList.add('preloading');
 
-                  var isSeen =
-                    sessionStorage.getItem('hasSeenBrandPreloader') === 'true';
+                  var isSeen = sessionStorage.getItem('hasSeenBrandPreloader') === 'true';
 
                   if (p === '/' && !isSeen) {
-                    document.documentElement.classList.add(
-                      'show-brand-preloader'
-                    );
+                    document.documentElement.classList.add('show-brand-preloader');
                   } else {
-                    document.documentElement.classList.add(
-                      'show-fade-preloader'
-                    );
+                    document.documentElement.classList.add('show-fade-preloader');
                   }
                 } catch (e) {
-                  document.documentElement.classList.add(
-                    'show-fade-preloader'
-                  );
+                  document.documentElement.classList.add('show-fade-preloader');
                 }
               })();
             `,
@@ -309,7 +278,6 @@ export default function RootLayout({
           type="font/otf"
           crossOrigin="anonymous"
         />
-
         <link
           rel="preload"
           href="/fonts/Canela-Light-Trial.otf"
@@ -320,7 +288,7 @@ export default function RootLayout({
       </head>
 
       <body
-        className="flex min-h-[100vh] flex-col"
+        className="flex min-h-[100dvh] flex-col"
         style={{ backgroundColor: "#162D24" }}
         suppressHydrationWarning
       >
@@ -328,12 +296,10 @@ export default function RootLayout({
           <SmoothScroll>
             <HeaderWrapper />
             <NavMenuWrapper />
-
-            <main className="site-root flex min-h-[100vh] w-full flex-1 flex-col overflow-x-hidden">
+            <main className="site-root flex min-h-[100dvh] w-full flex-1 flex-col overflow-x-hidden">
               {children}
             </main>
           </SmoothScroll>
-
           <PreloaderToggle />
         </SiteProvider>
       </body>

@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useRef, MutableRefObject } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  MutableRefObject,
+} from "react";
 
 export const PAGES_WITH_OWN_PRELOADER: string[] = [];
 
@@ -27,18 +34,41 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
       if ("scrollRestoration" in window.history) {
         window.history.scrollRestoration = "manual";
       }
-      setHasSeenBrandPreloader(sessionStorage.getItem("hasSeenBrandPreloader") === "true");
+      setHasSeenBrandPreloader(
+        sessionStorage.getItem("hasSeenBrandPreloader") === "true"
+      );
     }
+
+    const clearPreloaderClasses = () => {
+      document.body.classList.remove("preloading", "scroll-locked");
+      document.documentElement.classList.remove("preloading", "scroll-locked");
+    };
 
     const handlePopState = () => {
       setPreloaderDone(true);
-      document.body.classList.remove("preloading");
-      document.documentElement.classList.remove("preloading");
+      clearPreloaderClasses();
+      if (smootherRef.current) {
+        smootherRef.current.resize();
+        smootherRef.current.start();
+      }
     };
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
+
+  // Recalculate smooth scroll dimension limits whenever the preloader finishes
+  useEffect(() => {
+    if (preloaderDone) {
+      document.body.classList.remove("preloading", "scroll-locked");
+      document.documentElement.classList.remove("preloading", "scroll-locked");
+
+      if (smootherRef.current) {
+        smootherRef.current.resize();
+        smootherRef.current.start();
+      }
+    }
+  }, [preloaderDone]);
 
   const markBrandPreloaderSeen = () => {
     try {
