@@ -72,22 +72,31 @@
   padding: 0;
 }
 
-html,
-body {
+html {
   background-color: #162d24 !important;
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   scroll-behavior: auto !important;
-  min-height: 100%;
   width: 100%;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y !important;
+  /* Allow WebKit scroll engines to manage gestures naturally */
+  overscroll-behavior-y: none;
+}
+
+body {
+  background-color: #162d24 !important;
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  overflow-x: hidden;
-  overscroll-behavior-y: none; /* Prevents iOS rubber-band scroll shifts */
 }
 
 html::-webkit-scrollbar,
@@ -97,18 +106,10 @@ body::-webkit-scrollbar {
   height: 0 !important;
 }
 
-body {
-  color: var(--foreground);
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-  line-height: var(--leading-body);
-  overflow-y: auto;
-}
-
 /* ─── Unified Global Smooth Scroll & Hardware Engine ─────────── */
 html.lenis,
 html.lenis body {
-  height: auto;
+  height: auto !important;
 }
 
 .lenis.lenis-smooth {
@@ -166,7 +167,7 @@ video {
   }
 }
 
-/* ─── Global Pins (Using svh to lock height on iOS) ─────────── */
+/* ─── Global Pins ────────────────────────────────────────────── */
 .pin-all,
 .pin-all-home,
 .pin-all-contact,
@@ -198,6 +199,7 @@ video {
 html.preloading,
 body.preloading {
   overflow: hidden !important;
+  height: 100% !important;
   width: 100% !important;
   touch-action: none !important;
   background: linear-gradient(135deg, #162d24 0%, #094146 100%) !important;

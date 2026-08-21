@@ -33,7 +33,6 @@ export default function AboutMobile() {
     totalScrollable: 0,
     vh: 0,
     trackTopOffset: 0,
-    footerHeight: 0,
   });
 
   const lastSizeRef = useRef({ width: 0, height: 0 });
@@ -79,6 +78,7 @@ export default function AboutMobile() {
     const vh = window.innerHeight;
     const vw = window.innerWidth;
 
+    // Dynamically calculate actual track height to account for footer size
     const footerHeight = layer7Ref.current?.offsetHeight || vh;
     const totalTrackHeight = vh * 5 + footerHeight;
     trackRef.current.style.height = `${totalTrackHeight}px`;
@@ -89,7 +89,6 @@ export default function AboutMobile() {
       totalScrollable: Math.max(0, totalTrackHeight - vh),
       vh,
       trackTopOffset: window.scrollY + rect.top,
-      footerHeight,
     };
 
     lastSizeRef.current = { width: vw, height: vh };
@@ -142,9 +141,21 @@ export default function AboutMobile() {
 
     const panels =
       trackRef.current?.querySelectorAll<HTMLElement>(".about-stack-layer");
+
     const s5Bg = scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
 
     let isRunning = true;
+
+    const isAndroid =
+      typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
+
+    // Easing & speed cap controls:
+const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
+    
+    // STRICT MAX SPEED CAP PER FRAME:
+    // Lower values (e.g., 0.003 - 0.005) make fast flicks smooth and controlled.
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
+
     let lastTime = performance.now();
 
     const render = () => {
@@ -154,13 +165,21 @@ export default function AboutMobile() {
       const dt = Math.min((now - lastTime) / 1000, 0.1);
       lastTime = now;
 
-      // Smoother interpolation factor to align progress with gesture speed
-      const dynamicEase = 1 - Math.exp(-0.12 * 60 * dt);
-      const delta = (targetProgress.current - currentProgress.current) * dynamicEase;
+      const dynamicEase = 1 - Math.exp(-EASE_FACTOR * 60 * dt);
+
+      let delta =
+        (targetProgress.current - currentProgress.current) * dynamicEase;
+
+      // Cap maximum speed per frame during aggressive swiping
+      if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
+        delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
+      }
 
       currentProgress.current += delta;
+
       const p = currentProgress.current;
 
+      // Original progress map keyframes
       const s1Prog = mapRange(p, 0.0, 0.12);
       const s2Prog = mapRange(p, 0.12, 0.24);
       const s3EntranceProg = mapRange(p, 0.24, 0.36);
@@ -197,9 +216,10 @@ export default function AboutMobile() {
         }
       }
 
-      const { vh, footerHeight } = scrollMetricsRef.current;
+      const { vh } = scrollMetricsRef.current;
 
       if (layer7Ref.current) {
+        const footerHeight = layer7Ref.current.offsetHeight || vh;
         const y = vh - footerHeight * footerProgress;
         layer7Ref.current.style.transform = `translate3d(0, ${y}px, 0)`;
       }
@@ -236,13 +256,14 @@ export default function AboutMobile() {
       if (totalScrollable <= 0) return;
 
       const relativeScroll = scrollY - trackTopOffset;
+      const trackBottom = relativeScroll + totalScrollable;
 
       if (fixedFrameRef.current) {
-        if (relativeScroll >= 0 && relativeScroll <= totalScrollable) {
+        if (relativeScroll >= 0 && trackBottom >= 0) {
           fixedFrameRef.current.style.position = "fixed";
           fixedFrameRef.current.style.top = "0px";
           fixedFrameRef.current.style.bottom = "auto";
-        } else if (relativeScroll > totalScrollable) {
+        } else if (trackBottom < 0) {
           fixedFrameRef.current.style.position = "absolute";
           fixedFrameRef.current.style.top = "auto";
           fixedFrameRef.current.style.bottom = "0px";
@@ -287,10 +308,10 @@ export default function AboutMobile() {
   }, [shouldLoadRest, smootherRef, triggerSec5Hook]);
 
   return (
-    <div ref={scopeRef} className="w-full overscroll-none">
+    <div ref={scopeRef} className="w-full">
       <div
         ref={trackRef}
-        className="about-track-container relative w-full touch-pan-y"
+        className="about-track-container relative w-full"
       >
         <div
           ref={fixedFrameRef}
