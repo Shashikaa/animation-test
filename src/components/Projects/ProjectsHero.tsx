@@ -63,9 +63,9 @@ export default function ProjectsHero({
                     Projects
                   </h1>
                   <p className="hero-desc hero-text-target hero-desc-target text-[#F4EEDF] !mt-1 max-w-[380px]">
-                    That truly speak for themselves.
+                   Projects That Speak for Themselves
                     <br />
-                    Take a look at some of our completed projects across Melbourne.
+                  Take a look at some of our completed pool projects across Melbourne.
                   </p>
                 </div>
               </div>
@@ -75,12 +75,7 @@ export default function ProjectsHero({
                 <div className="relative w-full max-w-[310px] md:max-w-[400px] lg:max-w-[440px] mb-12 md:mb-16 lg:mb-22 pr-6 md:pr-12 lg:pr-20 text-[#F4EEDF]">
                   <div className="relative w-full h-full min-h-[150px]">
                     <p className="scroll-para-1 invisible absolute top-0 left-0 w-full pointer-events-auto">
-                      Our projects showcase the quality, craftsmanship, and
-                      attention to detail that define Grand Pools. From luxury
-                      backyard retreats to large-scale custom builds across
-                      Melbourne, every pool is designed to complement its
-                      surroundings while delivering lasting beauty,
-                      functionality, and value.
+Our projects reflect the quality, craftsmanship, and attention to detail that define Grand Pools. From luxury backyard retreats to large-scale custom builds across Melbourne, every pool is designed to complement its surroundings and deliver lasting beauty, function, and value.
                     </p>
                   </div>
                 </div>

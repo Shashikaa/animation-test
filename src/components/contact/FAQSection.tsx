@@ -119,7 +119,7 @@ export default function FAQSection({ onLayoutChange }: FAQSectionProps) {
             className="!text-[#F4EEDF] font-display !font-[100]"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Frequently Asked <br /> Questions
+            Still Have <br /> Questions
           </h2>
         </div>
 

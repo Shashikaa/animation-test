@@ -408,12 +408,12 @@ export default function ServicesDesktop() {
         layerFooter.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
       }
 
-      const upperOpacity = (1 - footerProgress).toFixed(3);
-
-      if (appSecWrap && footerProgress > 0) {
-        const appScale = (1.0 - footerProgress * 0.08).toFixed(4);
-        appSecWrap.style.opacity = upperOpacity;
-        appSecWrap.style.transform = `translate3d(0, 0%, 0) scale3d(${appScale}, ${appScale}, 1)`;
+      // Appsection stays visible underneath as CTA and Footer slide over
+      if (appSecWrap && stepProgress >= 6.8) {
+        appSecWrap.style.opacity = "1";
+        if (stepProgress >= 9.8) {
+          appSecWrap.style.transform = "translate3d(0, 0%, 0) scale3d(1, 1, 1)";
+        }
       }
 
       rafId.current = requestAnimationFrame(renderTransforms);

@@ -22,16 +22,14 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
           {/* Paragraph 1: High/Center-Left Position */}
           <div className="absolute bottom-[260px] md:bottom-[280px] lg:top-[35%] left-6 md:left-12 lg:!left-[37%]  max-w-[290px] md:max-w-[310px]">
             <p className="text-[14px] md:text-[16px] leading-relaxed font-light">
-              From stunning pool renovations to high-end commercial builds, 
-              we deliver tailored solutions with precision and care.
+From considered pool renovations to high-end commercial builds, we deliver tailored solutions with precision, care, and a clear focus on quality.
             </p>
           </div>
 
           {/* Paragraph 2: Bottom-Right Position */}
           <div className="absolute bottom-18 right-6 lg:bottom-12 md:right-12 lg:bottom-16 lg:right-16 max-w-[280px] md:max-w-[300px] text-left">
             <p className="text-[14px] md:text-[16px] leading-relaxed font-light">
-              Whether you're upgrading an existing pool or starting from scratch, 
-              our expert team ensures a seamless process and exceptional results.
+Whether you’re renovating an existing pool or creating something new, our team keeps the process clear, considered, and focused on a high-quality result.
             </p>
           </div>
         </div>
@@ -74,8 +72,7 @@ export default function ServicesHero({ hideText = false, isMobile = false }: Her
                   Expert Pool Solutions
                 </h1>
                 <p className="hero-desc hero-text-target hero-desc-target text-[#F4EEDF] w-[320px]">
-                  Custom-designed pools crafted for relaxing, hosting, and elevated outdoor living.
-                </p>
+Tailored pools for relaxing, hosting, and elevated outdoor living.                </p>
               </div>
             </div>
           )}

@@ -2,7 +2,7 @@
 
 export default function Appsection() {
   return (
-    <section className="relative w-full h-full min-h-screen overflow-hidden flex items-center justify-center  lg:py-0">
+    <section className="relative w-full h-full min-h-screen overflow-hidden flex items-center justify-center lg:py-0">
       
       {/* ── Background Image ── */}
       <div 
@@ -22,13 +22,13 @@ export default function Appsection() {
               className="text-[#F4EEDF] !font-[100] text-3xl md:text-5xl lg:text-6xl !max-w-[520px] sm:max-w-none !mb-4 reveal-text"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              Stay Updated at Every Stage
+              {`Stay Updated\nat Every Stage`}
             </h2>
           </div>
 
           <div className="hidden lg:flex flex-col items-center w-full gap-6">
-            <p className="font-body text-[#F4EEDF] text-sm md:text-base  self-start !max-w-[520px] reveal-text">
-              Pool Care+ keeps you informed and involved from start to finish. Track progress, receive live updates, and follow each stage of your pool project — all in one place.
+            <p className="font-body text-[#F4EEDF] text-sm md:text-base self-start !max-w-[520px] reveal-text">
+              {`Once your pool is completed, Grand Pools' Pool Care+ will show\nyou how to use and look after your pools, as well as contain\nyour equipment and warranty register. All in one place`}
             </p>
           </div>
         </div>
@@ -51,16 +51,11 @@ export default function Appsection() {
           </span>
 
           <p className="font-body text-[#F4EEDF] text-sm md:text-base leading-relaxed text-left !mb-12">
-            Pool Care+ keeps you informed and involved from start to finish. Track progress, receive live updates, and follow each stage of your pool project — all in one place.
+            Once your pool is completed, Grand Pools' Pool Care+ will show you how to use and look after your pools, as well as contain your equipment and warranty register. All in one place
           </p>
 
-          <a
-            href="#"
-
-            className="group btn-underline font-body mt-2"
-          >
+          <a href="#" className="group btn-underline font-body mt-2">
             DOWNLOAD
-
           </a>
         </div>
 

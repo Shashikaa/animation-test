@@ -7,12 +7,12 @@ const slides = [
   {
     img: "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=1200&q=80",
     label: "Residential Pool Construction",
-    desc: "Whether you're creating a peaceful backyard retreat or an entertainer’s dream, we bring your vision to life with tailored designs, expert craftsmanship, and a seamless building process from start to finish.",
+    desc: "Whether you’re creating a peaceful backyard retreat or a space made for entertaining, we bring your vision to life with tailored design, expert craftsmanship, and a clear process from start to finish.",
   },
   {
     img: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=1200&q=80",
     label: "Pool Equipment & Installation",
-    desc: "Upgrade and protect your pool with high-performance equipment and professional installation. From energy-efficient pumps and advanced filtration systems to smart automation, we ensure seamless setup and reliable performance for crystal-clear water.",
+    desc: "From pumps and filters to heating systems and automation, we supply and install the latest pool equipment to keep your pool running smoothly.",
   },
   {
     img: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1200&q=80",
@@ -182,7 +182,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
                 <motion.p
                   custom={0.1}
                   variants={textLineVariants}
-                  className="font-body text-[#F4EEDF]/80 text-[13px] md:text-[16px] leading-relaxed max-w-[420px]"
+                  className="font-body text-[#F4EEDF] text-[13px] md:text-[16px] leading-relaxed max-w-[420px]"
                 >
                   {activeSlide.desc}
                 </motion.p>

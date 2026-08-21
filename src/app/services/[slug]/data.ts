@@ -26,7 +26,7 @@ export interface FullServiceData {
   sectionTwo: SectionTwoData;
 }
 
-export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
+export const SERVICES_DATA: Record<string, FullServiceData> = {
   'residential-pools-construction': {
     slug: 'residential-pools-construction',
     hero: {
@@ -42,43 +42,37 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
         {
           label: 'Designed Around You',
           type: 'paragraph',
-          content: 'Every layout footprint is sculpted around your specific landscape contours, optimising spatial workflow and view corridors to fit your family lifestyle perfectly.'
+          content: 'We create pools that fit seamlessly into your outdoor area—whether you prefer sleek modern lines, a resort-inspired look, or something completely unique. Our designs take into account functionality, visual appeal, and the flow of your space.'
         },
         {
           label: 'Built with Precision & Quality',
-          type: 'points',
-          content: [
-            'Premium shotcrete pool shell formulation',
-            'Laser-aligned waterline tile installations',
-            'Monolithic structural engineer review approvals'
-          ]
+          type: 'paragraph',
+          content: 'Our experienced team manages the entire construction process, using top-grade materials and proven methods to ensure long-lasting durability. From excavation and plumbing to concreting and tiling, we oversee every detail with care.'
+
         },
         {
           label: 'Smooth Process',
           type: 'paragraph',
-          content: 'From permitting and clearing to plumbing and final plaster accents, we coordinate the structural timeline cleanly so you stay completely informed.'
+          content: 'We handle all planning, permits, and compliance so you don’t have to. Throughout the project, you’ll be kept updated at each step, with clear communication and timelines to ensure a smooth, stress-free experience.'
         },
         {
           label: 'Optional Upgrades & Features',
-          type: 'points',
-          content: [
-            'Vanishing pool overflow parameters',
-            'Smart smartphone automation arrays',
-            'Bespoke stone water cascade waterfalls'
-          ]
+          type: 'paragraph',
+            content: 'Enhance your new pool with spa zones, infinity edges, LED lighting, in-floor cleaning systems, water features, or heating options. We’ll guide you through the latest trends and technologies to elevate your pool experience.'
+
         }
       ]
     },
     sectionOne: {
-      title: 'Olympic-Grade Architecture',
-      paragraph: 'Our residential builds are structurally engineered to handle custom volume profiles, leveraging deep engineering methodologies to guarantee decades of flawless operational durability.',
+      title: 'Design Build Details',
+      paragraph: 'From the first design concept to the final finishing details, we manage every stage of your pool project with care, quality materials, and a clear process.',
       bgImageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1920&q=80',
       sideImageUrl: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=1000&q=80',
       fourParagraphs: [
-        'Custom shotcrete reinforcement guarantees long-term structural load safety.',
-        'Precision plumbing alignment scales spatial flow parameters optimally.',
-        'Sleek modern tiling selections integrate seamlessly with deck environments.',
-        'Architectural design passes continuous monolithic engineer review guidelines.'
+        'Attention to Detail\nEvery detail is considered with care  from the pool layout and materials to the final finish  creating a result that feels precise, polished, and built to last.',
+        'Innovative Solution\nsWe use modern pool systems, smart equipment, and considered design solutions to create a pool that feels efficient, functional, and built for today’s lifestyle.',
+        'Built for Longevity\nWe use quality materials, trusted construction methods, and durable finishes to create pools that are made to perform beautifully for years to come.',
+        'Seamless Experience\nWe keep the process clear and well-managed, with transparent communication and steady guidance from the first conversation through to completion.'
       ]
     },
     sectionTwo: {
@@ -98,48 +92,56 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     slug: 'pool-equipment-and-installation',
     hero: {
       title: 'Pool Equipment & Installation',
-      subtitle: 'Bespoke Private Staycations',
+      subtitle: 'From pumps and filters to heating systems and automation, we supply and install the latest pool equipment to keep your pool running smoothly.',
       bgImageUrl: 'https://images.unsplash.com/photo-1572331165267-854da2b10ccc?auto=format&fit=crop&w=1920&q=80',
       tabs: [
         {
-          label: 'From Vision to Reality',
+          label: 'Why Renovate Your Pool?',
           type: 'paragraph',
-          content: 'Crafting premium backyard spaces that seamlessly combine sleek modern water elements with elegant landscape design. Our expert team ensures premium execution on every luxury build.'
+          content: 'Over time, pools can develop cracks, outdated finishes, or inefficient systems. A renovation enhances both aesthetics and functionality, making your pool safer, more efficient, and visually stunning.'
         },
         {
-          label: 'Designed Around You',
-          type: 'paragraph',
-          content: 'Bespoke pool profiles built explicitly to complement high-end residential architectural structures and natural site elevations.'
-        },
-        {
-          label: 'Optional Upgrades & Features',
+          label: 'Our Pool Renovation Services',
           type: 'points',
           content: [
-            'Infinity edge & vanishing glass profiles',
-            'Smart automation integrations',
-            'Premium diamond-brite finish options'
+            'Resurfacing & Tiling: Upgrade worn-out finishes with high-quality tiles, pebblecrete, or quartz.‍',
+            'Structural Repairs: Fix cracks, leaks, or damaged pool shells to restore durability.‍',
+            'Pool Equipment Upgrades: Install modern pumps, filters, and heating systems for efficiency.‍',
+            'Modern Design Enhancements: Add water features, LED lighting, or a new shape to refresh your pool’s look.'
+          ]},
+        {
+          label: 'Our Process',
+          type: 'points',
+          content: [
+            'Assessment & Consultation – We inspect your pool and discuss renovation goals.‍',
+            'Custom Design Plan – We create a tailored solution that suits your needs and budget.‍',
+            'Renovation & Installation – Our skilled team handles all upgrades and improvements.‍',
+            'Final Inspection & Handover – We ensure quality and customer satisfaction before completion.'
           ]
         }
       ]
     },
     sectionOne: {
-      title: 'Bespoke Concrete Contours',
-      paragraph: 'Every high-end residential build begins with premium custom concrete profiles styled perfectly to fit your land contours, ensuring architectural impact from every viewing angle.',
+      title: 'Design Build Details',
+      paragraph: 'From the first design concept to the final finishing details, we manage every stage of your pool project with care, quality materials, and a clear process.',
       bgImageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1920&q=80',
       sideImageUrl: 'https://images.unsplash.com/photo-1572331165267-854da2b10ccc?auto=format&fit=crop&w=1000&q=80',
       fourParagraphs: [
-        'Vanishing edge structures carve sleek, unobstructed views directly into drop-offs.',
-        'Bespoke concrete curves mold completely around modern high-end architectural footprints.',
-        'Custom internal steps and sun shelves maximize functional shallow-water real estate.',
-        'Premium diamond aggregate finishes capture light flawlessly for maximum brilliance.'
+        'Attention to Detail\nEvery detail is considered with care  from the pool layout and materials to the final finish  creating a result that feels precise, polished, and built to last.',
+        'Innovative Solution\nsWe use modern pool systems, smart equipment, and considered design solutions to create a pool that feels efficient, functional, and built for today’s lifestyle.',
+        'Built for Longevity\nWe use quality materials, trusted construction methods, and durable finishes to create pools that are made to perform beautifully for years to come.',
+        'Seamless Experience\nWe keep the process clear and well-managed, with transparent communication and steady guidance from the first conversation through to completion.'
       ]
     },
     sectionTwo: {
-      title: 'Luxury Integrations Explained',
+  title: 'Everything You Need to Know',
       bgImageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1920&q=80',
       faqs: [
-        { question: 'What options do I have for internal finishes?', answer: 'We offer specialized polished aggregate blends, premium quartz formulations, and fully tiled mosaic options.' },
-        { question: 'How do vanishing edge parameters perform?', answer: 'They leverage lower catch basins paired with dedicated balance valves to handle subtle pool water overflow smoothly.' }
+        { question: 'How long does new pool construction take?', answer: 'Most custom shotcrete pools require 8 to 12 weeks depending on site access and structural complexity.' },
+        { question: 'What is included in the new pool construction service?', answer: 'Yes, we handle all engineering submissions, environmental zoning clearances, and construction permits.' },
+        { question: 'Can I customise the shape and features of my pool?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' },
+        { question: 'Do you handle permits and approvals?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' },
+        { question: 'How do I get started with a new pool build?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' }
       ]
     }
   },
@@ -152,44 +154,53 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       bgImageUrl: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1920&q=80',
       tabs: [
         {
-          label: 'From Vision to Reality',
+          label: 'Why Choose Us ',
           type: 'paragraph',
-          content: 'Transforming older concrete pool shells into modern architectural centerpieces. We seamlessly integrate structural renovations with upgraded modern aesthetics.'
+          content: 'Commercial pools require advanced planning, engineering, and compliance with safety standards. Our team specialises in delivering high-quality, fully compliant pools tailored to your business needs.'
         },
         {
-          label: 'Built with Precision & Quality',
+          label: 'Our Commercial Pool Services',
           type: 'points',
           content: [
-            'Complete concrete shell reinforcement fixes',
-            'Hydraulic plumbing pressure safety tests',
-            'Premium architectural masonry restoration'
+            'Custom Design & Engineering: Tailored solutions to fit your facility and vision.‍',
+            'Structural Integrity & Safety Compliance: Pools built to meet industry regulations.‍',
+            'Advanced Filtration & Sanitation Systems: Ensuring optimal water quality for high usage.‍',
+            'Luxury Features & Smart Technology: Infinity edges, water jets, LED lighting, and automated systems.'
           ]
         },
         {
-          label: 'Modern Upgrades',
-          type: 'paragraph',
-          content: 'Easily update layout elements by introducing thermal heating systems, salt chlorination conversions, or modern shallow sun shelves.'
+          label: 'Our Construction Process',
+          type: 'points',
+          content: [
+            'Consultation & Planning – We assess your space and project requirements.‍',
+            'Design & Engineering – Customised designs ensuring durability and compliance.‍',
+            'Construction & Installation – Built with high-quality materials and expert craftsmanship.‍',
+            'Final Testing & Approval – We conduct thorough safety checks before handover.'
+          ]
         }
       ]
     },
     sectionOne: {
-      title: 'Modern Structural Refit',
-      paragraph: 'We completely revitalize aging frameworks, removing degraded masonry to pave the way for modern sub-surface layouts, updated waterline tiling, and highly efficient structural finishes.',
+      title: 'Design Build Details',
+      paragraph: 'From the first design concept to the final finishing details, we manage every stage of your pool project with care, quality materials, and a clear process.',
       bgImageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1920&q=80',
       sideImageUrl: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1000&q=80',
       fourParagraphs: [
-        'Complete removal of failing sub-layers restores structural integrity before replastering.',
-        'Underground pressure scanning isolates and seals historical fluid leaks.',
-        'Modern waterline tile replacement updates the core palette of the pool shell.',
-        'Structural modification introduces sun shelves and shallow lounges to old footprints.'
+        'Attention to Detail\nEvery detail is considered with care  from the pool layout and materials to the final finish  creating a result that feels precise, polished, and built to last.',
+        'Innovative Solution\nsWe use modern pool systems, smart equipment, and considered design solutions to create a pool that feels efficient, functional, and built for today’s lifestyle.',
+        'Built for Longevity\nWe use quality materials, trusted construction methods, and durable finishes to create pools that are made to perform beautifully for years to come.',
+        'Seamless Experience\nWe keep the process clear and well-managed, with transparent communication and steady guidance from the first conversation through to completion.'
       ]
     },
     sectionTwo: {
-      title: 'Restoration Scope & FAQ',
+      title: 'Everything You Need to Know',
       bgImageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1920&q=80',
       faqs: [
-        { question: 'Can you fix cracked concrete pool shells?', answer: 'Yes, we apply high-tensile staples alongside epoxy injection loops to restore structural engineering load tolerances.' },
-        { question: 'Is it possible to convert an older pool to salt chlorination?', answer: 'Absolutely. We seamlessly swap in inline electrolytic cells during the plumbing overhaul phase.' }
+        { question: 'How long does new pool construction take?', answer: 'Most custom shotcrete pools require 8 to 12 weeks depending on site access and structural complexity.' },
+        { question: 'What is included in the new pool construction service?', answer: 'Yes, we handle all engineering submissions, environmental zoning clearances, and construction permits.' },
+        { question: 'Can I customise the shape and features of my pool?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' },
+        { question: 'Do you handle permits and approvals?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' },
+        { question: 'How do I get started with a new pool build?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' }
       ]
     }
   }

@@ -10,6 +10,7 @@ import { FullServiceData } from "./data";
 
 const SubServiceSectionOne = dynamic(() => import("@/src/components/Service/SubServiceSectionOne"));
 const SubServiceFAQSection = dynamic(() => import("@/src/components/Service/SubServiceFAQSection"));
+const Appsection = dynamic(() => import("@/src/components/Projects/Appsection"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
 const clamp = (val: number, min = 0, max = 1) => Math.min(Math.max(val, min), max);
@@ -25,6 +26,8 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
 
   const heroPanelRef = useRef<HTMLDivElement>(null);
   const sectionOneRef = useRef<HTMLDivElement>(null);
+  const appFaqLayerRef = useRef<HTMLDivElement>(null);
+  const appSectionRef = useRef<HTMLDivElement>(null);
   const faqSectionRef = useRef<HTMLDivElement>(null);
   const footerLayerRef = useRef<HTMLDivElement>(null);
 
@@ -39,7 +42,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
   const s10ImgElementRef = useRef<HTMLElement | null>(null);
   const seqContainerRef = useRef<HTMLElement | null>(null);
 
-  // Cached layout metrics to eliminate forced reflows during scroll
+  // Cached layout metrics
   const scrollMetricsRef = useRef({
     totalScrollable: 0,
     vh: 0,
@@ -114,19 +117,25 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // Measure dynamic heights and offsets (About Page style logic)
+  // Measure dynamic heights and offsets
   const updateMetrics = useCallback(() => {
     if (!trackRef.current) return;
 
     const vh = window.innerHeight;
     const vw = window.innerWidth;
 
-    // Calculate dynamic height based on auto-height elements
+    const appHeight = appSectionRef.current?.offsetHeight || vh;
     const faqHeight = faqSectionRef.current?.offsetHeight || vh;
     const footerHeight = footerLayerRef.current?.offsetHeight || vh;
 
-    // 6 Full Viewport Steps + Dynamic Tail Heights for FAQ & Footer
-    const totalTrackHeight = vh * 5 + faqHeight + footerHeight;
+    // Track steps:
+    // Step 1: Hero Clip (1vh)
+    // Step 2: Section 1 Slide In (1vh)
+    // Step 3: Section 1 Content Expand (3vh)
+    // Step 4: App + FAQ Translate (appHeight + faqHeight)
+    // Step 5: Footer Slide Up (footerHeight)
+    const totalContentTravel = appHeight + faqHeight;
+    const totalTrackHeight = vh * 5 + totalContentTravel + footerHeight;
     trackRef.current.style.height = `${totalTrackHeight}px`;
 
     const rect = trackRef.current.getBoundingClientRect();
@@ -166,14 +175,14 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     };
   }, [shouldLoadRest, updateMetrics, handleResize]);
 
-  // Smooth Easing & Render Loop with Velocity Cap logic
+  // Smooth Easing & Render Loop
   useEffect(() => {
     if (!shouldLoadRest) return;
 
     let isRunning = true;
 
     const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
-const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
+    const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
 
     let lastTime = performance.now();
@@ -196,10 +205,17 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
       currentProgress.current += delta;
 
       const currentProg = currentProgress.current;
-      const totalSteps = 7.0;
+      // Step timeline map:
+      // 0.0 -> 1.0 : Hero Phase
+      // 1.0 -> 2.0 : Section One Slide Up
+      // 2.0 -> 5.0 : Section One Expand
+      // 5.0 -> 7.0 : App + FAQ Travel (Ends exactly at 7.0)
+      // 7.0 -> 8.0 : Footer Slides Up Immediately
+      const totalSteps = 8.0;
       const stepProgress = currentProg * totalSteps;
 
       const { vh } = scrollMetricsRef.current;
+      const appHeight = appSectionRef.current?.offsetHeight || vh;
       const faqHeight = faqSectionRef.current?.offsetHeight || vh;
       const footerHeight = footerLayerRef.current?.offsetHeight || vh;
 
@@ -282,26 +298,29 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
 
         if (seqContainerRef.current) {
           const textProg = clamp((stepProgress - 3.0) / 2.0);
-          const seqY = -textProg * 1240;
+          const seqY = -textProg * 1440;
           seqContainerRef.current.style.transform = `translate3d(0, ${seqY}px, 0)`;
         }
       }
 
-      // STEP 4: FAQ Section Reveal (5.0 -> 6.0)
-      const faqProg = clamp(stepProgress - 5.0);
-      if (faqSectionRef.current) {
+      // STEP 4: APP + FAQ Continuous Layer Translation (5.0 -> 7.0)
+      // Progress spans exactly 2 full steps (5.0 -> 7.0) with zero gap at the end
+      const appFaqProg = clamp((stepProgress - 5.0) / 2.0);
+      if (appFaqLayerRef.current) {
+        const totalContentTravel = appHeight + faqHeight;
+        const targetOffset = totalContentTravel > vh ? -(totalContentTravel - vh) : 0;
         const startY = vh;
-        const endY = -(faqHeight - vh);
-        const currentY = startY + (endY - startY) * faqProg;
-        faqSectionRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
+        const currentY = startY + (targetOffset - startY) * appFaqProg;
+        appFaqLayerRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
       }
 
-      if (sectionOneRef.current && faqProg > 0) {
-        sectionOneRef.current.style.transform = `translate3d(0, ${-faqProg * 15}%, 0)`;
+      if (sectionOneRef.current && appFaqProg > 0) {
+        sectionOneRef.current.style.transform = `translate3d(0, ${-appFaqProg * 15}%, 0)`;
       }
 
-      // STEP 5: Footer Reveal (6.0 -> 7.0)
-      const footerProg = clamp(stepProgress - 6.0);
+      // STEP 5: Footer / CTA Overlay (7.0 -> 8.0)
+      // Begins immediately as step 4 reaches completion at 7.0
+      const footerProg = clamp(stepProgress - 7.0);
       if (footerLayerRef.current) {
         const translateY = vh - footerHeight * footerProg;
         footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
@@ -378,6 +397,7 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
             <SubServiceHero data={pageData.hero} isMobile={true} />
           </div>
 
+          {/* DOWNSTREAM SECTIONS */}
           {shouldLoadRest && (
             <>
               {/* Layer 2: Section One */}
@@ -389,16 +409,22 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
                 <SubServiceSectionOne data={pageData.sectionOne} />
               </div>
 
-              {/* Layer 3: Dynamic FAQ Section */}
+              {/* Layer 3: App + FAQ continuous layer */}
               <div
-                ref={faqSectionRef}
-                className="layer-auto-height transform-gpu absolute left-0 top-0 w-full z-30 will-change-transform backface-hidden"
+                ref={appFaqLayerRef}
+                className="layer-auto-height transform-gpu absolute left-0 top-0 w-full z-30 will-change-transform backface-hidden pointer-events-auto"
                 style={{ transform: "translate3d(0, 100svh, 0)" }}
               >
-                <SubServiceFAQSection data={pageData.sectionTwo} />
+                <div ref={appSectionRef} className="w-full bg-[#162D24]">
+                  <Appsection />
+                </div>
+
+                <div ref={faqSectionRef} className="w-full bg-[#162D24]">
+                  <SubServiceFAQSection data={pageData.sectionTwo} />
+                </div>
               </div>
 
-              {/* Layer 4: Footer */}
+              {/* Layer 4: Footer / CTA Overlay */}
               <div
                 ref={footerLayerRef}
                 className="layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[95] will-change-transform backface-hidden"

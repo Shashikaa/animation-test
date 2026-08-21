@@ -4,7 +4,7 @@ import { useEffect, useState, use } from "react";
 import { notFound } from 'next/navigation';
 import SubServicesDesktop from "./SubServicesDesktop";
 import SubServicesMobile from "./SubServicesMobile";
-import { GRAND_POOLS_DATA } from './data';
+import { SERVICES_DATA } from './data';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -12,7 +12,7 @@ interface PageProps {
 
 export default function SubServicePage({ params }: PageProps) {
   const { slug } = use(params); 
-  const pageData = GRAND_POOLS_DATA[slug];
+  const pageData = SERVICES_DATA[slug];
   
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
 

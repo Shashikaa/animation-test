@@ -56,13 +56,13 @@ export default function SubServiceHero({ data, hideText = false }: HeroProps) {
                 {activeTab.content as string}
               </p>
             ) : (
-              <ol className="space-y-3 w-full text-sm md:text-lg text-[#fff] font-body list-none p-0 m-0">
+              <ol className="space-y-3 w-full text-sm md:text-[16px] text-[#fff] font-body list-none p-0 m-0">
                 {(activeTab?.content as string[]).map((point, i) => (
                   <li
                     key={i}
                     className="flex items-baseline gap-2 leading-relaxed"
                   >
-                    <span className="text-[#fff] font-body text-xs select-none shrink-0 min-w-[4px]">
+                    <span className="text-[#fff] font-body text-sm md:text-[16px] select-none shrink-0 min-w-[4px]">
                       {String(i + 1).padStart(2)}.
                     </span>
                     <span>{point}</span>

@@ -6,6 +6,7 @@ import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal"
 import SubServiceHero from "@/src/components/Service/SubServiceHero";
 import SubServiceSectionOne from "@/src/components/Service/SubServiceSectionOne";
 import SubServiceFAQSection from "@/src/components/Service/SubServiceFAQSection";
+import Appsection from "@/src/components/Projects/Appsection";
 import SectionCTA from "@/src/components/SectionCTA";
 import Footer from "@/src/components/Footer";
 import { useSite } from "@/src/app/context/SiteContext";
@@ -16,44 +17,7 @@ type SubServicesDesktopProps = {
 };
 
 const TOTAL_SCROLL_STEPS = 10;
-
-// QUADRATIC EASING MATCHING ABOUT DESKTOP
 const easeOutQuad = (t: number) => t * (2 - t);
-
-// Utility for DOM text line splitting matching About/Projects implementation
-function executeDesktopSplitting(selector: string) {
-  const elements = document.querySelectorAll<HTMLElement>(selector);
-  elements.forEach((element) => {
-    if (!element || element.dataset.splitComplete === "true") return;
-
-    const rawText = element.textContent || "";
-    const linesArray = rawText
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
-
-    element.innerHTML = "";
-    linesArray.forEach((lineText) => {
-      const wrapper = document.createElement("span");
-      wrapper.className = "custom-line-wrap";
-      wrapper.style.display = "block";
-      wrapper.style.overflow = "hidden";
-      wrapper.style.position = "relative";
-
-      const inner = document.createElement("span");
-      inner.className = "custom-line-inner";
-      inner.style.display = "block";
-      inner.style.transform = "translate3d(0, 100%, 0)";
-      inner.style.opacity = "0";
-      inner.textContent = lineText;
-
-      wrapper.appendChild(inner);
-      element.appendChild(wrapper);
-    });
-
-    element.dataset.splitComplete = "true";
-  });
-}
 
 export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps) {
   const scopeRef = useRef<HTMLDivElement>(null);
@@ -75,7 +39,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
 
   const targetProgress = useRef(0);
   const smoothProgress = useRef(0);
-  const revealedSections = useRef<Set<string>>(new Set());
+  const revealedElements = useRef<Set<string>>(new Set());
   const rafId = useRef<number | null>(null);
 
   const { smootherRef } = useSite();
@@ -85,7 +49,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     unlockScrollEarlyMs: 1800,
   });
 
-  // ── 1. UNLOCK LENIS / SCROLL (MATCHING ABOUT LOGIC) ──
+  // ── 1. UNLOCK LENIS / SCROLL ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -154,51 +118,63 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     };
   }, [shouldLoadRest, measure, handleResize]);
 
-  // ── 3. TEXT REVEAL LOGIC (EXACT ABOUT TRIGGER IMPLEMENTATION) ──
-  const triggerPlayOnceTextReveal = useCallback((
-    containerSelector: string,
-    currentStepProg: number,
-    triggerThreshold: number
-  ) => {
-    if (!scopeRef.current) return;
-
-    const key = containerSelector;
-    if (revealedSections.current.has(key)) return;
-
-    if (currentStepProg >= triggerThreshold) {
-      revealedSections.current.add(key);
-
-      const lineInners = scopeRef.current.querySelectorAll<HTMLElement>(
-        `${containerSelector} .gs-line-inner, ${containerSelector} .custom-line-inner`
-      );
-
-      lineInners.forEach((el, idx) => {
-        el.style.transition = `transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s, opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s`;
-        el.style.transform = "translate3d(0, 0%, 0)";
-        el.style.opacity = "1";
-      });
-    }
-  }, []);
-
-  // Prepare custom line splitting & setup text reveal instances
+  // ── 3. TEXT REVEAL INITIALIZATION ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
-    // Split custom paragraphs into line-wrap structures matching About desktop
-    executeDesktopSplitting(".scroll-para-1");
-    executeDesktopSplitting(".reveal-text");
-    executeDesktopSplitting(".services-faq-wrap .reveal-text");
+    useTextReveal(scopeRef, ".section-one-wrap .reveal-text");
+    useTextReveal(scopeRef, ".s10-seq-container .reveal-text");
+    useTextReveal(scopeRef, ".services-app-faq-layer .reveal-text");
+    useTextReveal(scopeRef, ".services-faq-wrap .reveal-text");
 
     return () => {
       if (scopeRef.current) {
-        restoreTextReveal(scopeRef.current, ".scroll-para-1");
-        restoreTextReveal(scopeRef.current, ".reveal-text");
-        restoreTextReveal(scopeRef.current, ".services-faq-wrap .reveal-text");
+        restoreTextReveal(
+          scopeRef.current,
+          [
+            ".section-one-wrap .reveal-text",
+            ".s10-seq-container .reveal-text",
+            ".services-app-faq-layer .reveal-text",
+            ".services-faq-wrap .reveal-text",
+          ].join(",")
+        );
       }
     };
   }, [shouldLoadRest]);
 
-  // ── 4. CONTINUOUS LERP RENDER ENGINE ──
+  // ── 4. REVEAL TRIGGER HELPER ──
+  const triggerProgressTextReveal = useCallback(
+    (containerSelector: string, currentStepProg: number, threshold: number) => {
+      if (!scopeRef.current) return;
+
+      if (currentStepProg >= threshold) {
+        const container = scopeRef.current.querySelector<HTMLElement>(containerSelector);
+        if (!container || container.style.visibility === "hidden") return;
+
+        const revealElements = container.querySelectorAll<HTMLElement>(".reveal-text");
+        revealElements.forEach((el, index) => {
+          const key = `${containerSelector}-${index}`;
+          if (revealedElements.current.has(key)) return;
+
+          revealedElements.current.add(key);
+
+          const lineInners = el.querySelectorAll<HTMLElement>(".gs-line-inner");
+          lineInners.forEach((line, idx) => {
+            const delay = idx * 0.08;
+            line.style.transition =
+              `transform 0.85s cubic-bezier(0.16,1,0.3,1) ${delay}s, ` +
+              `opacity 0.85s cubic-bezier(0.16,1,0.3,1) ${delay}s`;
+
+            line.style.transform = "translate3d(0,0%,0)";
+            line.style.opacity = "1";
+          });
+        });
+      }
+    },
+    []
+  );
+
+  // ── 5. CONTINUOUS LERP RENDER ENGINE ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
@@ -219,27 +195,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     const s10ImgInnerWrap = scope.querySelector<HTMLElement>(".s10-img-inner-wrap");
     const s10ImgElem = scope.querySelector<HTMLElement>(".s10-img-element");
     const s10SeqContainer = scope.querySelector<HTMLElement>(".s10-seq-container");
-    const faqWrap = scope.querySelector<HTMLElement>(".services-faq-wrap");
-
-    [
-      heroTextWrap,
-      heroTopLayer,
-      secOneWrap,
-      heroBg,
-      s10ParaTop,
-      s10Title,
-      s10ImgInnerWrap,
-      s10ImgElem,
-      s10SeqContainer,
-      faqWrap,
-      layerCTA.current,
-      layerFooter.current,
-    ].forEach((el) => {
-      if (el) {
-        el.style.willChange = "transform, opacity, clip-path";
-        el.style.transform = "translate3d(0, 0, 0)";
-      }
-    });
+    const appFaqLayer = scope.querySelector<HTMLElement>(".services-app-faq-layer");
 
     const renderTransforms = (time: number) => {
       if (!isRunning) return;
@@ -248,17 +204,13 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
       lastTime = time;
 
       const dynamicEase = 1 - Math.exp(-EASE_FACTOR * 60 * dt);
-      let delta =
-        (targetProgress.current - smoothProgress.current) * dynamicEase;
+      let delta = (targetProgress.current - smoothProgress.current) * dynamicEase;
 
       if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
         delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
       }
 
-      smoothProgress.current = Math.min(
-        Math.max(smoothProgress.current + delta, 0),
-        1
-      );
+      smoothProgress.current = Math.min(Math.max(smoothProgress.current + delta, 0), 1);
 
       const currentProgress = smoothProgress.current;
       const stepProgress = currentProgress * (TOTAL_SCROLL_STEPS - 1);
@@ -297,9 +249,8 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
         heroBg.style.transform = `translate3d(${xPerc}%, 0, 0) scale3d(${scaleVal}, ${scaleVal}, 1)`;
       }
 
-      // ── TRIGGER TEXT REVEALS AT EXACT STEP THRESHOLDS ──
-      // Section One Heading / Top Paragraph
-      triggerPlayOnceTextReveal(".section-one-wrap", stepProgress, 0.95);
+      // Trigger Section One Reveal at Step 1.15 (when clipPath is ~35% open)
+      triggerProgressTextReveal(".section-one-wrap", stepProgress, 1.15);
 
       // STEP 3: DESKTOP IMAGE EXPAND (STEPS 1.8 -> 3.2)
       const expandProg = easeOutQuad(Math.min(Math.max((stepProgress - 1.8) / 1.4, 0), 1));
@@ -334,36 +285,42 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
         s10ImgElem.style.transform = `scale3d(${imgScale}, ${imgScale}, 1)`;
       }
 
-      // STEP 4: SEQUENTIAL PARAGRAPHS ROLL UP (STEPS 3.5 -> 6.0)
-      const seqProg = easeOutQuad(Math.min(Math.max((stepProgress - 3.5) / 2.5, 0), 1));
+      // STEP 4: SEQUENTIAL PARAGRAPHS ROLL UP (STEPS 3.2 -> 5.5)
+      const seqProg = easeOutQuad(Math.min(Math.max((stepProgress - 3.2) / 2.3, 0), 1));
 
       if (s10SeqContainer) {
-        const translateY = (-seqProg * 1100).toFixed(2);
+        const translateY = (-seqProg * 1400).toFixed(2);
         s10SeqContainer.style.transform = `translate3d(0, ${translateY}px, 0)`;
       }
 
-      // Trigger paragraph reveal inside the sequential container
-      triggerPlayOnceTextReveal(".s10-seq-container", stepProgress, 3.6);
+      // Trigger paragraph reveals early at Step 2.6 (as image expansion starts)
+      triggerProgressTextReveal(".s10-seq-container", stepProgress, 2.6);
 
-      // STEP 5: FAQ SECTION SLIDE UP (STEPS 6.2 -> 7.5)
-      const faqProg = easeOutQuad(Math.min(Math.max((stepProgress - 6.2) / 1.3, 0), 1));
+      // STEP 5: APP + FAQ MOVE AS ONE CONTINUOUS SHEET (STEPS 5.5 -> 7.5)
+      const appFaqProgress = easeOutQuad(
+        Math.min(Math.max((stepProgress - 5.5) / 2.0, 0), 1)
+      );
 
-      if (faqWrap) {
-        faqWrap.style.visibility = stepProgress >= 6.0 ? "visible" : "hidden";
-        if (stepProgress < 8.5) {
-          faqWrap.style.transform = `translate3d(0, ${((1 - faqProg) * 100).toFixed(2)}%, 0)`;
-          faqWrap.style.opacity = "1";
-        }
+      if (appFaqLayer) {
+        appFaqLayer.style.visibility = stepProgress >= 5.4 ? "visible" : "hidden";
+        const startY = vh;
+        const endY = -vh;
+        const currentY = startY + (endY - startY) * appFaqProgress;
+        appFaqLayer.style.transform = `translate3d(0, ${currentY.toFixed(2)}px, 0)`;
+        appFaqLayer.style.opacity = "1";
       }
 
-      // Trigger FAQ section title and text reveals
-      triggerPlayOnceTextReveal(".services-faq-wrap", stepProgress, 6.4);
+      // Trigger Appsection reveal at Step 5.7 (as the layer starts sliding up)
+      triggerProgressTextReveal(".services-app-faq-layer", stepProgress, 5.7);
+
+      // Trigger FAQ section reveal at Step 6.5 (as FAQ rises into the lower viewport)
+      triggerProgressTextReveal(".services-faq-wrap", stepProgress, 6.5);
 
       // STEP 6: LAYER CTA SLIDE (STEPS 7.5 -> 8.5)
       const ctaProgress = easeOutQuad(Math.min(Math.max((stepProgress - 7.5) / 1.0, 0), 1));
 
       if (layerCTA.current) {
-        layerCTA.current.style.visibility = stepProgress >= 7.3 ? "visible" : "hidden";
+        layerCTA.current.style.visibility = stepProgress >= 7.4 ? "visible" : "hidden";
         const startY = vh;
         const endY = -(ctaHeight - vh);
         const currentY = startY + (endY - startY) * ctaProgress;
@@ -379,22 +336,22 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
       }
 
       if (layerFooter.current) {
-        layerFooter.current.style.visibility = stepProgress >= 8.3 ? "visible" : "hidden";
+        layerFooter.current.style.visibility = stepProgress >= 8.4 ? "visible" : "hidden";
         const startY = vh;
         const endY = vh - footerHeight;
         const translateY = startY + (endY - startY) * footerProgress;
         layerFooter.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
       }
 
-      if (faqWrap) {
+      if (appFaqLayer) {
         if (footerProgress > 0) {
           const upperOpacity = (1 - footerProgress).toFixed(3);
           const faqScale = (1.0 - footerProgress * 0.08).toFixed(4);
-          faqWrap.style.opacity = upperOpacity;
-          faqWrap.style.transform = `translate3d(0, 0%, 0) scale3d(${faqScale}, ${faqScale}, 1)`;
-        } else if (stepProgress >= 7.5 && stepProgress < 8.5) {
-          faqWrap.style.opacity = "1";
-          faqWrap.style.transform = "translate3d(0, 0%, 0) scale3d(1, 1, 1)";
+          appFaqLayer.style.opacity = upperOpacity;
+          appFaqLayer.style.transform = `translate3d(0, ${-vh}px, 0) scale3d(${faqScale}, ${faqScale}, 1)`;
+        } else if (stepProgress >= 7.5) {
+          appFaqLayer.style.opacity = "1";
+          appFaqLayer.style.transform = `translate3d(0, ${-vh}px, 0) scale3d(1, 1, 1)`;
         }
       }
 
@@ -448,7 +405,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
         window.removeEventListener("scroll", handleScroll);
       }
     };
-  }, [shouldLoadRest, smootherRef, triggerPlayOnceTextReveal]);
+  }, [shouldLoadRest, smootherRef, triggerProgressTextReveal]);
 
   const isReady = preloaderDone && introDone;
 
@@ -482,15 +439,21 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
                 <SubServiceSectionOne data={pageData.sectionOne} />
               </div>
 
-              {/* Layer 3: FAQ slide overlay */}
+              {/* Layer 3: App + FAQ continuous slide sheet */}
               <div
-                className="services-faq-wrap absolute inset-0 w-full h-full z-30 overflow-hidden bg-black structural-layer transform-gpu will-change-transform"
+                className="services-app-faq-layer absolute left-0 top-0 w-full h-[200vh] z-30 bg-black structural-layer transform-gpu will-change-transform"
                 style={{
                   visibility: "hidden",
-                  transform: "translate3d(0, 100%, 0)",
+                  transform: "translate3d(0, 100vh, 0)",
                 }}
               >
-                <SubServiceFAQSection data={pageData.sectionTwo} />
+                <div className="w-full h-screen overflow-hidden bg-black">
+                  <Appsection />
+                </div>
+
+                <div className="services-faq-wrap w-full h-screen overflow-hidden bg-black">
+                  <SubServiceFAQSection data={pageData.sectionTwo} />
+                </div>
               </div>
 
               {/* Layer 4: Section CTA wrapper */}

@@ -44,7 +44,7 @@ export default function SubServiceSectionOne({ data }: SubServiceSectionOneProps
         
         {/* ── TOP: Description Paragraph ── */}
         <div className="w-full s10-top-text-row max-lg:order-2 max-lg:mt-2 !mt-[30px] lg:!mt-[0]">
-          <p className="s10-para-top font-body text-[#F4EEDF] pointer-events-none text-sm lg:text-base max-w-[420px]">
+          <p className="s10-para-top font-body text-[#F4EEDF] pointer-events-none text-sm lg:text-base max-w-[420px] whitespace-pre-line">
             {data.paragraph}
           </p>
         </div>
@@ -86,28 +86,28 @@ export default function SubServiceSectionOne({ data }: SubServiceSectionOneProps
         
         {/* FRAME 1: Left Aligned everywhere */}
         <div className="s10-seq-p s10-seq-p-1 w-full flex justify-start text-left">
-          <p className="font-body text-[#F4EEDF] text-base lg:text-lg max-w-[300px] leading-relaxed drop-shadow-lg">
+          <p className="font-body text-[#F4EEDF] text-base lg:text-lg max-w-[320px] leading-relaxed drop-shadow-lg whitespace-pre-line">
             {data.fourParagraphs?.[0]}
           </p>
         </div>
 
         {/* FRAME 2: Right Aligned on Mobile/Tab, Left Aligned on Desktop */}
         <div className="s10-seq-p s10-seq-p-2 w-full flex justify-end lg:justify-start text-right lg:text-left lg:!pl-[10%]">
-          <p className="font-body text-[#F4EEDF] text-base lg:text-lg max-w-[300px] leading-relaxed drop-shadow-lg">
+          <p className="font-body text-[#F4EEDF] text-base lg:text-lg max-w-[320px] leading-relaxed drop-shadow-lg whitespace-pre-line">
             {data.fourParagraphs?.[1]}
           </p>
         </div>
 
         {/* FRAME 3: Left Aligned on Mobile/Tab, Right Aligned on Desktop */}
         <div className="s10-seq-p s10-seq-p-3 w-full flex justify-start lg:justify-end text-left lg:text-right">
-          <p className="font-body text-[#F4EEDF] text-base lg:text-lg max-w-[300px] leading-relaxed drop-shadow-lg">
+          <p className="font-body text-[#F4EEDF] text-base lg:text-lg max-w-[330px] leading-relaxed drop-shadow-lg whitespace-pre-line">
             {data.fourParagraphs?.[2]}
           </p>
         </div>
 
         {/* FRAME 4: Right Aligned on Mobile/Tab, Center Aligned on Desktop */}
         <div className="s10-seq-p s10-seq-p-4 w-full flex justify-end lg:justify-center text-right">
-          <p className="font-body text-[#F4EEDF] text-base lg:text-lg max-w-[300px] leading-relaxed drop-shadow-lg">
+          <p className="font-body text-[#F4EEDF] text-base lg:text-lg max-w-[340px] leading-relaxed drop-shadow-lg whitespace-pre-line">
             {data.fourParagraphs?.[3]}
           </p>
         </div>
