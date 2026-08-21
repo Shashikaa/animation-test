@@ -34,6 +34,9 @@ export function useHeroIntro(
 
     if (lenis && typeof lenis.stop === "function") {
       lenis.stop();
+      if (typeof lenis.scrollTo === "function") {
+        lenis.scrollTo(0, { immediate: true });
+      }
     }
 
     let rafOne: number;
@@ -58,34 +61,31 @@ export function useHeroIntro(
       setTimeout(() => clearInterval(retryInterval), 1500);
     }
 
-    // 1. Mount downstream components during main zoom
     const mountTimer = setTimeout(() => {
       setShouldLoadRest(true);
     }, 900);
 
-    // 2. Smoothly enable Lenis scroll listening
     const unlockScrollTimer = setTimeout(() => {
-      if (lenis && typeof lenis.start === "function") {
-        lenis.start();
+      window.scrollTo(0, 0);
+      if (lenis) {
+        if (typeof lenis.scrollTo === "function") {
+          lenis.scrollTo(0, { immediate: true });
+        }
+        if (typeof lenis.start === "function") {
+          lenis.start();
+        }
       }
-      window.dispatchEvent(new Event("scroll"));
     }, unlockScrollEarlyMs);
 
-    // 3. Mark keyframe sequence finished & replace with static styles
     const completeTimer = setTimeout(() => {
       setIntroDone(true);
       if (scopeRef.current) {
         scopeRef.current.classList.remove("hero-animate-active");
         scopeRef.current.classList.add("hero-animate-done");
       }
-      
-      // Idle-schedule Lenis resize so it doesn't cause main thread drop
+
       if (lenis && typeof lenis.resize === "function") {
-        if ("requestIdleCallback" in window) {
-          window.requestIdleCallback(() => lenis.resize(), { timeout: 400 });
-        } else {
-          requestAnimationFrame(() => lenis.resize());
-        }
+        lenis.resize();
       }
     }, introDurationMs + 100);
 
