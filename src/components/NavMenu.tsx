@@ -44,22 +44,6 @@ const SOCIAL_LINKS = [
   { label: "Instagram", href: "https://www.instagram.com/grandpools_aus/", src: "/ig.svg" },
 ];
 
-function useScrollLock(lock: boolean) {
-  useEffect(() => {
-    if (lock) {
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-    };
-  }, [lock]);
-}
-
 function GrandSVG({ width, height }: { width: number; height: number }) {
   return (
     <svg viewBox="0 0 212 30" width={width} height={height} fill="none"
@@ -88,6 +72,8 @@ function PoolsSVG({ width, height }: { width: number; height: number }) {
 
 function SharedLogoMarkup({ onClose }: { onClose?: () => void }) {
   const handleLogoClick = () => {
+    document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
     if (onClose) onClose();
   };
 
@@ -136,7 +122,7 @@ function CloseButton({ onClick, className }: { onClick: () => void; className?: 
       aria-label="Close menu"
       className={`!flex !items-center !justify-center !p-1.5 !bg-transparent !border-none !cursor-pointer !opacity-85 hover:!opacity-100 hover:!rotate-90 active:!scale-90 active:!opacity-100 !transition-[opacity,transform] !duration-200 !ease-in-out ${className ?? ""}`}
     >
-      <img src="/closebtn.svg" alt="" className="!w-6 !h-6 md:!w-7 md:!h-7 !block !object-contain" />
+      <img src="/closebtn.svg" alt="Close" className="!w-6 !h-6 md:!w-7 md:!h-7 !block !object-contain" />
     </button>
   );
 }
@@ -268,8 +254,6 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const pathname = usePathname();
 
-  useScrollLock(open);
-
   useEffect(() => {
     if (open) onClose();
   }, [pathname]);
@@ -279,6 +263,20 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    }
+    return () => { 
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, [open]);
 
   return (
     <AnimatePresence mode="wait">
@@ -357,6 +355,10 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
             exit="hidden"
             className="!px-6 md:!px-10 !pb-[100px]"
           >
+            <div className="font-body !mb-6">
+              <p className="!m-0 !mb-3 !text-[20px]"></p>
+            </div>
+
             <div className="!flex !items-center !gap-4">
               {SOCIAL_LINKS.map(({ label, href, src }) => (
                 <a
@@ -367,7 +369,7 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
                   aria-label={label}
                   className="!flex !opacity-100 hover:!opacity-70 active:!opacity-50 active:!scale-95 !transition-all !duration-200"
                 >
-                  <img src={src} alt="" className="!block !w-8 !h-8 !object-contain" />
+                  <img src={src} alt={label} className="!block !w-8 !h-8 !object-contain" />
                 </a>
               ))}
             </div>
@@ -382,8 +384,6 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
 function DesktopMenu({ open, onClose }: NavMenuProps) {
   const pathname = usePathname();
 
-  useScrollLock(open);
-
   useEffect(() => {
     if (open) onClose();
   }, [pathname]);
@@ -395,7 +395,7 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
 
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [activeIndex, setActiveIndex]   = useState(initialActiveIndex);
-  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -443,6 +443,20 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
     document.addEventListener("mousedown", handleMouseDown);
     return () => document.removeEventListener("mousedown", handleMouseDown);
   }, [open, onClose]);
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    }
+    return () => { 
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, [open]);
 
   return (
     <AnimatePresence mode="wait">
@@ -527,6 +541,9 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
               exit="hidden"
               className="!px-5 md:!px-[30px] lg:!px-[55px]"
             >
+              <div className="font-body !mb-6" style={{ color: LOGO_COLOR }}>
+                <p className="!m-0 !text-[18px] !font-medium"></p>
+              </div>
               <div className="!flex !items-center !gap-4">
                 {SOCIAL_LINKS.map(({ label, href, src }) => (
                   <a
@@ -537,7 +554,7 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
                     aria-label={label}
                     className="!flex !opacity-100 hover:!opacity-70 active:!opacity-50 !transition-opacity !duration-200"
                   >
-                    <img src={src} alt="" className="!block !w-7 !h-7 !object-contain" />
+                    <img src={src} alt={label} className="!block !w-7 !h-7 !object-contain" />
                   </a>
                 ))}
               </div>
@@ -591,6 +608,8 @@ function NavLink({
   const highlighted = isActive || isCurrentPage || isTouched;
 
   const handleClick = () => {
+    document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
     if (onCloseMenu) onCloseMenu();
   };
 
@@ -607,7 +626,6 @@ function NavLink({
       }}
       onTouchEnd={() => setIsTouched(false)}
       onTouchCancel={() => setIsTouched(false)}
-      aria-current={isCurrentPage ? "page" : undefined}
       className={
         isMobile
           ? "!inline-block !no-underline !leading-[2.0] md:!leading-[2.5] !cursor-pointer active:!scale-[0.98] active:!opacity-90 !transition-transform !duration-150"
