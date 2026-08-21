@@ -1,33 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation"; 
-import { useSite } from "../app/context/SiteContext"; 
-
-const SOCIAL_LINKS = [
-  { label: "Email", href: "mailto:admin@grandpools.com.au", src: "/email.svg", size: 24 },
-  { label: "Instagram", href: "https://www.instagram.com/grandpools_aus/", src: "/ig.svg", size: 27 },
-];
-
-const MAIN_NAV = [
-  { item: "Home", href: "/" },
-  { item: "About Us", href: "/about" },
-  { item: "Services", href: "/services" },
-  { item: "Projects", href: "/projects" },
-  { item: "Contact Us", href: "/contact" },
-];
-
-const SERVICES_NAV = [
-  { item: "Residential Pools Construction", href: "/services/residential-pools-construction" },
-  { item: "Pool Equipment & Installation", href: "/services/pool-equipment-and-installation" },
-  { item: "Commercial Pool Construction", href: "/services/commercial-pool-construction" },
-];
+import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
-  const { smootherRef } = useSite();
   const pathname = usePathname();
 
-  // Force full reload if user clicks logo while already on the home page
   const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (pathname === "/") {
       e.preventDefault();
@@ -36,300 +15,359 @@ export default function Footer() {
   };
 
   return (
-    <footer
-      style={{
-        position: "relative",
-        width: "100%",
-        zIndex: 20,
-        boxSizing: "border-box",
-      }}
-    >
-      <style jsx global>{`
-        @media (max-width: 1023px) {
-          .responsive-row-2 {
-            flex-direction: column !important;
-            align-items: center !important;
-            gap: 24px !important;
-            margin-bottom: 24px !important;
-          }
-          .responsive-links-container {
-            width: 100% !important;
-            justify-content: space-between !important;
-            gap: 0px !important;
-          }
-          .responsive-socials-container {
-            width: 100% !important;
-            align-items: center !important;
-            margin-left: 0 !important;
-            gap: 0px !important;
-          }
-          .desktop-only-contacts {
-            display: none !important;
-          }
-          .mobile-only-row-4 {
-            display: flex !important;
-          }
-          .desktop-only-row-4 {
-            display: none !important;
-          }
-          .responsive-bottom-row {
-            flex-direction: column !important;
-            gap: 32px !important;
-          }
-          .responsive-attribution {
-            width: 100% !important;
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-          }
-          .responsive-attribution span {
-            width: auto !important;
-            text-align: left !important;
-          }
-        }
-
-        @media (max-width: 767px) {
-          .responsive-attribution {
-            flex-direction: column !important;
-            justify-content: center !important;
-            align-items: center !important;
-            gap: 16px !important;
-          }
-          .responsive-attribution span {
-            width: 100% !important;
-            text-align: center !important;
-          }
-          .mobile-copy-text {
-            display: block !important;
-            width: 100% !important;
-            text-align: center !important;
-          }
-        }
-      `}</style>
-
-      <div 
-        className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[20px] !pt-[30px] md:!pt-[40px] shadow-2xl overflow-hidden"
-        style={{
-          width: "100%",
-          background: "linear-gradient(135deg, #162D24 0%, #094146 100%)",
-          transform: "translate3d(0, 0, 0)",
-          WebkitTransform: "translate3d(0, 0, 0)",
-          isolation: "isolate",
-        }}
-      >
-        {/* ROW 1: Logo */}
-        <div
-          style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-start",
-            overflow: "hidden",
-            marginBottom: 30,
-            position: "relative",
-            zIndex: 20,
-          }}
-        >
-          <Link 
-            href="/" 
-            onClick={handleLogoClick}
-            style={{ 
-              display: "block", 
-              width: "100%", 
-              maxWidth: "380px",
-              position: "relative",
-              zIndex: 20,
-            }}
-          >
-            <img
-              src="/Footer.svg"
-              alt="Grand Pools"
-              style={{
-                width: "100%",
-                height: "auto",
-                display: "block",
-                cursor: "pointer",
-                pointerEvents: "auto",
-              }}
-            />
-          </Link>
-        </div>
-
-        {/* ROW 2: Link Column Grid */}
-        <div
-          className="responsive-row-2"
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "start",
-            justifyContent: "space-between",
-            marginBottom: 48,
-          }}
-        >
-          {/* Navigation Links */}
-          <div 
-            className="responsive-links-container flex flex-row justify-between lg:w-[60%] !text-[14px] md:!text-[16px]" 
-            style={{ display: "flex", flexDirection: "row" }}
-          >
-            {/* Col 1 — Main Nav */}
-            <nav style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
-              {MAIN_NAV.map(({ item, href }) => (
-                <Link
-                  key={item}
-                  href={href}
-                  style={{
-                    color: "#F4EBE4",
-                    textDecoration: "none",
-                    fontFamily: "var(--font-body)",
-                    transition: "opacity 0.2s ease",
-                    width: "fit-content",
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
-                  onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
-                >
-                  {item}
-                </Link>
-              ))}
-            </nav>
-
-            {/* Col 2 — Services Nav */}
-            <nav className="flex flex-col !items-end lg:!items-start gap-3">
-              {SERVICES_NAV.map(({ item, href }) => (
-                <Link
-                  key={item}
-                  href={href}
-                  style={{
-                    color: "#F4EBE4",
-                    textDecoration: "none",
-                    fontFamily: "var(--font-body)",
-                    transition: "opacity 0.2s ease",
-                    width: "fit-content",
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
-                  onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
-                >
-                  {item}
-                </Link>
-              ))}
-            </nav>
+    <>
+      <footer className="footer-container">
+        <div className="footer-wrapper">
+          {/* ROW 1: Logo */}
+          <div className="footer-logo-row">
+            <Link
+              href="/"
+              onClick={handleLogoClick}
+              className="footer-logo-link"
+            >
+              <Image
+                src="/Footer.svg"
+                alt="Grand Pools"
+                width={380}
+                height={80}
+                className="footer-logo-img"
+                priority
+              />
+            </Link>
           </div>
 
-          {/* Col 3 — Social Icons */}
-          <div className="responsive-socials-container" style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 24, marginTop: 12 }}>
-              {SOCIAL_LINKS.map(({ label, href, src, size }) => (
-                <SocialLink key={label} href={href} label={label} src={src} size={size} />
-              ))}
+          {/* ROW 2: Links */}
+          <div className="footer-links-row">
+            {/* Nav Columns */}
+            <div className="footer-nav-columns">
+              {/* Col 1 */}
+              <nav className="footer-nav-col">
+                <Link href="/">Home</Link>
+                <Link href="/about">About Us</Link>
+                <Link href="/services">Services</Link>
+                <Link href="/projects">Projects</Link>
+                <Link href="/contact">Contact Us</Link>
+              </nav>
+
+              {/* Col 2 */}
+              <nav className="footer-nav-col footer-nav-col-right">
+                <Link href="/services/residential-pools-construction">
+                  Residential Pools Construction
+                </Link>
+                <Link href="/services/pool-equipment-and-installation">
+                  Pool Equipment &amp; Installation
+                </Link>
+                <Link href="/services/commercial-pool-construction">
+                  Commercial Pool Construction
+                </Link>
+              </nav>
+            </div>
+
+            {/* Social Icons */}
+            <div className="footer-social-col">
+              <div className="footer-social-icons">
+                <a
+                  href="mailto:admin@grandpools.com.au"
+                  aria-label="Email"
+                  className="social-icon-link"
+                >
+                  <Image
+                    src="/email.svg"
+                    alt="Email"
+                    width={24}
+                    height={24}
+                  />
+                </a>
+                <a
+                  href="https://www.instagram.com/grandpools_aus/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="social-icon-link"
+                >
+                  <Image
+                    src="/ig.svg"
+                    alt="Instagram"
+                    width={27}
+                    height={27}
+                  />
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="footer-divider" />
+
+          {/* ROW 3: Bottom Row */}
+          <div className="footer-bottom-row">
+            {/* Mobile Policy Links */}
+            <div className="footer-mobile-policies">
+              <Link href="/terms-of-use">Terms of Use</Link>
+              <Link href="/privacy-policy">Privacy Policy</Link>
+            </div>
+
+            {/* Desktop Copyright */}
+            <span className="footer-desktop-copyright">
+              © 2026 Grand Pools. All Rights Reserved.
+            </span>
+
+            {/* Desktop Policy Links */}
+            <div className="footer-desktop-policies">
+              <Link href="/terms-of-use">Terms of Use</Link>
+              <Link href="/privacy-policy">Privacy Policy</Link>
+            </div>
+
+            {/* Attribution & Mobile Copyright */}
+            <div className="footer-attribution-col">
+              <span>
+                Design &amp; Development by{" "}
+                <a
+                  href="https://tactik.com.au/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Tactik.
+                </a>
+              </span>
+
+              <span className="footer-mobile-copyright">
+                © 2026 Grand Pools. All Rights Reserved.
+              </span>
             </div>
           </div>
         </div>
+      </footer>
 
-        {/* Glass Divider Line */}
-        <div
-          style={{ height: "1px", background: "rgba(244, 235, 228, 0.2)", marginBottom: 20 }}
-          className="w-full"
-        />
+      <style jsx>{`
+        .footer-container {
+          position: relative;
+          width: 100%;
+          z-index: 20;
+          box-sizing: border-box;
+          color: #f4ebe4;
+          font-family: var(--font-body);
+        }
 
-        {/* ROW 3: Bottom Row */}
-        <div
-          className="responsive-bottom-row !text-[14px] md:!text-[16px]"
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            width: "100%",
-          }}
-        >
-          {/* Mobile Split Layout */}
-          <div className="mobile-only-row-4" style={{ display: "none", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-            <BottomLink href="/terms-of-use">Terms of Use</BottomLink>
-            <BottomLink href="/privacy-policy">Privacy Policy</BottomLink>
-          </div>
+        .footer-wrapper {
+          width: 100%;
+          padding: 28px 20px 20px;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          overflow: hidden;
+          background: linear-gradient(to bottom right, #162d24, #094146);
+          transform: translate3d(0, 0, 0);
+          isolation: isolate;
+        }
 
-          {/* Desktop Copyright */}
-          <span className="desktop-only-row-4" style={{ color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
-            © 2026 Grand Pools. All Rights Reserved.
-          </span>
+        .footer-logo-row {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          overflow: hidden;
+          margin-bottom: 28px;
+          position: relative;
+          z-index: 20;
+        }
 
-          {/* Desktop Links */}
-          <div className="desktop-only-row-4 !text-[14px] md:!text-[16px]" style={{ display: "flex", gap: 24, alignItems: "center" }}>
-            <BottomLink href="/terms-of-use">Terms of Use</BottomLink>
-            <BottomLink href="/privacy-policy">Privacy Policy</BottomLink>
-          </div>
+        .footer-logo-link {
+          display: block;
+          width: 100%;
+          max-width: 380px;
+          position: relative;
+          z-index: 20;
+        }
 
-          {/* Desktop Attribution */}
-          <div className="responsive-attribution !text-[14px] md:!text-[16px]">
-            <span style={{ color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
-              Design &amp; Development by{" "}
-              <a
-                href="https://tactik.com.au/"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#F4EBE4", textDecoration: "none", fontWeight: 500, opacity: 1, transition: "opacity 0.2s ease" }}
-                onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
-                onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
-              >
-                Tactik.
-              </a>
-            </span>
+        .footer-logo-img {
+          width: 100%;
+          height: auto;
+          display: block;
+          cursor: pointer;
+          pointer-events: auto;
+        }
 
-            <span className="mobile-only-row-4 mobile-copy-text !text-[14px] md:!text-[16px] !text-center" style={{ display: "none", color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
-              © 2026 Grand Pools. All Rights Reserved.
-            </span>
-          </div>
-        </div>
-      </div>
-    </footer>
-  );
-}
+        .footer-links-row {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: space-between;
+          gap: 24px;
+          margin-bottom: 24px;
+        }
 
-function SocialLink({ href, label, src, size = 24 }: { href: string; label: string; src: string; size?: number }) {
-  return (
-    <a
-      href={href}
-      aria-label={label}
-      target={href.startsWith("http") ? "_blank" : undefined}
-      rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: size,
-        height: size,
-        textDecoration: "none",
-        transition: "opacity 0.2s ease",
-      }}
-      onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
-      onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
-    >
-      <img
-        src={src}
-        alt={label}
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "contain",
-          display: "block",
-        }}
-      />
-    </a>
-  );
-}
+        .footer-nav-columns {
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+          width: 100%;
+          font-size: 14px;
+        }
 
-function BottomLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      style={{
-        color: "#F4EBE4",
-        fontFamily: "var(--font-body)",
-        textDecoration: "none",
-        transition: "opacity 0.2s ease",
-      }}
-      onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
-      onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
-    >
-      {children}
-    </Link>
+        .footer-nav-col {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+
+        .footer-nav-col-right {
+          align-items: flex-end;
+          text-align: right;
+        }
+
+        .footer-nav-col :global(a),
+        .footer-desktop-policies :global(a),
+        .footer-mobile-policies :global(a),
+        .footer-attribution-col :global(a) {
+          transition: opacity 0.2s ease;
+        }
+
+        .footer-nav-col :global(a:hover),
+        .footer-desktop-policies :global(a:hover),
+        .footer-mobile-policies :global(a:hover),
+        .footer-attribution-col :global(a:hover),
+        .social-icon-link:hover {
+          opacity: 0.7;
+        }
+
+        .footer-social-col {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 100%;
+        }
+
+        .footer-social-icons {
+          display: flex;
+          align-items: center;
+          gap: 24px;
+          margin-top: 12px;
+        }
+
+        .social-icon-link {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: opacity 0.2s ease;
+        }
+
+        .footer-divider {
+          width: 100%;
+          height: 1px;
+          background-color: rgba(244, 235, 228, 0.2);
+          margin-bottom: 20px;
+        }
+
+        .footer-bottom-row {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          gap: 32px;
+          font-size: 14px;
+        }
+
+        .footer-mobile-policies {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 100%;
+        }
+
+        .footer-desktop-copyright {
+          display: none;
+        }
+
+        .footer-desktop-policies {
+          display: none;
+        }
+
+        .footer-attribution-col {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 100%;
+          gap: 16px;
+        }
+
+        .footer-mobile-copyright {
+          display: inline;
+          text-align: center;
+          width: 100%;
+        }
+
+        @media (min-width: 768px) {
+          .footer-wrapper {
+            padding-left: 30px;
+            padding-right: 30px;
+            padding-top: 40px;
+          }
+
+          .footer-nav-columns {
+            font-size: 16px;
+          }
+
+          .footer-bottom-row {
+            font-size: 16px;
+          }
+
+          .footer-attribution-col {
+            flex-direction: row;
+            gap: 24px;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .footer-links-row {
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 0;
+            margin-bottom: 48px;
+          }
+
+          .footer-nav-columns {
+            width: 60%;
+          }
+
+          .footer-nav-col-right {
+            align-items: flex-start;
+            text-align: left;
+          }
+
+          .footer-social-col {
+            align-items: flex-end;
+            width: auto;
+          }
+
+          .footer-bottom-row {
+            flex-direction: row;
+            gap: 0;
+          }
+
+          .footer-mobile-policies {
+            display: none;
+          }
+
+          .footer-desktop-copyright {
+            display: inline;
+          }
+
+          .footer-desktop-policies {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+          }
+
+          .footer-attribution-col {
+            width: auto;
+          }
+
+          .footer-mobile-copyright {
+            display: none;
+          }
+        }
+      `}</style>
+    </>
   );
 }
