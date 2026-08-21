@@ -24,12 +24,16 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "manual";
+      }
       setHasSeenBrandPreloader(sessionStorage.getItem("hasSeenBrandPreloader") === "true");
     }
 
     const handlePopState = () => {
       setPreloaderDone(true);
       document.body.classList.remove("preloading");
+      document.documentElement.classList.remove("preloading");
     };
 
     window.addEventListener("popstate", handlePopState);
