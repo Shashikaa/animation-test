@@ -16,29 +16,49 @@ const NAV_LINKS = [
   { 
     label: "Home", 
     href: "/", 
-    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1400&q=80"
+    image: "/placeholder.png" 
   },
   { 
     label: "About Us", 
     href: "/about", 
-    image: "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=1400&q=80" 
+    image: "/placeholder.png" 
   },
   { 
     label: "Services", 
     href: "/services", 
-    image: "https://images.unsplash.com/photo-1572331165267-854da2b10ccc?auto=format&fit=crop&w=1400&q=80" 
+    image: "/placeholder.png" 
   },
   { 
     label: "Projects", 
     href: "/projects", 
-    image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1400&q=80" 
+    image: "/placeholder.png" 
   },
   { 
     label: "Contact Us", 
     href: "/contact", 
-    image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1400&q=80" 
+    image: "/placeholder.png"  
   },
 ];
+
+const SERVICE_SUB_LINKS = [
+  {
+    label: "Residential Pools Construction",
+    href: "/services/residential-pools-construction",
+    image: "/placeholder.png" 
+  },
+  {
+    label: "Pool Equipment & Installation",
+    href: "/services/pool-equipment-and-installation",
+    image: "/placeholder.png" 
+  },
+  {
+    label: "Commercial Pool Construction",
+    href: "/services/commercial-pool-construction",
+    image: "/placeholder.png" 
+  },
+];
+
+const MENU_IMAGE_ITEMS = [...NAV_LINKS, ...SERVICE_SUB_LINKS];
 
 const SOCIAL_LINKS = [
   { label: "Instagram", href: "https://www.instagram.com/grandpools_aus/", src: "/ig.svg" },
@@ -159,16 +179,16 @@ function ImagePanel({ activeIndex }: { activeIndex: number }) {
             className="!absolute !inset-0 !z-10"
           >
             <img
-              src={NAV_LINKS[layer.index].image}
-              alt={NAV_LINKS[layer.index].label}
+              src={MENU_IMAGE_ITEMS[layer.index].image}
+              alt={MENU_IMAGE_ITEMS[layer.index].label}
               className="!w-full !h-full !object-cover !block"
             />
           </motion.div>
         ) : (
           <div key={layer.key} className="!absolute !inset-0 !z-0 !overflow-hidden">
             <img
-              src={NAV_LINKS[layer.index].image}
-              alt={NAV_LINKS[layer.index].label}
+              src={MENU_IMAGE_ITEMS[layer.index].image}
+              alt={MENU_IMAGE_ITEMS[layer.index].label}
               className="!w-full !h-full !object-cover !block"
             />
           </div>
@@ -342,6 +362,22 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
                       isMobile
                     />
                   </motion.div>
+
+                  {label === "Services" && (
+                    <motion.div
+                      variants={linkVariants}
+                      className="!flex !flex-col !gap-2 !pl-4 !pb-3 md:!pl-6"
+                    >
+                      {SERVICE_SUB_LINKS.map((service) => (
+                        <ServiceSubLink
+                          key={service.href}
+                          {...service}
+                          onCloseMenu={onClose}
+                          isMobile
+                        />
+                      ))}
+                    </motion.div>
+                  )}
                 </div>
               ))}
             </motion.nav>
@@ -389,7 +425,14 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
   }, [pathname]);
 
   const initialActiveIndex = useMemo(() => {
-    const idx = NAV_LINKS.findIndex(link => link.href === pathname);
+    const serviceIdx = SERVICE_SUB_LINKS.findIndex(link => link.href === pathname);
+    if (serviceIdx !== -1) return NAV_LINKS.length + serviceIdx;
+
+    const idx = NAV_LINKS.findIndex(link =>
+      link.href === "/services"
+        ? pathname === "/services" || pathname.startsWith("/services/")
+        : link.href === pathname
+    );
     return idx !== -1 ? idx : 0;
   }, [pathname]);
 
@@ -411,6 +454,16 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
     
     hoverTimerRef.current = setTimeout(() => {
       setActiveIndex(i);
+    }, 50);
+  }, []);
+
+  const handleServiceMouseEnter = useCallback((serviceIndex: number) => {
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+
+    setHoveredIndex(2);
+
+    hoverTimerRef.current = setTimeout(() => {
+      setActiveIndex(NAV_LINKS.length + serviceIndex);
     }, 50);
   }, []);
 
@@ -528,6 +581,22 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
                         onCloseMenu={onClose}
                       />
                     </motion.div>
+
+                    {label === "Services" && (
+                      <motion.div
+                        variants={linkVariants}
+                        className="!flex !flex-col !gap-2 !pl-4 !pt-2 !pb-1"
+                      >
+                        {SERVICE_SUB_LINKS.map((service, serviceIndex) => (
+                          <ServiceSubLink
+                            key={service.href}
+                            {...service}
+                            onCloseMenu={onClose}
+                            onMouseEnter={() => handleServiceMouseEnter(serviceIndex)}
+                          />
+                        ))}
+                      </motion.div>
+                    )}
                   </div>
                 ))}
               </motion.nav>
@@ -635,8 +704,65 @@ function NavLink({
       <span
         className="font-body !inline-block !select-none !font-normal !normal-case !not-italic !transition-[color,letter-spacing] !duration-[250ms,350ms] !ease-in-out"
         style={{
-          fontSize: isMobile ? "24px" : "clamp(22px, 2vw, 28px)",
+          fontSize: isMobile ? "24px" : "clamp(24px, 2vw, 28px)",
           color: highlighted ? "#F4EEDF" : "rgba(244, 238, 223, 0.6)",
+        }}
+      >
+        {label}
+      </span>
+    </Link>
+  );
+}
+
+function ServiceSubLink({
+  label,
+  href,
+  onCloseMenu,
+  onMouseEnter,
+  isMobile = false,
+}: {
+  label: string;
+  href: string;
+  onCloseMenu?: () => void;
+  onMouseEnter?: () => void;
+  isMobile?: boolean;
+}) {
+  const pathname = usePathname();
+  const isCurrentPage = pathname === href;
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleClick = () => {
+    document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
+    onCloseMenu?.();
+  };
+
+  return (
+    <Link
+      href={href}
+      prefetch={true}
+      onClick={handleClick}
+      onMouseEnter={() => {
+        setIsHovered(true);
+        onMouseEnter?.();
+      }}
+      onMouseLeave={() => setIsHovered(false)}
+      onFocus={() => {
+        setIsHovered(true);
+        onMouseEnter?.();
+      }}
+      onBlur={() => setIsHovered(false)}
+      className="!w-fit !no-underline !transition-opacity !duration-200 hover:!opacity-100 active:!opacity-70"
+    >
+      <span
+        className="font-body !block !font-normal !leading-snug"
+        style={{
+          fontSize: isMobile ? "20px" : "clamp(23px, 2vw, 20px)",
+          color:
+            isCurrentPage || isHovered
+              ? "#F4EEDF"
+              : "rgba(244, 238, 223, 0.55)",
+          transition: "color 250ms ease-in-out",
         }}
       >
         {label}

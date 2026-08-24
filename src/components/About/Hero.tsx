@@ -25,7 +25,8 @@ export default function Hero({ isMobile = false }: HeroProps) {
         <div className="hero-bg-target about-hero-bg absolute -top-[10%] -bottom-[10%] h-[120%] w-full [backface-visibility:hidden]">
           <Image
             src={bgImage}
-            alt="Grand Pools Hero"
+            alt=""
+            aria-hidden="true"
             fill
             priority
             quality={85}
@@ -33,15 +34,19 @@ export default function Hero({ isMobile = false }: HeroProps) {
             className="object-cover object-center"
           />
         </div>
+
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 z-[2]" />
+
         <div className="about-hero-text-wrap section-container relative z-10 h-full flex flex-col justify-end !pb-22 w-full pointer-events-auto">
           <div className="flex flex-col !gap-4 lg:!gap-8 leading-normal">
+            {/* The only real H1 */}
             <h1
               className="hero-text-target hero-title-target text-[#F4EEDF] !font-[100]"
               style={{ fontFamily: "var(--font-display)" }}
             >
-More Than Just a Pool
+              More Than Just a Pool
             </h1>
+
             <p className="hero-text-target hero-desc-target text-[#F4EEDF]">
               Creating Experiences
             </p>
@@ -49,7 +54,7 @@ More Than Just a Pool
         </div>
       </div>
 
-      {/* RIGHT HALF OF CURTAIN (Desktop Only) */}
+      {/* RIGHT HALF OF CURTAIN — Desktop only */}
       {!isMobile && (
         <div
           className="about-hero-panel-right absolute inset-0 w-full h-full overflow-hidden pointer-events-none"
@@ -58,11 +63,13 @@ More Than Just a Pool
             clipPath: "inset(0% 0% 0% 50%)",
             WebkitClipPath: "inset(0% 0% 0% 50%)",
           }}
+          aria-hidden="true"
         >
           <div className="hero-bg-target about-hero-bg absolute -top-[10%] -bottom-[10%] h-[120%] w-full [backface-visibility:hidden]">
             <Image
               src={bgImage}
-              alt="Grand Pools Hero"
+              alt=""
+              aria-hidden="true"
               fill
               priority
               quality={85}
@@ -70,17 +77,22 @@ More Than Just a Pool
               className="object-cover object-center"
             />
           </div>
+
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 z-[2]" />
+
           <div className="about-hero-text-wrap section-container relative z-10 h-full flex flex-col justify-end !pb-22 w-full pointer-events-auto">
             <div className="flex flex-col !gap-4 lg:!gap-8 leading-normal">
-              <h1
-                className="hero-text-target hero-title-target text-[#F4EEDF] !font-[100]"
+              {/* Visual copy—not another heading */}
+              <div
+                className="h1 hero-text-target hero-title-target text-[#F4EEDF] !font-[100]"
                 style={{ fontFamily: "var(--font-display)" }}
               >
-More Than Just a Pool              </h1>
-              <p className="hero-text-target hero-desc-target text-[#F4EEDF]">
+                More Than Just a Pool
+              </div>
+
+              <div className="hero-text-target hero-desc-target text-[#F4EEDF]">
                 Creating Experiences
-              </p>
+              </div>
             </div>
           </div>
         </div>

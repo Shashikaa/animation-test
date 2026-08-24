@@ -91,9 +91,9 @@ export default function SectionEight({ preloaderDone }: SectionEightProps) {
         </div>
 
         <div className="!absolute !top-0 !left-0 !z-20 !flex !flex-col !items-start !gap-7 !pt-[12vh] !px-5">
-          <h2 className="s8-heading !text-[#F4EEDF] !text-left font-display">
+          <div className="h2 s8-heading !text-[#F4EEDF] !text-left font-display">
             Water as Sanctuary
-          </h2>
+          </div>
           <p className="s8-para !text-[#F4EEDF] !text-left font-body max-w-[300px]">
             Designed to disappear into the landscape, not announce itself.
             The result isn't a pool. It's a quiet room you walk outside to find.

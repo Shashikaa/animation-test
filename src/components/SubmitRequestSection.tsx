@@ -1,119 +1,59 @@
 "use client";
 
-import LazyWaveCanvas from "./LazyWaveCanvas";
 import CtaForm from "./CtaForm";
 
 type SubmitRequestSectionProps = {
   onClose?: () => void;
-  preloaderDone?: boolean;
 };
 
 export default function SubmitRequestSection({
   onClose,
-  preloaderDone,
 }: SubmitRequestSectionProps) {
   return (
-    <section className="about-section-cta section-cta min-h-full w-full relative z-[10000] overflow-hidden">
+    <section className="about-section-cta section-cta relative z-[10000] min-h-[100dvh] w-full overflow-hidden lg:!hidden">
       {/* Floating Close Button */}
       {onClose && (
         <button
+          type="button"
           onClick={onClose}
           aria-label="Close modal"
-          className="!fixed !top-4 !right-4 md:!top-8 md:!right-12 !z-[50] !flex !items-center !justify-center !p-1.5 !bg-transparent !border-none !cursor-pointer !opacity-85 hover:!opacity-100 hover:!rotate-90 active:!scale-90 active:!opacity-100 !transition-[opacity,transform] !duration-200 !ease-in-out"
+          className="!fixed !right-4 !top-4 !z-[50] !flex !cursor-pointer !items-center !justify-center !border-none !bg-transparent !p-1.5 !opacity-85 !transition-[opacity,transform] !duration-200 !ease-in-out hover:!rotate-90 hover:!opacity-100 active:!scale-90 active:!opacity-100 md:!right-12 md:!top-8"
         >
           <img
             src="/closebtn.svg"
-            alt="Close"
-            className="!w-6 !h-6 md:!w-7 md:!h-7 !block !object-contain"
+            alt=""
+            aria-hidden="true"
+            className="!block !h-6 !w-6 !object-contain md:!h-7 md:!w-7"
           />
         </button>
       )}
 
-      {/* Background Canvas & Fallback Image */}
-      <div className="absolute inset-0 z-[1] pointer-events-none w-full h-full">
-        <div className="hidden lg:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
-          <LazyWaveCanvas imageSrc="/CTA.webp" preloaderDone={preloaderDone} />
-        </div>
-
-        <div className="block lg:hidden w-full h-full">
-          <img
-            src="/CTAmob.webp"
-            alt="Background"
-            className="w-full h-full object-cover"
-          />
-        </div>
-      </div>
-
-      {/* Desktop Layout */}
+      {/* Mobile and Tablet Background */}
       <div
-        className="hidden lg:flex section-container cta-inner-desktop"
-        style={{
-          position: "relative",
-          zIndex: 10,
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 44,
-          minHeight: "100vh",
-          height: "100%",
-          maxWidth: 1440,
-          padding: "40px 48px",
-          margin: "0 auto",
-        }}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-[1] h-full w-full"
       >
-        <div
-          style={{
-            flex: "0 0 auto",
-            maxWidth: 620,
-            display: "flex",
-            flexDirection: "column",
-            gap: 24,
-          }}
-        >
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <h2
-              className="font-display"
-              style={{ color: "#F4EEDF", fontWeight: 100, margin: 0 }}
-            >
-              Ready to Build Your Dream
-            </h2>
-          </div>
-          <p
-            className="font-body"
-            style={{
-              color: "#F4EEDF",
-              fontSize: 16,
-              lineHeight: 1.2,
-              margin: 0,
-              maxWidth: 400,
-            }}
-          >
-            Let&apos;s bring your vision to life with a custom-designed pool
-            crafted for your space and lifestyle. Reach out to get started today.
-          </p>
-        </div>
-
-        <div style={{ flex: "1 1 auto", maxWidth: 560 }}>
-          <CtaForm isMobile={false} nameSuffix="modal-desktop" />
-        </div>
+        <img
+          src="/CTAmob.webp"
+          alt=""
+          className="h-full w-full object-cover"
+        />
       </div>
 
-      {/* Mobile & Tablet Layout */}
+      {/* Mobile and Tablet Layout */}
       <div
-        className="flex lg:hidden cta-inner-mobile w-full min-h-[100dvh] !py-20 md:!justify-center"
+        className="cta-inner-mobile relative z-10 flex min-h-[100dvh] w-full flex-col items-start justify-start !py-20 md:justify-center"
         style={{
-          position: "relative",
-          zIndex: 10,
-          flexDirection: "column",
-          justifyContent: "flex-start",
-          alignItems: "flex-start",
           paddingLeft: "20px",
           paddingRight: "20px",
           margin: 0,
         }}
       >
         <div className="w-full">
-          <h2
-            className="font-display !max-w-[300px] md:!max-w-[430px]"
+          {/* Visual title—not an SEO heading */}
+          <div
+            aria-hidden="true"
+            className="h2 font-display !max-w-[300px] md:!max-w-[430px]"
             style={{
               color: "#F4EEDF",
               margin: 0,
@@ -121,8 +61,8 @@ export default function SubmitRequestSection({
               textAlign: "left",
             }}
           >
-            Ready to Build Your Dream
-          </h2>
+            Ready to Dive In
+          </div>
 
           <p
             className="font-body max-w-[500px]"
@@ -134,7 +74,8 @@ export default function SubmitRequestSection({
             }}
           >
             Let&apos;s bring your vision to life with a custom-designed pool
-            crafted for your space and lifestyle. Reach out to get started today.
+            crafted for your space and lifestyle. Reach out to get started
+            today.
           </p>
 
           <div className="w-full text-left">

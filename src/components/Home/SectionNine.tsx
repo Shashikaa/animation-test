@@ -14,9 +14,9 @@ export default function SectionNine() {
           />
           
           <div className="s9-native-title-wrapper-1 absolute top-1/2 right-0 -translate-y-1/2 w-[400px] hidden lg:block">
-            <h2 className="s9-title-part1 text-[#F4EEDF] font-display text-[46px] leading-none text-right whitespace-nowrap select-none">
+            <div className="h2  s9-title-part1 text-[#F4EEDF] font-display text-[46px] leading-none text-right whitespace-nowrap select-none">
               Ready to<span className="inline-block w-[12px]">&nbsp;</span>
-            </h2>
+            </div>
           </div>
         </div>
 
@@ -31,9 +31,9 @@ export default function SectionNine() {
           />
 
           <div className="s9-native-title-wrapper-2 absolute top-1/2 left-0 -translate-y-1/2 w-[400px] hidden lg:block">
-            <h2 className="s9-title-part2 text-[#F4EEDF] font-display text-[46px] leading-none text-left whitespace-nowrap select-none">
+            <div className="h2 s9-title-part2 text-[#F4EEDF] font-display text-[46px] leading-none text-left whitespace-nowrap select-none">
               Dive In?
-            </h2>
+            </div>
           </div>
         </div>
       </div>
@@ -59,10 +59,10 @@ export default function SectionNine() {
           
           {/* TARGET WRAPPER */}
           <div className="s9-target-wrapper relative w-full text-right opacity-0 select-none pointer-events-none">
-            <h2 className="font-display text-[46px] leading-none inline-flex items-center justify-end gap-3 text-[#F4EEDF] whitespace-nowrap">
+            <div className="h2 font-display text-[46px] leading-none inline-flex items-center justify-end gap-3 text-[#F4EEDF] whitespace-nowrap">
               <span>Ready to</span>
               <span>Dive In?</span>
-            </h2>
+            </div>
           </div>
 
           <div className="h-4 w-full block clear-both" />
@@ -79,7 +79,7 @@ export default function SectionNine() {
 
       {/* MOBILE & TABLET OVERLAY LAYER */}
       <div className="absolute top-32 right-6 md:right-10 z-40 flex flex-col items-end lg:hidden max-w-[320px] md:max-w-[450px] pointer-events-none">
-        <h2 className="s9-title text-[#F4EEDF] font-display text-3xl md:text-4xl text-right w-full !mb-5">
+        <h2 className="h2 s9-title text-[#F4EEDF] font-display text-3xl md:text-4xl text-right w-full !mb-5">
           Ready to Dive In?
         </h2>
         <p className="s9-para-mobile text-[#F4EEDF] font-body text-right text-sm md:text-base leading-relaxed">

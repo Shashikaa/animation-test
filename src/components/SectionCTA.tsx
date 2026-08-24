@@ -54,9 +54,10 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <h2
               className="font-display"
+              
               style={{ color: "#F4EEDF", fontWeight: 100, margin: 0 }}
             >
-Ready to Dive in            </h2>
+Ready to Dive In            </h2>
           </div>
           <p
             className="font-body"
@@ -93,16 +94,16 @@ Ready to Dive in            </h2>
           opacity: "var(--cta-inner-opacity, 1)",
         }}
       >
-        <h2
-          className="font-display !max-w-[300px] md:!max-w-[430px]"
+        <div
+          className=" h2 font-display !max-w-[300px] md:!max-w-[430px]"
           style={{
             color: "#F4EEDF",
             margin: 0,
             marginBottom: 20,
           }}
         >
-          Ready to Dive in
-        </h2>
+          Ready to Dive In
+        </div>
 
         <p
           className="font-body max-w-[500px]"

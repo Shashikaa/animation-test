@@ -100,12 +100,12 @@ export default function SectionSeven() {
 
         {/* Title + card — left-aligned */}
         <div className="!flex !flex-col !items-left !gap-4 !pl-6">
-          <h2
-            className="!text-[#F4EEDF] !font-[100] !text-left !m-0 !mt-12"
+          <div
+            className="h2 !text-[#F4EEDF] !font-[100] !text-left !m-0 !mt-12"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Meet the Expert
-          </h2>
+          </div>
 
           <div
             className="!w-[340px] !max-w-[340px] !flex !flex-col !mt-2 "

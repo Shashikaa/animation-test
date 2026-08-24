@@ -103,15 +103,15 @@ Ready to Dive in            </h2>
           margin: 0,
         }}
       >
-        <h2
-          className="font-display !max-w-[300px] md:!max-w-[430px]"
+        <div
+          className="h2 font-display !max-w-[300px] md:!max-w-[430px]"
           style={{
             color: "#F4EEDF",
             margin: 0,
             marginBottom: 28,
           }}
         >
-Ready to Dive in        </h2>
+Ready to Dive in        </div>
 
         <p
           className="font-body max-w-[500px]"
