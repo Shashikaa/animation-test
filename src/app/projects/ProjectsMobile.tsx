@@ -80,10 +80,12 @@ export default function ProjectsMobile() {
   useEffect(() => {
     if (!shouldLoadRest) return;
     executeMobileSplitting(".scroll-para-1");
+    executeMobileSplitting(".scroll-para-2");
 
     return () => {
       if (scopeRef.current) {
         restoreTextReveal(scopeRef.current, ".scroll-para-1");
+        restoreTextReveal(scopeRef.current, ".scroll-para-2");
       }
     };
   }, [shouldLoadRest]);
@@ -118,7 +120,7 @@ export default function ProjectsMobile() {
 
     const footerHeight = footerLayerRef.current?.offsetHeight || vh;
 
-    // Dynamically calculate track height based on step views + footer height
+    // Tightened dynamic track height to eliminate dead gap before footer
     const totalTrackHeight = vh * 4 + footerHeight;
 
     trackRef.current.style.height = `${totalTrackHeight}px`;
@@ -171,8 +173,7 @@ export default function ProjectsMobile() {
     const isAndroid =
       typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
 
-    // Dynamic easing and delta capping matching AboutMobile
-const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
+    const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
 
     let lastTime = performance.now();
@@ -196,22 +197,28 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
       currentProgress.current += delta;
 
       const p = currentProgress.current;
-      const totalSteps = 4.5;
+      const totalSteps = 4.2;
       const stepProgress = p * totalSteps;
 
       const { vh } = scrollMetricsRef.current;
 
-      // ── Hero Text Reveal ──
+      // ── DOM References ──
       const heroTextWrap =
         scopeRef.current?.querySelector<HTMLElement>(".hero-text-wrap");
       const scrollPara1 =
         scopeRef.current?.querySelector<HTMLElement>(".scroll-para-1");
-      const paraLines = scopeRef.current?.querySelectorAll<HTMLElement>(
+      const para1Lines = scopeRef.current?.querySelectorAll<HTMLElement>(
         ".scroll-para-1 .custom-line-inner"
+      );
+      const scrollPara2 =
+        scopeRef.current?.querySelector<HTMLElement>(".scroll-para-2");
+      const para2Lines = scopeRef.current?.querySelectorAll<HTMLElement>(
+        ".scroll-para-2 .custom-line-inner"
       );
       const parallaxImg =
         scopeRef.current?.querySelector<HTMLElement>(".parallax-img-asset");
 
+      // ── Initial Hero Title & Desc Fade (0.0 -> 0.4) ──
       const heroTextFade = clamp(stepProgress / 0.4);
       if (heroTextWrap) {
         heroTextWrap.style.opacity = `${1 - heroTextFade}`;
@@ -221,26 +228,53 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
         heroTextWrap.style.visibility = heroTextFade >= 1 ? "hidden" : "visible";
       }
 
-      if (scrollPara1 && paraLines) {
-        const paraProgress = clamp((stepProgress - 0.3) / 0.5);
-        scrollPara1.style.visibility = paraProgress > 0 ? "visible" : "hidden";
+      // ── Paragraph 1 Reveal (In: 0.3 -> 0.8 | Out: 0.8 -> 1.1) ──
+      const para1In = clamp((stepProgress - 0.3) / 0.5);
+      const para1Out = clamp((stepProgress - 0.8) / 0.3);
 
-        paraLines.forEach((line, idx) => {
-          const lineStaggerProg = clamp((paraProgress - idx * 0.1) / 0.6);
-          line.style.opacity = `${lineStaggerProg}`;
+      if (scrollPara1) {
+        scrollPara1.style.visibility =
+          stepProgress >= 0.3 && stepProgress <= 1.1 ? "visible" : "hidden";
+        scrollPara1.style.opacity = `${1 - para1Out}`;
+        scrollPara1.style.transform = `translate3d(0, ${-20 * para1Out}px, 0)`;
+      }
+
+      if (para1Lines) {
+        para1Lines.forEach((line, idx) => {
+          const lineProg = clamp((para1In - idx * 0.1) / 0.6);
+          line.style.opacity = `${lineProg}`;
           line.style.transform = `translate3d(0, ${
-            (1 - lineStaggerProg) * 100
+            (1 - lineProg) * 100
           }%, 0)`;
         });
       }
 
-      // ── Section One Reveal & Parallax Image Transform ──
-      const s1Prog = clamp(stepProgress - 1.0);
+      // ── Paragraph 2 Reveal (In: 1.1 -> 1.6) ──
+      const para2In = clamp((stepProgress - 1.1) / 0.5);
+
+      if (scrollPara2) {
+        scrollPara2.style.visibility = stepProgress >= 1.1 ? "visible" : "hidden";
+      }
+
+      if (para2Lines) {
+        para2Lines.forEach((line, idx) => {
+          const lineProg = clamp((para2In - idx * 0.1) / 0.6);
+          line.style.opacity = `${lineProg}`;
+          line.style.transform = `translate3d(0, ${
+            (1 - lineProg) * 100
+          }%, 0)`;
+        });
+      }
+
+      // ── Section One Reveal & Parallax Image Transform (1.6 -> 2.6) ──
+      const s1Prog = clamp((stepProgress - 1.6) / 1.0);
+
       if (heroPanelRef.current) {
         heroPanelRef.current.style.transform = `translate3d(0, ${
           -s1Prog * 15
         }%, 0)`;
       }
+
       if (sectionOneRef.current) {
         sectionOneRef.current.style.transform = `translate3d(0, ${
           (1 - s1Prog) * 100
@@ -252,22 +286,22 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
         parallaxImg.style.transform = `translate3d(0, ${imgY.toFixed(2)}%, 0)`;
       }
 
-      // ── Section Two ──
-      const s2Prog = clamp(stepProgress - 2.0);
+      // ── Section Two Reveal (2.6 -> 3.2) ──
+      const s2Prog = clamp((stepProgress - 2.6) / 0.6);
       if (sectionTwoRef.current) {
         sectionTwoRef.current.style.transform = `translate3d(0, ${
           (1 - s2Prog) * 100
         }%, 0)`;
       }
 
-      if (stepProgress >= 2.2 && stepProgress <= 4.5) {
+      if (stepProgress >= 2.8 && stepProgress <= 4.2) {
         setIsSectionTwoActive(true);
       } else {
         setIsSectionTwoActive(false);
       }
 
-      // ── Footer Layer ──
-      const footerProgress = clamp(stepProgress - 3.5);
+      // ── Footer Layer Reveal (Immediately follows Sec 2: 3.2 -> 4.2) ──
+      const footerProgress = clamp((stepProgress - 3.2) / 1.0);
       if (footerLayerRef.current) {
         const footerHeight = footerLayerRef.current.offsetHeight || vh;
         const translateY = vh - footerHeight * footerProgress;

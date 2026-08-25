@@ -29,7 +29,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       {
         title: "Consultation & Site Review",
         description: "We start by understanding your space, goals, and what you want from the pool. Our team reviews the site, access, layout, and key project requirements. This gives us a clear direction before design begins.",
-        image: "/placeholder.webp"
+        image: "/placeholder1.jpg"
       },
       {
         title: "Design & Planning",
@@ -39,7 +39,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       {
         title: "Approvals & Preparation",
         description: "Before building begins, we prepare the required details and documentation. This stage helps align the project, schedule, access, and technical needs. Everything is organised so construction can move forward smoothly.",
-        image: "/placeholder.webp"
+        image: "/placeholder2.jpg"
       },
       {
         title: "Construction & Installation",
@@ -49,7 +49,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       {
         title: "Finishing & Installation",
         description: "Final finishes, equipment checks, water balance, and detailing are completed. We make sure everything is ready, clean, and working properly. Then we guide you through how to use and care for your new pool.",
-        image: "/placeholder.webp"
+        image: "/placeholder1.jpg"
       }
     ]
   },
@@ -74,12 +74,12 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       {
         title: "Design & Planning",
         description: "Balancing shallow play steps, swim zones, and surrounding alfresco entertaining decks into a single master layout.",
-        image:"/placeholder.webp"
+        image:"/placeholder1.jpg"
       },
       {
         title: "Approvals & Preparation",
         description: "Careful soil removal and soil stabilization tailored specifically for coastal terrain and deep foundation requirements.",
-        image: "/placeholder.webp"
+        image: "/placeholder2.jpg"
       },
       {
         title: "Construction & Installation",
@@ -89,7 +89,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       {
         title: "Finishing & Installation",
         description: "Finishing touches including timber decking, perimeter fencing, energy-efficient heat pumps, and water balance testing.",
-        image:"/placeholder.webp"
+        image:"/placeholder1.jpg"
       }
     ]
   },
@@ -109,7 +109,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       {
         title: "Consultation & Site Review",
         description: "Assessing tight urban access constraints, boundary easements, and adjacent structures for precise micro-plunge installation.",
-        image: "/placeholder.webp"
+        image: "/placeholder1.jpg"
       },
       {
         title: "Design & Planning",
@@ -119,7 +119,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       {
         title: "Approvals & Preparation",
         description: "Utilising compact machinery and custom rigging techniques to negotiate zero-lot-line urban property boundaries.",
-        image: "/placeholder.webp"
+        image: "/placeholder2.jpg"
       },
       {
         title: "Construction & Installation",
@@ -129,7 +129,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       {
         title: "Finishing & Installation",
         description: "Hand-laid mosaic tiles, warm accent LED lighting, and discreet hidden equipment equipment rooms finalize the build.",
-        image: "/placeholder.webp"
+        image: "/placeholder1.jpg"
       }
     ]
   },
@@ -149,12 +149,12 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       {
         title: "Consultation & Site Review",
         description: "Analysing natural slope grade, sun orientation, and existing flora to blend the pool organically with the landscape.",
-        image: "/placeholder.webp"
+        image: "/placeholder1.jpg"
       },
       {
         title: "Design & Planning",
         description: "Designing infinity edges and natural stone coping that transition smoothly into the surrounding garden scenery.",
-        image: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=1920&auto=format&fit=crop"
+        image: "placeholder2.jpg"
       },
       {
         title: "Approvals & Preparation",
@@ -164,7 +164,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       {
         title: "Construction & Installation",
         description: "Heavy-duty concrete spray application forming elevated beam edges and sunken lounge seating areas.",
-        image: "/placeholder.webp"
+        image: "/placeholder1.jpg"
       },
       {
         title: "Finishing & Installation",
@@ -189,7 +189,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       {
         title: "Consultation & Site Review",
         description: "Comprehensive site evaluation and collaboration with lead architects to establish ultra-luxury specifications.",
-        image: "/placeholder.webp"
+        image: "/placeholder1.jpg"
       },
       {
         title: "Design & Planning",
@@ -199,7 +199,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       {
         title: "Approvals & Preparation",
         description: "Deep foundation works with specialized underpinning to protect surrounding high-end residential structures.",
-        image: "/placeholder.webp"
+        image: "/placeholder2.jpg"
       },
       {
         title: "Construction & Installation",
@@ -209,7 +209,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       {
         title: "Finishing & Installation",
         description: "Imported Italian glass tiles, climate-controlled heating, submerged sound systems, and automated cover integration.",
-        image:"/placeholder.webp"
+        image:"/placeholder1.jpg"
       }
     ]
   }

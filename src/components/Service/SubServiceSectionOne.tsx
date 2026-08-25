@@ -31,13 +31,15 @@ export default function SubServiceSectionOne({ data }: SubServiceSectionOneProps
       className="s10-section relative w-full h-full overflow-hidden"
     >
       {/* ── Background Static Image Layer ── */}
-      <div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full mix-blend-normal">
-        <img 
-          src="/placeholder.webp" 
-          alt="Background" 
-          className="w-full h-full object-cover"
-        />
-      </div>
+<div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full mix-blend-normal">
+  <img 
+    src="/placeholder.webp" 
+    alt="Background" 
+    className="w-full h-full object-cover"
+  />
+  {/* Dark Overlay */}
+  <div className="absolute inset-0 bg-black/50" />
+</div>
 
       {/* ── Foreground Layout Grid ── */}
       <div className="s10-content-initial section-container relative z-10 w-full h-full flex flex-col justify-between max-lg:justify-start max-lg:gap-4 !pt-[100px] md:!pt-[18vh] lg:!pt-[18vh] pb-[10vh]">

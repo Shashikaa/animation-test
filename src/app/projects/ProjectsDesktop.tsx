@@ -14,7 +14,8 @@ type ContactProps = {
   preloaderDone?: boolean;
 };
 
-const TOTAL_SCROLL_STEPS = 10;
+// Reduced total scroll steps from 10 to 8 to remove dead space
+const TOTAL_SCROLL_STEPS = 8;
 
 // Quadratic Easing matching About component setup
 const easeOutQuad = (t: number) => t * (2 - t);
@@ -86,7 +87,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     unlockScrollEarlyMs: 1800,
   });
 
-  // ── 1. UNLOCK LENIS / SCROLL (MATCHING ABOUT LOGIC) ──
+  // ── 1. UNLOCK LENIS / SCROLL ──
   useEffect(() => {
     const lenis = smootherRef?.current;
 
@@ -157,7 +158,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     };
   }, [shouldLoadRest, measure, handleResize]);
 
-  // ── 3. TEXT REVEAL LOGIC (EXACT ABOUT implementation) ──
+  // ── 3. TEXT REVEAL LOGIC ──
   const triggerPlayOnceTextReveal = useCallback((
     containerSelector: string,
     currentStepProg: number,
@@ -186,21 +187,22 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
-    // Apply text splitting and hook text reveals exactly like About
     executeDesktopSplitting(".scroll-para-1");
+    executeDesktopSplitting(".scroll-para-2");
     useTextReveal(scopeRef, ".reveal-text");
     useTextReveal(scopeRef, ".section-one-wrapper .reveal-text");
 
     return () => {
       if (scopeRef.current) {
         restoreTextReveal(scopeRef.current, ".scroll-para-1");
+        restoreTextReveal(scopeRef.current, ".scroll-para-2");
         restoreTextReveal(scopeRef.current, ".reveal-text");
         restoreTextReveal(scopeRef.current, ".section-one-wrapper .reveal-text");
       }
     };
   }, [shouldLoadRest]);
 
-  // ── 4. CONTINUOUS LERP RENDER ENGINE (MATCHING ABOUT SCROLL LOGIC) ──
+  // ── 4. CONTINUOUS LERP RENDER ENGINE ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
@@ -211,16 +213,17 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     const EASE_FACTOR = 0.15;
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.008;
 
-    // Cache element references inside closure
     const heroTextWrap = scope.querySelector<HTMLElement>(".hero-text-wrap");
     const scrollPara1 = scope.querySelector<HTMLElement>(".scroll-para-1");
-    const paraInners = scope.querySelectorAll<HTMLElement>(".scroll-para-1 .custom-line-inner");
+    const para1Inners = scope.querySelectorAll<HTMLElement>(".scroll-para-1 .custom-line-inner");
+    const scrollPara2 = scope.querySelector<HTMLElement>(".scroll-para-2");
+    const para2Inners = scope.querySelectorAll<HTMLElement>(".scroll-para-2 .custom-line-inner");
+
     const heroBgs = scope.querySelectorAll<HTMLElement>(".projects-hero-bg, .hero-bg-anim");
     const secOne = scope.querySelector<HTMLElement>(".section-one-wrapper");
     const parallaxImg = scope.querySelector<HTMLElement>(".parallax-img-asset");
     const secTwo = scope.querySelector<HTMLElement>(".section-two-wrapper");
 
-    // Promote elements for hardware acceleration
     [secOne, parallaxImg, secTwo, layerCTA.current, layerFooter.current].forEach((el) => {
       if (el) {
         el.style.willChange = "transform, opacity";
@@ -235,8 +238,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
       lastTime = time;
 
       const dynamicEase = 1 - Math.exp(-EASE_FACTOR * 60 * dt);
-      let delta =
-        (targetProgress.current - smoothProgress.current) * dynamicEase;
+      let delta = (targetProgress.current - smoothProgress.current) * dynamicEase;
 
       if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
         delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
@@ -248,11 +250,10 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
       );
 
       const currentProgress = smoothProgress.current;
-
       const stepProgress = currentProgress * (TOTAL_SCROLL_STEPS - 1);
       const { sec1Height, ctaHeight, footerHeight, vh } = dimensionsRef.current;
 
-      // ── STEP 1: HERO TEXT, PARAGRAPH & BACKGROUND ──
+      // ── STEP 1: INITIAL HERO TITLE & DESC (0.0 -> 0.4) ──
       const heroFadeOutProg = easeOutQuad(Math.min(Math.max(stepProgress / 0.4, 0), 1));
 
       if (heroTextWrap) {
@@ -261,21 +262,39 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
         heroTextWrap.style.visibility = heroFadeOutProg >= 1 ? "hidden" : "visible";
       }
 
-      const paraStart = 0.4;
-      const paraInProg = easeOutQuad(Math.min(Math.max((stepProgress - paraStart) / 0.6, 0), 1));
+      // ── PARAGRAPH 1 (Fade in: 0.4 -> 0.7 | Fade out: 0.7 -> 1.0) ──
+      const para1In = easeOutQuad(Math.min(Math.max((stepProgress - 0.4) / 0.3, 0), 1));
+      const para1Out = easeOutQuad(Math.min(Math.max((stepProgress - 0.7) / 0.3, 0), 1));
 
       if (scrollPara1) {
-        scrollPara1.style.visibility = stepProgress >= paraStart ? "visible" : "hidden";
+        scrollPara1.style.visibility = stepProgress >= 0.4 && stepProgress <= 1.0 ? "visible" : "hidden";
+        scrollPara1.style.opacity = `${(1 - para1Out).toFixed(3)}`;
+        scrollPara1.style.transform = `translate3d(0, ${(-para1Out * 20).toFixed(2)}px, 0)`;
       }
 
-      if (paraInners && paraInners.length > 0) {
-        paraInners.forEach((inner) => {
-          inner.style.opacity = `${paraInProg.toFixed(3)}`;
-          inner.style.transform = `translate3d(0, ${((1 - paraInProg) * 100).toFixed(2)}%, 0)`;
+      if (para1Inners && para1Inners.length > 0) {
+        para1Inners.forEach((inner) => {
+          inner.style.opacity = `${para1In.toFixed(3)}`;
+          inner.style.transform = `translate3d(0, ${((1 - para1In) * 100).toFixed(2)}%, 0)`;
         });
       }
 
-      const heroBgProg = easeOutQuad(Math.min(Math.max(stepProgress / 1.0, 0), 1));
+      // ── PARAGRAPH 2 (Fade in: 1.0 -> 1.6 - Fully reveals by 1.6) ──
+      const para2InProg = easeOutQuad(Math.min(Math.max((stepProgress - 1.0) / 0.6, 0), 1));
+
+      if (scrollPara2) {
+        scrollPara2.style.visibility = stepProgress >= 1.0 ? "visible" : "hidden";
+      }
+
+      if (para2Inners && para2Inners.length > 0) {
+        para2Inners.forEach((inner) => {
+          inner.style.opacity = `${para2InProg.toFixed(3)}`;
+          inner.style.transform = `translate3d(0, ${((1 - para2InProg) * 100).toFixed(2)}%, 0)`;
+        });
+      }
+
+      // ── HERO BACKGROUND (0.0 -> 1.6) ──
+      const heroBgProg = easeOutQuad(Math.min(Math.max(stepProgress / 1.6, 0), 1));
       if (heroBgs && heroBgs.length > 0) {
         const scaleVal = (1.0 + heroBgProg * 0.05).toFixed(4);
         const bgY = (-heroBgProg * 12).toFixed(2);
@@ -284,9 +303,9 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
         });
       }
 
-      // ── STEP 2: SECTION ONE SLIDE & REVEAL (STEPS 1.0 -> 3.0) ──
-      const s1Start = 1.0;
-      const s1Prog = easeOutQuad(Math.min(Math.max((stepProgress - s1Start) / 2.0, 0), 1));
+      // ── STEP 2: SECTION ONE SLIDE & REVEAL (STARTS IMMEDIATELY AT 1.6 -> 3.2) ──
+      const s1Start = 1.6;
+      const s1Prog = easeOutQuad(Math.min(Math.max((stepProgress - s1Start) / 1.6, 0), 1));
 
       if (secOne) {
         const targetY = -(sec1Height - vh);
@@ -299,25 +318,24 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
         parallaxImg.style.transform = `translate3d(0, ${imgY}%, 0)`;
       }
 
-      // Play text reveal based on step threshold
-      triggerPlayOnceTextReveal(".section-one-wrapper", stepProgress, 1.2);
+      triggerPlayOnceTextReveal(".section-one-wrapper", stepProgress, 1.8);
 
-      // ── STEP 3: SECTION TWO SLIDE (STEPS 3.5 -> 5.5) ──
-      const s2Start = 3.5;
-      const s2Prog = easeOutQuad(Math.min(Math.max((stepProgress - s2Start) / 2.0, 0), 1));
+      // ── STEP 3: SECTION TWO SLIDE (STEPS 3.2 -> 4.8) ──
+      const s2Start = 3.2;
+      const s2Prog = easeOutQuad(Math.min(Math.max((stepProgress - s2Start) / 1.6, 0), 1));
 
       if (secTwo) {
         secTwo.style.transform = `translate3d(0, ${((1 - s2Prog) * 100).toFixed(3)}%, 0)`;
       }
 
-      if (stepProgress >= 4.0 && stepProgress < 7.0) {
+      if (stepProgress >= 3.6 && stepProgress < 5.8) {
         setIsSectionTwoActive(true);
       } else {
         setIsSectionTwoActive(false);
       }
 
-      // ── STEP 4: LAYER CTA SLIDE (STEPS 6.0 -> 7.8) ──
-      const ctaProgress = easeOutQuad(Math.min(Math.max((stepProgress - 6.0) / 1.8, 0), 1));
+      // ── STEP 4: LAYER CTA SLIDE (STEPS 4.8 -> 6.2) ──
+      const ctaProgress = easeOutQuad(Math.min(Math.max((stepProgress - 4.8) / 1.4, 0), 1));
       if (layerCTA.current) {
         const startY = vh;
         const endY = -(ctaHeight - vh);
@@ -325,11 +343,10 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
         layerCTA.current.style.transform = `translate3d(0, ${currentY.toFixed(2)}px, 0)`;
       }
 
-      // ── STEP 5: LAYER FOOTER & CTA FADE OUT (STEPS 7.8 -> 9.0 - EXACT ABOUT LOGIC) ──
-      const footerProgress = easeOutQuad(Math.min(Math.max((stepProgress - 7.8) / 1.2, 0), 1));
+      // ── STEP 5: LAYER FOOTER & CTA FADE OUT (STEPS 6.2 -> 7.0) ──
+      const footerProgress = easeOutQuad(Math.min(Math.max((stepProgress - 6.2) / 0.8, 0), 1));
 
       if (layerCTA.current) {
-        // Sets CSS variable matching SectionCTA's internal opacity styling in About
         const innerOpacity = (1 - footerProgress).toFixed(3);
         layerCTA.current.style.setProperty("--cta-inner-opacity", innerOpacity);
       }
@@ -341,7 +358,6 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
         layerFooter.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
       }
 
-      // Smooth opacity decrease on prior sections as footer rises
       const upperOpacity = (1 - footerProgress).toFixed(3);
 
       if (secTwo) {

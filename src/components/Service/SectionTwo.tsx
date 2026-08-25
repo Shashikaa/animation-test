@@ -10,12 +10,12 @@ const slides = [
     desc: "Whether you’re creating a peaceful backyard retreat or a space made for entertaining, we bring your vision to life with tailored design, expert craftsmanship, and a clear process from start to finish.",
   },
   {
-    img: "/placeholder.webp",
+    img: "/placeholder2.jpg",
     label: "Pool Equipment & Installation",
     desc: "From pumps and filters to heating systems and automation, we supply and install the latest pool equipment to keep your pool running smoothly.",
   },
   {
-    img: "/placeholder.webp",
+    img: "/placeholder1.jpg",
     label: "Commercial Pool Construction",
     desc: "We design and build large-scale pools for hotels, resorts, apartment complexes, and public facilities, delivering premium quality and durability.",
   },

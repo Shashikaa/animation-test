@@ -26,7 +26,8 @@ export default function SubServiceFAQSection({ data }: FAQSectionProps) {
         alt="Grand Pools background scenery"
         className="absolute top-0 left-0 w-full h-full object-cover z-0 pointer-events-none"
       />
-      
+        {/* Dark Overlay */}
+  <div className="absolute inset-0 bg-black/50" />
       {/* Main Container */}
       <div className="faq-content section-container relative z-20 w-full min-h-screen h-full flex flex-col lg:flex-row justify-center lg:justify-between gap-4 md:gap-8 pb-12 lg:pb-24">
         

@@ -51,7 +51,7 @@ export default function ProjectsHero({
 
           {!hideText && (
             <>
-              {/* Left-Aligned Initial Content Block */}
+              {/* Bottom Left-Aligned Initial Title & Subtitle */}
               <div className="hero-text-wrap section-container absolute inset-0 z-10 h-full flex flex-col justify-end pb-12 md:pb-16 lg:pb-22 pl-6 md:pl-12 lg:pl-20 will-change-[opacity,transform]">
                 <div className="flex flex-col !gap-4 lg:!gap-8">
                   <h1
@@ -63,21 +63,27 @@ export default function ProjectsHero({
                     Projects
                   </h1>
                   <p className="hero-desc hero-text-target hero-desc-target text-[#F4EEDF] !mt-1 max-w-[380px]">
-                   Projects That Speak for Themselves
+                    Projects That Speak for Themselves
                     <br />
-                  Take a look at some of our completed pool projects across Melbourne.
+                    Take a look at some of our completed pool projects across Melbourne.
                   </p>
                 </div>
               </div>
 
-              {/* Right-Aligned Dynamic Scroll Blocks */}
-              <div className="scroll-text-container section-container absolute inset-0 z-20 h-full flex items-end justify-start pointer-events-none">
-                <div className="relative w-full max-w-[310px] md:max-w-[400px] lg:max-w-[440px] mb-12 md:mb-16 lg:mb-22 pr-6 md:pr-12 lg:pr-20 text-[#F4EEDF]">
-                  <div className="relative w-full h-full min-h-[150px]">
-                    <p className="scroll-para-1 invisible absolute top-0 left-0 w-full pointer-events-auto">
-Our projects reflect the quality, craftsmanship, and attention to detail that define Grand Pools. From luxury backyard retreats to large-scale custom builds across Melbourne, every pool is designed to complement its surroundings and deliver lasting beauty, function, and value.
-                    </p>
-                  </div>
+              {/* Dynamic Scroll Text Blocks */}
+              <div className="scroll-text-container section-container absolute inset-0 z-20 h-full pointer-events-none">
+                {/* Paragraph 1: Bottom Right */}
+                <div className="absolute bottom-12 md:bottom-16 lg:bottom-22 left-6 md:left-12 lg:left-20 w-full max-w-[310px] md:max-w-[400px] lg:max-w-[440px] text-[#F4EEDF]">
+                  <p className="scroll-para-1 invisible top-0 left-0 w-full pointer-events-auto">
+                    Our projects reflect the quality, craftsmanship, and attention to detail that define Grand Pools. From luxury backyard retreats to large-scale custom builds across Melbourne, every pool is designed to complement its surroundings and deliver lasting beauty, function, and value.
+                  </p>
+                </div>
+
+                {/* Paragraph 2: Top Left */}
+                <div className="absolute top-24 md:top-32 lg:top-36 left-6 md:left-12 lg:left-20 w-full max-w-[310px] md:max-w-[400px] lg:max-w-[440px] text-[#F4EEDF]">
+                  <p className="scroll-para-2 invisible top-0 left-0 w-full pointer-events-auto">
+                    We work closely with each client to create tailored pool solutions that transform outdoor spaces into refined environments for relaxation, entertaining, and everyday enjoyment.
+                  </p>
                 </div>
               </div>
             </>

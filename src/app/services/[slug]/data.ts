@@ -66,7 +66,7 @@ export const SERVICES_DATA: Record<string, FullServiceData> = {
     sectionOne: {
       title: 'Design Build Details',
       paragraph: 'From the first design concept to the final finishing details, we manage every stage of your pool project with care, quality materials, and a clear process.',
-      bgImageUrl: '/placeholder.webp',
+      bgImageUrl: '/placeholder2.jpg',
       sideImageUrl: '/placeholder.webp',
       fourParagraphs: [
         'Custom Pool Design\nEvery pool is designed around your space, lifestyle, and vision for a truly tailored result.',

@@ -24,7 +24,7 @@ export default function SectionOne() {
       {/* Background Image Layer */}
 <div
   className="contact-one-bg absolute top-0 left-0 w-full h-[100%] lg:h-[200%] bg-cover bg-bottom lg:bg-center bg-no-repeat will-change-transform"
-  style={{ backgroundImage: "url('/placeholder.webp')" }}
+  style={{ backgroundImage: "url('/contactparalax.webp')" }}
 />
       
       {/* Main Layout Grid Context */}
