@@ -128,7 +128,7 @@ export default function PrivacyPolicyPage() {
           style={{ clipPath: "inset(0% 0% 0% 0%)" }}
         >
           <div
-            className="hero-bg absolute inset-0 bg-cover bg-center bg-[url('/sectiontwo.webp')]"
+            className="hero-bg absolute inset-0 bg-cover bg-center bg-[url('/Background.svg')]"
             style={{ transform: "scale(1)", transformOrigin: "center center" }}
           />
         </div>

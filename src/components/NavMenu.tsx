@@ -16,27 +16,27 @@ const NAV_LINKS = [
   { 
     label: "Home", 
     href: "/", 
-    image: "/placeholder.png" 
+    image: "/placeholder.webp" 
   },
   { 
     label: "About Us", 
     href: "/about", 
-    image: "/placeholder.png" 
+    image: "/placeholder.webp" 
   },
   { 
     label: "Services", 
     href: "/services", 
-    image: "/placeholder.png" 
+    image: "/placeholder.webp" 
   },
   { 
     label: "Projects", 
     href: "/projects", 
-    image: "/placeholder.png" 
+    image: "/placeholder.webp" 
   },
   { 
     label: "Contact Us", 
     href: "/contact", 
-    image: "/placeholder.png"  
+    image: "/placeholder.webp"  
   },
 ];
 
@@ -44,17 +44,17 @@ const SERVICE_SUB_LINKS = [
   {
     label: "Residential Pools Construction",
     href: "/services/residential-pools-construction",
-    image: "/placeholder.png" 
+    image: "/placeholder.webp" 
   },
   {
     label: "Pool Equipment & Installation",
     href: "/services/pool-equipment-and-installation",
-    image: "/placeholder.png" 
+    image: "/placeholder.webp" 
   },
   {
     label: "Commercial Pool Construction",
     href: "/services/commercial-pool-construction",
-    image: "/placeholder.png" 
+    image: "/placeholder.webp" 
   },
 ];
 

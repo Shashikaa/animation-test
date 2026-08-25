@@ -52,7 +52,7 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
 <div 
   className="s5-bg absolute -top-[0%] left-0 w-full h-[200%] bg-cover bg-center will-change-transform"
   style={{
-    backgroundImage: `url('https://i.pinimg.com/1200x/c2/2a/07/c22a07cd8a4b2539fd215da26b807e80.jpg')`
+    backgroundImage: `url('/placeholder.webp')`
   }}
 />        
         <div className="absolute inset-0 bg-black/40 pointer-events-none z-[1]" />

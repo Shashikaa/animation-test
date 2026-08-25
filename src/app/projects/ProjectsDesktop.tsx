@@ -300,7 +300,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
       }
 
       // Play text reveal based on step threshold
-      triggerPlayOnceTextReveal(".section-one-wrapper", stepProgress, 1.5);
+      triggerPlayOnceTextReveal(".section-one-wrapper", stepProgress, 1.2);
 
       // ── STEP 3: SECTION TWO SLIDE (STEPS 3.5 -> 5.5) ──
       const s2Start = 3.5;

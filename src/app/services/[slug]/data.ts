@@ -32,7 +32,7 @@ export const SERVICES_DATA: Record<string, FullServiceData> = {
     hero: {
       title: 'Residential Pool Construction',
       subtitle: 'Tailored pools for relaxing, hosting, and elevated outdoor living.',
-      bgImageUrl: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=1920&q=80',
+      bgImageUrl: '/placeholder.webp',
       tabs: [
         {
           label: 'From Vision to Reality',
@@ -66,24 +66,24 @@ export const SERVICES_DATA: Record<string, FullServiceData> = {
     sectionOne: {
       title: 'Design Build Details',
       paragraph: 'From the first design concept to the final finishing details, we manage every stage of your pool project with care, quality materials, and a clear process.',
-      bgImageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1920&q=80',
-      sideImageUrl: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=1000&q=80',
+      bgImageUrl: '/placeholder.webp',
+      sideImageUrl: '/placeholder.webp',
       fourParagraphs: [
-        'Attention to Detail\nEvery detail is considered with care  from the pool layout and materials to the final finish  creating a result that feels precise, polished, and built to last.',
-        'Innovative Solution\nsWe use modern pool systems, smart equipment, and considered design solutions to create a pool that feels efficient, functional, and built for today’s lifestyle.',
-        'Built for Longevity\nWe use quality materials, trusted construction methods, and durable finishes to create pools that are made to perform beautifully for years to come.',
-        'Seamless Experience\nWe keep the process clear and well-managed, with transparent communication and steady guidance from the first conversation through to completion.'
+        'Custom Pool Design\nEvery pool is designed around your space, lifestyle, and vision for a truly tailored result.',
+        'Expert Craftsmanship\nFrom excavation and plumbing to concreting and tiling, every stage is completed with precision and care.',
+        'Modern Features & Upgrades\n Enhance your pool with spas, infinity edges, lighting, heating, water features, and smart technologies.',
+        'Seamless Project Delivery\n We manage design, permits, approvals, construction, and handover for a smooth, stress-free experience.'
       ]
     },
     sectionTwo: {
       title: 'Everything You Need to Know',
-      bgImageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1920&q=80',
+      bgImageUrl: '/placeholder.webp',
       faqs: [
-        { question: 'How long does new pool construction take?', answer: 'Most custom shotcrete pools require 8 to 12 weeks depending on site access and structural complexity.' },
-        { question: 'What is included in the new pool construction service?', answer: 'Yes, we handle all engineering submissions, environmental zoning clearances, and construction permits.' },
-        { question: 'Can I customise the shape and features of my pool?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' },
-        { question: 'Do you handle permits and approvals?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' },
-        { question: 'How do I get started with a new pool build?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' }
+        { question: 'How long does new pool construction take?', answer: 'Construction timelines vary based on the design and site conditions, but most new pools take between 8 to 16 weeks from the start of excavation to final handover. We’ll provide a clear schedule before we begin and keep you informed throughout the build.' },
+        { question: 'What is included in the new pool construction service?', answer: 'Our service includes everything from design consultation, site preparation, and construction, to finishing touches like tiling, fencing, and handover. We also help with permits, engineering approvals, and post-construction care.' },
+        { question: 'Can I customise the shape and features of my pool?', answer: 'Absolutely. Every pool we build is custom-designed to suit your space and preferences. You can choose the size, shape, depth, finishes, lighting, and optional features like spas, water features, or heating.' },
+        { question: 'Do you handle permits and approvals?', answer: 'Yes, we manage all necessary permits, council approvals, and compliance checks for your new pool. This includes structural engineering and site surveys to ensure everything is built safely and legally.' },
+        { question: 'How do I get started with a new pool build?', answer: 'Simply contact us to book a consultation. We’ll discuss your ideas, inspect the site, and walk you through the process step-by-step. From there, we’ll provide a custom design plan and a detailed quote to get your project underway.' }
       ]
     }
   },
@@ -93,7 +93,7 @@ export const SERVICES_DATA: Record<string, FullServiceData> = {
     hero: {
       title: 'Pool Equipment & Installation',
       subtitle: 'From pumps and filters to heating systems and automation, we supply and install the latest pool equipment to keep your pool running smoothly.',
-      bgImageUrl: 'https://images.unsplash.com/photo-1572331165267-854da2b10ccc?auto=format&fit=crop&w=1920&q=80',
+      bgImageUrl: '/placeholder.webp',
       tabs: [
         {
           label: 'Why Renovate Your Pool?',
@@ -124,24 +124,24 @@ export const SERVICES_DATA: Record<string, FullServiceData> = {
     sectionOne: {
       title: 'Design Build Details',
       paragraph: 'From the first design concept to the final finishing details, we manage every stage of your pool project with care, quality materials, and a clear process.',
-      bgImageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1920&q=80',
-      sideImageUrl: 'https://images.unsplash.com/photo-1572331165267-854da2b10ccc?auto=format&fit=crop&w=1000&q=80',
+      bgImageUrl: '/placeholder.webp',
+      sideImageUrl: '/placeholder.webp',
       fourParagraphs: [
-        'Attention to Detail\nEvery detail is considered with care  from the pool layout and materials to the final finish  creating a result that feels precise, polished, and built to last.',
-        'Innovative Solution\nsWe use modern pool systems, smart equipment, and considered design solutions to create a pool that feels efficient, functional, and built for today’s lifestyle.',
-        'Built for Longevity\nWe use quality materials, trusted construction methods, and durable finishes to create pools that are made to perform beautifully for years to come.',
-        'Seamless Experience\nWe keep the process clear and well-managed, with transparent communication and steady guidance from the first conversation through to completion.'
+        'Tailored Equipment Solutions\nWe assess your pool and recommend the right equipment for its size, usage, and performance needs.',
+        'Modern & Efficient Systems\nFrom pumps and filters to heating and smart automation, we install technology designed for better efficiency and control.',
+        'Professional Installation\nEvery system is carefully installed, tested, and calibrated to ensure reliable, long-term performance.',
+        'Ongoing Support\nWe guide you through operation and maintenance, making your pool equipment simple and hassle-free to manage.'
       ]
     },
     sectionTwo: {
   title: 'Everything You Need to Know',
-      bgImageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1920&q=80',
+      bgImageUrl: '/placeholder.webp',
       faqs: [
-        { question: 'How long does new pool construction take?', answer: 'Most custom shotcrete pools require 8 to 12 weeks depending on site access and structural complexity.' },
-        { question: 'What is included in the new pool construction service?', answer: 'Yes, we handle all engineering submissions, environmental zoning clearances, and construction permits.' },
-        { question: 'Can I customise the shape and features of my pool?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' },
-        { question: 'Do you handle permits and approvals?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' },
-        { question: 'How do I get started with a new pool build?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' }
+        { question: 'How long does new pool construction take?', answer: 'Construction timelines vary based on the design and site conditions, but most new pools take between 8 to 16 weeks from the start of excavation to final handover. We’ll provide a clear schedule before we begin and keep you informed throughout the build.' },
+        { question: 'What is included in the new pool construction service?', answer: 'Our service includes everything from design consultation, site preparation, and construction, to finishing touches like tiling, fencing, and handover. We also help with permits, engineering approvals, and post-construction care.' },
+        { question: 'Can I customise the shape and features of my pool?', answer: 'Absolutely. Every pool we build is custom-designed to suit your space and preferences. You can choose the size, shape, depth, finishes, lighting, and optional features like spas, water features, or heating.' },
+        { question: 'Do you handle permits and approvals?', answer: 'Yes, we manage all necessary permits, council approvals, and compliance checks for your new pool. This includes structural engineering and site surveys to ensure everything is built safely and legally.' },
+        { question: 'How do I get started with a new pool build?', answer: 'Simply contact us to book a consultation. We’ll discuss your ideas, inspect the site, and walk you through the process step-by-step. From there, we’ll provide a custom design plan and a detailed quote to get your project underway.' }
       ]
     }
   },
@@ -151,7 +151,7 @@ export const SERVICES_DATA: Record<string, FullServiceData> = {
     hero: {
       title: 'Commercial Pool Construction',
       subtitle: 'Breathing New Life',
-      bgImageUrl: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1920&q=80',
+      bgImageUrl: '/placeholder.webp',
       tabs: [
         {
           label: 'Why Choose Us ',
@@ -183,24 +183,24 @@ export const SERVICES_DATA: Record<string, FullServiceData> = {
     sectionOne: {
       title: 'Design Build Details',
       paragraph: 'From the first design concept to the final finishing details, we manage every stage of your pool project with care, quality materials, and a clear process.',
-      bgImageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=1920&q=80',
-      sideImageUrl: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1000&q=80',
+      bgImageUrl: '/placeholder.webp',
+      sideImageUrl: '/placeholder.webp',
       fourParagraphs: [
-        'Attention to Detail\nEvery detail is considered with care  from the pool layout and materials to the final finish  creating a result that feels precise, polished, and built to last.',
-        'Innovative Solution\nsWe use modern pool systems, smart equipment, and considered design solutions to create a pool that feels efficient, functional, and built for today’s lifestyle.',
-        'Built for Longevity\nWe use quality materials, trusted construction methods, and durable finishes to create pools that are made to perform beautifully for years to come.',
-        'Seamless Experience\nWe keep the process clear and well-managed, with transparent communication and steady guidance from the first conversation through to completion.'
+        'Custom Design & Engineering\nEvery commercial pool is tailored to your facility, operational needs, and architectural vision.',
+        'Safety & Compliance\nWe design and build to meet strict Australian Standards, safety requirements, and local regulations.',
+        'Built for High Performance \nDurable construction and advanced filtration systems ensure reliable performance even under heavy daily use.',
+        'End-to-End Delivery \nFrom planning and approvals to construction, testing, and handover, we manage every stage of the project.'
       ]
     },
     sectionTwo: {
       title: 'Everything You Need to Know',
-      bgImageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1920&q=80',
+      bgImageUrl: '/placeholder.webp',
       faqs: [
-        { question: 'How long does new pool construction take?', answer: 'Most custom shotcrete pools require 8 to 12 weeks depending on site access and structural complexity.' },
-        { question: 'What is included in the new pool construction service?', answer: 'Yes, we handle all engineering submissions, environmental zoning clearances, and construction permits.' },
-        { question: 'Can I customise the shape and features of my pool?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' },
-        { question: 'Do you handle permits and approvals?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' },
-        { question: 'How do I get started with a new pool build?', answer: 'While possible, integrating automation arrays during initial plumbing runs reduces execution costs significantly.' }
+        { question: 'How long does new pool construction take?', answer: 'Construction timelines vary based on the design and site conditions, but most new pools take between 8 to 16 weeks from the start of excavation to final handover. We’ll provide a clear schedule before we begin and keep you informed throughout the build.' },
+        { question: 'What is included in the new pool construction service?', answer: 'Our service includes everything from design consultation, site preparation, and construction, to finishing touches like tiling, fencing, and handover. We also help with permits, engineering approvals, and post-construction care.' },
+        { question: 'Can I customise the shape and features of my pool?', answer: 'Absolutely. Every pool we build is custom-designed to suit your space and preferences. You can choose the size, shape, depth, finishes, lighting, and optional features like spas, water features, or heating.' },
+        { question: 'Do you handle permits and approvals?', answer: 'Yes, we manage all necessary permits, council approvals, and compliance checks for your new pool. This includes structural engineering and site surveys to ensure everything is built safely and legally.' },
+        { question: 'How do I get started with a new pool build?', answer: 'Simply contact us to book a consultation. We’ll discuss your ideas, inspect the site, and walk you through the process step-by-step. From there, we’ll provide a custom design plan and a detailed quote to get your project underway.' }
       ]
     }
   }

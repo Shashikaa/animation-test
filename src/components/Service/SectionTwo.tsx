@@ -5,17 +5,17 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const slides = [
   {
-    img: "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=1200&q=80",
+    img: "/placeholder.webp",
     label: "Residential Pool Construction",
     desc: "Whether you’re creating a peaceful backyard retreat or a space made for entertaining, we bring your vision to life with tailored design, expert craftsmanship, and a clear process from start to finish.",
   },
   {
-    img: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=1200&q=80",
+    img: "/placeholder.webp",
     label: "Pool Equipment & Installation",
     desc: "From pumps and filters to heating systems and automation, we supply and install the latest pool equipment to keep your pool running smoothly.",
   },
   {
-    img: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1200&q=80",
+    img: "/placeholder.webp",
     label: "Commercial Pool Construction",
     desc: "We design and build large-scale pools for hotels, resorts, apartment complexes, and public facilities, delivering premium quality and durability.",
   },

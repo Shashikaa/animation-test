@@ -57,7 +57,7 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
               
               style={{ color: "#F4EEDF", fontWeight: 100, margin: 0 }}
             >
-Ready to Dive In            </h2>
+Your Dream Pool Starts Here          </h2>
           </div>
           <p
             className="font-body"
@@ -102,7 +102,7 @@ Ready to Dive In            </h2>
             marginBottom: 20,
           }}
         >
-          Ready to Dive In
+       Your Dream Pool Starts Here
         </div>
 
         <p

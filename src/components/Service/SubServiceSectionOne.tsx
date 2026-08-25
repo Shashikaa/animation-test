@@ -33,7 +33,7 @@ export default function SubServiceSectionOne({ data }: SubServiceSectionOneProps
       {/* ── Background Static Image Layer ── */}
       <div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full mix-blend-normal">
         <img 
-          src="/pool-dark-bg.webp" 
+          src="/placeholder.webp" 
           alt="Background" 
           className="w-full h-full object-cover"
         />

@@ -28,7 +28,7 @@ export default function SectionSeven() {
       <div
         className="s7-mob-bg absolute bg-cover bg-center block lg:hidden"
         style={{
-          backgroundImage: "url('/mobilesection7.jpg')",
+          backgroundImage: "url('/secninemob.jpg')",
           top: 0, left: 0, width: "100%", height: "100%",
           transform: "scale(1.35)",
           transformOrigin: "center center",

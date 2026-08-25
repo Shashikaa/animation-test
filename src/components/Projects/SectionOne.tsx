@@ -30,7 +30,7 @@ export default function SectionOne() {
             
             <div className="absolute inset-0 w-full h-full overflow-hidden">
               <Image
-                src="/projects.webp" 
+                src="/placeholder.webp" 
                 alt="Aerial view of custom pool"
                 width={2000}
                 height={1500}

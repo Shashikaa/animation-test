@@ -59,7 +59,7 @@ export default function SectionTwo() {
         }}
       >
         <img
-          src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1600&q=82"
+          src="/sliderimage1.webp"
           alt="Background layer 2 - Premium Overview"
           decoding="async"
           className="w-full h-full object-cover"
@@ -78,7 +78,7 @@ export default function SectionTwo() {
         }}
       >
         <img
-          src="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=1600&q=82"
+          src="/sliderimage2.webp"
           alt="Background layer 3 - Structural Layout"
           decoding="async"
           className="w-full h-full object-cover"
@@ -97,7 +97,7 @@ export default function SectionTwo() {
         }}
       >
         <img
-          src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1400&q=80"
+          src="/placeholder.webp"
           alt="Background layer 4 - Architectural details"
           decoding="async"
           className="w-full h-full object-cover"
@@ -141,7 +141,7 @@ export default function SectionTwo() {
           >
             <div className="w-full h-full relative overflow-hidden shadow-2xl">
               <img
-                src="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=1600&q=82"
+                src="/sliderimage1.webp"
                 alt="Premium pool design structural layout"
                 loading="eager"
                 fetchPriority="high"
@@ -163,7 +163,7 @@ export default function SectionTwo() {
           >
             <div className="w-full h-full relative overflow-hidden shadow-2xl">
               <img
-                src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=1600&q=82"
+                src="/sliderimage2.webp"
                 alt="Figma layout premium overview pool"
                 loading="eager"
                 fetchPriority="high"
@@ -193,7 +193,7 @@ export default function SectionTwo() {
         </p>
         <div className="w-full aspect-[4/3] max-w-[340px] overflow-hidden !mt-[40px] transform-gpu">
           <img
-            src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1400&q=80"
+            src="/placeholder.webp"
             alt="Architectural swimming details"
             loading="eager"
             decoding="async"

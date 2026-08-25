@@ -11,8 +11,8 @@ export default function ContactHero({
   hideText = false,
   isMobile = false,
 }: ContactHeroProps) {
-  const desktopImg = "/contacthero.webp";
-  const mobileImg = "/contacthero.webp";
+  const desktopImg = "/placeholder.webp";
+  const mobileImg = "/placeholder.webp";
   const bgImage = isMobile ? mobileImg : desktopImg;
 
   return (
