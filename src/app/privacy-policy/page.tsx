@@ -146,7 +146,7 @@ export default function PrivacyPolicyPage() {
                 <h1 className="font-display text-[#F4EEDF] text-3xl sm:text-5xl lg:text-6xl leading-tight select-none">
                   Privacy Policy
                 </h1>
-                <p className="font-body text-[#F4EEDF] mt-3 lg:mt-6 max-w-md text-xs sm:text-base leading-relaxed opacity-90">
+                <p className="font-body text-[#F4EEDF] !mt-6 lg:mt-6 !mb-4 max-w-md text-xs sm:text-base leading-relaxed">
                   This Privacy Policy outlines our commitment to privacy, data
                   protection, and transparency for all clients and website
                   visitors. Here you can find clear information about how Grand

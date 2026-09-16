@@ -2,18 +2,22 @@
 
 import { useRef, useState, useCallback, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
-import { GRAND_POOLS_DATA } from "@/src/app/projects/[slug]/data"; // Update path if needed
+import { GRAND_POOLS_DATA } from "@/src/app/projects/[slug]/data";
 import Link from "next/link";
 
-// Map the keys from GRAND_POOLS_DATA into the array structure needed for SectionTwo
-const PROJECTS = Object.entries(GRAND_POOLS_DATA).map(([key, data]) => ({
-  id: key,
-  label: data.title,
-  description: data.description,
-  // Uses the primary/first image from the dataset, falling back to a default if empty
-  image: data.images[0] || "/kooyong-rd-toorak.webp",
-  slug: `/projects/${key}`,
-}));
+const PROJECTS = Object.entries(GRAND_POOLS_DATA).map(([key, data]) => {
+  const source = data.media || data.images[0] || "/kooyong-rd-toorak.webp";
+  const isVideo = /\.(mp4|webm|mov)$/i.test(source);
+
+  return {
+    id: key,
+    label: data.title,
+    description: data.description,
+    mediaSrc: source,
+    isVideo,
+    slug: `/projects/${key}`,
+  };
+});
 
 const FADE_DURATION = 0.8;
 
@@ -28,6 +32,10 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
   const animating = useRef<boolean>(false);
   const entranceTimeline = useRef<gsap.core.Timeline | null>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
+  
+  // Keep separate refs for desktop and mobile video elements if needed, or query them directly
+  const desktopMediaRefs = useRef<(HTMLVideoElement | HTMLImageElement | null)[]>([]);
+  const mobileMediaRefs = useRef<(HTMLVideoElement | HTMLImageElement | null)[]>([]);
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -60,8 +68,22 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
   useEffect(() => {
     if (isActive) {
       entranceTimeline.current?.play();
+      const currentMedia = desktopMediaRefs.current[currentRef.current];
+      if (currentMedia instanceof HTMLVideoElement) {
+        currentMedia.play().catch(() => {});
+      }
+      const currentMobileMedia = mobileMediaRefs.current[currentRef.current];
+      if (currentMobileMedia instanceof HTMLVideoElement) {
+        currentMobileMedia.play().catch(() => {});
+      }
     } else {
       entranceTimeline.current?.reverse();
+      desktopMediaRefs.current.forEach((el) => {
+        if (el instanceof HTMLVideoElement) el.pause();
+      });
+      mobileMediaRefs.current.forEach((el) => {
+        if (el instanceof HTMLVideoElement) el.pause();
+      });
     }
   }, [isActive]);
 
@@ -70,10 +92,20 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
     if (animating.current || next === prev || !containerRef.current) return;
     animating.current = true;
 
-    const isMobile = window.innerWidth < 768;
-
     currentRef.current = next;
     setCurrent(next);
+
+    // Play incoming videos
+    const nextDesktop = desktopMediaRefs.current[next];
+    const nextMobile = mobileMediaRefs.current[next];
+    if (nextDesktop instanceof HTMLVideoElement) {
+      nextDesktop.currentTime = 0;
+      nextDesktop.play().catch(() => {});
+    }
+    if (nextMobile instanceof HTMLVideoElement) {
+      nextMobile.currentTime = 0;
+      nextMobile.play().catch(() => {});
+    }
 
     if (indicatorRef.current) {
       const segmentWidthPercentage = 100 / PROJECTS.length;
@@ -86,31 +118,33 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
       });
     }
 
-    const contextPrefix = isMobile ? ".s3-mobile-section" : ".s2-desktop-section";
+    // Run transition for both contexts to ensure consistency
+    [".s2-desktop-section", ".s3-mobile-section"].forEach((contextPrefix) => {
+      const incomingEl = containerRef.current?.querySelector(`${contextPrefix} .s3-bg-${next + 1}`);
+      const outgoingEl = containerRef.current?.querySelector(`${contextPrefix} .s3-bg-${prev + 1}`);
 
-    // Prepare incoming image layout layer properties
-    gsap.set(`${contextPrefix} .s3-bg-${next + 1}`, {
-      opacity: 0,
-      zIndex: 2,
-    });
+      if (incomingEl && outgoingEl) {
+        // Set incoming element above outgoing element immediately
+        gsap.set(incomingEl, { zIndex: 2, opacity: 0 });
+        gsap.set(outgoingEl, { zIndex: 1 });
 
-    // Maintain old layout layer underneath during transition fade
-    gsap.set(`${contextPrefix} .s3-bg-${prev + 1}`, {
-      zIndex: 1,
-    });
-
-    // Animate opacity
-    gsap.to(`${contextPrefix} .s3-bg-${next + 1}`, {
-      opacity: 1,
-      duration: FADE_DURATION,
-      ease: "power2.out",
-      onComplete: () => {
-        gsap.set(`${contextPrefix} .s3-bg-${next + 1}`, { zIndex: 1 });
-        gsap.set(`${contextPrefix} .s3-bg-${prev + 1}`, {
-          zIndex: 0,
-          opacity: 0,
+        // Smooth crossfade animation
+        gsap.to(incomingEl, {
+          opacity: 1,
+          duration: FADE_DURATION,
+          ease: "power2.inOut",
+          onComplete: () => {
+            // Clean up z-indexes and hide outgoing element after fade completes
+            gsap.set(incomingEl, { zIndex: 2 });
+            gsap.set(outgoingEl, { zIndex: 1, opacity: 0 });
+            
+            const prevDesktop = desktopMediaRefs.current[prev];
+            const prevMobile = mobileMediaRefs.current[prev];
+            if (prevDesktop instanceof HTMLVideoElement) prevDesktop.pause();
+            if (prevMobile instanceof HTMLVideoElement) prevMobile.pause();
+          },
         });
-      },
+      }
     });
 
     PROJECTS.forEach((_, i) => {
@@ -139,6 +173,52 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
     goTo(idx, direction);
   };
 
+  const renderMediaElement = (
+    project: (typeof PROJECTS)[0], 
+    i: number, 
+    refList: React.MutableRefObject<(HTMLVideoElement | HTMLImageElement | null)[]>
+  ) => {
+    const commonStyles = {
+      position: "absolute" as const,
+      inset: 0,
+      width: "100%",
+      height: "100%",
+      objectFit: "cover" as const,
+      zIndex: i === 0 ? 2 : 1,
+      opacity: i === 0 ? 1 : 0,
+      willChange: "opacity", // Optimizes browser rendering for smooth transitions
+    };
+
+    if (project.isVideo) {
+      return (
+        <video
+          key={project.id}
+          ref={(el) => { refList.current[i] = el; }}
+          className={`s3-bg s3-bg-${i + 1}`}
+          src={project.mediaSrc}
+          autoPlay
+          loop
+          muted
+          playsInline
+          aria-hidden
+          style={commonStyles}
+        />
+      );
+    }
+
+    return (
+      <img
+        key={project.id}
+        ref={(el) => { refList.current[i] = el; }}
+        className={`s3-bg s3-bg-${i + 1}`}
+        src={project.mediaSrc}
+        alt={project.label}
+        aria-hidden
+        style={commonStyles}
+      />
+    );
+  };
+
   return (
     <div ref={containerRef}>
       {/* ── DESKTOP LAYOUT ── */}
@@ -146,33 +226,15 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
         className="s2-desktop-section hidden md:block w-full min-h-[100svh] relative overflow-hidden z-30"
         style={{ pointerEvents: "auto" }}
       >
-        {PROJECTS.map((project, i) => (
-          <img
-            key={project.id}
-            className={`s3-bg s3-bg-${i + 1}`}
-            src={project.image}
-            alt={project.label}
-            aria-hidden
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              transition: "none",
-              zIndex: i === 0 ? 1 : 0,
-              opacity: i === 0 ? 1 : 0,
-            }}
-          />
-        ))}
+        {PROJECTS.map((project, i) => renderMediaElement(project, i, desktopMediaRefs))}
 
-        {/* Pure Flat Color Overlay */}
         <div
           style={{
             position: "absolute",
             inset: 0,
             backgroundColor: "rgba(0, 0, 0, 0.4)",
-            zIndex: 2,
+            zIndex: 3,
+            pointerEvents: "none",
           }}
         />
 
@@ -212,7 +274,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
           ))}
         </div>
 
-        {/* Desktop Global Action Footer Wrapper */}
+        {/* Desktop Footer Action */}
         <div
           className="w-full"
           style={{
@@ -224,6 +286,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
             display: "flex",
             flexDirection: "column",
             paddingBottom: "55px",
+            pointerEvents: "none",
           }}
         >
           <div
@@ -235,6 +298,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               paddingLeft: "8%",
               paddingRight: "8%",
               paddingBottom: "35px",
+              pointerEvents: "auto",
             }}
           >
             <Link
@@ -252,33 +316,15 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
         className="s3-mobile-section block md:hidden w-full min-h-[100svh] relative overflow-hidden z-30"
         style={{ pointerEvents: "auto" }}
       >
-        {PROJECTS.map((project, i) => (
-          <img
-            key={project.id}
-            className={`s3-bg s3-bg-${i + 1}`}
-            src={project.image}
-            alt={project.label}
-            aria-hidden
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              transition: "none",
-              zIndex: i === 0 ? 1 : 0,
-              opacity: i === 0 ? 1 : 0,
-            }}
-          />
-        ))}
+        {PROJECTS.map((project, i) => renderMediaElement(project, i, mobileMediaRefs))}
 
-        {/* Pure Flat Color Overlay */}
         <div
           style={{
             position: "absolute",
             inset: 0,
             backgroundColor: "rgba(0, 0, 0, 0.4)",
-            zIndex: 2,
+            zIndex: 3,
+            pointerEvents: "none",
           }}
         />
 
@@ -319,7 +365,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
           ))}
         </div>
 
-        {/* Mobile Global Action Footer Wrapper */}
+        {/* Mobile Footer Action */}
         <div
           className="w-full"
           style={{
@@ -331,6 +377,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
             display: "flex",
             flexDirection: "column",
             paddingBottom: "55px",
+            pointerEvents: "none",
           }}
         >
           <div
@@ -341,6 +388,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
               paddingLeft: "8%",
               paddingRight: "8%",
               paddingBottom: "55px",
+              pointerEvents: "auto",
             }}
           >
             <Link

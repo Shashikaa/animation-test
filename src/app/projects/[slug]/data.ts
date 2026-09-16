@@ -9,47 +9,49 @@ export interface FullServiceData {
   category: string;
   description: string;
   images: string[];
+  media?: string;
   slides: InfoSlide[];
 }
 
 export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
-  "kooyong-rd-toorak": {
-    title: "Kooyong Rd Toorak",
+  "camberwell": {
+    title: "Camberwell",
     category: "Custom Concrete Pool",
     description: "A refined architectural pool designed with privacy, structure, and timeless detail in mind. Set within a premium Toorak residence, this project combines a raised pool form, dark mosaic finishes, soft stone surfaces, and layered landscaping to create a calm, private outdoor retreat.",
     images: [
-      "/kooyong/hero.webp",
+      "/camberwell.webp",
       "/placeholder.webp",
       "/placeholder.webp",
       "/placeholder.webp",
       "/placeholder.webp",
       "/placeholder.webp",
     ],
+    media: "/camberwell.mp4",
     slides: [
       {
         title: "Consultation & Site Review",
         description: "We start by understanding your space, goals, and what you want from the pool. Our team reviews the site, access, layout, and key project requirements. This gives us a clear direction before design begins.",
-        image: "/placeholder1.jpg"
+        image: "/camberwell1.webp"
       },
       {
         title: "Design & Planning",
         description: "Your pool concept is shaped around the home, landscape, and daily use. We define the layout, finishes, features, and practical details. The result is a clear plan before construction starts.",
-        image: "/placeholder.webp"
+        image: "/camberwell6.webp"
       },
       {
         title: "Approvals & Preparation",
         description: "Before building begins, we prepare the required details and documentation. This stage helps align the project, schedule, access, and technical needs. Everything is organised so construction can move forward smoothly.",
-        image: "/placeholder2.jpg"
+        image: "/camberwell3.webp"
       },
       {
         title: "Construction & Installation",
         description: "This is where the pool starts taking shape on site. Our team manages excavation, structure, plumbing, equipment, and installation. Every step is handled with precision and long-term durability in mind.",
-        image: "/placeholder.webp"
+        image: "/camberwell4.webp"
       },
       {
         title: "Finishing & Installation",
         description: "Final finishes, equipment checks, water balance, and detailing are completed. We make sure everything is ready, clean, and working properly. Then we guide you through how to use and care for your new pool.",
-        image: "/placeholder1.jpg"
+        image: "/camberwell5.webp"
       }
     ]
   },
@@ -65,6 +67,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       "/placeholder.webp",
       "/placeholder.webp",
     ],
+    media: "/kooyong/hero-video.mp4",
     slides: [
       {
         title: "Consultation & Site Review",
@@ -173,43 +176,44 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       }
     ]
   },
-  "the-como-toorak": {
-    title: "‘The Como’ Toorak",
+  "toorak-penthouse": {
+    title: "Toorak Penthouse",
     category: "Luxury Showcase",
     description: "An elegant centerpiece featuring state-of-the-art water filtration, ambient lighting, and bespoke architectural surrounds.",
     images: [
-      "/toorak.webp",
-      "/placeholder.webp",
-      "/placeholder.webp",
-      "/placeholder.webp",
-      "/placeholder.webp",
-      "/placeholder.webp",
+      "/toorakhero.webp",
+      "/toorak2.webp",
+      "/toorak3.webp",
+      "/toorak4.webp",
+      "/toorak5.webp",
+      "/toorak6.webp",
     ],
+    media: "/toorak.mp4",
     slides: [
       {
         title: "Consultation & Site Review",
         description: "Comprehensive site evaluation and collaboration with lead architects to establish ultra-luxury specifications.",
-        image: "/placeholder1.jpg"
+        image: "/toorak1.webp"
       },
       {
         title: "Design & Planning",
         description: "Integrating flush knife-edge perimeter overflows, hidden balance tanks, and fully automated water management systems.",
-        image:"/placeholder.webp"
+        image:"/toorak5.webp"
       },
       {
         title: "Approvals & Preparation",
         description: "Deep foundation works with specialized underpinning to protect surrounding high-end residential structures.",
-        image: "/placeholder2.jpg"
+        image: "/toorak2.webp"
       },
       {
         title: "Construction & Installation",
         description: "Custom timber shuttering and high-strength concrete formulations crafted to millimeter tolerances.",
-        image: "/placeholder.webp"
+        image: "/toorak7.webp"
       },
       {
         title: "Finishing & Installation",
         description: "Imported Italian glass tiles, climate-controlled heating, submerged sound systems, and automated cover integration.",
-        image:"/placeholder1.jpg"
+        image:"/toorak6.webp"
       }
     ]
   }

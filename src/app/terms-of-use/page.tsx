@@ -146,7 +146,7 @@ export default function TermsPage() {
                 <h1 className="font-display text-[#F4EEDF] text-3xl sm:text-5xl lg:text-6xl leading-tight select-none">
                   Terms of Use
                 </h1>
-                <p className="font-body text-[#F4EEDF] mt-3 lg:mt-6 max-w-md text-xs sm:text-base leading-relaxed opacity-90">
+                <p className="font-body text-[#F4EEDF] !mt-6 lg:mt-6 !mb-4 max-w-md text-xs sm:text-base leading-relaxed ">
                   These Terms of Use detail the terms, conditions, and service
                   agreements governing our interactions with clients, website
                   visitors, and project partners. Here you can find clear

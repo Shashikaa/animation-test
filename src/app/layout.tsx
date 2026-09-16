@@ -9,7 +9,7 @@ import NavMenuWrapper from "../components/NavMenuWrapper";
 import PreloaderToggle from "../components/PreloaderToggle";
 import SmoothScroll from "../components/SmoothScroll";
 
-const SITE_URL = "https://www.grandpools.com.au";
+const SITE_URL = "https://grandpools.com.au";
 
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
