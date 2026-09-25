@@ -26,7 +26,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       "/placeholder.webp",
       "/placeholder.webp",
     ],
-    media: "/camberwell.mp4",
+    media: "/camberwell-opt.webm",
     slides: [
       {
         title: "Consultation & Site Review",
@@ -188,7 +188,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       "/toorak5.webp",
       "/toorak6.webp",
     ],
-    media: "/toorak.mp4",
+    media: "/toorak-opt.webm",
     slides: [
       {
         title: "Consultation & Site Review",

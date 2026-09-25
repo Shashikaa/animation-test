@@ -33,7 +33,6 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
   const entranceTimeline = useRef<gsap.core.Timeline | null>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
   
-  // Keep separate refs for desktop and mobile video elements if needed, or query them directly
   const desktopMediaRefs = useRef<(HTMLVideoElement | HTMLImageElement | null)[]>([]);
   const mobileMediaRefs = useRef<(HTMLVideoElement | HTMLImageElement | null)[]>([]);
 
@@ -65,24 +64,48 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
     return () => ctx.revert();
   }, []);
 
+  // Strict silent play helper
+  const safePlayVideo = (videoEl: HTMLVideoElement | null) => {
+    if (!videoEl) return;
+    
+    // Explicitly mute audio at the browser API level
+    videoEl.muted = true;
+    videoEl.volume = 0;
+
+    const playPromise = videoEl.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((error) => {
+        console.warn("Video playback deferred:", error);
+      });
+    }
+  };
+
   useEffect(() => {
     if (isActive) {
       entranceTimeline.current?.play();
-      const currentMedia = desktopMediaRefs.current[currentRef.current];
-      if (currentMedia instanceof HTMLVideoElement) {
-        currentMedia.play().catch(() => {});
+      
+      const currentDesktop = desktopMediaRefs.current[currentRef.current];
+      if (currentDesktop instanceof HTMLVideoElement) {
+        safePlayVideo(currentDesktop);
       }
-      const currentMobileMedia = mobileMediaRefs.current[currentRef.current];
-      if (currentMobileMedia instanceof HTMLVideoElement) {
-        currentMobileMedia.play().catch(() => {});
+      
+      const currentMobile = mobileMediaRefs.current[currentRef.current];
+      if (currentMobile instanceof HTMLVideoElement) {
+        safePlayVideo(currentMobile);
       }
     } else {
       entranceTimeline.current?.reverse();
       desktopMediaRefs.current.forEach((el) => {
-        if (el instanceof HTMLVideoElement) el.pause();
+        if (el instanceof HTMLVideoElement) {
+          el.pause();
+          el.muted = true;
+        }
       });
       mobileMediaRefs.current.forEach((el) => {
-        if (el instanceof HTMLVideoElement) el.pause();
+        if (el instanceof HTMLVideoElement) {
+          el.pause();
+          el.muted = true;
+        }
       });
     }
   }, [isActive]);
@@ -95,16 +118,16 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
     currentRef.current = next;
     setCurrent(next);
 
-    // Play incoming videos
     const nextDesktop = desktopMediaRefs.current[next];
     const nextMobile = mobileMediaRefs.current[next];
+    
     if (nextDesktop instanceof HTMLVideoElement) {
       nextDesktop.currentTime = 0;
-      nextDesktop.play().catch(() => {});
+      safePlayVideo(nextDesktop);
     }
     if (nextMobile instanceof HTMLVideoElement) {
       nextMobile.currentTime = 0;
-      nextMobile.play().catch(() => {});
+      safePlayVideo(nextMobile);
     }
 
     if (indicatorRef.current) {
@@ -118,30 +141,32 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
       });
     }
 
-    // Run transition for both contexts to ensure consistency
     [".s2-desktop-section", ".s3-mobile-section"].forEach((contextPrefix) => {
       const incomingEl = containerRef.current?.querySelector(`${contextPrefix} .s3-bg-${next + 1}`);
       const outgoingEl = containerRef.current?.querySelector(`${contextPrefix} .s3-bg-${prev + 1}`);
 
       if (incomingEl && outgoingEl) {
-        // Set incoming element above outgoing element immediately
         gsap.set(incomingEl, { zIndex: 2, opacity: 0 });
         gsap.set(outgoingEl, { zIndex: 1 });
 
-        // Smooth crossfade animation
         gsap.to(incomingEl, {
           opacity: 1,
           duration: FADE_DURATION,
           ease: "power2.inOut",
           onComplete: () => {
-            // Clean up z-indexes and hide outgoing element after fade completes
             gsap.set(incomingEl, { zIndex: 2 });
             gsap.set(outgoingEl, { zIndex: 1, opacity: 0 });
             
             const prevDesktop = desktopMediaRefs.current[prev];
             const prevMobile = mobileMediaRefs.current[prev];
-            if (prevDesktop instanceof HTMLVideoElement) prevDesktop.pause();
-            if (prevMobile instanceof HTMLVideoElement) prevMobile.pause();
+            if (prevDesktop instanceof HTMLVideoElement) {
+              prevDesktop.pause();
+              prevDesktop.muted = true;
+            }
+            if (prevMobile instanceof HTMLVideoElement) {
+              prevMobile.pause();
+              prevMobile.muted = true;
+            }
           },
         });
       }
@@ -186,22 +211,35 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
       objectFit: "cover" as const,
       zIndex: i === 0 ? 2 : 1,
       opacity: i === 0 ? 1 : 0,
-      willChange: "opacity", // Optimizes browser rendering for smooth transitions
+      willChange: "opacity",
     };
 
     if (project.isVideo) {
       return (
         <video
           key={project.id}
-          ref={(el) => { refList.current[i] = el; }}
+          ref={(el) => { 
+            refList.current[i] = el; 
+            if (el) {
+              // Ensure zero volume and absolute muted state on the underlying DOM node
+              el.muted = true;
+              el.volume = 0;
+            }
+          }}
           className={`s3-bg s3-bg-${i + 1}`}
           src={project.mediaSrc}
           autoPlay
           loop
           muted
           playsInline
+          preload="auto"
           aria-hidden
           style={commonStyles}
+          onCanPlay={(e) => {
+            if (isActive && currentRef.current === i) {
+              safePlayVideo(e.currentTarget);
+            }
+          }}
         />
       );
     }
