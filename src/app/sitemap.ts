@@ -53,7 +53,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.2,
     },
     {
-      url: `${BASE_URL}/terms`,
+      url: `${BASE_URL}/terms-of-use`,
       changeFrequency: "yearly",
       priority: 0.2,
     },

@@ -20,20 +20,21 @@ export default function SectionTen() {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full h-full overflow-hidden"
+      className="relative w-full h-full overflow-hidden select-none"
     >
       {/* ── Static Background Image Layer ── */}
       <div className="s10-static-bg absolute inset-0 z-[1] w-full h-full pointer-events-none">
         <img 
           src="/pool-dark-bg.webp" 
           alt="Pool background" 
+          draggable={false}
           className="s10-bg-img w-full h-full object-cover"
         />
       </div>
 
       {/* ── FIRST STAGE ELEMENTS ── */}
       <h2
-        className="s10-title absolute !font-[100] text-[#FFFFFF] pointer-events-none reveal-text"
+        className="s10-title absolute !font-[100] text-[#FFFFFF] select-text pointer-events-auto reveal-text"
         style={{
           fontFamily: "var(--font-display)",
           zIndex: 10,
@@ -43,14 +44,14 @@ export default function SectionTen() {
       </h2> 
 
       <p
-        className="s10-title-sub absolute font-body text-[#FFFFFF] pointer-events-none !mt-3 reveal-text"
+        className="s10-title-sub absolute font-body text-[#FFFFFF] select-text pointer-events-auto !mt-3 reveal-text"
         style={{ zIndex: 10 }} 
       >
         Designed for You
       </p>
 
       <p
-        className="s10-para-top absolute font-body text-[#FFFFFF] pointer-events-none reveal-text"
+        className="s10-para-top absolute font-body text-[#FFFFFF] select-text pointer-events-auto reveal-text"
         style={{
           zIndex: 10,
         }}
@@ -60,10 +61,10 @@ export default function SectionTen() {
       </p>
 
       {/* ── MOBILE & TABLET SCROLLABLE STRUCTURAL CONTAINER ── */}
-      <div className="s10-scrollable-container">
+      <div className="s10-scrollable-container pointer-events-none">
         {/* SECOND STAGE ELEMENTS */}
-        <div className="s10-content-wrap">
-          <p className="s10-card-para text-[#FFFFFF] text-sm md:text-base leading-relaxed">
+        <div className="s10-content-wrap pointer-events-none">
+          <p className="s10-card-para text-[#FFFFFF] text-sm md:text-base leading-relaxed select-text pointer-events-auto">
             At Grand Pools, we focus on every detail to deliver exceptional results, combining innovative design, modern technologies, premium materials, and proven construction techniques. <br /><br />
             Our commitment to quality, durability, clear communication, and a seamless process ensures your pool is built to last and exceeds expectations.
           </p>

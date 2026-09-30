@@ -34,7 +34,15 @@ const Appsection = dynamic(() => import("../components/Appsection"), {
 
 import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
 
-const TOTAL_SCROLL_STEPS = 16.8;
+// Pinned scene ends when Section 9's fly-in finishes (1 step = 100vh of scroll).
+// CTA + Footer now live in normal document flow after the pinned track.
+const PIN_END_STEP = 14.5;
+const TRACK_HEIGHT_VH = (PIN_END_STEP + 1) * 100;
+
+// Original timeline was 15.8 steps long with a 0.008 per-frame progress cap.
+// Rescale the cap so the smoothing speed in *steps per frame* stays identical.
+const ORIGINAL_STEPS = 15.8;
+const MAX_PROGRESS_DELTA_PER_FRAME = (0.008 * ORIGINAL_STEPS) / PIN_END_STEP;
 
 const easeOutQuad = (t: number) => t * (2 - t);
 const clamp = (v: number, min = 0, max = 1) =>
@@ -80,12 +88,7 @@ export default function HomeDesktop() {
   const trackRef = useRef<HTMLDivElement>(null);
   const fixedFrameRef = useRef<HTMLDivElement>(null);
 
-  const layerCTA = useRef<HTMLDivElement>(null);
-  const layerFooter = useRef<HTMLDivElement>(null);
-
   const dimensionsRef = useRef({
-    ctaHeight: 0,
-    footerHeight: 0,
     vh: 0,
     vw: 0,
     trackTopOffset: 0,
@@ -167,11 +170,6 @@ export default function HomeDesktop() {
     const vw = window.innerWidth;
 
     dimensionsRef.current = {
-      ctaHeight: layerCTA.current?.offsetHeight || vh,
-      footerHeight:
-        layerFooter.current?.offsetHeight ||
-        layerFooter.current?.scrollHeight ||
-        vh,
       vh,
       vw,
       trackTopOffset: window.scrollY + rect.top,
@@ -217,15 +215,9 @@ export default function HomeDesktop() {
 
     measure();
 
-    const resizeObserver = new ResizeObserver(() => measure());
-
-    if (layerCTA.current) resizeObserver.observe(layerCTA.current);
-    if (layerFooter.current) resizeObserver.observe(layerFooter.current);
-
     window.addEventListener("resize", handleResize, { passive: true });
 
     return () => {
-      resizeObserver.disconnect();
       window.removeEventListener("resize", handleResize);
     };
   }, [preloaderDone, introDone, measure, handleResize]);
@@ -304,7 +296,6 @@ export default function HomeDesktop() {
     let lastTime = performance.now();
 
     const EASE_FACTOR = 0.15;
-    const MAX_PROGRESS_DELTA_PER_FRAME = 0.008;
 
     const s8TextElements =
       scope.querySelectorAll<HTMLElement>(".section-8 .reveal-text");
@@ -432,10 +423,8 @@ export default function HomeDesktop() {
 
       smoothProgress.current = clamp(smoothProgress.current + delta);
 
-      const stepProgress =
-        smoothProgress.current * (TOTAL_SCROLL_STEPS - 1);
-
-      const { ctaHeight, footerHeight, vh } = dimensionsRef.current;
+      // 1 step = 100vh of scroll (same as before)
+      const stepProgress = smoothProgress.current * PIN_END_STEP;
 
       const heroPhase1 = easeOutQuad(clamp(stepProgress / 1.2));
 
@@ -788,10 +777,8 @@ export default function HomeDesktop() {
       }
 
       /*
-       * UPDATED:
        * Keep Appsection background large during Section 9.
-       * Before it went 1.25 -> 1.00 and moved 12%.
-       * Now it only goes 1.25 -> 1.17 and moves 3%.
+       * It only goes 1.25 -> 1.17 and moves 3%.
        */
       if (appSecBg) {
         const scaleVal = (
@@ -888,53 +875,7 @@ export default function HomeDesktop() {
         }
       }
 
-      const ctaArriveProg = easeOutQuad(
-        clamp((stepProgress - 14.5) / 0.8)
-      );
-
-      if (layerCTA.current) {
-        const startY = vh;
-        const endY = -(ctaHeight - vh);
-
-        const currentY =
-          startY +
-          (endY - startY) * ctaArriveProg;
-
-        layerCTA.current.style.visibility =
-          stepProgress >= 14.3 ? "visible" : "hidden";
-
-        layerCTA.current.style.transform = `translate3d(0, ${currentY.toFixed(
-          2
-        )}px, 0)`;
-      }
-
-      const footerArriveProg = easeOutQuad(
-        clamp((stepProgress - 15.3) / 0.5)
-      );
-
-      if (layerCTA.current) {
-        const innerOpacity = (1 - footerArriveProg).toFixed(3);
-        layerCTA.current.style.setProperty(
-          "--cta-inner-opacity",
-          innerOpacity
-        );
-      }
-
-      if (layerFooter.current) {
-        const startY = vh;
-        const endY = vh - footerHeight;
-
-        const translateY =
-          startY +
-          (endY - startY) * footerArriveProg;
-
-        layerFooter.current.style.visibility =
-          stepProgress >= 15.1 ? "visible" : "hidden";
-
-        layerFooter.current.style.transform = `translate3d(0, ${translateY.toFixed(
-          2
-        )}px, 0)`;
-      }
+      // CTA & Footer now live in normal document flow below the pinned track.
 
       rafId.current =
         requestAnimationFrame(renderTransforms);
@@ -1030,6 +971,8 @@ export default function HomeDesktop() {
     triggerProgressTextReveal,
   ]);
 
+  const isReady = preloaderDone && introDone;
+
   return (
     <div
       ref={scopeRef}
@@ -1067,7 +1010,7 @@ export default function HomeDesktop() {
         ref={trackRef}
         className="home-track-container relative w-full"
         style={{
-          height: `${TOTAL_SCROLL_STEPS * 100}vh`,
+          height: `${TRACK_HEIGHT_VH}vh`,
         }}
       >
         <div
@@ -1124,33 +1067,16 @@ export default function HomeDesktop() {
           >
             <SectionNine />
           </div>
-
-          <div
-            ref={layerCTA}
-            className="section-cta absolute left-0 top-0 w-full z-[120] will-change-transform transform-gpu"
-            style={{
-              transform:
-                "translate3d(0, 100vh, 0)",
-              visibility: "hidden",
-            }}
-          >
-            <SectionCTA
-              preloaderDone={preloaderDone}
-            />
-          </div>
-
-          <div
-            ref={layerFooter}
-            className="footer absolute left-0 top-0 w-full z-[125] will-change-transform transform-gpu"
-            style={{
-              transform:
-                "translate3d(0, 100vh, 0)",
-              visibility: "hidden",
-            }}
-          >
-            <Footer />
-          </div>
         </div>
+      </div>
+
+      {/* STANDARD DOCUMENT FLOW FOR CTA AND FOOTER */}
+      <div
+        className="relative z-20 w-full bg-black"
+        style={{ visibility: isReady ? "visible" : "hidden" }}
+      >
+        <SectionCTA preloaderDone={preloaderDone} />
+        <Footer />
       </div>
     </div>
   );

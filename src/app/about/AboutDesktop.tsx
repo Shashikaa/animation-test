@@ -15,7 +15,11 @@ const SectionFive = dynamic(() => import("@/src/components/About/SectionFive"));
 const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
-const EFFECTIVE_STEPS = 11.0;
+const EFFECTIVE_STEPS = 11.0; // defines scroll speed per step (unchanged)
+const PIN_END_STEP = 8.2; // pinned scene ends here (end of section 5)
+// Same math as measure(), in vh so the track is correct before JS measures
+const TRACK_HEIGHT_VH =
+  PIN_END_STEP * ((EFFECTIVE_STEPS - 1) / EFFECTIVE_STEPS) * 100 + 100;
 const easeOutQuad = (t: number) => t * (2 - t);
 const clamp = (v: number, min = 0, max = 1) => Math.min(Math.max(v, min), max);
 
@@ -25,12 +29,8 @@ export default function AboutDesktop() {
   const scopeRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const fixedFrameRef = useRef<HTMLDivElement>(null);
-  const layer6Ref = useRef<HTMLDivElement>(null);
-  const layer7Ref = useRef<HTMLDivElement>(null);
 
   const dimensionsRef = useRef({
-    ctaHeight: 0,
-    footerHeight: 0,
     vh: 0,
     trackTopOffset: 0,
     totalScrollable: 0,
@@ -80,20 +80,19 @@ export default function AboutDesktop() {
 
     const vh = window.innerHeight;
     const vw = window.innerWidth;
+
+    // same scroll distance per step as before
+    const pxPerStep = (vh * (EFFECTIVE_STEPS - 1)) / EFFECTIVE_STEPS;
+    const totalScrollable = PIN_END_STEP * pxPerStep;
+
+    trackRef.current.style.height = `${totalScrollable + vh}px`;
+
     const rect = trackRef.current.getBoundingClientRect();
 
-    const calculatedHeight = vh * EFFECTIVE_STEPS;
-    trackRef.current.style.height = `${calculatedHeight}px`;
-
     dimensionsRef.current = {
-      ctaHeight: layer6Ref.current?.offsetHeight || vh,
-      footerHeight:
-        layer7Ref.current?.offsetHeight ||
-        layer7Ref.current?.scrollHeight ||
-        vh,
       vh,
       trackTopOffset: window.scrollY + rect.top,
-      totalScrollable: Math.max(0, calculatedHeight - vh),
+      totalScrollable,
     };
 
     lastSizeRef.current = { width: vw, height: vh };
@@ -114,16 +113,10 @@ export default function AboutDesktop() {
 
     measure();
 
-    const resizeObserver = new ResizeObserver(measure);
-
-    if (layer6Ref.current) resizeObserver.observe(layer6Ref.current);
-    if (layer7Ref.current) resizeObserver.observe(layer7Ref.current);
-
     window.addEventListener("resize", handleResize, { passive: true });
     window.addEventListener("orientationchange", measure, { passive: true });
 
     return () => {
-      resizeObserver.disconnect();
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", measure);
     };
@@ -302,9 +295,7 @@ export default function AboutDesktop() {
       smoothProgress.current = clamp(smoothProgress.current + delta);
 
       const currentProgress = smoothProgress.current;
-      const stepProgress = currentProgress * EFFECTIVE_STEPS;
-
-      const { ctaHeight, footerHeight, vh } = dimensionsRef.current;
+      const stepProgress = currentProgress * PIN_END_STEP;
 
       // 1. HERO
       const s1Prog = easeOutQuad(clamp(stepProgress, 0, 1));
@@ -356,7 +347,7 @@ export default function AboutDesktop() {
         secFive.style.visibility = stepProgress >= 4.6 ? "visible" : "hidden";
         secFive.style.transform = `translate3d(0,${((1 - s5Prog) * 100).toFixed(3)}%,0)`;
       }
-      if (stepProgress >= 5.5 && stepProgress < 8.2) {
+      if (stepProgress >= 5.5 && stepProgress <= PIN_END_STEP) {
         setIsSectionFiveActive(true);
         const sec5SubProgress = (stepProgress - 5.5) / 2.7;
         if (sec5SubProgress < 0.33) triggerSec5Hook(0);
@@ -371,27 +362,7 @@ export default function AboutDesktop() {
         s5Bg.style.transform = `translate3d(0,${(-parallaxProg * 50).toFixed(2)}%,0)`;
       }
 
-      // 6. CTA & 7. FOOTER
-      const ctaProgress = easeOutQuad(clamp((stepProgress - 8.2) / 1.6, 0, 1));
-      const footerProgress = easeOutQuad(clamp((stepProgress - 9.8) / 1.2, 0, 1));
-
-      if (layer6Ref.current) {
-        const startY = vh;
-        const endY = -(ctaHeight - vh);
-        const currentY = startY + (endY - startY) * ctaProgress;
-        layer6Ref.current.style.transform = `translate3d(0,${currentY.toFixed(2)}px,0)`;
-
-        // Calculate fade-out specifically for the inner CTA container as footer comes in
-        const innerOpacity = (1 - footerProgress).toFixed(3);
-        layer6Ref.current.style.setProperty("--cta-inner-opacity", innerOpacity);
-      }
-
-      if (layer7Ref.current) {
-        const startY = vh;
-        const endY = vh - footerHeight;
-        const translateY = startY + (endY - startY) * footerProgress;
-        layer7Ref.current.style.transform = `translate3d(0,${translateY.toFixed(2)}px,0)`;
-      }
+      // CTA & Footer now live in normal document flow below the pinned track.
 
       rafId.current = requestAnimationFrame(renderTransforms);
     };
@@ -464,6 +435,7 @@ export default function AboutDesktop() {
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
+        style={{ height: `${TRACK_HEIGHT_VH}vh` }}
       >
         <div
           ref={fixedFrameRef}
@@ -528,26 +500,21 @@ export default function AboutDesktop() {
               >
                 <SectionFive isActive={isSectionFiveActive} />
               </div>
-
-              <div
-                ref={layer6Ref}
-                className="about-section-cta absolute left-0 top-0 w-full z-[90] transform-gpu will-change-transform"
-                style={{ transform: "translate3d(0,100vh,0)" }}
-              >
-                <SectionCTA preloaderDone={isReady} />
-              </div>
-
-              <div
-                ref={layer7Ref}
-                className="about-footer-wrap absolute left-0 top-0 w-full z-[100] transform-gpu will-change-transform"
-                style={{ transform: "translate3d(0,100vh,0)" }}
-              >
-                <Footer />
-              </div>
             </>
           )}
         </div>
       </div>
+
+      {/* STANDARD DOCUMENT FLOW FOR CTA AND FOOTER */}
+      {shouldLoadRest && (
+        <div
+          className="relative z-20 w-full bg-[#162D24]"
+          style={{ visibility: isReady ? "visible" : "hidden" }}
+        >
+          <SectionCTA preloaderDone={isReady} />
+          <Footer />
+        </div>
+      )}
     </div>
   );
 }

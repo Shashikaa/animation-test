@@ -391,7 +391,7 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
             exit="hidden"
             className="!px-6 md:!px-10 !pb-[100px]"
           >
-            <div className="font-body !mb-6">
+            <div className="font-display !mb-6">
               <p className="!m-0 !mb-3 !text-[20px]"></p>
             </div>
 
@@ -610,7 +610,7 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
               exit="hidden"
               className="!px-5 md:!px-[30px] lg:!px-[55px]"
             >
-              <div className="font-body !mb-6" style={{ color: LOGO_COLOR }}>
+              <div className="font-display !mb-6" style={{ color: LOGO_COLOR }}>
                 <p className="!m-0 !text-[18px] !font-medium"></p>
               </div>
               <div className="!flex !items-center !gap-4">
@@ -702,7 +702,7 @@ function NavLink({
       }
     >
       <span
-        className="font-body !inline-block !select-none !font-normal !normal-case !not-italic !transition-[color,letter-spacing] !duration-[250ms,350ms] !ease-in-out"
+        className="font-display !inline-block !select-none !font-[300] !normal-case !not-italic !transition-[color,letter-spacing] !duration-[250ms,350ms] !ease-in-out"
         style={{
           fontSize: isMobile ? "24px" : "clamp(24px, 2vw, 28px)",
           color: highlighted ? "#F4EEDF" : "rgba(244, 238, 223, 0.6)",
@@ -755,7 +755,7 @@ function ServiceSubLink({
       className="!w-fit !no-underline !transition-opacity !duration-200 hover:!opacity-100 active:!opacity-70"
     >
       <span
-        className="font-body !block !font-normal !leading-snug"
+        className="font-display !block !font-[300] !leading-snug"
         style={{
           fontSize: isMobile ? "20px" : "clamp(23px, 2vw, 20px)",
           color:

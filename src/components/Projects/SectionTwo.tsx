@@ -233,6 +233,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
           muted
           playsInline
           preload="auto"
+     
           aria-hidden
           style={commonStyles}
           onCanPlay={(e) => {

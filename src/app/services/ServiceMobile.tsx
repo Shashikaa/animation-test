@@ -9,9 +9,26 @@ import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 const SectionOne = dynamic(() => import("@/src/components/Service/SectionOne"));
 const SectionTwo = dynamic(() => import("@/src/components/Service/SectionTwo"));
 const Appsection = dynamic(() => import("@/src/components/Appsection"));
+const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
 const clamp = (val: number, min = 0, max = 1) => Math.min(Math.max(val, min), max);
+
+// Original timeline: 6 steps, Hero(1) + Sec1(1) + Sec2(2) + App(1) + Footer(1)
+const ORIGINAL_TOTAL_STEPS = 6.0;
+
+// Pinned scene ends when the App section is fully in place (old footer start, step 5.0).
+// CTA + Footer now live in normal document flow after the pinned track.
+const PIN_END_STEP = 5.0;
+const PIN_END_P = PIN_END_STEP / ORIGINAL_TOTAL_STEPS;
+
+// Short hold at the end of the pin so the smoothed animation finishes
+// BEFORE the pin releases and the CTA scrolls in. Set to 0 to disable.
+const HOLD_VH = 40;
+
+// Initial track height (before measuring), assuming App = Footer = 1 viewport.
+// Same formula as updateMetrics: PIN_END_P * (3vh + app + footer) + hold + 1vh
+const INITIAL_TRACK_HEIGHT_VH = PIN_END_P * 5 * 100 + HOLD_VH + 100;
 
 export default function ServicesMobile() {
   const scopeRef = useRef<HTMLDivElement>(null);
@@ -22,11 +39,16 @@ export default function ServicesMobile() {
   const sectionOneRef = useRef<HTMLDivElement>(null);
   const sectionTwoRef = useRef<HTMLDivElement>(null);
   const appSecRef = useRef<HTMLDivElement>(null);
-  const footerLayerRef = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
 
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
 
-  const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
+  const scrollMetricsRef = useRef({
+    totalScrollable: 0,
+    animScrollable: 0,
+    vh: 0,
+    trackTopOffset: 0,
+  });
   const lastSizeRef = useRef({ width: 0, height: 0 });
 
   const currentProgress = useRef(0);
@@ -35,7 +57,7 @@ export default function ServicesMobile() {
   const lastSec2Idx = useRef<number>(-1);
 
   const { smootherRef } = useSite();
-  const { preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
+  const { introDone, preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
     isMobile: true,
     introDurationMs: 2800,
     unlockScrollEarlyMs: 1800,
@@ -86,17 +108,22 @@ export default function ServicesMobile() {
     const vw = window.innerWidth;
 
     const appHeight = appSecRef.current?.offsetHeight || vh;
-    const footerHeight = footerLayerRef.current?.offsetHeight || vh;
+    const footerHeight = footerRef.current?.offsetHeight || vh;
 
-    // Total track height = 1.0 Hero + 1.0 Sec1 + 2.0 Sec2 + AppHeight + FooterHeight
-    const totalTrackHeight = vh * 4.0 + appHeight + footerHeight;
+    // Same scroll distance per progress unit as before (3vh + App + Footer),
+    // but the track now only covers the pinned part (p = 0 -> PIN_END_P).
+    const fullScrollable = vh * 3.0 + appHeight + footerHeight;
+    const animScrollable = PIN_END_P * fullScrollable;
+    const holdPx = (HOLD_VH / 100) * vh;
+    const totalScrollable = animScrollable + holdPx;
 
-    trackRef.current.style.height = `${totalTrackHeight}px`;
+    trackRef.current.style.height = `${totalScrollable + vh}px`;
 
     const rect = trackRef.current.getBoundingClientRect();
 
     scrollMetricsRef.current = {
-      totalScrollable: Math.max(0, totalTrackHeight - vh),
+      totalScrollable: Math.max(0, totalScrollable),
+      animScrollable: Math.max(1, animScrollable),
       vh,
       trackTopOffset: window.scrollY + rect.top,
     };
@@ -120,10 +147,16 @@ export default function ServicesMobile() {
 
     updateMetrics();
 
+    // App + Footer heights drive scroll speed (as before), so re-measure when they load/change
+    const resizeObserver = new ResizeObserver(() => updateMetrics());
+    if (appSecRef.current) resizeObserver.observe(appSecRef.current);
+    if (footerRef.current) resizeObserver.observe(footerRef.current);
+
     window.addEventListener("resize", handleResize, { passive: true });
     window.addEventListener("orientationchange", updateMetrics, { passive: true });
 
     return () => {
+      resizeObserver.disconnect();
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", updateMetrics);
     };
@@ -134,8 +167,7 @@ export default function ServicesMobile() {
 
     let isRunning = true;
 
-    const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
-    const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
+    const EASE_FACTOR = 0.06;
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
 
     let lastTime = performance.now();
@@ -159,9 +191,8 @@ export default function ServicesMobile() {
 
       const p = currentProgress.current;
 
-      // Total timeline steps: Hero (1.0) + Sec1 (1.0) + Sec2 (2.0) + App (1.0) + Footer (1.0) = 6.0
-      const totalSteps = 6.0;
-      const stepProgress = p * totalSteps;
+      // Same step mapping as before (p is scaled to 0 -> PIN_END_P)
+      const stepProgress = p * ORIGINAL_TOTAL_STEPS;
 
       const { vh } = scrollMetricsRef.current;
 
@@ -239,13 +270,7 @@ export default function ServicesMobile() {
         sectionTwoRef.current.style.transform = `translate3d(0, ${-appProg * 15}%, 0)`;
       }
 
-      // --- STEP 5: FOOTER REVEAL (5.0 -> 6.0) ---
-      const footerProg = clamp(stepProgress - 5.0);
-      if (footerLayerRef.current) {
-        const footerHeight = footerLayerRef.current.offsetHeight || vh;
-        const translateY = vh - footerHeight * footerProg;
-        footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
-      }
+      // CTA & Footer now live in normal document flow below the pinned track.
 
       rafId.current = requestAnimationFrame(render);
     };
@@ -253,7 +278,7 @@ export default function ServicesMobile() {
     const handleScroll = (e?: any) => {
       const lenis = smootherRef?.current;
       const scrollY = e?.scroll ?? lenis?.scroll ?? window.scrollY;
-      const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
+      const { totalScrollable, animScrollable, trackTopOffset } = scrollMetricsRef.current;
 
       if (totalScrollable <= 0) return;
 
@@ -276,7 +301,9 @@ export default function ServicesMobile() {
         }
       }
 
-      targetProgress.current = clamp(relativeScroll / totalScrollable);
+      // Animation completes after `animScrollable` (p = PIN_END_P); the remaining
+      // HOLD_VH is a hold so smoothing catches up before the pin releases.
+      targetProgress.current = clamp(relativeScroll / animScrollable) * PIN_END_P;
     };
 
     const lenis = smootherRef?.current;
@@ -301,9 +328,15 @@ export default function ServicesMobile() {
     };
   }, [shouldLoadRest, smootherRef, triggerSec2Hook]);
 
+  const isReady = preloaderDone && introDone;
+
   return (
     <div ref={scopeRef} className="w-full bg-[#162D24]">
-      <div ref={trackRef} className="services-track-container relative w-full">
+      <div
+        ref={trackRef}
+        className="services-track-container relative w-full"
+        style={{ height: `${INITIAL_TRACK_HEIGHT_VH}vh` }}
+      >
         <div
           ref={fixedFrameRef}
           className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-svh"
@@ -344,19 +377,23 @@ export default function ServicesMobile() {
               >
                 <Appsection />
               </div>
-
-              {/* Layer 5: Footer Wrapper Frame */}
-              <div
-                ref={footerLayerRef}
-                className="layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[151] will-change-transform backface-hidden"
-                style={{ transform: "translate3d(0, 100svh, 0)" }}
-              >
-                <Footer />
-              </div>
             </>
           )}
         </div>
       </div>
+
+      {/* STANDARD DOCUMENT FLOW FOR CTA AND FOOTER */}
+      {shouldLoadRest && (
+        <div
+          className="relative z-20 w-full bg-[#162D24]"
+          style={{ visibility: isReady ? "visible" : "hidden" }}
+        >
+          <SectionCTA preloaderDone={isReady} />
+          <div ref={footerRef}>
+            <Footer />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import SubServiceHero from "@/src/components/Service/SubServiceHero";
 import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
@@ -11,9 +11,27 @@ import { FullServiceData } from "./data";
 const SubServiceSectionOne = dynamic(() => import("@/src/components/Service/SubServiceSectionOne"));
 const SubServiceFAQSection = dynamic(() => import("@/src/components/Service/SubServiceFAQSection"));
 const Appsection = dynamic(() => import("@/src/components/Projects/Appsection"));
+const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
 const clamp = (val: number, min = 0, max = 1) => Math.min(Math.max(val, min), max);
+
+// Original timeline: 8 steps.
+//   0-1 Hero | 1-2 Sec1 slide | 2-5 Sec1 expand | 5-7 App+FAQ travel | 7-8 Footer
+const ORIGINAL_TOTAL_STEPS = 8.0;
+
+// Pinned scene ends when App + FAQ have fully travelled (old footer start, step 7.0).
+// CTA + Footer now live in normal document flow after the pinned track.
+const PIN_END_STEP = 7.0;
+const PIN_END_P = PIN_END_STEP / ORIGINAL_TOTAL_STEPS;
+
+// Short hold at the end of the pin so the smoothed animation finishes
+// BEFORE the pin releases and the CTA scrolls in. Set to 0 to disable.
+const HOLD_VH = 40;
+
+// Initial track height (before measuring), assuming App = FAQ = Footer = 1 viewport.
+// Same formula as updateMetrics: PIN_END_P * (4vh + app + faq + footer) + hold + 1vh
+const INITIAL_TRACK_HEIGHT_VH = PIN_END_P * 7 * 100 + HOLD_VH + 100;
 
 type SubServicesMobileProps = {
   pageData: FullServiceData;
@@ -29,7 +47,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
   const appFaqLayerRef = useRef<HTMLDivElement>(null);
   const appSectionRef = useRef<HTMLDivElement>(null);
   const faqSectionRef = useRef<HTMLDivElement>(null);
-  const footerLayerRef = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
 
   // Cached DOM references
   const heroTextWrapRef = useRef<HTMLElement | null>(null);
@@ -45,6 +63,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
   // Cached layout metrics
   const scrollMetricsRef = useRef({
     totalScrollable: 0,
+    animScrollable: 0,
     vh: 0,
     trackTopOffset: 0,
   });
@@ -126,22 +145,22 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
 
     const appHeight = appSectionRef.current?.offsetHeight || vh;
     const faqHeight = faqSectionRef.current?.offsetHeight || vh;
-    const footerHeight = footerLayerRef.current?.offsetHeight || vh;
+    const footerHeight = footerRef.current?.offsetHeight || vh;
 
-    // Track steps:
-    // Step 1: Hero Clip (1vh)
-    // Step 2: Section 1 Slide In (1vh)
-    // Step 3: Section 1 Content Expand (3vh)
-    // Step 4: App + FAQ Translate (appHeight + faqHeight)
-    // Step 5: Footer Slide Up (footerHeight)
-    const totalContentTravel = appHeight + faqHeight;
-    const totalTrackHeight = vh * 5 + totalContentTravel + footerHeight;
-    trackRef.current.style.height = `${totalTrackHeight}px`;
+    // Same scroll distance per progress unit as before (4vh + App + FAQ + Footer),
+    // but the track now only covers the pinned part (p = 0 -> PIN_END_P).
+    const fullScrollable = vh * 4 + appHeight + faqHeight + footerHeight;
+    const animScrollable = PIN_END_P * fullScrollable;
+    const holdPx = (HOLD_VH / 100) * vh;
+    const totalScrollable = animScrollable + holdPx;
+
+    trackRef.current.style.height = `${totalScrollable + vh}px`;
 
     const rect = trackRef.current.getBoundingClientRect();
 
     scrollMetricsRef.current = {
-      totalScrollable: Math.max(0, totalTrackHeight - vh),
+      totalScrollable: Math.max(0, totalScrollable),
+      animScrollable: Math.max(1, animScrollable),
       vh,
       trackTopOffset: window.scrollY + rect.top,
     };
@@ -166,10 +185,17 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
 
     updateMetrics();
 
+    // App / FAQ / Footer heights drive scroll speed (as before), so re-measure when they load/change
+    const resizeObserver = new ResizeObserver(() => updateMetrics());
+    if (appSectionRef.current) resizeObserver.observe(appSectionRef.current);
+    if (faqSectionRef.current) resizeObserver.observe(faqSectionRef.current);
+    if (footerRef.current) resizeObserver.observe(footerRef.current);
+
     window.addEventListener("resize", handleResize, { passive: true });
     window.addEventListener("orientationchange", updateMetrics, { passive: true });
 
     return () => {
+      resizeObserver.disconnect();
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", updateMetrics);
     };
@@ -181,8 +207,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
 
     let isRunning = true;
 
-    const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
-    const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
+    const EASE_FACTOR = 0.06;
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
 
     let lastTime = performance.now();
@@ -205,19 +230,12 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
       currentProgress.current += delta;
 
       const currentProg = currentProgress.current;
-      // Step timeline map:
-      // 0.0 -> 1.0 : Hero Phase
-      // 1.0 -> 2.0 : Section One Slide Up
-      // 2.0 -> 5.0 : Section One Expand
-      // 5.0 -> 7.0 : App + FAQ Travel (Ends exactly at 7.0)
-      // 7.0 -> 8.0 : Footer Slides Up Immediately
-      const totalSteps = 8.0;
-      const stepProgress = currentProg * totalSteps;
+      // Same step mapping as before (p is scaled to 0 -> PIN_END_P)
+      const stepProgress = currentProg * ORIGINAL_TOTAL_STEPS;
 
       const { vh } = scrollMetricsRef.current;
       const appHeight = appSectionRef.current?.offsetHeight || vh;
       const faqHeight = faqSectionRef.current?.offsetHeight || vh;
-      const footerHeight = footerLayerRef.current?.offsetHeight || vh;
 
       // STEP 1: Hero Top Layer Clip & Text Fade (0.0 -> 1.0)
       const heroPhase1Prog = clamp(stepProgress / 1.0);
@@ -304,7 +322,6 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
       }
 
       // STEP 4: APP + FAQ Continuous Layer Translation (5.0 -> 7.0)
-      // Progress spans exactly 2 full steps (5.0 -> 7.0) with zero gap at the end
       const appFaqProg = clamp((stepProgress - 5.0) / 2.0);
       if (appFaqLayerRef.current) {
         const totalContentTravel = appHeight + faqHeight;
@@ -318,13 +335,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         sectionOneRef.current.style.transform = `translate3d(0, ${-appFaqProg * 15}%, 0)`;
       }
 
-      // STEP 5: Footer / CTA Overlay (7.0 -> 8.0)
-      // Begins immediately as step 4 reaches completion at 7.0
-      const footerProg = clamp(stepProgress - 7.0);
-      if (footerLayerRef.current) {
-        const translateY = vh - footerHeight * footerProg;
-        footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
-      }
+      // CTA & Footer now live in normal document flow below the pinned track.
 
       rafId.current = requestAnimationFrame(render);
     };
@@ -332,7 +343,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     const handleScroll = (e?: any) => {
       const lenis = smootherRef?.current;
       const scrollY = e?.scroll ?? lenis?.scroll ?? window.scrollY;
-      const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
+      const { totalScrollable, animScrollable, trackTopOffset } = scrollMetricsRef.current;
 
       if (totalScrollable <= 0) return;
 
@@ -355,7 +366,9 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         }
       }
 
-      targetProgress.current = clamp(relativeScroll / totalScrollable);
+      // Animation completes after `animScrollable` (p = PIN_END_P); the remaining
+      // HOLD_VH is a hold so smoothing catches up before the pin releases.
+      targetProgress.current = clamp(relativeScroll / animScrollable) * PIN_END_P;
     };
 
     const lenis = smootherRef?.current;
@@ -382,9 +395,15 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     };
   }, [shouldLoadRest, smootherRef]);
 
+  const isReady = preloaderDone && introDone;
+
   return (
     <div ref={scopeRef} className="w-full bg-[#162D24]">
-      <div ref={trackRef} className="services-track-container relative w-full">
+      <div
+        ref={trackRef}
+        className="services-track-container relative w-full"
+        style={{ height: `${INITIAL_TRACK_HEIGHT_VH}vh` }}
+      >
         <div
           ref={fixedFrameRef}
           className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-svh"
@@ -423,19 +442,23 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
                   <SubServiceFAQSection data={pageData.sectionTwo} />
                 </div>
               </div>
-
-              {/* Layer 4: Footer / CTA Overlay */}
-              <div
-                ref={footerLayerRef}
-                className="layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[95] will-change-transform backface-hidden"
-                style={{ transform: "translate3d(0, 100svh, 0)" }}
-              >
-                <Footer />
-              </div>
             </>
           )}
         </div>
       </div>
+
+      {/* STANDARD DOCUMENT FLOW FOR CTA AND FOOTER */}
+      {shouldLoadRest && (
+        <div
+          className="relative z-20 w-full bg-[#162D24]"
+          style={{ visibility: isReady ? "visible" : "hidden" }}
+        >
+          <SectionCTA preloaderDone={isReady} />
+          <div ref={footerRef}>
+            <Footer />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

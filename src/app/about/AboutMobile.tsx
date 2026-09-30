@@ -11,7 +11,16 @@ const SectionTwo = dynamic(() => import("@/src/components/About/SectionTwo"));
 const SectionThree = dynamic(() => import("@/src/components/About/SectionThree"));
 const SectionFour = dynamic(() => import("@/src/components/About/SectionFour"));
 const SectionFive = dynamic(() => import("@/src/components/About/SectionFive"));
+const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
+
+// Pinned scene ends at p = 0.82 (end of Section 5, old footer start).
+// CTA + Footer now live in normal document flow after the pinned track.
+const PIN_END_P = 0.82;
+
+// Initial track height (before measuring), assuming footer height = 1 viewport.
+// Same formula as updateMetrics: PIN_END_P * (4vh + footer) + 1vh
+const INITIAL_TRACK_HEIGHT_VH = (PIN_END_P * 5 + 1) * 100;
 
 const clamp = (val: number, min = 0, max = 1) =>
   Math.min(Math.max(val, min), max);
@@ -27,7 +36,7 @@ export default function AboutMobile() {
   const scopeRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const fixedFrameRef = useRef<HTMLDivElement>(null);
-  const layer7Ref = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
 
   const scrollMetricsRef = useRef({
     totalScrollable: 0,
@@ -44,7 +53,7 @@ export default function AboutMobile() {
 
   const { smootherRef } = useSite();
 
-  const { preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
+  const { introDone, preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
     isMobile: true,
     introDurationMs: 2800,
     unlockScrollEarlyMs: 1800,
@@ -78,15 +87,18 @@ export default function AboutMobile() {
     const vh = window.innerHeight;
     const vw = window.innerWidth;
 
-    // Dynamically calculate actual track height to account for footer size
-    const footerHeight = layer7Ref.current?.offsetHeight || vh;
-    const totalTrackHeight = vh * 5 + footerHeight;
-    trackRef.current.style.height = `${totalTrackHeight}px`;
+    // Same scroll distance per progress unit as before (4vh + footer height),
+    // but the track now only covers the pinned part (p = 0 -> PIN_END_P).
+    const footerHeight = footerRef.current?.offsetHeight || vh;
+    const fullScrollable = vh * 4 + footerHeight;
+    const totalScrollable = PIN_END_P * fullScrollable;
+
+    trackRef.current.style.height = `${totalScrollable + vh}px`;
 
     const rect = trackRef.current.getBoundingClientRect();
 
     scrollMetricsRef.current = {
-      totalScrollable: Math.max(0, totalTrackHeight - vh),
+      totalScrollable: Math.max(0, totalScrollable),
       vh,
       trackTopOffset: window.scrollY + rect.top,
     };
@@ -112,12 +124,17 @@ export default function AboutMobile() {
 
     updateMetrics();
 
+    // Footer height drives scroll speed (as before), so re-measure when it loads/changes
+    const resizeObserver = new ResizeObserver(() => updateMetrics());
+    if (footerRef.current) resizeObserver.observe(footerRef.current);
+
     window.addEventListener("resize", handleResize, { passive: true });
     window.addEventListener("orientationchange", updateMetrics, {
       passive: true,
     });
 
     return () => {
+      resizeObserver.disconnect();
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", updateMetrics);
     };
@@ -146,12 +163,9 @@ export default function AboutMobile() {
 
     let isRunning = true;
 
-    const isAndroid =
-      typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
-
     // Easing & speed cap controls:
-const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
-    
+    const EASE_FACTOR = 0.06;
+
     // STRICT MAX SPEED CAP PER FRAME:
     // Lower values (e.g., 0.003 - 0.005) make fast flicks smooth and controlled.
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
@@ -185,8 +199,7 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
       const s3EntranceProg = mapRange(p, 0.24, 0.36);
       const s3ExitProg = mapRange(p, 0.36, 0.48);
       const s5EntranceProg = mapRange(p, 0.48, 0.6);
-      const s5ActiveProg = mapRange(p, 0.6, 0.82);
-      const footerProgress = mapRange(p, 0.82, 1.0);
+      const s5ActiveProg = mapRange(p, 0.6, PIN_END_P);
 
       if (panels && panels.length > 0) {
         if (panels[1]) {
@@ -216,20 +229,14 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
         }
       }
 
-      const { vh } = scrollMetricsRef.current;
-
-      if (layer7Ref.current) {
-        const footerHeight = layer7Ref.current.offsetHeight || vh;
-        const y = vh - footerHeight * footerProgress;
-        layer7Ref.current.style.transform = `translate3d(0, ${y}px, 0)`;
-      }
+      // CTA & Footer now live in normal document flow below the pinned track.
 
       if (s5Bg) {
-        const parallaxProg = mapRange(p, 0.48, 0.82);
+        const parallaxProg = mapRange(p, 0.48, PIN_END_P);
         s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
       }
 
-      if (p >= 0.6 && p < 0.82) {
+      if (p >= 0.6 && p <= PIN_END_P) {
         setIsSectionFiveActive(true);
 
         if (s5ActiveProg < 0.33) {
@@ -274,7 +281,8 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
         }
       }
 
-      targetProgress.current = clamp(relativeScroll / totalScrollable);
+      // Map the pinned track onto p = 0 -> PIN_END_P so keyframes stay identical
+      targetProgress.current = clamp(relativeScroll / totalScrollable) * PIN_END_P;
     };
 
     const lenis = smootherRef?.current;
@@ -307,11 +315,14 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
     };
   }, [shouldLoadRest, smootherRef, triggerSec5Hook]);
 
+  const isReady = preloaderDone && introDone;
+
   return (
     <div ref={scopeRef} className="w-full">
       <div
         ref={trackRef}
         className="about-track-container relative w-full"
+        style={{ height: `${INITIAL_TRACK_HEIGHT_VH}vh` }}
       >
         <div
           ref={fixedFrameRef}
@@ -354,18 +365,26 @@ const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
               >
                 <SectionFive isActive={isSectionFiveActive} />
               </div>
-
-              <div
-                ref={layer7Ref}
-                className="layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[151] will-change-transform backface-hidden"
-                style={{ transform: "translate3d(0, 100svh, 0)" }}
-              >
-                <Footer />
-              </div>
             </>
           )}
         </div>
       </div>
+
+      {/* STANDARD DOCUMENT FLOW FOR CTA AND FOOTER */}
+      {shouldLoadRest && (
+        <div
+          className="relative z-20 w-full"
+          style={{
+            visibility: isReady ? "visible" : "hidden",
+            backgroundColor: "#162D24",
+          }}
+        >
+          <SectionCTA preloaderDone={isReady} />
+          <div ref={footerRef}>
+            <Footer />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

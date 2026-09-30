@@ -108,13 +108,14 @@ export default function Footer() {
       `}</style>
 
       <div 
-        className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[20px] !pt-[30px] md:!pt-[40px] shadow-2xl overflow-hidden"
+        className="!px-[20px] md:!px-[30px] !pb-[20px] md:!pb-[20px] !pt-[30px] md:!pt-[40px] shadow-2xl overflow-hidden font-light"
         style={{
           width: "100%",
           background: "linear-gradient(135deg, #162D24 0%, #094146 100%)",
           transform: "translate3d(0, 0, 0)",
           WebkitTransform: "translate3d(0, 0, 0)",
           isolation: "isolate",
+          fontWeight: 300,
         }}
       >
         {/* ROW 1: Logo */}
@@ -180,7 +181,8 @@ export default function Footer() {
                   style={{
                     color: "#F4EBE4",
                     textDecoration: "none",
-                    fontFamily: "var(--font-body)",
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 300,
                     transition: "opacity 0.2s ease",
                     width: "fit-content",
                   }}
@@ -201,7 +203,8 @@ export default function Footer() {
                   style={{
                     color: "#F4EBE4",
                     textDecoration: "none",
-                    fontFamily: "var(--font-body)",
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 300,
                     transition: "opacity 0.2s ease",
                     width: "fit-content",
                   }}
@@ -247,7 +250,7 @@ export default function Footer() {
           </div>
 
           {/* Desktop Copyright */}
-          <span className="desktop-only-row-4" style={{ color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
+          <span className="desktop-only-row-4" style={{ color: "#F4EBE4", fontFamily: "var(--font-display)", fontWeight: 300 }}>
             © 2026 Grand Pools. All Rights Reserved.
           </span>
 
@@ -259,13 +262,13 @@ export default function Footer() {
 
           {/* Desktop Attribution */}
           <div className="responsive-attribution !text-[14px] md:!text-[16px]">
-            <span style={{ color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
+            <span style={{ color: "#F4EBE4", fontFamily: "var(--font-display)", fontWeight: 300 }}>
               Design &amp; Development by{" "}
               <a
                 href="https://tactik.com.au/"
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: "#F4EBE4", textDecoration: "none", fontWeight: 500, opacity: 1, transition: "opacity 0.2s ease" }}
+                style={{ color: "#F4EBE4", textDecoration: "none", fontWeight: 300, opacity: 1, transition: "opacity 0.2s ease" }}
                 onMouseEnter={e => { e.currentTarget.style.opacity = "0.7"; }}
                 onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
               >
@@ -273,7 +276,7 @@ export default function Footer() {
               </a>
             </span>
 
-            <span className="mobile-only-row-4 mobile-copy-text !text-[14px] md:!text-[16px] !text-center" style={{ display: "none", color: "#F4EBE4", fontFamily: "var(--font-body)" }}>
+            <span className="mobile-only-row-4 mobile-copy-text !text-[14px] md:!text-[16px] !text-center" style={{ display: "none", color: "#F4EBE4", fontFamily: "var(--font-display)", fontWeight: 300 }}>
               © 2026 Grand Pools. All Rights Reserved.
             </span>
           </div>
@@ -322,7 +325,8 @@ function BottomLink({ href, children }: { href: string; children: React.ReactNod
       href={href}
       style={{
         color: "#F4EBE4",
-        fontFamily: "var(--font-body)",
+        fontFamily: "var(--font-display)",
+        fontWeight: 300,
         textDecoration: "none",
         transition: "opacity 0.2s ease",
       }}

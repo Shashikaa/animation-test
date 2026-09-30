@@ -8,7 +8,7 @@ type SectionEightProps = {
 };
 
 export default function SectionEight({ preloaderDone }: SectionEightProps) {
-  const sectionRef   = useRef<HTMLDivElement>(null);
+  const sectionRef    = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const personRef    = useRef<HTMLDivElement>(null);
   const bgParallaxRef = useRef<HTMLDivElement>(null);
@@ -67,18 +67,19 @@ export default function SectionEight({ preloaderDone }: SectionEightProps) {
   return (
     <div
       ref={sectionRef}
-      className="relative w-full h-full overflow-hidden"
+      className="relative w-full h-full overflow-hidden select-none"
       style={{ transform: "translate3d(0,0,0)", backfaceVisibility: "hidden" }}
     >
       <link rel="preload" href="/Forest.webp" as="image" type="image/webp" />
       <link rel="preload" href="/ForestMob.webp" as="image" type="image/webp" />
 
       {/* MOBILE + TABLET LAYOUT */}
-      <div className="lg:!hidden !absolute !inset-0 !overflow-hidden section-container">
-        <div className="s8-mob-bg absolute inset-0 z-[1] w-full h-full overflow-hidden">
+      <div className="lg:!hidden !absolute !inset-0 !overflow-hidden section-container pointer-events-none">
+        <div className="s8-mob-bg absolute inset-0 z-[1] w-full h-full overflow-hidden pointer-events-none">
           <img 
             src="/ForestMob.webp" 
             alt="Forest" 
+            draggable={false}
             className="w-full h-full object-cover" 
             style={{ 
               width: "100%", 
@@ -90,11 +91,11 @@ export default function SectionEight({ preloaderDone }: SectionEightProps) {
           />
         </div>
 
-        <div className="!absolute !top-0 !left-0 !z-20 !flex !flex-col !items-start !gap-7 !pt-[12vh] !px-5">
-          <div className="h2 s8-heading !text-[#F4EEDF] !text-left font-display">
+        <div className="!absolute !top-0 !left-0 !z-20 !flex !flex-col !items-start !gap-7 !pt-[12vh] !px-5 pointer-events-none">
+          <div className="h2 s8-heading select-text pointer-events-auto !text-[#F4EEDF] !text-left font-display">
             Water as Sanctuary
           </div>
-          <p className="s8-para !text-[#F4EEDF] !text-left font-body max-w-[300px]">
+          <p className="s8-para select-text pointer-events-auto !text-[#F4EEDF] !text-left font-body max-w-[300px]">
             Designed to disappear into the landscape, not announce itself.
             The result isn't a pool. It's a quiet room you walk outside to find.
           </p>
@@ -105,7 +106,7 @@ export default function SectionEight({ preloaderDone }: SectionEightProps) {
       <div ref={containerRef} className="hidden lg:block absolute inset-0" style={{ overflow: "hidden" }}>
         
         <div
-          className="s8-bg-img absolute inset-0 w-full"
+          className="s8-bg-img absolute inset-0 w-full pointer-events-none"
           style={{
             top: "-10%", 
             height: "120%",
@@ -124,19 +125,18 @@ export default function SectionEight({ preloaderDone }: SectionEightProps) {
             </div>
           </div>
         </div>
-        
 
-        
         {/* Foreground Content Stack */}
         <div className="absolute inset-0 z-20 pointer-events-none">
           <div
             ref={personRef}
-            className="absolute bottom-[-30px] left-[6vw] h-[105%] w-[75%]"
+            className="absolute bottom-[-30px] left-[6vw] h-[105%] w-[75%] pointer-events-none"
             style={{ willChange: "transform" }}
           >
             <img
               src="/person.png"
               alt=""
+              draggable={false}
               style={{
                 width: "100%", height: "100%", objectFit: "contain", 
                 objectPosition: "bottom left", mixBlendMode: "screen",
@@ -145,11 +145,11 @@ export default function SectionEight({ preloaderDone }: SectionEightProps) {
             />
           </div>
 
-          <div className="absolute left-1/2 top-1/2 -translate-y-1/2 flex flex-col gap-5 text-left ">
-            <h2 className="s8-heading text-[#F4EEDF] font-display whitespace-nowrap reveal-text">
+          <div className="absolute left-1/2 top-1/2 -translate-y-1/2 flex flex-col gap-5 text-left pointer-events-none">
+            <h2 className="s8-heading select-text pointer-events-auto text-[#F4EEDF] font-display whitespace-nowrap reveal-text">
               Water as Sanctuary
             </h2>
-            <p className="s8-para text-[#F4EEDF] font-body leading-relaxed max-w-[330px] reveal-text">
+            <p className="s8-para select-text pointer-events-auto text-[#F4EEDF] font-body leading-relaxed max-w-[330px] reveal-text">
               Designed to disappear into the landscape, not announce itself.
               The result isn't a pool. It's a quiet room you walk outside to find.
             </p>

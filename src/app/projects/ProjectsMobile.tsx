@@ -9,10 +9,19 @@ import { restoreTextReveal } from "@/src/app/utils/useTextReveal";
 
 const SectionOne = dynamic(() => import("@/src/components/Projects/SectionOne"));
 const SectionTwo = dynamic(() => import("@/src/components/Projects/SectionTwo"));
+const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
 const clamp = (val: number, min = 0, max = 1) =>
   Math.min(Math.max(val, min), max);
+
+// Animation length (unchanged): scroll speed per step stays identical
+const TOTAL_SCROLL_STEPS = 3.6;
+
+// Extra scroll held at the end of the pin so the smoothed animation can
+// finish (Section 2 fully in place) BEFORE the pin releases and the CTA
+// starts scrolling into view. Increase if you still see it on fast flicks.
+const HOLD_VH = 40;
 
 function executeMobileSplitting(selector: string) {
   const elements = document.querySelectorAll(selector);
@@ -56,10 +65,10 @@ export default function ProjectsMobile() {
   const heroPanelRef = useRef<HTMLDivElement>(null);
   const sectionOneRef = useRef<HTMLDivElement>(null);
   const sectionTwoRef = useRef<HTMLDivElement>(null);
-  const footerLayerRef = useRef<HTMLDivElement>(null);
 
   const scrollMetricsRef = useRef({
     totalScrollable: 0,
+    animScrollable: 0,
     vh: 0,
     trackTopOffset: 0,
   });
@@ -71,7 +80,7 @@ export default function ProjectsMobile() {
   const rafId = useRef<number | null>(null);
 
   const { smootherRef } = useSite();
-  const { preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
+  const { introDone, preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
     isMobile: true,
     introDurationMs: 2800,
     unlockScrollEarlyMs: 1800,
@@ -118,17 +127,15 @@ export default function ProjectsMobile() {
     const vh = window.innerHeight;
     const vw = window.innerWidth;
 
-    const footerHeight = footerLayerRef.current?.offsetHeight || vh;
-
-    // Tightened dynamic track height to eliminate dead gap before footer
-    const totalTrackHeight = vh * 4 + footerHeight;
-
-    trackRef.current.style.height = `${totalTrackHeight}px`;
-
     const rect = trackRef.current.getBoundingClientRect();
 
+    const totalScrollable = Math.max(0, rect.height - vh);
+    // Scroll distance that drives the animation (same as the old full track)
+    const animScrollable = Math.max(1, totalScrollable - (HOLD_VH / 100) * vh);
+
     scrollMetricsRef.current = {
-      totalScrollable: Math.max(0, totalTrackHeight - vh),
+      totalScrollable,
+      animScrollable,
       vh,
       trackTopOffset: window.scrollY + rect.top,
     };
@@ -173,8 +180,8 @@ export default function ProjectsMobile() {
     const isAndroid =
       typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
 
-    const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
-    const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
+    const EASE_FACTOR = isAndroid ? 0.08 : 0.08;
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.01;
 
     let lastTime = performance.now();
 
@@ -197,10 +204,7 @@ export default function ProjectsMobile() {
       currentProgress.current += delta;
 
       const p = currentProgress.current;
-      const totalSteps = 4.2;
-      const stepProgress = p * totalSteps;
-
-      const { vh } = scrollMetricsRef.current;
+      const stepProgress = p * TOTAL_SCROLL_STEPS;
 
       // ── DOM References ──
       const heroTextWrap =
@@ -218,7 +222,7 @@ export default function ProjectsMobile() {
       const parallaxImg =
         scopeRef.current?.querySelector<HTMLElement>(".parallax-img-asset");
 
-      // ── Initial Hero Title & Desc Fade (0.0 -> 0.4) ──
+      // ── Hero Fade (0.0 -> 0.4) ──
       const heroTextFade = clamp(stepProgress / 0.4);
       if (heroTextWrap) {
         heroTextWrap.style.opacity = `${1 - heroTextFade}`;
@@ -228,7 +232,7 @@ export default function ProjectsMobile() {
         heroTextWrap.style.visibility = heroTextFade >= 1 ? "hidden" : "visible";
       }
 
-      // ── Paragraph 1 Reveal (In: 0.3 -> 0.8 | Out: 0.8 -> 1.1) ──
+      // ── Para 1 (0.3 -> 1.1) ──
       const para1In = clamp((stepProgress - 0.3) / 0.5);
       const para1Out = clamp((stepProgress - 0.8) / 0.3);
 
@@ -249,7 +253,7 @@ export default function ProjectsMobile() {
         });
       }
 
-      // ── Paragraph 2 Reveal (In: 1.1 -> 1.6) ──
+      // ── Para 2 (1.1 -> 1.6) ──
       const para2In = clamp((stepProgress - 1.1) / 0.5);
 
       if (scrollPara2) {
@@ -266,7 +270,7 @@ export default function ProjectsMobile() {
         });
       }
 
-      // ── Section One Reveal & Parallax Image Transform (1.6 -> 2.6) ──
+      // ── Sec One (1.6 -> 2.6) ──
       const s1Prog = clamp((stepProgress - 1.6) / 1.0);
 
       if (heroPanelRef.current) {
@@ -286,26 +290,18 @@ export default function ProjectsMobile() {
         parallaxImg.style.transform = `translate3d(0, ${imgY.toFixed(2)}%, 0)`;
       }
 
-      // ── Section Two Reveal (2.6 -> 3.2) ──
-      const s2Prog = clamp((stepProgress - 2.6) / 0.6);
+      // ── Sec Two (2.6 -> 3.6) ──
+      const s2Prog = clamp((stepProgress - 2.6) / 1.0);
       if (sectionTwoRef.current) {
         sectionTwoRef.current.style.transform = `translate3d(0, ${
           (1 - s2Prog) * 100
         }%, 0)`;
       }
 
-      if (stepProgress >= 2.8 && stepProgress <= 4.2) {
+      if (stepProgress >= 2.8) {
         setIsSectionTwoActive(true);
       } else {
         setIsSectionTwoActive(false);
-      }
-
-      // ── Footer Layer Reveal (Immediately follows Sec 2: 3.2 -> 4.2) ──
-      const footerProgress = clamp((stepProgress - 3.2) / 1.0);
-      if (footerLayerRef.current) {
-        const footerHeight = footerLayerRef.current.offsetHeight || vh;
-        const translateY = vh - footerHeight * footerProgress;
-        footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
       }
 
       rafId.current = requestAnimationFrame(render);
@@ -314,7 +310,8 @@ export default function ProjectsMobile() {
     const handleScroll = (e?: any) => {
       const lenis = smootherRef?.current;
       const scrollY = e?.scroll ?? lenis?.scroll ?? window.scrollY;
-      const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
+      const { totalScrollable, animScrollable, trackTopOffset } =
+        scrollMetricsRef.current;
 
       if (totalScrollable <= 0) return;
 
@@ -337,7 +334,9 @@ export default function ProjectsMobile() {
         }
       }
 
-      targetProgress.current = clamp(relativeScroll / totalScrollable);
+      // Animation completes after `animScrollable`; the remaining HOLD_VH is a
+      // hold so the smoothed animation catches up before the pin releases.
+      targetProgress.current = clamp(relativeScroll / animScrollable);
     };
 
     const lenis = smootherRef?.current;
@@ -365,15 +364,19 @@ export default function ProjectsMobile() {
     };
   }, [shouldLoadRest, smootherRef]);
 
+  const isReady = preloaderDone && introDone;
+
   return (
     <div ref={scopeRef} className="w-full bg-[#162D24]">
+      {/* VIRTUAL PINNED TRACK: animation length + short hold at the end */}
       <div
         ref={trackRef}
         className="projects-track-container relative w-full"
+        style={{ height: `${TOTAL_SCROLL_STEPS * 100 + HOLD_VH}vh` }}
       >
         <div
           ref={fixedFrameRef}
-          className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-svh"
+          className="fixed top-0 left-0 w-full overflow-hidden bg-[#162D24] z-10 h-svh transform-gpu"
         >
           <div
             ref={heroPanelRef}
@@ -399,18 +402,18 @@ export default function ProjectsMobile() {
               >
                 <SectionTwo isActive={isSectionTwoActive} />
               </div>
-
-              <div
-                ref={footerLayerRef}
-                className="layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[151] will-change-transform backface-hidden"
-                style={{ transform: "translate3d(0, 100svh, 0)" }}
-              >
-                <Footer />
-              </div>
             </>
           )}
         </div>
       </div>
+
+      {/* NATURAL DOCUMENT FLOW FOR CTA AND FOOTER */}
+      {shouldLoadRest && (
+        <div className="relative z-20 w-full bg-[#162D24]">
+          <SectionCTA preloaderDone={isReady} />
+          <Footer />
+        </div>
+      )}
     </div>
   );
 }

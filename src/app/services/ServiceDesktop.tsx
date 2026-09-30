@@ -11,7 +11,16 @@ import SectionCTA from "@/src/components/SectionCTA";
 import Footer from "@/src/components/Footer";
 import { useSite } from "@/src/app/context/SiteContext";
 
-const TOTAL_SCROLL_STEPS = 12;
+// Original timeline: 12 steps (11 scrollable, 1 step = 100vh of scroll).
+const ORIGINAL_STEPS = 11;
+
+// Pinned scene ends when the App section has fully arrived (old step 8.2).
+// CTA + Footer now live in normal document flow after the pinned track.
+const PIN_END_STEP = 8.2;
+const TRACK_HEIGHT_VH = (PIN_END_STEP + 1) * 100;
+
+// Keep the smoothing speed identical in steps per frame.
+const MAX_PROGRESS_DELTA_PER_FRAME = (0.008 * ORIGINAL_STEPS) / PIN_END_STEP;
 
 const easeOutQuad = (t: number) => t * (2 - t);
 
@@ -55,12 +64,7 @@ export default function ServicesDesktop() {
   const trackRef = useRef<HTMLDivElement>(null);
   const fixedFrameRef = useRef<HTMLDivElement>(null);
 
-  const layerCTA = useRef<HTMLDivElement>(null);
-  const layerFooter = useRef<HTMLDivElement>(null);
-
   const scrollMetricsRef = useRef({
-    ctaHeight: 0,
-    footerHeight: 0,
     vh: 0,
     trackTopOffset: 0,
     totalScrollable: 0,
@@ -114,8 +118,6 @@ export default function ServicesDesktop() {
     const vw = window.innerWidth;
 
     scrollMetricsRef.current = {
-      ctaHeight: layerCTA.current?.offsetHeight || vh,
-      footerHeight: layerFooter.current?.offsetHeight || layerFooter.current?.scrollHeight || vh,
       vh,
       trackTopOffset: window.scrollY + rect.top,
       totalScrollable: rect.height - vh,
@@ -138,15 +140,10 @@ export default function ServicesDesktop() {
     if (!shouldLoadRest) return;
     measure();
 
-    const resizeObserver = new ResizeObserver(() => measure());
-    if (layerCTA.current) resizeObserver.observe(layerCTA.current);
-    if (layerFooter.current) resizeObserver.observe(layerFooter.current);
-
     window.addEventListener("resize", handleResize, { passive: true });
     window.addEventListener("orientationchange", measure, { passive: true });
 
     return () => {
-      resizeObserver.disconnect();
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", measure);
     };
@@ -225,7 +222,6 @@ export default function ServicesDesktop() {
     let lastTime = performance.now();
 
     const EASE_FACTOR = 0.15;
-    const MAX_PROGRESS_DELTA_PER_FRAME = 0.008;
 
     const heroTextWrap = scope.querySelector<HTMLElement>(".hero-text-wrap");
     const heroTopLayer = scope.querySelector<HTMLElement>(".services-hero-top-layer");
@@ -248,8 +244,6 @@ export default function ServicesDesktop() {
       secTwoWrap,
       s2DesktopSec,
       appSecWrap,
-      layerCTA.current,
-      layerFooter.current,
     ].forEach((el) => {
       if (el) {
         el.style.willChange = "transform, opacity, clip-path";
@@ -278,8 +272,9 @@ export default function ServicesDesktop() {
 
       const currentProgress = smoothProgress.current;
 
-      const stepProgress = currentProgress * (TOTAL_SCROLL_STEPS - 1);
-      const { ctaHeight, footerHeight, vh } = scrollMetricsRef.current;
+      // 1 step = 100vh of scroll (same as before)
+      const stepProgress = currentProgress * PIN_END_STEP;
+      const { vh } = scrollMetricsRef.current;
 
       // STEP 1: HERO HOLD & TOP LAYER NARROW (STEPS 0.0 -> 0.8)
       const heroProg = easeOutQuad(Math.min(Math.max(stepProgress / 0.8, 0), 1));
@@ -370,9 +365,7 @@ export default function ServicesDesktop() {
 
       if (appSecWrap) {
         appSecWrap.style.visibility = stepProgress >= 6.6 ? "visible" : "hidden";
-        if (stepProgress < 9.8) {
-          appSecWrap.style.transform = `translate3d(0, ${((1 - appProg) * 100).toFixed(2)}%, 0)`;
-        }
+        appSecWrap.style.transform = `translate3d(0, ${((1 - appProg) * 100).toFixed(2)}%, 0)`;
       }
 
       if (secTwoWrap && appProg > 0 && stepProgress < 6.8) {
@@ -381,40 +374,13 @@ export default function ServicesDesktop() {
 
       triggerPlayOnceTextReveal(".services-appsec-wrap", stepProgress, 7.2);
 
-      // STEP 6: LAYER CTA SLIDE (STEPS 8.5 -> 9.8)
-      const ctaProgress = easeOutQuad(Math.min(Math.max((stepProgress - 8.5) / 1.3, 0), 1));
-
-      if (layerCTA.current) {
-        layerCTA.current.style.visibility = stepProgress >= 8.3 ? "visible" : "hidden";
-        const startY = vh;
-        const endY = -(ctaHeight - vh);
-        const currentY = startY + (endY - startY) * ctaProgress;
-        layerCTA.current.style.transform = `translate3d(0, ${currentY.toFixed(2)}px, 0)`;
-      }
-
-      // STEP 7: LAYER FOOTER & CTA FADE OUT (STEPS 9.8 -> 11.0)
-      const footerProgress = easeOutQuad(Math.min(Math.max((stepProgress - 9.8) / 1.2, 0), 1));
-
-      if (layerCTA.current) {
-        const innerOpacity = (1 - footerProgress).toFixed(3);
-        layerCTA.current.style.setProperty("--cta-inner-opacity", innerOpacity);
-      }
-
-      if (layerFooter.current) {
-        layerFooter.current.style.visibility = stepProgress >= 9.6 ? "visible" : "hidden";
-        const startY = vh;
-        const endY = vh - footerHeight;
-        const translateY = startY + (endY - startY) * footerProgress;
-        layerFooter.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
-      }
-
-      // Appsection stays visible underneath as CTA and Footer slide over
+      // Appsection stays visible as the pinned scene ends
       if (appSecWrap && stepProgress >= 6.8) {
         appSecWrap.style.opacity = "1";
-        if (stepProgress >= 9.8) {
-          appSecWrap.style.transform = "translate3d(0, 0%, 0) scale3d(1, 1, 1)";
-        }
       }
+
+      // CTA & Footer now live in normal document flow below the pinned track.
+      void vh;
 
       rafId.current = requestAnimationFrame(renderTransforms);
     };
@@ -475,7 +441,7 @@ export default function ServicesDesktop() {
       <div
         ref={trackRef}
         className="services-track relative w-full"
-        style={{ height: `${TOTAL_SCROLL_STEPS * 100}vh` }}
+        style={{ height: `${TRACK_HEIGHT_VH}vh` }}
       >
         <div
           ref={fixedFrameRef}
@@ -521,28 +487,21 @@ export default function ServicesDesktop() {
               >
                 <Appsection />
               </div>
-
-              {/* Layer 5: Section CTA Container */}
-              <div
-                ref={layerCTA}
-                className="services-section-cta absolute left-0 top-0 w-full z-[120] structural-layer pointer-events-auto transform-gpu will-change-transform"
-                style={{ transform: "translate3d(0, 100vh, 0)", visibility: "hidden" }}
-              >
-                <SectionCTA preloaderDone={isReady} />
-              </div>
-
-              {/* Layer 6: Footer Container */}
-              <div
-                ref={layerFooter}
-                className="services-footer-wrap absolute left-0 top-0 w-full z-[125] structural-layer transform-gpu will-change-transform"
-                style={{ transform: "translate3d(0, 100vh, 0)", visibility: "hidden" }}
-              >
-                <Footer />
-              </div>
             </>
           )}
         </div>
       </div>
+
+      {/* STANDARD DOCUMENT FLOW FOR CTA AND FOOTER */}
+      {shouldLoadRest && (
+        <div
+          className="relative z-20 w-full bg-black"
+          style={{ visibility: isReady ? "visible" : "hidden" }}
+        >
+          <SectionCTA preloaderDone={isReady} />
+          <Footer />
+        </div>
+      )}
     </div>
   );
 }

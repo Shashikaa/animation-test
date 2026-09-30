@@ -13,8 +13,16 @@ const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { 
 const SectionNine = dynamic(() => import("../components/Home/SectionNine"), { ssr: false });
 const SectionTen = dynamic(() => import("../components/Home/SectionTen"), { ssr: false });
 const Appsection = dynamic(() => import("../components/Appsection"), { ssr: false });
+const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
 
 const clamp = (val: number, min = 0, max = 1) => Math.min(Math.max(val, min), max);
+
+// Animation ends when Section Nine is fully in place (footer is no longer pinned)
+const TOTAL_STEPS = 9.0;
+
+// Extra pinned scroll at the end so the smoothed animation can finish
+// BEFORE the pin releases and the CTA scrolls into view.
+const HOLD_VH = 40;
 
 function executeInlineSplitting(selector: string) {
   if (typeof document === "undefined") return;
@@ -56,9 +64,8 @@ export default function HomeMobile() {
   const sec7Ref = useRef<HTMLDivElement>(null);
   const appSecRef = useRef<HTMLDivElement>(null);
   const sec9Ref = useRef<HTMLDivElement>(null);
-  const footerLayerRef = useRef<HTMLDivElement>(null);
 
-  const scrollMetricsRef = useRef({ totalScrollable: 0, vh: 0, trackTopOffset: 0 });
+  const scrollMetricsRef = useRef({ totalScrollable: 0, animScrollable: 0, vh: 0, trackTopOffset: 0 });
   const lastSizeRef = useRef({ width: 0, height: 0 });
 
   const currentProgress = useRef(0);
@@ -132,16 +139,19 @@ export default function HomeMobile() {
     const vw = window.innerWidth;
 
     const appHeight = appSecRef.current?.offsetHeight || vh;
-    const footerHeight = footerLayerRef.current?.offsetHeight || vh;
 
-    const totalTrackHeight = vh * 7.8 + appHeight + footerHeight;
+    // No footer in the pinned track anymore; add a hold at the end
+    const totalTrackHeight = vh * 7.8 + appHeight + (HOLD_VH / 100) * vh;
 
     trackRef.current.style.height = `${totalTrackHeight}px`;
 
     const rect = trackRef.current.getBoundingClientRect();
+    const totalScrollable = Math.max(0, totalTrackHeight - vh);
 
     scrollMetricsRef.current = {
-      totalScrollable: Math.max(0, totalTrackHeight - vh),
+      totalScrollable,
+      // Scroll distance that drives the animation; the remainder is the hold
+      animScrollable: Math.max(1, totalScrollable - (HOLD_VH / 100) * vh),
       vh,
       trackTopOffset: window.scrollY + rect.top,
     };
@@ -229,8 +239,7 @@ export default function HomeMobile() {
       currentProgress.current += delta;
 
       const p = currentProgress.current;
-      const totalSteps = 9.8;
-      const stepProgress = p * totalSteps;
+      const stepProgress = p * TOTAL_STEPS;
       const { vh } = scrollMetricsRef.current;
       const cache = domCache.current;
 
@@ -444,16 +453,7 @@ export default function HomeMobile() {
         s9BgImg.style.transform = `scale(${1.35 - s9Prog * 0.35}) translate3d(0, ${(1 - s9Prog) * 20}%, 0)`;
       }
 
-      // ── Step 9.0 -> 9.8: FOOTER REVEAL ──
-      const footerProgress = clamp((stepProgress - 9.0) / 0.8);
-
-      if (footerLayerRef.current) {
-        const footerHeight = footerLayerRef.current.offsetHeight || vh;
-        const translateY = vh - footerHeight * footerProgress;
-        footerLayerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
-        footerLayerRef.current.style.opacity = `${footerProgress > 0 ? 1 : 0}`;
-        footerLayerRef.current.style.visibility = footerProgress > 0 ? "visible" : "hidden";
-      }
+      // Footer reveal removed: CTA + Footer now scroll in normal document flow.
 
       rafId.current = requestAnimationFrame(render);
     };
@@ -461,7 +461,7 @@ export default function HomeMobile() {
     const handleScroll = (e?: any) => {
       const lenis = smootherRef?.current;
       const scrollY = e?.scroll ?? lenis?.scroll ?? window.scrollY;
-      const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
+      const { totalScrollable, animScrollable, trackTopOffset } = scrollMetricsRef.current;
 
       if (totalScrollable <= 0) return;
 
@@ -484,7 +484,9 @@ export default function HomeMobile() {
         }
       }
 
-      targetProgress.current = clamp(relativeScroll / totalScrollable);
+      // Animation completes after animScrollable; the remaining HOLD_VH is a hold
+      // so the smoothed animation catches up before the pin releases.
+      targetProgress.current = clamp(relativeScroll / animScrollable);
     };
 
     const lenis = smootherRef?.current;
@@ -508,6 +510,8 @@ export default function HomeMobile() {
     };
   }, [shouldLoadRest, smootherRef]);
 
+  const isReady = preloaderDone;
+
   return (
     <div ref={scopeRef} className="relative w-full bg-black text-white">
       <style jsx global>{`
@@ -525,6 +529,7 @@ export default function HomeMobile() {
         }
       `}</style>
 
+      {/* VIRTUAL PINNED TRACK: animation length + short hold at the end */}
       <div ref={trackRef} className="home-track-container relative w-full">
         <div
           ref={fixedFrameRef}
@@ -593,19 +598,18 @@ export default function HomeMobile() {
               >
                 <SectionNine />
               </div>
-
-              {/* Layer 8: Footer */}
-              <div
-                ref={footerLayerRef}
-                className="footer layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[126] will-change-transform backface-hidden"
-                style={{ transform: "translate3d(0, 100svh, 0)", opacity: 0, visibility: "hidden" }}
-              >
-                <Footer />
-              </div>
             </>
           )}
         </div>
       </div>
+
+      {/* NATURAL DOCUMENT FLOW FOR CTA AND FOOTER */}
+      {shouldLoadRest && (
+        <div className="relative z-20 w-full bg-black">
+          <SectionCTA preloaderDone={isReady} />
+          <Footer />
+        </div>
+      )}
     </div>
   );
 }

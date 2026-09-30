@@ -14,13 +14,13 @@ type ContactProps = {
   preloaderDone?: boolean;
 };
 
-// Reduced total scroll steps from 10 to 8 to remove dead space
-const TOTAL_SCROLL_STEPS = 8;
+// Reduced total scroll steps for virtual timeline (Hero -> Sec 1 -> Sec 2)
+const TOTAL_SCROLL_STEPS = 5;
 
-// Quadratic Easing matching About component setup
+// Quadratic Easing
 const easeOutQuad = (t: number) => t * (2 - t);
 
-// Utility for DOM text line splitting matching About implementation
+// Utility for DOM text line splitting
 function executeDesktopSplitting(selector: string) {
   const elements = document.querySelectorAll<HTMLElement>(selector);
   elements.forEach((element) => {
@@ -59,13 +59,8 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
   const fixedFrameRef = useRef<HTMLDivElement>(null);
   const sectionOneRef = useRef<HTMLDivElement>(null);
 
-  const layerCTA = useRef<HTMLDivElement>(null);
-  const layerFooter = useRef<HTMLDivElement>(null);
-
   const dimensionsRef = useRef({
     sec1Height: 0,
-    ctaHeight: 0,
-    footerHeight: 0,
     vh: 0,
     trackTopOffset: 0,
     totalScrollable: 0,
@@ -119,8 +114,6 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
     dimensionsRef.current = {
       sec1Height: sectionOneRef.current?.offsetHeight || vh,
-      ctaHeight: layerCTA.current?.offsetHeight || vh,
-      footerHeight: layerFooter.current?.offsetHeight || layerFooter.current?.scrollHeight || vh,
       vh,
       trackTopOffset: window.scrollY + rect.top,
       totalScrollable: rect.height - vh,
@@ -145,8 +138,6 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
     const resizeObserver = new ResizeObserver(() => measure());
     if (sectionOneRef.current) resizeObserver.observe(sectionOneRef.current);
-    if (layerCTA.current) resizeObserver.observe(layerCTA.current);
-    if (layerFooter.current) resizeObserver.observe(layerFooter.current);
 
     window.addEventListener("resize", handleResize, { passive: true });
     window.addEventListener("orientationchange", measure, { passive: true });
@@ -224,7 +215,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
     const parallaxImg = scope.querySelector<HTMLElement>(".parallax-img-asset");
     const secTwo = scope.querySelector<HTMLElement>(".section-two-wrapper");
 
-    [secOne, parallaxImg, secTwo, layerCTA.current, layerFooter.current].forEach((el) => {
+    [secOne, parallaxImg, secTwo].forEach((el) => {
       if (el) {
         el.style.willChange = "transform, opacity";
         el.style.transform = "translate3d(0, 0, 0)";
@@ -251,7 +242,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
       const currentProgress = smoothProgress.current;
       const stepProgress = currentProgress * (TOTAL_SCROLL_STEPS - 1);
-      const { sec1Height, ctaHeight, footerHeight, vh } = dimensionsRef.current;
+      const { sec1Height, vh } = dimensionsRef.current;
 
       // ── STEP 1: INITIAL HERO TITLE & DESC (0.0 -> 0.4) ──
       const heroFadeOutProg = easeOutQuad(Math.min(Math.max(stepProgress / 0.4, 0), 1));
@@ -303,9 +294,9 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
         });
       }
 
-      // ── STEP 2: SECTION ONE SLIDE & REVEAL (STARTS IMMEDIATELY AT 1.6 -> 3.2) ──
+      // ── STEP 2: SECTION ONE SLIDE & REVEAL (1.6 -> 3.0) ──
       const s1Start = 1.6;
-      const s1Prog = easeOutQuad(Math.min(Math.max((stepProgress - s1Start) / 1.6, 0), 1));
+      const s1Prog = easeOutQuad(Math.min(Math.max((stepProgress - s1Start) / 1.4, 0), 1));
 
       if (secOne) {
         const targetY = -(sec1Height - vh);
@@ -320,51 +311,18 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
       triggerPlayOnceTextReveal(".section-one-wrapper", stepProgress, 1.8);
 
-      // ── STEP 3: SECTION TWO SLIDE (STEPS 3.2 -> 4.8) ──
-      const s2Start = 3.2;
-      const s2Prog = easeOutQuad(Math.min(Math.max((stepProgress - s2Start) / 1.6, 0), 1));
+      // ── STEP 3: SECTION TWO SLIDE (3.0 -> 4.0) ──
+      const s2Start = 3.0;
+      const s2Prog = easeOutQuad(Math.min(Math.max((stepProgress - s2Start) / 1.0, 0), 1));
 
       if (secTwo) {
         secTwo.style.transform = `translate3d(0, ${((1 - s2Prog) * 100).toFixed(3)}%, 0)`;
       }
 
-      if (stepProgress >= 3.6 && stepProgress < 5.8) {
+      if (stepProgress >= 3.2) {
         setIsSectionTwoActive(true);
       } else {
         setIsSectionTwoActive(false);
-      }
-
-      // ── STEP 4: LAYER CTA SLIDE (STEPS 4.8 -> 6.2) ──
-      const ctaProgress = easeOutQuad(Math.min(Math.max((stepProgress - 4.8) / 1.4, 0), 1));
-      if (layerCTA.current) {
-        const startY = vh;
-        const endY = -(ctaHeight - vh);
-        const currentY = startY + (endY - startY) * ctaProgress;
-        layerCTA.current.style.transform = `translate3d(0, ${currentY.toFixed(2)}px, 0)`;
-      }
-
-      // ── STEP 5: LAYER FOOTER & CTA FADE OUT (STEPS 6.2 -> 7.0) ──
-      const footerProgress = easeOutQuad(Math.min(Math.max((stepProgress - 6.2) / 0.8, 0), 1));
-
-      if (layerCTA.current) {
-        const innerOpacity = (1 - footerProgress).toFixed(3);
-        layerCTA.current.style.setProperty("--cta-inner-opacity", innerOpacity);
-      }
-
-      if (layerFooter.current) {
-        const startY = vh;
-        const endY = vh - footerHeight;
-        const translateY = startY + (endY - startY) * footerProgress;
-        layerFooter.current.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
-      }
-
-      const upperOpacity = (1 - footerProgress).toFixed(3);
-
-      if (secTwo) {
-        secTwo.style.opacity = upperOpacity;
-      }
-      if (secOne) {
-        secOne.style.opacity = upperOpacity;
       }
 
       rafId.current = requestAnimationFrame(renderTransforms);
@@ -423,6 +381,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
   return (
     <div ref={scopeRef} className="w-full bg-black">
+      {/* VIRTUAL PINNED TRACK FOR HERO, SEC 1 & SEC 2 */}
       <div
         ref={trackRef}
         className="projects-track-container relative w-full"
@@ -440,7 +399,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
             <ProjectsHero />
           </div>
 
-          {/* DOWNSTREAM SECTIONS */}
+          {/* DOWNSTREAM VIRTUAL SECTIONS */}
           {shouldLoadRest && (
             <>
               {/* Layer 2: Section One Container */}
@@ -459,28 +418,18 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
               >
                 <SectionTwo isActive={isSectionTwoActive} />
               </div>
-
-              {/* Layer 4: CTA Section Container */}
-              <div
-                ref={layerCTA}
-                className="projects-section-cta absolute left-0 top-0 w-full z-[95] structural-layer pointer-events-auto transform-gpu will-change-transform"
-                style={{ transform: "translate3d(0, 100vh, 0)" }}
-              >
-                <SectionCTA preloaderDone={isReady} />
-              </div>
-
-              {/* Layer 5: Footer Container */}
-              <div
-                ref={layerFooter}
-                className="projects-footer-wrap absolute left-0 top-0 w-full z-[96] structural-layer transform-gpu will-change-transform"
-                style={{ zIndex: 96, transform: "translate3d(0, 100vh, 0)" }}
-              >
-                <Footer />
-              </div>
             </>
           )}
         </div>
       </div>
+
+      {/* STANDARD DOCUMENT FLOW FOR CONTACT FORM AND FOOTER */}
+      {shouldLoadRest && (
+        <div className="relative z-20 w-full bg-black">
+          <SectionCTA preloaderDone={isReady} />
+          <Footer />
+        </div>
+      )}
     </div>
   );
 }
