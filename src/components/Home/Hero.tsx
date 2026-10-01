@@ -43,18 +43,22 @@ export default function Hero({ onReady }: HeroProps) {
         <div className="hero-overlay absolute inset-0 bg-black/30 pointer-events-none z-[21]" />
       </div>
 
-
-
       {/* Main Container Layer */}
       <div className="section-container relative h-full w-full flex flex-col justify-end items-start lg:flex-row lg:items-end lg:justify-between !pb-[100px] md:!pb-[140px] lg:!pb-30 gap-8 z-30">
 
         {/* LEFT SIDE: Container for Initial Title & Frame 3 Secondary Paragraph */}
         <div className="max-w-xl lg:max-w-4xl flex flex-col justify-end overflow-visible relative min-h-[120px] w-full lg:w-auto">
           
-          {/* 1. FRAME 1: Top-Left Paragraph (Below Header on Mobile) */}
-          <div className="hero-left-initial max-lg:fixed max-lg:top-[15vh] max-lg:left-6 max-lg:right-6 block h-fit overflow-visible relative z-30 max-w-[250px] sm:max-w-[250px] lg:max-w-[250px]">
-            <p className="hero-title font-body text-[#F4EEDF] text-left text-base sm:text-lg lg:text-xl leading-relaxed m-0 p-0 select-none">
-Premium pools with refined wellness features, designed for private outdoor living.            </p>
+          {/* 1. FRAME 1: Top-Left Paragraph & H1 (Below Header on Mobile) */}
+          <div className="hero-left-initial max-lg:fixed max-lg:top-[15vh] max-lg:left-6 max-lg:right-6 block h-fit overflow-visible relative z-30 max-w-[350px] sm:max-w-[420px] lg:!max-w-[740px]">
+            {/* Visually Visible H1 for SEO & Accessibility */}
+            <h1 className="font-display text-[#F4EEDF] text-left text-3xl sm:text-4xl lg:text-5xl font-normal leading-tight m-0 mb-3 p-0">
+              Custom Concrete Pools, Built for Melbourne
+            </h1>
+
+            <p className="hero-title font-body text-[#F4EEDF] text-left text-base sm:text-lg lg:text-xl leading-relaxed m-0 p-0 select-none  max-w-[420px] ">
+              Grounded in 25 years of master craftsmanship, we build bespoke swimming pools designed to seamlessly integrate with your home’s architecture and landscape.
+            </p>
           </div>
 
           {/* 3. FRAME 3: Bottom-Left Paragraph (Visible on load with opacity/visibility reset) */}
@@ -63,7 +67,8 @@ Premium pools with refined wellness features, designed for private outdoor livin
             style={{ opacity: 1, visibility: "visible" }}
           >
             <p className="hero-secondary-para font-body text-[#F4EEDF] text-left text-sm sm:text-base leading-relaxed m-0 p-0">
-Expert craftsmanship and attention to detail bring your vision to life, delivering seamless pool solutions from concept to completion.            </p>
+              Expert craftsmanship and attention to detail bring your vision to life, delivering seamless pool solutions from concept to completion.
+            </p>
           </div>
         </div>
 
@@ -73,17 +78,18 @@ Expert craftsmanship and attention to detail bring your vision to life, deliveri
           {/* 2. FRAME 2: Center Paragraph (Over the Pool Area on Mobile) */}
           <div className="hero-right-text-wrap max-lg:fixed max-lg:top-1/2 max-lg:-translate-y-1/2 max-lg:left-6 max-lg:right-6 relative w-full max-w-[340px] md:max-w-[390px] lg:!max-w-[420px] overflow-hidden text-left lg:text-right">
             <p className="hero-right-text font-body text-[#F4EEDF] text-left lg:text-right text-sm sm:text-base leading-relaxed m-0 p-0">
-At Grand Pools, we create custom swimming pools that balance style, function, and quality. Each pool is designed to complement its outdoor setting while adding lasting value and elegance to your home or business.            </p>
+              At Grand Pools, we create custom swimming pools that balance style, function, and quality. Each pool is designed to complement its outdoor setting while adding lasting value and elegance to your home or business.
+            </p>
           </div>
 
           {/* Action Button */}
-<Link
-  href="/projects"
-  prefetch={true}
-  className="hero-contact-btn group btn-underline font-body ml-0 lg:ml-10"
->
-  See Our Projects
-</Link>
+          <Link
+            href="/projects"
+            prefetch={true}
+            className="hero-contact-btn group btn-underline font-body ml-0 lg:ml-10"
+          >
+            See Our Projects
+          </Link>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Instrument_Sans, Cormorant_Garamond } from "next/font/google";
+import { Instrument_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -19,35 +19,12 @@ const instrumentSans = Instrument_Sans({
   display: "swap",
 });
 
-const cormorantGaramond = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-cormorant",
-  display: "swap",
-});
-
 const canelaText = localFont({
   src: [
     {
       path: "../../public/fonts/Canela-Thin.ttf",
       weight: "100",
       style: "normal",
-    },
-    {
-      path: "../../public/fonts/Canela-Light-Trial.otf",
-      weight: "300",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/CanelaText-Regular-Trial.otf",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/Canela-RegularItalic-Trial.otf",
-      weight: "400",
-      style: "italic",
     },
   ],
   variable: "--font-display",
@@ -129,11 +106,13 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * WCAG 1.4.4 Fix:
+ * Removed `maximumScale: 1` and `userScalable: false` to permit zoom & pinch-to-zoom up to 200%+.
+ */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
   themeColor: "#162D24",
 };
@@ -193,7 +172,7 @@ export default function RootLayout({
   return (
     <html
       lang="en-AU"
-      className={`${instrumentSans.variable} ${cormorantGaramond.variable} ${canelaText.variable} antialiased`}
+      className={`${instrumentSans.variable} ${canelaText.variable} antialiased`}
       style={{ backgroundColor: "#162D24" }}
       suppressHydrationWarning
     >
@@ -219,6 +198,38 @@ export default function RootLayout({
                 background-color: #162D24 !important;
                 margin: 0 !important;
                 padding: 0 !important;
+              }
+
+              /* WCAG 2.4.7 Screen reader visually hidden / focus visible skip link helper */
+              .sr-only-focusable {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+                border: 0;
+              }
+              .sr-only-focusable:focus {
+                position: fixed;
+                top: 1rem;
+                left: 1rem;
+                z-index: 9999;
+                width: auto;
+                height: auto;
+                padding: 0.75rem 1.25rem;
+                margin: 0;
+                overflow: visible;
+                clip: auto;
+                white-space: normal;
+                background-color: #162D24;
+                color: #F4EEDF;
+                border: 2px solid #F4EEDF;
+                border-radius: 4px;
+                font-family: sans-serif;
+                font-weight: 600;
               }
 
               @font-face {
@@ -292,11 +303,20 @@ export default function RootLayout({
         style={{ backgroundColor: "#162D24" }}
         suppressHydrationWarning
       >
+        {/* WCAG 2.4.1 Skip Link for Keyboard/Screen Reader Navigation */}
+        <a href="#main-content" className="sr-only-focusable">
+          Skip to main content
+        </a>
+
         <SiteProvider>
           <SmoothScroll>
             <HeaderWrapper />
             <NavMenuWrapper />
-            <main className="site-root flex min-h-[100dvh] w-full flex-1 flex-col overflow-x-hidden">
+            <main
+              id="main-content"
+              tabIndex={-1}
+              className="site-root flex min-h-[100dvh] w-full flex-1 flex-col overflow-x-hidden outline-none"
+            >
               {children}
             </main>
           </SmoothScroll>

@@ -60,39 +60,39 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     category: "Family Sanctuary",
     description: "Designed for relaxation and play, this expansive backyard oasis balances child-friendly functionality with contemporary aesthetics.",
     images: [
-      "/dennetthero.webp",
+      "/687fd7481f63ca63b2f05763_IMG_4132.avif",
       "/placeholder.webp",
       "/placeholder.webp",
       "/placeholder.webp",
       "/placeholder.webp",
       "/placeholder.webp",
     ],
-    media: "/dennetthero.webp",
+    media: "/687fd7481f63ca63b2f05763_IMG_4132.avif",
     slides: [
       {
         title: "Consultation & Site Review",
         description: "Evaluating family lifestyle needs and site dimensions to layout an inviting, safe, and functional backyard pool environment.",
-        image: "/placeholder.webp"
+        image: "/p2.webp"
       },
       {
         title: "Design & Planning",
         description: "Balancing shallow play steps, swim zones, and surrounding alfresco entertaining decks into a single master layout.",
-        image:"/placeholder1.jpg"
+        image:"/p3.webp"
       },
       {
         title: "Approvals & Preparation",
         description: "Careful soil removal and soil stabilization tailored specifically for coastal terrain and deep foundation requirements.",
-        image: "/placeholder2.jpg"
+        image: "/p4.webp"
       },
       {
         title: "Construction & Installation",
         description: "Precision steel fixing and high-density concrete spraying form the robust foundation built for decades of family fun.",
-        image: "/placeholder.webp"
+        image: "/p5.avif"
       },
       {
         title: "Finishing & Installation",
         description: "Finishing touches including timber decking, perimeter fencing, energy-efficient heat pumps, and water balance testing.",
-        image:"/placeholder1.jpg"
+        image:"/p6.avif"
       }
     ]
   },
@@ -101,7 +101,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     category: "Architectural Plunge",
     description: "Maximising urban space, this compact plunge pool features high-end custom tilework and space-efficient engineering.",
     images: [
-      "/murray.webp",
+      "/hero-murray.webp",
       "/placeholder.webp",
       "/placeholder.webp",
       "/placeholder.webp",
@@ -112,27 +112,27 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       {
         title: "Consultation & Site Review",
         description: "Assessing tight urban access constraints, boundary easements, and adjacent structures for precise micro-plunge installation.",
-        image: "/placeholder1.jpg"
+        image: "/p7.webp"
       },
       {
         title: "Design & Planning",
         description: "Optimising every millimeter of the inner courtyard to incorporate swim jets, bench seating, and minimalist aesthetics.",
-        image: "/placeholder.webp"
+        image: "/p8.webp"
       },
       {
         title: "Approvals & Preparation",
         description: "Utilising compact machinery and custom rigging techniques to negotiate zero-lot-line urban property boundaries.",
-        image: "/placeholder2.jpg"
+        image: "/p9.webp"
       },
       {
         title: "Construction & Installation",
         description: "Engineered shotcrete shell pour creating a dense, watertight structure optimized for intimate urban spaces.",
-        image: "/placeholder.webp"
+        image: "/p11.jpg"
       },
       {
         title: "Finishing & Installation",
         description: "Hand-laid mosaic tiles, warm accent LED lighting, and discreet hidden equipment equipment rooms finalize the build.",
-        image: "/placeholder1.jpg"
+        image: "/p10.webp"
       }
     ]
   },
@@ -152,27 +152,27 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       {
         title: "Consultation & Site Review",
         description: "Analysing natural slope grade, sun orientation, and existing flora to blend the pool organically with the landscape.",
-        image: "/placeholder1.jpg"
+        image: "/p14.webp"
       },
       {
         title: "Design & Planning",
         description: "Designing infinity edges and natural stone coping that transition smoothly into the surrounding garden scenery.",
-        image: "placeholder2.jpg"
+        image: "p15.webp"
       },
       {
         title: "Approvals & Preparation",
         description: "Terraced excavation and custom retaining walls engineered to handle sloping ground conditions and soil pressures.",
-        image: "/placeholder.webp"
+        image: "/p13.webp"
       },
       {
         title: "Construction & Installation",
         description: "Heavy-duty concrete spray application forming elevated beam edges and sunken lounge seating areas.",
-        image: "/placeholder1.jpg"
+        image: "/p16.webp"
       },
       {
         title: "Finishing & Installation",
         description: "Installing organic bluestone paving, mineral salt filtration systems, and lush perimeter planting.",
-        image: "/placeholder.webp"
+        image: "/p17.webp"
       }
     ]
   },

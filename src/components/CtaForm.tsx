@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useId } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
@@ -70,12 +70,12 @@ export default function CtaForm({
     }
 
     if (!postCode) {
-      errors[getName("postCode")] = "post code is required.";
+      errors[getName("postCode")] = "Post code is required.";
     } else if (!AU_POSTCODE_REGEX.test(postCode)) {
       errors[getName("postCode")] = "Please enter a valid 4-digit post code.";
     }
 
-    if (!budgetType) errors[getName("budgetType")] = "Budget type is required.";
+    if (!budgetType) errors[getName("budgetType")] = "Project type is required.";
     if (!budgetRange) errors[getName("budgetRange")] = "Budget range is required.";
     if (!contractMethod) errors[getName("contractMethod")] = "Contract method is required.";
 
@@ -119,9 +119,17 @@ export default function CtaForm({
     }
   };
 
+  const errorCount = Object.keys(fieldErrors).length;
+
   return (
     <form onSubmit={handleSubmit} className="w-full h-auto" noValidate>
-      {/* Honeypot Field */}
+      <div role="status" aria-live="assertive" className="sr-only">
+        {errorCount > 0 &&
+          `Form submission failed. ${errorCount} field${
+            errorCount > 1 ? "s contain" : " contains"
+          } errors. Please review and complete the required fields.`}
+      </div>
+
       <div style={{ display: "none" }} aria-hidden="true">
         <input
           type="text"
@@ -173,8 +181,8 @@ export default function CtaForm({
         <div className="grid grid-cols-1 md:grid md:grid-cols-2 md:gap-x-[72px] gap-y-4">
           <CtaSelect
             key={`bt_${resetKey}`}
-            placeholder="Budget Type *"
-            options={["Residential", "Commercial", "Mixed Use"]}
+            placeholder="Project Type *"
+            options={["New Concrete Pool", "Pool + Landscaping", "Renovation / Refurbishment"]}
             name={getName("budgetType")}
             isMobile={isMobile}
             error={fieldErrors[getName("budgetType")]}
@@ -182,7 +190,7 @@ export default function CtaForm({
           <CtaSelect
             key={`br_${resetKey}`}
             placeholder="Budget Range *"
-            options={["$10k – $30k", "$30k – $75k", "$75k – $150k", "$150k+"]}
+            options={["$150k – $250k", "$250k – $400k", "$400k+"]}
             name={getName("budgetRange")}
             isMobile={isMobile}
             error={fieldErrors[getName("budgetRange")]}
@@ -216,6 +224,7 @@ export default function CtaForm({
         {globalError && (
           <div
             role="alert"
+            aria-live="assertive"
             style={{
               marginTop: 12,
               padding: "10px 14px",
@@ -241,7 +250,7 @@ function SubmitButton({ loading }: { loading: boolean }) {
     <button
       type="submit"
       disabled={loading}
-      className="btn-underline cursor-pointer font-body !pb-2 text-[16px]"
+      className="btn-underline cursor-pointer font-body !pb-2 text-[16px] focus-visible:outline-2 focus-visible:outline-[#F4EEDF] focus-visible:outline-offset-4"
     >
       {loading ? "Submitting..." : "Submit Now"}
     </button>
@@ -261,6 +270,7 @@ function CtaInput({
   isMobile?: boolean;
   error?: string;
 }) {
+  const errorId = useId();
   const borderOpacity = isMobile ? "1" : "0.35";
   const defaultBorder = `1px solid ${
     error ? "#feb2b2" : `rgba(244, 238, 223, ${borderOpacity})`
@@ -289,7 +299,8 @@ function CtaInput({
         name={name}
         placeholder={placeholder}
         aria-invalid={!!error}
-        className={isMobile ? "cta-input-field-mobile" : "cta-input-field"}
+        aria-describedby={error ? errorId : undefined}
+        className={`${isMobile ? "cta-input-field-mobile" : "cta-input-field"} focus-visible:outline-2 focus-visible:outline-[#F4EEDF] focus-visible:outline-offset-2`}
         style={{
           background: "transparent",
           border: "none",
@@ -297,7 +308,6 @@ function CtaInput({
           color: "#F4EEDF",
           fontSize: 16,
           padding: "10px 10px 10px 0",
-          outline: "none",
           width: "100%",
           fontFamily: "inherit",
           letterSpacing: "0.02em",
@@ -316,6 +326,9 @@ function CtaInput({
       />
       {error && (
         <span
+          id={errorId}
+          role="alert"
+          aria-live="polite"
           style={{
             color: "#feb2b2",
             fontSize: "12px",
@@ -346,6 +359,7 @@ function CtaSelect({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState("");
+  const [activeIndex, setActiveIndex] = useState(-1);
   const [mounted, setMounted] = useState(false);
   const [dropdownPos, setDropdownPos] = useState({
     top: 0,
@@ -353,7 +367,11 @@ function CtaSelect({
     width: 0,
     openUpward: false,
   });
+
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const comboboxRef = useRef<HTMLDivElement>(null);
+  const errorId = useId();
+  const listboxId = useId();
 
   useEffect(() => {
     setMounted(true);
@@ -407,18 +425,47 @@ function CtaSelect({
     };
   }, [isOpen, name]);
 
-  const handleToggle = (e: React.SyntheticEvent) => {
-    e.preventDefault();
+  const toggleDropdown = () => {
     if (!isOpen) {
       updatePosition();
+      const currentIdx = options.indexOf(selectedValue);
+      setActiveIndex(currentIdx >= 0 ? currentIdx : 0);
     }
     setIsOpen((prev) => !prev);
   };
 
+  const handleSelectOption = (option: string) => {
+    setSelectedValue(option);
+    setIsOpen(false);
+    if (comboboxRef.current) {
+      comboboxRef.current.focus();
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
-      handleToggle(e);
+      e.preventDefault();
+      if (!isOpen) {
+        toggleDropdown();
+      } else if (activeIndex >= 0 && activeIndex < options.length) {
+        handleSelectOption(options[activeIndex]);
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (!isOpen) {
+        toggleDropdown();
+      } else {
+        setActiveIndex((prev) => (prev < options.length - 1 ? prev + 1 : 0));
+      }
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!isOpen) {
+        toggleDropdown();
+      } else {
+        setActiveIndex((prev) => (prev > 0 ? prev - 1 : options.length - 1));
+      }
     } else if (e.key === "Escape") {
+      e.preventDefault();
       setIsOpen(false);
     }
   };
@@ -438,8 +485,8 @@ function CtaSelect({
 
     const portalContent = (
       <div
-        id={`portal_${name}`}
         role="listbox"
+        id={listboxId}
         style={{
           position: "absolute",
           top: `${dropdownPos.top}px`,
@@ -454,40 +501,38 @@ function CtaSelect({
           overscrollBehavior: "contain",
         }}
       >
-        {options.map((option) => (
-          <div
-            key={option}
-            role="option"
-            aria-selected={selectedValue === option}
-            onClick={(e) => {
-              e.preventDefault();
-              setSelectedValue(option);
-              setIsOpen(false);
-            }}
-            style={{
-              padding: "12px 16px",
-              color: selectedValue === option ? "#162D24" : "#F4EEDF",
-              background:
-                selectedValue === option ? "#F4EEDF" : "transparent",
-              fontSize: 16,
-              cursor: "pointer",
-              transition: "background 0.15s ease, color 0.15s ease",
-            }}
-            onMouseEnter={(e) => {
-              if (selectedValue !== option) {
-                e.currentTarget.style.background =
-                  "rgba(244, 238, 223, 0.08)";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (selectedValue !== option) {
-                e.currentTarget.style.background = "transparent";
-              }
-            }}
-          >
-            {option}
-          </div>
-        ))}
+        {options.map((option, idx) => {
+          const isSelected = selectedValue === option;
+          const isActive = activeIndex === idx;
+
+          return (
+            <div
+              key={option}
+              id={`option_${name}_${idx}`}
+              role="option"
+              aria-selected={isSelected}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleSelectOption(option);
+              }}
+              style={{
+                padding: "12px 16px",
+                color: isSelected ? "#162D24" : "#F4EEDF",
+                background: isSelected
+                  ? "#F4EEDF"
+                  : isActive
+                  ? "rgba(244, 238, 223, 0.15)"
+                  : "transparent",
+                fontSize: 16,
+                cursor: "pointer",
+                transition: "background 0.15s ease, color 0.15s ease",
+              }}
+              onMouseEnter={() => setActiveIndex(idx)}
+            >
+              {option}
+            </div>
+          );
+        })}
       </div>
     );
 
@@ -503,13 +548,20 @@ function CtaSelect({
       <input type="hidden" name={name} value={selectedValue} />
 
       <div
+        ref={comboboxRef}
         role="combobox"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
+        aria-controls={isOpen ? listboxId : undefined}
+        aria-activedescendant={
+          isOpen && activeIndex >= 0 ? `option_${name}_${activeIndex}` : undefined
+        }
         aria-invalid={!!error}
+        aria-describedby={error ? errorId : undefined}
         tabIndex={0}
-        onClick={handleToggle}
+        onClick={toggleDropdown}
         onKeyDown={handleKeyDown}
+        className="focus-visible:outline-2 focus-visible:outline-[#F4EEDF] focus-visible:outline-offset-2"
         style={{
           background: "transparent",
           borderBottom: defaultBorder,
@@ -523,7 +575,6 @@ function CtaSelect({
           justifyContent: "space-between",
           alignItems: "center",
           userSelect: "none",
-          outline: "none",
           transition: "border-color 0.25s",
         }}
       >
@@ -555,6 +606,9 @@ function CtaSelect({
 
       {error && (
         <span
+          id={errorId}
+          role="alert"
+          aria-live="polite"
           style={{
             color: "#feb2b2",
             fontSize: "12px",

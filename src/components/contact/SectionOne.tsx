@@ -51,7 +51,7 @@ export default function SectionOne() {
             {/* 1. Intro Paragraph Block */}
             <div className="w-full flex flex-col justify-start lg:justify-end text-left lg:text-right !pb-8 lg:!pb-16 h-auto lg:h-[calc(100vh-120px)]">
               <p className="text-[#F4EEDF]">
-                Have a question or want to discuss your project? Contact us by phone, email, or connect with us on Instagram. We’re always happy to help.
+                Have a question or want to discuss your project? Contact us by  email, or connect with us on Instagram. We’re always happy to help.
               </p>
             </div>
 

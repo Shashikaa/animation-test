@@ -1,6 +1,5 @@
 "use client";
 
-import LazyWaveCanvas from "./LazyWaveCanvas";
 import CtaForm from "./CtaForm";
 
 type SectionCTAProps = {
@@ -10,12 +9,18 @@ type SectionCTAProps = {
 export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
   return (
     <section className="about-section-cta section-cta min-h-[100dvh] h-auto w-full relative">
-      {/* Background Canvas & Fallback Image */}
+      {/* Static Background Images */}
       <div className="absolute inset-0 z-[1] pointer-events-none w-full h-full">
-        <div className="hidden lg:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
-          <LazyWaveCanvas imageSrc="/CTA.webp" preloaderDone={preloaderDone} />
+        {/* Desktop Background */}
+        <div className="hidden lg:block absolute inset-0 w-full h-full">
+          <img
+            src="/CTA.webp"
+            alt="Background"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
         </div>
 
+        {/* Mobile Background */}
         <div className="block lg:hidden w-full h-full">
           <img
             src="/CTAmob.webp"
@@ -54,11 +59,16 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <h2
               className="font-display"
-              
-              style={{ color: "#F4EEDF", fontWeight: 100, margin: 0 }}
+              style={{
+                color: "#F4EEDF",
+                fontWeight: 100,
+                margin: 0,
+              }}
             >
-Your Dream Pool Starts Here          </h2>
+              Your Dream Pool Starts Here
+            </h2>
           </div>
+
           <p
             className="font-body"
             style={{
@@ -95,14 +105,14 @@ Your Dream Pool Starts Here          </h2>
         }}
       >
         <div
-          className=" h2 font-display !max-w-[300px] md:!max-w-[430px]"
+          className="h2 font-display !max-w-[300px] md:!max-w-[430px]"
           style={{
             color: "#F4EEDF",
             margin: 0,
             marginBottom: 20,
           }}
         >
-       Your Dream Pool Starts Here
+          Your Dream Pool Starts Here
         </div>
 
         <p

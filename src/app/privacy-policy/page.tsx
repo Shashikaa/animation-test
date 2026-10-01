@@ -158,9 +158,9 @@ export default function PrivacyPolicyPage() {
               {/* Desktop Contact Details */}
               <div className="hidden lg:flex flex-col gap-4 font-body text-[#F4EEDF] text-sm sm:text-base">
                 <div>
-                  <h3 className="text-base font-bold tracking-wide text-[#F4EEDF]">
+                  <h2 className="!text-base font-bold tracking-wide text-[#F4EEDF]">
                     Legal & Privacy Inquiries
-                  </h3>
+                  </h2>
                 </div>
 
                 {/* Icons Row */}
@@ -209,9 +209,9 @@ export default function PrivacyPolicyPage() {
                       key={index}
                       className="flex flex-col gap-2 lg:gap-3 shrink-0"
                     >
-                      <h3 className="text-base sm:text-lg lg:text-xl font-body font-medium tracking-wide text-[#F4EEDF]">
+                      <h2 className=" !text-base sm:!text-lg lg:!text-xl font-body font-medium tracking-wide text-[#F4EEDF]">
                         {item.title}
-                      </h3>
+                      </h2>
                       <p className="font-body text-[#F4EEDF]/90 text-xs sm:text-sm leading-relaxed max-w-md">
                         {item.content}
                       </p>

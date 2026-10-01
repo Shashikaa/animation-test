@@ -69,10 +69,7 @@ export default function SectionNine() {
 
           {/* Content Paragraph Framework */}
           <p className="s9-para-desktop max-w-[460px] text-[#F4EEDF] text-right opacity-0 pointer-events-auto !leading-[1.2] !pr-4">
-            Don't hold back. As you swim along the sun-drenched water, delight in
-            the kaleidoscope of shifting reflections and backyard panoramas that
-            will leave you impressed. This is your private retreat — set your pace
-            and enjoy it at your desire.
+Unwind in a space designed around your lifestyle. From morning laps in clear, sunlit waters to quiet evenings by the poolside, every detail is crafted to offer an effortless escape at home. Take your time, set your own rhythm, and enjoy resort-quality living in your own backyard.
           </p>
         </div>
       </div>
@@ -83,10 +80,7 @@ export default function SectionNine() {
           Ready to Dive In?
         </h2>
         <p className="s9-para-mobile text-[#F4EEDF] font-body text-right text-sm md:text-base leading-relaxed">
-          Don't hold back. As you swim along the sun-drenched water, delight in
-          the kaleidoscope of shifting reflections and backyard panoramas that
-          will leave you impressed. This is your private retreat — set your pace
-          and enjoy it at your desire.
+Unwind in a space designed around your lifestyle. From morning laps in clear, sunlit waters to quiet evenings by the poolside, every detail is crafted to offer an effortless escape at home. Take your time, set your own rhythm, and enjoy resort-quality living in your own backyard.
         </p>
       </div>
 

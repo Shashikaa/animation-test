@@ -150,7 +150,7 @@ export const SERVICES_DATA: Record<string, FullServiceData> = {
     slug: 'commercial-pool-construction',
     hero: {
       title: 'Commercial Pool Construction',
-      subtitle: 'Breathing New Life',
+      subtitle: 'Architectural commercial pool construction across Melbourne & Bayside. High-performance aquatic engineering, structural compliance, and bespoke luxury builds.',
       bgImageUrl: '/service2.webp',
       tabs: [
         {

@@ -1,14 +1,14 @@
 "use client";
 
-const PARTNERS = [
-  { name: "Socure",      logo: "/partners/logo1.svg" },
-  { name: "Cedar",       logo: "/partners/logo2.svg" },
-  { name: "Airtable",    logo: "/partners/logo3.svg" },
-  { name: "Culture Amp", logo: "/partners/logo4.svg" },
+/* Blocked section: Hide partners until authentic logos are available */
+// const PARTNERS = [
+//   { name: "Socure",     logo: "/partners/logo1.svg" },
+//   { name: "Cedar",      logo: "/partners/logo2.svg" },
+//   { name: "Airtable",   logo: "/partners/logo3.svg" },
+//   { name: "Culture Amp", logo: "/partners/logo4.svg" },
+// ];
 
-];
-
-const PARTNERS_LOOP = [...PARTNERS, ...PARTNERS];
+// const PARTNERS_LOOP = [...PARTNERS, ...PARTNERS];
 
 export default function SectionSeven() {
   return (
@@ -36,10 +36,10 @@ export default function SectionSeven() {
         }}
       />
 
-<div 
-  className="absolute inset-0 w-full h-full pointer-events-none bg-gradient-to-tl from-black/30 via-black/20 to-black/10"
-  aria-hidden="true"
-/>
+      <div 
+        className="absolute inset-0 w-full h-full pointer-events-none bg-gradient-to-tl from-black/30 via-black/20 to-black/10"
+        aria-hidden="true"
+      />
 
       {/* ── Desktop: Title + Card ── */}
       <div
@@ -68,7 +68,8 @@ export default function SectionSeven() {
         </div>
       </div>
 
-      {/* ── Desktop: Partners ── */}
+      {/* ── Desktop: Partners (Hidden for now) ── */}
+      {/* 
       <div className="hidden lg:flex absolute bottom-22 right-12 flex-col items-end gap-5 z-10">
         <p className="font-body text-[#F4EBE4] text-sm">Our Partners</p>
         <div
@@ -78,20 +79,21 @@ export default function SectionSeven() {
             WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
           }}
         >
-<div className="flex items-center gap-7 w-max animate-marquee">
-  {PARTNERS_LOOP.map((p, i) => (
-    <div key={i} className="flex flex-shrink-0 items-center justify-center">
-      <img 
-        src={p.logo} 
-        alt={p.name}
-        className="block w-auto h-auto object-contain"
-        style={{ filter: "brightness(0) invert(1)" }} 
-      />
-    </div>
-  ))}
-</div>
+          <div className="flex items-center gap-7 w-max animate-marquee">
+            {PARTNERS_LOOP.map((p, i) => (
+              <div key={i} className="flex flex-shrink-0 items-center justify-center">
+                <img 
+                  src={p.logo} 
+                  alt={p.name}
+                  className="block w-auto h-auto object-contain"
+                  style={{ filter: "brightness(0) invert(1)" }} 
+                />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </div> 
+      */}
 
       {/* ════════════════════
           MOBILE + TABLET LAYOUT
@@ -120,7 +122,8 @@ export default function SectionSeven() {
           </div>
         </div>
 
-        {/* Partners — bottom */}
+        {/* Partners — bottom (Hidden for now) */}
+        {/* 
         <div className="!flex !flex-col !items-end !gap-3 !px-6 ">
           <p className="!text-[#F4EBE4] !text-[16px] !m-0">Our Partners</p>
           <div
@@ -140,18 +143,10 @@ export default function SectionSeven() {
               ))}
             </div>
           </div>
-        </div>
+        </div> 
+        */}
       </div>
 
-      <style>{`
-        @keyframes marquee {
-          0%   { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-          animation: marquee 14s linear infinite;
-        }
-      `}</style>
     </section>
   );
 }
