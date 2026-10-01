@@ -175,7 +175,7 @@ export default function SectionTwo() {
           >
             <div className="w-full h-full relative overflow-hidden shadow-2xl">
               <img
-                src="/sliderimage2.webp"
+                src="/camberwell5.webp"
                 alt="Figma layout premium overview pool"
                 loading="eager"
                 fetchPriority="high"
@@ -212,7 +212,7 @@ export default function SectionTwo() {
 
         <div className="w-full aspect-[4/3] max-w-[340px] overflow-hidden !mt-[40px] transform-gpu pointer-events-none">
           <img
-            src="/placeholder.webp"
+            src="/toorak1.webp"
             alt="Architectural swimming details"
             loading="eager"
             decoding="async"

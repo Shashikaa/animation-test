@@ -32,7 +32,7 @@ export const SERVICES_DATA: Record<string, FullServiceData> = {
     hero: {
       title: 'Residential Pool Construction',
       subtitle: 'Tailored pools for relaxing, hosting, and elevated outdoor living.',
-      bgImageUrl: '/placeholder.webp',
+      bgImageUrl: '/menu.webp',
       tabs: [
         {
           label: 'From Vision to Reality',
@@ -66,8 +66,8 @@ export const SERVICES_DATA: Record<string, FullServiceData> = {
     sectionOne: {
       title: 'Design Build Details',
       paragraph: 'From the first design concept to the final finishing details, we manage every stage of your pool project with care, quality materials, and a clear process.',
-      bgImageUrl: '/placeholder2.jpg',
-      sideImageUrl: '/placeholder.webp',
+      bgImageUrl: '/toorak-top-view.webp',
+      sideImageUrl: '/toorak-view-front.webp',
       fourParagraphs: [
         'Custom Pool Design\nEvery pool is designed around your space, lifestyle, and vision for a truly tailored result.',
         'Expert Craftsmanship\nFrom excavation and plumbing to concreting and tiling, every stage is completed with precision and care.',
@@ -93,7 +93,7 @@ export const SERVICES_DATA: Record<string, FullServiceData> = {
     hero: {
       title: 'Pool Equipment & Installation',
       subtitle: 'From pumps and filters to heating systems and automation, we supply and install the latest pool equipment to keep your pool running smoothly.',
-      bgImageUrl: '/placeholder.webp',
+      bgImageUrl: '/service3.webp',
       tabs: [
         {
           label: 'Why Renovate Your Pool?',
@@ -125,7 +125,7 @@ export const SERVICES_DATA: Record<string, FullServiceData> = {
       title: 'Design Build Details',
       paragraph: 'From the first design concept to the final finishing details, we manage every stage of your pool project with care, quality materials, and a clear process.',
       bgImageUrl: '/placeholder.webp',
-      sideImageUrl: '/placeholder.webp',
+      sideImageUrl: '/camberwell-side.webp',
       fourParagraphs: [
         'Tailored Equipment Solutions\nWe assess your pool and recommend the right equipment for its size, usage, and performance needs.',
         'Modern & Efficient Systems\nFrom pumps and filters to heating and smart automation, we install technology designed for better efficiency and control.',
@@ -151,7 +151,7 @@ export const SERVICES_DATA: Record<string, FullServiceData> = {
     hero: {
       title: 'Commercial Pool Construction',
       subtitle: 'Breathing New Life',
-      bgImageUrl: '/placeholder.webp',
+      bgImageUrl: '/service2.webp',
       tabs: [
         {
           label: 'Why Choose Us ',
@@ -184,7 +184,7 @@ export const SERVICES_DATA: Record<string, FullServiceData> = {
       title: 'Design Build Details',
       paragraph: 'From the first design concept to the final finishing details, we manage every stage of your pool project with care, quality materials, and a clear process.',
       bgImageUrl: '/placeholder.webp',
-      sideImageUrl: '/placeholder.webp',
+      sideImageUrl: '/camberwell3.webp',
       fourParagraphs: [
         'Custom Design & Engineering\nEvery commercial pool is tailored to your facility, operational needs, and architectural vision.',
         'Safety & Compliance\nWe design and build to meet strict Australian Standards, safety requirements, and local regulations.',

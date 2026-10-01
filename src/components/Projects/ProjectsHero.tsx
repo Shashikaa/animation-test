@@ -11,8 +11,8 @@ export default function ProjectsHero({
   hideText = false,
   isMobile = false,
 }: ProjectsHeroProps) {
-  const desktopImg = "/placeholder.webp";
-  const mobileImg = "/placeholder.webp";
+  const desktopImg = "/camberwell1.webp";
+  const mobileImg = "/camberwell1.webp";
 
   const bgImage = isMobile ? mobileImg : desktopImg;
 

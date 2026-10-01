@@ -52,7 +52,7 @@ export default function SectionFive({ isActive = true }: SectionFiveProps) {
 <div 
   className="s5-bg absolute -top-[0%] left-0 w-full h-[200%] bg-cover bg-center will-change-transform"
   style={{
-    backgroundImage: `url('/placeholder.webp')`
+    backgroundImage: `url('/about-paralell.webp')`
   }}
 />        
         <div className="absolute inset-0 bg-black/40 pointer-events-none z-[1]" />

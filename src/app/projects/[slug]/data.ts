@@ -67,7 +67,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
       "/placeholder.webp",
       "/placeholder.webp",
     ],
-    media: "/kooyong/hero-video.mp4",
+    media: "/dennetthero.webp",
     slides: [
       {
         title: "Consultation & Site Review",
