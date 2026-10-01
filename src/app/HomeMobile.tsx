@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useLayoutEffect, useCallback, useState } from "react";
 import dynamic from "next/dynamic";
 import Hero from "../components/Home/Hero";
 import SectionTwo from "../components/Home/SectionTwo";
@@ -56,6 +56,7 @@ export default function HomeMobile() {
   const scopeRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const fixedFrameRef = useRef<HTMLDivElement>(null);
+  const ctaWrapRef = useRef<HTMLDivElement>(null);
 
   const heroPanelRef = useRef<HTMLDivElement>(null);
   const sec2Ref = useRef<HTMLDivElement>(null);
@@ -73,6 +74,8 @@ export default function HomeMobile() {
   const rafId = useRef<number | null>(null);
 
   const domCache = useRef<Record<string, HTMLElement | NodeListOf<HTMLElement> | null>>({});
+
+  const [metricsReady, setMetricsReady] = useState(false);
 
   const { smootherRef } = useSite();
   const { preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
@@ -110,8 +113,11 @@ export default function HomeMobile() {
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  useEffect(() => {
+  // Must be a layout effect declared BEFORE the metrics layout effect, so the
+  // split lines (.custom-line-inner) exist when updateMetrics caches them.
+  useLayoutEffect(() => {
     if (!shouldLoadRest) return;
+    executeInlineSplitting(".hero-left-initial h1");
     executeInlineSplitting(".hero-title");
     executeInlineSplitting(".hero-right-text");
     executeInlineSplitting(".hero-secondary-para");
@@ -144,6 +150,8 @@ export default function HomeMobile() {
     const totalTrackHeight = vh * 7.8 + appHeight + (HOLD_VH / 100) * vh;
 
     trackRef.current.style.height = `${totalTrackHeight}px`;
+    // Placeholder min-height is only needed before the real height is known
+    trackRef.current.style.minHeight = "0px";
 
     const rect = trackRef.current.getBoundingClientRect();
     const totalScrollable = Math.max(0, totalTrackHeight - vh);
@@ -163,7 +171,9 @@ export default function HomeMobile() {
         heroBg: scopeRef.current.querySelector(".hero-bg") as HTMLElement,
         progressFill: scopeRef.current.querySelector(".hero-progress-bar-fill") as HTMLElement,
         heroLeftInitial: scopeRef.current.querySelector(".hero-left-initial") as HTMLElement,
-        heroTitleInners: scopeRef.current.querySelectorAll<HTMLElement>(".hero-title .custom-line-inner"),
+        heroTitleInners: scopeRef.current.querySelectorAll<HTMLElement>(
+          ".hero-left-initial h1 .custom-line-inner, .hero-title .custom-line-inner"
+        ),
         heroRightWrap: scopeRef.current.querySelector(".hero-right-text-wrap") as HTMLElement,
         heroRightInners: scopeRef.current.querySelectorAll<HTMLElement>(".hero-right-text .custom-line-inner"),
         heroSecWrap: scopeRef.current.querySelector(".hero-secondary-text-wrap") as HTMLElement,
@@ -196,10 +206,12 @@ export default function HomeMobile() {
     updateMetrics();
   }, [updateMetrics]);
 
-  useEffect(() => {
+  // Runs before paint so the track has its real height on the first visible frame
+  useLayoutEffect(() => {
     if (!shouldLoadRest) return;
 
     updateMetrics();
+    setMetricsReady(true);
 
     window.addEventListener("resize", handleResize, { passive: true });
     window.addEventListener("orientationchange", updateMetrics, { passive: true });
@@ -258,14 +270,19 @@ export default function HomeMobile() {
       if (progressFill) progressFill.style.transform = `scaleY(${heroProg})`;
 
       const titleFade = clamp(heroProg / 0.4);
+
+      if (heroLeftInitial) {
+        heroLeftInitial.style.opacity = `${(1 - titleFade).toFixed(2)}`;
+        heroLeftInitial.style.transform = `translate3d(0, ${-20 * titleFade}px, 0)`;
+        heroLeftInitial.style.visibility = heroProg >= 0.4 ? "hidden" : "visible";
+      }
+
       if (heroTitleInners) {
         heroTitleInners.forEach((el) => {
           el.style.opacity = `${(1 - titleFade).toFixed(2)}`;
           el.style.transform = `translate3d(0, ${-20 * titleFade}px, 0)`;
         });
       }
-
-      if (heroLeftInitial) heroLeftInitial.style.visibility = heroProg >= 0.4 ? "hidden" : "visible";
 
       const rightIn = clamp((heroProg - 0.2) / 0.4);
       const rightOut = clamp((heroProg - 0.6) / 0.4);
@@ -296,7 +313,11 @@ export default function HomeMobile() {
 
       // ── Step 1 -> 2: SECTION TWO SLIDES UP ──
       const s2Prog = clamp(stepProgress - 1.0);
-      if (sec2Ref.current) sec2Ref.current.style.transform = `translate3d(0, ${(1 - s2Prog) * 100}%, 0)`;
+      if (sec2Ref.current) {
+        sec2Ref.current.style.transform = `translate3d(0, ${(1 - s2Prog) * 100}%, 0)`;
+        sec2Ref.current.style.opacity = `${s2Prog > 0 ? 1 : 0}`;
+        sec2Ref.current.style.visibility = s2Prog > 0 ? "visible" : "hidden";
+      }
       if (heroPanelRef.current && s2Prog > 0) heroPanelRef.current.style.transform = `translate3d(0, ${-s2Prog * 15}%, 0)`;
 
       // ── Step 2 -> 4.0: SECTION TWO INNER ANIMATIONS & BACKGROUND CLIPS ──
@@ -487,6 +508,12 @@ export default function HomeMobile() {
       // Animation completes after animScrollable; the remaining HOLD_VH is a hold
       // so the smoothed animation catches up before the pin releases.
       targetProgress.current = clamp(relativeScroll / animScrollable);
+
+      // Keep CTA + Footer hidden until the user is near the end of the pinned track
+      if (ctaWrapRef.current) {
+        const nearEnd = relativeScroll > totalScrollable - scrollMetricsRef.current.vh * 1.5;
+        ctaWrapRef.current.style.visibility = nearEnd ? "visible" : "hidden";
+      }
     };
 
     const lenis = smootherRef?.current;
@@ -508,13 +535,17 @@ export default function HomeMobile() {
         window.removeEventListener("scroll", handleScroll);
       }
     };
-  }, [shouldLoadRest, smootherRef]);
+    // metricsReady is a dependency so handleScroll() re-runs once the CTA wrapper exists
+  }, [shouldLoadRest, smootherRef, metricsReady]);
 
   const isReady = preloaderDone;
 
   return (
     <div ref={scopeRef} className="relative w-full bg-black text-white">
       <style jsx global>{`
+        .about-stack-layer {
+          visibility: hidden;
+        }
         .hero-right-text:not([data-split-complete="true"]),
         .hero-secondary-para:not([data-split-complete="true"]),
         .hero-right-text-wrap,
@@ -530,7 +561,11 @@ export default function HomeMobile() {
       `}</style>
 
       {/* VIRTUAL PINNED TRACK: animation length + short hold at the end */}
-      <div ref={trackRef} className="home-track-container relative w-full">
+      <div
+        ref={trackRef}
+        className="home-track-container relative w-full"
+        style={{ minHeight: "1000svh" }}
+      >
         <div
           ref={fixedFrameRef}
           className="fixed top-0 left-0 w-full overflow-hidden bg-black z-10 h-svh"
@@ -549,7 +584,7 @@ export default function HomeMobile() {
               <div
                 ref={sec2Ref}
                 className="section-2 about-stack-layer absolute inset-0 w-full h-svh z-20 transform-gpu will-change-transform backface-hidden"
-                style={{ transform: "translate3d(0, 100%, 0)" }}
+                style={{ transform: "translate3d(0, 100%, 0)", opacity: 0, visibility: "hidden" }}
               >
                 <SectionTwo />
               </div>
@@ -558,7 +593,7 @@ export default function HomeMobile() {
               <div
                 ref={sec8Ref}
                 className="section-8 about-stack-layer absolute inset-0 w-full h-svh z-30 transform-gpu will-change-transform backface-hidden"
-                style={{ transform: "translate3d(0, 100%, 0)" }}
+                style={{ transform: "translate3d(0, 100%, 0)", opacity: 0, visibility: "hidden" }}
               >
                 <SectionEight />
               </div>
@@ -604,9 +639,13 @@ export default function HomeMobile() {
       </div>
 
       {/* NATURAL DOCUMENT FLOW FOR CTA AND FOOTER */}
-      {shouldLoadRest && (
-        <div className="relative z-20 w-full bg-black">
-          <SectionCTA preloaderDone={isReady} />
+      {shouldLoadRest && metricsReady && (
+        <div
+          ref={ctaWrapRef}
+          className="relative z-20 w-full bg-black"
+          style={{ visibility: "hidden" }}
+        >
+          <SectionCTA />
           <Footer />
         </div>
       )}
