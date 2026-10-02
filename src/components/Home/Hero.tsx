@@ -50,9 +50,9 @@ export default function Hero({ onReady }: HeroProps) {
         <div className="max-w-xl lg:max-w-4xl flex flex-col justify-end overflow-visible relative min-h-[120px] w-full lg:w-auto">
           
           {/* 1. FRAME 1: Top-Left Paragraph & H1 (Below Header on Mobile) */}
-          <div className="hero-left-initial max-lg:fixed max-lg:top-[15vh] max-lg:left-6 max-lg:right-6 block h-fit overflow-visible relative z-30 max-w-[350px] sm:max-w-[420px] lg:!max-w-[520px]">
+          <div className="hero-left-initial max-lg:fixed max-lg:top-[15vh] max-lg:left-6 max-lg:right-6 block h-fit overflow-visible relative z-30 max-w-[350px] sm:max-w-[420px] lg:!max-w-[640px]">
             {/* Visually Visible H1 for SEO & Accessibility */}
-            <h1 className="font-display text-[#F4EEDF] !font-[100] text-left !text-3xl  lg:!text-[48px] font-normal leading-tight m-0 mb-3 p-0">
+            <h1 className="font-display text-[#F4EEDF] !font-[100] text-left !text-[42px]  lg:!text-[60px] font-normal leading-tight m-0 mb-3 p-0">
               Custom Concrete Pools, Built for Melbourne
             </h1>
 
