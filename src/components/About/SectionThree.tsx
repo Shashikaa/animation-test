@@ -18,8 +18,7 @@ export default function SectionThree() {
           alt=""
           aria-hidden
           className="s3-bg w-full h-full object-cover will-change-transform"
-          style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
-        />
+          style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }} loading="lazy" />
       </div>
 
       {/* ── MOBILE: Static Background Image ── */}
@@ -29,8 +28,7 @@ export default function SectionThree() {
           alt=""
           aria-hidden
           className="w-full h-full object-cover will-change-transform"
-          style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }}
-        />
+          style={{ transform: "translateZ(0)", backfaceVisibility: "hidden" }} loading="lazy" />
       </div>
 
       {/* ── Content Layer ── */}

@@ -1,46 +1,30 @@
-"use client";
-
-import { useEffect, useState, use } from "react";
-import { notFound } from 'next/navigation';
+import { notFound } from "next/navigation";
+import ResponsiveTree from "../../../components/ResponsiveTree";
 import SubServicesDesktop from "./SubServicesDesktop";
 import SubServicesMobile from "./SubServicesMobile";
-import { SERVICES_DATA } from './data';
+import { SERVICES_DATA } from "./data";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export default function SubServicePage({ params }: PageProps) {
-  const { slug } = use(params); 
+/**
+ * Server renders the desktop tree so crawlers get real content for each
+ * project/service page. ResponsiveTree swaps to mobile after mount at <=1024px.
+ */
+export default async function SingleServicePage({ params }: PageProps) {
+  const { slug } = await params;
   const pageData = SERVICES_DATA[slug];
-  
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
-  // Instantly trigger a 404 page if someone types an invalid slug
+  // Unknown slug is a 404, not a client-side blank.
   if (!pageData) {
     notFound();
   }
 
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 1025);
-    check();
-    
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-
-  // Prevent flash or hydration mismatch while window width resolves
-  if (isMobile === null) {
-    return null; // Avoid rendering an artificial 100vh spacer div
-  }
-
   return (
-    <>
-      {isMobile ? (
-        <SubServicesMobile pageData={pageData} />
-      ) : (
-        <SubServicesDesktop pageData={pageData} />
-      )}
-    </>
+    <ResponsiveTree
+      desktop={<SubServicesDesktop pageData={pageData} />}
+      mobile={<SubServicesMobile pageData={pageData} />}
+    />
   );
 }

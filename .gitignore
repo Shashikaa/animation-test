@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Media removed from public/ during the perf pass; kept locally for reference.
+_media-archive/

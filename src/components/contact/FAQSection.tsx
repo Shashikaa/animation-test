@@ -81,6 +81,7 @@ export default function FAQSection({ onLayoutChange }: FAQSectionProps) {
           alt="FAQ Background Thumbnail"
           className="w-full h-full object-cover"
           onLoad={() => onLayoutChange?.()}
+          loading="lazy"
         />
       </div>
 

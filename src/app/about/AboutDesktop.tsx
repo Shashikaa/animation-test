@@ -6,6 +6,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal";
+import { prefersReducedMotion, settleReducedMotion } from "../../lib/reducedMotion";
 
 const SectionOne = dynamic(() => import("@/src/components/About/SectionOne"));
 const SectionTwo = dynamic(() => import("@/src/components/About/SectionTwo"));
@@ -263,6 +264,14 @@ export default function AboutDesktop() {
 
     const scope = scopeRef.current;
     let isRunning = true;
+    // Reduced motion: skip the pinned scroll-scrub entirely and leave content
+    // settled and visible. The CSS media query alone cannot stop this rAF loop.
+    if (prefersReducedMotion()) {
+      isRunning = false;
+      settleReducedMotion(scope);
+      return;
+    }
+
     let lastTime = performance.now();
 
     const EASE_FACTOR = 0.15;
@@ -434,7 +443,7 @@ export default function AboutDesktop() {
     <div ref={scopeRef} className="w-full bg-[#162D24]">
       <div
         ref={trackRef}
-        className="about-track-container relative w-full"
+        className="about-track-container relative w-full gp-pin-track"
         style={{ height: `${TRACK_HEIGHT_VH}vh` }}
       >
         <div

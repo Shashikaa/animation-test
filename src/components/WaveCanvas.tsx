@@ -221,7 +221,7 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
         {imageSrc && (
           <img
             src={imageSrc}
-            alt="Background"
+            alt="" aria-hidden="true"
             className="absolute inset-0 w-full h-full object-cover pointer-events-none"
             onLoad={() => onReady?.()}
           />
@@ -235,7 +235,7 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
       {!isMobileOrTablet && (
         <video
           ref={videoRef}
-          src="/videos/Pool-Water-Reflect.webm"
+          src="/videos/Pool-Water-Reflect-opt.webm"
           loop
           muted
           playsInline
@@ -248,7 +248,7 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
       {imageSrc && (
         <img
           src={imageSrc}
-          alt="Background"
+          alt="" aria-hidden="true"
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
           style={{ opacity: 1 }}
           onLoad={() => {

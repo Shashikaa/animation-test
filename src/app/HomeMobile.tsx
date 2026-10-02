@@ -7,6 +7,7 @@ import SectionTwo from "../components/Home/SectionTwo";
 import Footer from "../components/Footer";
 import { useSite } from "./context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
+import { prefersReducedMotion, settleReducedMotion } from "../lib/reducedMotion";
 
 const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { ssr: false });
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
@@ -146,7 +147,14 @@ export default function HomeMobile() {
 
     const appHeight = appSecRef.current?.offsetHeight || vh;
 
-    // No footer in the pinned track anymore; add a hold at the end
+    // No footer in the pinned track anymore; add a hold at the end.
+    // Under reduced motion the scrub loop is disabled, so reserving ~7.8
+    // viewports of scroll distance would be empty scrolling. Collapse it to
+    // natural flow instead.
+    // Track height is left as authored under reduced motion: the pinned frame
+    // positions its children absolutely, so collapsing the track to natural
+    // height collapses the frame too and takes the content with it. Only the
+    // animation is removed, not the layout.
     const totalTrackHeight = vh * 7.8 + appHeight + (HOLD_VH / 100) * vh;
 
     trackRef.current.style.height = `${totalTrackHeight}px`;
@@ -230,6 +238,15 @@ export default function HomeMobile() {
     const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
     const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
+
+    // Reduced motion: skip the pinned scroll-scrub entirely and leave content
+    // in its settled, visible state. Without this the rAF loop below would keep
+    // writing transforms and the CSS media query would have no effect on it.
+    if (prefersReducedMotion()) {
+      isRunning = false;
+      settleReducedMotion(scopeRef.current);
+      return;
+    }
 
     let lastTime = performance.now();
 

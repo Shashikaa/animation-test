@@ -124,8 +124,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
             <img
               src={activeSlide.img}
               alt={activeSlide.label}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
+              className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
             {/* Desktop Gradient */}
             <div
               className="hidden md:block absolute inset-0 z-[2] pointer-events-none"

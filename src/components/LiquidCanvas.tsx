@@ -252,7 +252,7 @@ export default function LiquidCanvas({ imageSrc, onReady }: LiquidCanvasProps) {
       {imageSrc && (
         <img
           src={imageSrc}
-          alt="Background"
+          alt="" aria-hidden="true"
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
         />
       )}

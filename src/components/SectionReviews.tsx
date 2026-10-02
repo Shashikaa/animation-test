@@ -67,8 +67,7 @@ export default function SectionReviews() {
         <img
           src="/section-reviews-bg.webp" 
           alt="Grand Pools background scenery"
-          className="w-full h-full object-cover reviews-bg-img"
-        />
+          className="w-full h-full object-cover reviews-bg-img" loading="lazy" />
       </div>
 
       {/* CHANGED: Added px-4 (mobile side padding) and gap-4 md:gap-8 to create safe breathing room around the arrows */}
@@ -96,8 +95,7 @@ export default function SectionReviews() {
               <img
                 src={REVIEWS_DATA[activeIndex].avatar}
                 alt={REVIEWS_DATA[activeIndex].author}
-                className="w-12 h-12 rounded-full object-cover"
-              />
+                className="w-12 h-12 rounded-full object-cover" loading="lazy" />
               <span className="font-display text-[#F4EEDF] text-3xl">
                 {REVIEWS_DATA[activeIndex].author}
               </span>
@@ -112,8 +110,7 @@ export default function SectionReviews() {
                 <img
                   src={REVIEWS_DATA[activeIndex].avatar}
                   alt={REVIEWS_DATA[activeIndex].author}
-                  className="w-9 h-9 rounded-full object-cover"
-                />
+                  className="w-9 h-9 rounded-full object-cover" loading="lazy" />
                 <span className="font-display text-[#F4EEDF] text-2xl md:text-3xl">
                   {REVIEWS_DATA[activeIndex].author}
                 </span>

@@ -87,8 +87,7 @@ export default function SectionEight({ preloaderDone }: SectionEightProps) {
               objectFit: "cover",
               opacity: assetsLoaded ? 1 : 0,
               transition: "opacity 0.3s"
-            }}
-          />
+            }} loading="lazy" />
         </div>
 
         <div className="!absolute !top-0 !left-0 !z-20 !flex !flex-col !items-start !gap-7 !pt-[12vh] !px-5 pointer-events-none">
@@ -141,8 +140,7 @@ export default function SectionEight({ preloaderDone }: SectionEightProps) {
                 width: "100%", height: "100%", objectFit: "contain", 
                 objectPosition: "bottom left", mixBlendMode: "screen",
                 display: "block", transform: "scaleX(-1)", zIndex: 100,
-              }}
-            />
+              }} loading="lazy" />
           </div>
 
           <div className="absolute left-1/2 top-1/2 -translate-y-1/2 flex flex-col gap-5 text-left pointer-events-none">

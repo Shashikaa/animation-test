@@ -10,6 +10,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import { useTextReveal, restoreTextReveal } from "@/src/app/utils/useTextReveal";
+import { prefersReducedMotion, settleReducedMotion } from "../../lib/reducedMotion";
 
 const TOTAL_SCROLL_STEPS = 9;
 
@@ -210,6 +211,14 @@ export default function ContactDesktop() {
 
     const scope = scopeRef.current;
     let isRunning = true;
+    // Reduced motion: skip the pinned scroll-scrub entirely and leave content
+    // settled and visible. The CSS media query alone cannot stop this rAF loop.
+    if (prefersReducedMotion()) {
+      isRunning = false;
+      settleReducedMotion(scope);
+      return;
+    }
+
     let lastTime = performance.now();
 
     const EASE_FACTOR = 0.15;
@@ -358,7 +367,7 @@ export default function ContactDesktop() {
     <div ref={scopeRef} className="w-full bg-black">
       <div
         ref={trackRef}
-        className="contact-track-container relative w-full"
+        className="contact-track-container relative w-full gp-pin-track"
         style={{ height: `${TOTAL_SCROLL_STEPS * 100}vh` }}
       >
         <div

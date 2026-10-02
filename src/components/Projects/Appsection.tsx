@@ -39,8 +39,7 @@ export default function Appsection() {
             <img 
               src="/app.png" 
               alt="Pool Care Mobile App Mockup" 
-              className="w-full h-auto max-h-[55vh] md:max-h-[50vh] lg:!max-h-[60vh] block object-contain !mb-12 !mt-12"
-            />
+              className="w-full h-auto max-h-[55vh] md:max-h-[50vh] lg:!max-h-[60vh] block object-contain !mb-12 !mt-12" loading="lazy" />
           </div>
         </div>
 

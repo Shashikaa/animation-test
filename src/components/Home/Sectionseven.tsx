@@ -31,7 +31,13 @@ export default function SectionSeven() {
           backgroundImage: "url('/secninemob.jpg')",
           top: 0, left: 0, width: "100%", height: "100%",
           transform: "scale(1.35)",
+          // Scale from the centre so the zoom spills equally on both sides.
+          // With the default `50% 50%` on a left-anchored element the overflow
+          // is one-sided, which pushed the element past the right viewport edge.
           transformOrigin: "center center",
+          // Safety net: the scale is a deliberate effect, so the section must
+          // clip it rather than let it widen the document.
+          clipPath: "inset(0)",
           willChange: "transform",
         }}
       />
@@ -86,8 +92,7 @@ export default function SectionSeven() {
                   src={p.logo} 
                   alt={p.name}
                   className="block w-auto h-auto object-contain"
-                  style={{ filter: "brightness(0) invert(1)" }} 
-                />
+                  style={{ filter: "brightness(0) invert(1)" }} loading="lazy" />
               </div>
             ))}
           </div>
@@ -138,7 +143,7 @@ export default function SectionSeven() {
                 <div key={i} className="!flex-shrink-0">
                   <img src={p.logo} alt={p.name}
                     className="!block !w-[84px] !h-[26px] !object-contain"
-                    style={{ filter: "brightness(0) invert(1)" }} />
+                    style={{ filter: "brightness(0) invert(1)" }} loading="lazy" />
                 </div>
               ))}
             </div>

@@ -40,7 +40,7 @@ export default function LazyWaveCanvas({ imageSrc, preloaderDone }: LazyWaveCanv
       <div className="relative w-full h-full">
         <img
           src={imageSrc}
-          alt="Background"
+          alt="" aria-hidden="true"
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
         />
       </div>
@@ -54,7 +54,7 @@ export default function LazyWaveCanvas({ imageSrc, preloaderDone }: LazyWaveCanv
       ) : (
         <img
           src={imageSrc}
-          alt="Background"
+          alt="" aria-hidden="true"
           className="absolute inset-0 w-full h-full object-cover pointer-events-none"
         />
       )}

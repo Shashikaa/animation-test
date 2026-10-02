@@ -8,8 +8,8 @@ type SectionCTAProps = {
 };
 
 export default function SectionCTA({
-  imageSrcDesktop = "/CTAFORM.png",
-  imageSrcMobile = "/CTAFORM.png",
+  imageSrcDesktop = "/CTAFORM.webp",
+  imageSrcMobile = "/CTAFORM.webp",
 }: SectionCTAProps) {
   return (
     <section
@@ -24,17 +24,15 @@ export default function SectionCTA({
         <div className="hidden lg:block absolute inset-0 z-[1] pointer-events-auto w-full h-full">
           <img
             src={imageSrcDesktop}
-            alt="Background"
-            className="w-full h-full object-cover"
-          />
+            alt="" aria-hidden="true"
+            className="w-full h-full object-cover" loading="lazy" />
         </div>
 
         <div className="block lg:hidden w-full h-full">
           <img
             src={imageSrcMobile}
-            alt="Background"
-            className="w-full h-full object-cover"
-          />
+            alt="" aria-hidden="true"
+            className="w-full h-full object-cover" loading="lazy" />
         </div>
       </div>
 

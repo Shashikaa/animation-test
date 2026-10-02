@@ -28,8 +28,7 @@ export default function SectionTen() {
           src="/pool-dark-bg.webp" 
           alt="Pool background" 
           draggable={false}
-          className="s10-bg-img w-full h-full object-cover"
-        />
+          className="s10-bg-img w-full h-full object-cover" loading="lazy" />
       </div>
 
       {/* ── FIRST STAGE ELEMENTS ── */}

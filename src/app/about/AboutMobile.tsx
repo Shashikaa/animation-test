@@ -5,6 +5,7 @@ import Hero from "@/src/components/About/Hero";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
+import { prefersReducedMotion, settleReducedMotion } from "../../lib/reducedMotion";
 
 const SectionOne = dynamic(() => import("@/src/components/About/SectionOne"));
 const SectionTwo = dynamic(() => import("@/src/components/About/SectionTwo"));
@@ -162,6 +163,14 @@ export default function AboutMobile() {
     const s5Bg = scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
 
     let isRunning = true;
+    // Reduced motion: skip the pinned scroll-scrub entirely and leave content
+    // settled and visible. The CSS media query alone cannot stop this rAF loop.
+    if (prefersReducedMotion()) {
+      isRunning = false;
+      settleReducedMotion(scopeRef.current);
+      return;
+    }
+
 
     // Easing & speed cap controls:
     const EASE_FACTOR = 0.06;
@@ -321,7 +330,7 @@ export default function AboutMobile() {
     <div ref={scopeRef} className="w-full">
       <div
         ref={trackRef}
-        className="about-track-container relative w-full"
+        className="about-track-container relative w-full gp-pin-track"
         style={{ height: `${INITIAL_TRACK_HEIGHT_VH}vh` }}
       >
         <div
