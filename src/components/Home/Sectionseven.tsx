@@ -1,14 +1,14 @@
 "use client";
 
-/* Blocked section: Hide partners until authentic logos are available */
-// const PARTNERS = [
-//   { name: "Socure",     logo: "/partners/logo1.svg" },
-//   { name: "Cedar",      logo: "/partners/logo2.svg" },
-//   { name: "Airtable",   logo: "/partners/logo3.svg" },
-//   { name: "Culture Amp", logo: "/partners/logo4.svg" },
-// ];
+// 1. Make sure these are UNCOMMENTED:
+const PARTNERS = [
+  { name: "Socure",     logo: "/partners/logo1.svg" },
+  { name: "Cedar",      logo: "/partners/logo2.svg" },
+  { name: "Airtable",   logo: "/partners/logo3.svg" },
+  { name: "Culture Amp", logo: "/partners/logo4.svg" },
+];
 
-// const PARTNERS_LOOP = [...PARTNERS, ...PARTNERS];
+const PARTNERS_LOOP = [...PARTNERS, ...PARTNERS];
 
 export default function SectionSeven() {
   return (
@@ -31,12 +31,7 @@ export default function SectionSeven() {
           backgroundImage: "url('/secninemob.jpg')",
           top: 0, left: 0, width: "100%", height: "100%",
           transform: "scale(1.35)",
-          // Scale from the centre so the zoom spills equally on both sides.
-          // With the default `50% 50%` on a left-anchored element the overflow
-          // is one-sided, which pushed the element past the right viewport edge.
           transformOrigin: "center center",
-          // Safety net: the scale is a deliberate effect, so the section must
-          // clip it rather than let it widen the document.
           clipPath: "inset(0)",
           willChange: "transform",
         }}
@@ -59,9 +54,7 @@ export default function SectionSeven() {
           Meet the Experts
         </h2>
 
-        <div
-          className="flex flex-col gap-0.5 !px-[32px] !py-[30px] max-w-[340px] !mt-2 "
-        >
+        <div className="flex flex-col gap-0.5 !px-[32px] !py-[30px] max-w-[340px] !mt-2">
           <p className="s7-para font-body text-[#F4EEDF] text-[14px] font-normal reveal-text">
             Lachlan Deleeuw
           </p>
@@ -74,8 +67,7 @@ export default function SectionSeven() {
         </div>
       </div>
 
-      {/* ── Desktop: Partners (Hidden for now) ── */}
-      {/* 
+      {/* ── Desktop: Partners Slider ── */}
       <div className="hidden lg:flex absolute bottom-22 right-12 flex-col items-end gap-5 z-10">
         <p className="font-body text-[#F4EBE4] text-sm">Our Partners</p>
         <div
@@ -92,13 +84,14 @@ export default function SectionSeven() {
                   src={p.logo} 
                   alt={p.name}
                   className="block w-auto h-auto object-contain"
-                  style={{ filter: "brightness(0) invert(1)" }} loading="lazy" />
+                  style={{ filter: "brightness(0) invert(1)" }} 
+                  loading="lazy" 
+                />
               </div>
             ))}
           </div>
         </div>
-      </div> 
-      */}
+      </div>
 
       {/* ════════════════════
           MOBILE + TABLET LAYOUT
@@ -114,9 +107,7 @@ export default function SectionSeven() {
             Meet the Expert
           </div>
 
-          <div
-            className="!w-[340px] !max-w-[340px] !flex !flex-col !mt-2 "
-          >
+          <div className="!w-[340px] !max-w-[340px] !flex !flex-col !mt-2">
             <p className="!text-[#F4EEDF] !text-[14px] !font-normal !m-0">Lachlan Deleeuw</p>
             <p className="!text-[#F4EEDF] !text-[14px] !mt-2.5 !mb-0">Founder – Grand Pools</p>
             <p className="!text-[#F4EBE4] !text-[14px] !font-normal !leading-snug !mt-4 !mb-0">
@@ -127,9 +118,8 @@ export default function SectionSeven() {
           </div>
         </div>
 
-        {/* Partners — bottom (Hidden for now) */}
-        {/* 
-        <div className="!flex !flex-col !items-end !gap-3 !px-6 ">
+        {/* Mobile: Partners Slider */}
+        <div className="!flex !flex-col !items-end !gap-3 !px-6">
           <p className="!text-[#F4EBE4] !text-[16px] !m-0">Our Partners</p>
           <div
             className="!overflow-hidden !w-[350px]"
@@ -141,15 +131,19 @@ export default function SectionSeven() {
             <div className="flex gap-5 w-max animate-marquee">
               {PARTNERS_LOOP.map((p, i) => (
                 <div key={i} className="!flex-shrink-0">
-                  <img src={p.logo} alt={p.name}
+                  <img 
+                    src={p.logo} 
+                    alt={p.name}
                     className="!block !w-[84px] !h-[26px] !object-contain"
-                    style={{ filter: "brightness(0) invert(1)" }} loading="lazy" />
+                    style={{ filter: "brightness(0) invert(1)" }} 
+                    loading="lazy" 
+                  />
                 </div>
               ))}
             </div>
           </div>
         </div> 
-        */}
+
       </div>
 
     </section>

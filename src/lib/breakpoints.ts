@@ -58,7 +58,7 @@ export function getScrollPhysics() {
     // lerp of 1 means "no smoothing" in Lenis; mobile relies on native
     // momentum plus syncTouchLerp rather than wheel interpolation.
     lerp: isAndroid ? 0.07 : isMobile ? 1 : 0.08,
-    wheelMultiplier: isAndroid ? 1.4 : isMobile ? 1.4 : 1.0,
+    wheelMultiplier: isAndroid ? 1.4 : isMobile ? 1.4 : 1.05,
     syncTouch: true,
     syncTouchLerp: isAndroid ? 0.05 : isMobile ? 0.06 : 0.08,
     touchMultiplier: isAndroid ? 1.5 : isMobile ? 1.4 : 1,
