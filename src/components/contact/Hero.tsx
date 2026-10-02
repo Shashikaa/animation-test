@@ -11,8 +11,8 @@ export default function ContactHero({
   hideText = false,
   isMobile = false,
 }: ContactHeroProps) {
-  const desktopImg = "/camberwell1.webp";
-  const mobileImg = "/camberwell6.webp";
+  const desktopImg = "/toorak-top-view.webp";
+  const mobileImg = "/toorak-top-view.webp";
   const bgImage = isMobile ? mobileImg : desktopImg;
 
   return (

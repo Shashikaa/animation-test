@@ -208,7 +208,7 @@ export default function SectionTwo() {
 
         <div className="w-full aspect-[4/3] max-w-[340px] overflow-hidden !mt-[40px] transform-gpu pointer-events-none rounded-sm">
           <img
-            src="/toorak1.webp"
+            src="/p6.avif"
             alt="Architectural concrete pool detail in Toorak residence"
             loading="eager"
             decoding="async"

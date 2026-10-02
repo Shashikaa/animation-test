@@ -181,7 +181,7 @@ export const GRAND_POOLS_DATA: Record<string, FullServiceData> = {
     category: "Luxury Showcase",
     description: "An elegant centerpiece featuring state-of-the-art water filtration, ambient lighting, and bespoke architectural surrounds.",
     images: [
-      "/toorakhero.webp",
+      "/toorak-top-view.webp",
       "/toorak2.webp",
       "/toorak3.webp",
       "/toorak4.webp",
