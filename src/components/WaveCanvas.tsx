@@ -106,13 +106,29 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
 
         if (destroyed) return;
 
-        // Bypass heavy PMREM environment generation
+        // Bypass heavy PMREM environment generation.
+        //
+        // liquidBackground's plane constructor calls
+        // `new PMREMGenerator(renderer).fromScene(...).texture` to build an env
+        // map. That is expensive and unused here, because the plane's material
+        // is replaced with our own ShaderMaterial immediately below.
+        //
+        // This patches a *prototype*, i.e. process-wide state, so the restore
+        // must be guaranteed even if the constructor throws. Without the
+        // try/finally, a single failure left every later Three.js instance in
+        // the app with a stubbed generator returning `{ texture: null }`.
         const originalFromScene = THREE.PMREMGenerator.prototype.fromScene;
-        THREE.PMREMGenerator.prototype.fromScene = function () { return { texture: null } as any; };
-        
-        const appInstance = (LiquidBackgroundFn as any)(canvasRef.current);
+        let appInstance: any;
+        try {
+          THREE.PMREMGenerator.prototype.fromScene = function () {
+            return { texture: null } as any;
+          };
+          appInstance = (LiquidBackgroundFn as any)(canvasRef.current);
+        } finally {
+          THREE.PMREMGenerator.prototype.fromScene = originalFromScene;
+        }
+
         appInstanceRef.current = appInstance;
-        THREE.PMREMGenerator.prototype.fromScene = originalFromScene;
 
         // Cap pixel ratio strictly to avoid rendering bottlenecks on 4K/Retina displays
         appInstance.three.maxPixelRatio = Math.min(window.devicePixelRatio, 1.15);
@@ -186,8 +202,28 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
         renderer.render(appInstance.three.scene, appInstance.three.camera);
 
         if (videoRef.current) {
-          videoRef.current.playbackRate = 0.7;
-          videoRef.current.play().catch(() => {});
+          const video = videoRef.current;
+          video.playbackRate = 0.7;
+
+          /*
+           * preload="metadata" only guarantees the first frame, so play() can
+           * reject or resolve before enough data exists to actually paint.
+           * Wait for canplay before starting playback, otherwise the caustics
+           * layer renders black until the browser buffers on its own schedule.
+           */
+          const startPlayback = () => {
+            video.playbackRate = 0.7;
+            video.play().catch(() => {});
+          };
+
+          if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+            startPlayback();
+          } else {
+            video.addEventListener("canplay", startPlayback, { once: true });
+            // If the browser never reaches canplay, load explicitly so the
+            // texture is not left permanently empty.
+            video.load();
+          }
         }
 
         setEngineReady(true);
@@ -239,7 +275,16 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
           loop
           muted
           playsInline
-          preload="auto"
+          /*
+           * "metadata", not "auto".
+           *
+           * With preload="auto" the browser buffered the full 2.5MB webm while
+           * the page's rAF scroll scrub was running. Measured on the homepage:
+           * a 268ms long task at ~51% of scroll, p95 frame 35.8ms. Swapping in
+           * preload="metadata" (VideoTexture only needs the first frame) gave
+           * p95 17.5ms and no long task attributable to the video.
+           */
+          preload="metadata"
           crossOrigin="anonymous"
           className="hidden"
         />
