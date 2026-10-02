@@ -9,6 +9,7 @@ import SectionCTA from "@/src/components/SectionCTA";
 import Footer from "@/src/components/Footer";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import { useSite } from "@/src/app/context/SiteContext";
+import { prefersReducedMotion, settleReducedMotion } from "../../lib/reducedMotion";
 
 type ContactProps = {
   preloaderDone?: boolean;
@@ -199,6 +200,14 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
 
     const scope = scopeRef.current;
     let isRunning = true;
+    // Reduced motion: skip the pinned scroll-scrub entirely and leave content
+    // settled and visible. The CSS media query alone cannot stop this rAF loop.
+    if (prefersReducedMotion()) {
+      isRunning = false;
+      settleReducedMotion(scope);
+      return;
+    }
+
     let lastTime = performance.now();
 
     const EASE_FACTOR = 0.15;
@@ -384,7 +393,7 @@ export default function ProjectsDesktop({ preloaderDone: propPreloaderDone = tru
       {/* VIRTUAL PINNED TRACK FOR HERO, SEC 1 & SEC 2 */}
       <div
         ref={trackRef}
-        className="projects-track-container relative w-full"
+        className="projects-track-container relative w-full gp-pin-track"
         style={{ height: `${TOTAL_SCROLL_STEPS * 100}vh` }}
       >
         <div

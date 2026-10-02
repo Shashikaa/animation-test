@@ -1,31 +1,16 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import ServiceMobile from "./ServiceMobile";
+import ResponsiveTree from "../../components/ResponsiveTree";
 import ServiceDesktop from "./ServiceDesktop";
+import ServiceMobile from "./ServiceMobile";
 
-export default function ServicePage() {
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 1025);
-    check();
-    
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-
-  if (isMobile === null) {
-    return null; // Avoid rendering an artificial 100vh spacer div
-  }
-
+/**
+ * Server renders the desktop tree so crawlers and no-JS visitors get real
+ * content; ResponsiveTree swaps to the mobile tree after mount at <=1024px.
+ */
+export default function servicesPage() {
   return (
-    <>
-      {isMobile ? (
-        <ServiceMobile />
-      ) : (
-        <ServiceDesktop />
-      )}
-    </>
+    <ResponsiveTree
+      desktop={<ServiceDesktop />}
+      mobile={<ServiceMobile />}
+    />
   );
 }

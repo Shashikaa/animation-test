@@ -258,6 +258,12 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
+                  // Marks that JS is available, so the pre-hydration
+                  // ResponsiveTree wrapper knows it is safe to hide the
+                  // desktop markup on phones. Without JS the desktop content
+                  // stays visible rather than leaving a blank page.
+                  document.documentElement.classList.add('js');
+
                   var p = window.location.pathname;
 
                   if (p === '/terms' || p === '/privacy-policy') {

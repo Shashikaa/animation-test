@@ -6,6 +6,8 @@ import { useSite } from "../app/context/SiteContext";
 import CustomScrollBar from "./CustomScrollBar";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { getScrollPhysics } from "../lib/breakpoints";
+import { prefersReducedMotion } from "../lib/reducedMotion";
 
 if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger);
 
@@ -29,23 +31,32 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
     let destroyed = false;
 
     const initLenis = async () => {
+      // Reduced motion: never smooth-scroll. Lenis stays off entirely so the
+      // browser's native scrolling is used untouched.
+      if (prefersReducedMotion()) {
+        onScrollReady?.();
+        return;
+      }
+
       const Lenis = (await import("lenis")).default;
       if (destroyed) return;
 
-      const isMobile = window.matchMedia("(max-width: 767px)").matches;
-      const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
+      // Same breakpoint as the Desktop/Mobile render gate, so tablets get the
+      // tuned mobile physics instead of desktop wheel interpolation.
+      const { lerp, wheelMultiplier, syncTouch, syncTouchLerp, touchMultiplier } =
+        getScrollPhysics();
 
       instance = new Lenis({
         wrapper: window,
         content: document.documentElement,
         // 🎯 Absorbs fast flicks into buttery smooth motion
-        lerp: isAndroid ? 0.07 : isMobile ? 1 : 0.08,
+        lerp,
         smoothWheel: true,
-        wheelMultiplier: isAndroid ? 1.4 : isMobile ? 1.4 : 1.0,
-        syncTouch: true,
-        syncTouchLerp: isAndroid ? 0.05 : isMobile ? 0.06 : 0.08,
+        wheelMultiplier,
+        syncTouch,
+        syncTouchLerp,
         // 🎯 Standard multiplier prevents violent travel distance on fast flings
-        touchMultiplier: isAndroid ? 1.5 : isMobile ? 1.4 : 1,
+        touchMultiplier,
         easing: (t: number) => 1 - Math.pow(1 - t, 4),
         autoResize: true,
       });
@@ -82,20 +93,25 @@ export default function SmoothScroll({ children, onScrollReady }: SmoothScrollPr
   }, [onScrollReady, smootherRef]);
 
   useEffect(() => {
-    const lenis = lenisRef.current;
-    if (!lenis) return;
+      const lenis = lenisRef.current;
 
-    if (!preloaderDone) {
-      lenis.stop();
-      return;
-    }
+      if (!preloaderDone) {
+        lenis?.stop();
+        return;
+      }
 
-    lenis.start();
-    lenis.scrollTo(0, { immediate: true });
+      if (!lenis) {
+        // Reduced motion: no Lenis instance, but layout still needs measuring.
+        const timer = setTimeout(() => ScrollTrigger.refresh(), 150);
+        return () => clearTimeout(timer);
+      }
 
-    const timer = setTimeout(() => ScrollTrigger.refresh(), 150);
-    return () => clearTimeout(timer);
-  }, [pathname, preloaderDone]);
+      lenis.start();
+      lenis.scrollTo(0, { immediate: true });
+
+      const timer = setTimeout(() => ScrollTrigger.refresh(), 150);
+      return () => clearTimeout(timer);
+    }, [pathname, preloaderDone]);
 
   return (
     <div className="flex flex-col min-h-[100dvh] w-full relative">

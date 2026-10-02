@@ -15,18 +15,16 @@ export default function SectionCTA({ preloaderDone }: SectionCTAProps) {
         <div className="hidden lg:block absolute inset-0 w-full h-full">
           <img
             src="/CTA.webp"
-            alt="Background"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
+            alt="" aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
         </div>
 
         {/* Mobile Background */}
         <div className="block lg:hidden w-full h-full">
           <img
             src="/CTAmob.webp"
-            alt="Background"
-            className="w-full h-full object-cover"
-          />
+            alt="" aria-hidden="true"
+            className="w-full h-full object-cover" loading="lazy" />
         </div>
       </div>
 

@@ -23,8 +23,7 @@ export default function SubmitRequestSection({
             src="/closebtn.svg"
             alt=""
             aria-hidden="true"
-            className="!block !h-6 !w-6 !object-contain md:!h-7 md:!w-7"
-          />
+            className="!block !h-6 !w-6 !object-contain md:!h-7 md:!w-7" loading="lazy" />
         </button>
       )}
 
@@ -36,8 +35,7 @@ export default function SubmitRequestSection({
         <img
           src="/CTAmob.webp"
           alt=""
-          className="h-full w-full object-cover"
-        />
+          className="h-full w-full object-cover" loading="lazy" />
       </div>
 
       {/* Mobile and Tablet Layout */}

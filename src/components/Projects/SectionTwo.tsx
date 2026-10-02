@@ -253,6 +253,7 @@ export default function SectionTwo({ isActive }: SectionTwoProps) {
         src={project.mediaSrc}
         alt={project.label}
         aria-hidden
+        loading="lazy"
         style={commonStyles}
       />
     );

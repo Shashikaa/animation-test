@@ -6,6 +6,7 @@ import ProjectsHero from "../../components/Projects/ProjectsHero";
 import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import { restoreTextReveal } from "@/src/app/utils/useTextReveal";
+import { prefersReducedMotion, settleReducedMotion } from "../../lib/reducedMotion";
 
 const SectionOne = dynamic(() => import("@/src/components/Projects/SectionOne"));
 const SectionTwo = dynamic(() => import("@/src/components/Projects/SectionTwo"));
@@ -176,6 +177,14 @@ export default function ProjectsMobile() {
     if (!shouldLoadRest) return;
 
     let isRunning = true;
+    // Reduced motion: skip the pinned scroll-scrub entirely and leave content
+    // settled and visible. The CSS media query alone cannot stop this rAF loop.
+    if (prefersReducedMotion()) {
+      isRunning = false;
+      settleReducedMotion(scopeRef.current);
+      return;
+    }
+
 
     const isAndroid =
       typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
@@ -371,7 +380,7 @@ export default function ProjectsMobile() {
       {/* VIRTUAL PINNED TRACK: animation length + short hold at the end */}
       <div
         ref={trackRef}
-        className="projects-track-container relative w-full"
+        className="projects-track-container relative w-full gp-pin-track"
         style={{ height: `${TOTAL_SCROLL_STEPS * 100 + HOLD_VH}vh` }}
       >
         <div

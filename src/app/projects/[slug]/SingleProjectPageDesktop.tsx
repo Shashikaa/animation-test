@@ -9,6 +9,7 @@ import Footer from "@/src/components/Footer";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import { useSite } from "@/src/app/context/SiteContext";
 import { FullServiceData } from "./data";
+import { prefersReducedMotion, settleReducedMotion } from "../../../lib/reducedMotion";
 
 // Quadratic Easing
 const easeOutQuad = (t: number) => t * (2 - t);
@@ -148,6 +149,14 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
 
     const scope = scopeRef.current;
     let isRunning = true;
+    // Reduced motion: skip the pinned scroll-scrub entirely and leave content
+    // settled and visible. The CSS media query alone cannot stop this rAF loop.
+    if (prefersReducedMotion()) {
+      isRunning = false;
+      settleReducedMotion(scope);
+      return;
+    }
+
     let lastTime = performance.now();
 
     const EASE_FACTOR = 0.15;
@@ -361,7 +370,7 @@ export default function SingleProjectPageDesktop({ pageData }: SubServicesDeskto
     <div ref={scopeRef} className="w-full bg-[#162D24]">
       <div
         ref={trackRef}
-        className="single-project-track relative w-full"
+        className="single-project-track relative w-full gp-pin-track"
         style={{ height: `${containerHeightVh}vh` }}
       >
         <div

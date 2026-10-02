@@ -24,8 +24,7 @@ export default function SubServiceFAQSection({ data }: FAQSectionProps) {
       <img
         src="/faq-bg.webp" 
         alt="Grand Pools background scenery"
-        className="absolute top-0 left-0 w-full h-full object-cover z-0 pointer-events-none"
-      />
+        className="absolute top-0 left-0 w-full h-full object-cover z-0 pointer-events-none" loading="lazy" />
         {/* Dark Overlay */}
   <div className="absolute inset-0 bg-black/60" />
       {/* Main Container */}

@@ -11,6 +11,7 @@ import SectionCTA from "@/src/components/SectionCTA";
 import Footer from "@/src/components/Footer";
 import { useSite } from "@/src/app/context/SiteContext";
 import { FullServiceData } from "./data";
+import { prefersReducedMotion, settleReducedMotion } from "../../../lib/reducedMotion";
 
 type SubServicesDesktopProps = {
   pageData: FullServiceData;
@@ -178,6 +179,14 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
 
     const scope = scopeRef.current;
     let isRunning = true;
+    // Reduced motion: skip the pinned scroll-scrub entirely and leave content
+    // settled and visible. The CSS media query alone cannot stop this rAF loop.
+    if (prefersReducedMotion()) {
+      isRunning = false;
+      settleReducedMotion(scope);
+      return;
+    }
+
     let lastTime = performance.now();
 
     const EASE_FACTOR = 0.15;
@@ -374,7 +383,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     <div ref={scopeRef} className="w-full bg-black">
       <div
         ref={trackRef}
-        className="sub-services-track relative w-full"
+        className="sub-services-track relative w-full gp-pin-track"
         style={{ height: `${TRACK_HEIGHT_VH}vh` }}
       >
         <div

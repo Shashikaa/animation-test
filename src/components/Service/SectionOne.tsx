@@ -16,8 +16,7 @@ export default function SectionOne() {
         <img
           src="/Service1.webp"
           alt="Tailored Pool Solutions background"
-          className="w-full h-full object-cover"
-        />
+          className="w-full h-full object-cover" loading="lazy" />
       </div>
 
       <div className="section-container relative z-[2] h-full flex flex-col justify-between pb-10 md:pb-14 lg:pb-6">

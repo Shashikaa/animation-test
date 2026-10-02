@@ -672,6 +672,75 @@ button.btn-underline:hover::after,
   animation: none !important;
 }
 
+/*
+ * Pre-hydration visibility for <ResponsiveTree>.
+ *
+ * The server sends the desktop tree. Below MOBILE_MAX_WIDTH (1024px, see
+ * src/lib/breakpoints.ts) it is hidden until the client swaps in the mobile
+ * tree, so phones never see the desktop layout flash. Kept in sync with the
+ * 1024px tier used elsewhere in this file.
+ *
+ * Scoped to html.js (set by an inline script in layout.tsx) so that a visitor
+ * with JavaScript disabled still sees the desktop content instead of a blank
+ * page.
+ */
+@media (max-width: 1024px) {
+  html.js .rs-tree-unresolved > *:first-child {
+    display: none !important;
+  }
+}
+
+/*
+ * Reduced motion: collapse the pinned scroll track.
+ *
+ * The pinned sections reserve roughly 7.8 viewport-heights of scroll distance
+ * purely to drive the rAF scrub. With the loops disabled (see
+ * src/lib/reducedMotion.ts) that distance is just empty scrolling, so clamp the
+ * track to a single viewport and let content flow normally.
+ */
+@media (prefers-reduced-motion: reduce) {
+  /*
+   * Applied by class rather than a JS media-query check, because the track
+   * height is rendered on the server. Reading matchMedia during render would
+   * differ from the server HTML and trigger a hydration mismatch. !important
+   * is required to override the inline style.
+   */
+  /*
+   * NOTE: the track height is deliberately NOT collapsed here. The pinned
+   * sections position their children absolutely against a fixed-height frame,
+   * so forcing the track to auto height collapses the frame to zero and takes
+   * the content with it. Scroll distance is left as authored; what is removed
+   * is the animation, not the layout.
+   */
+
+  /*
+   * The scrub loop reveals whole sections by flipping visibility on
+   * structural layers as the playhead passes them (e.g.
+   * `secNine.style.visibility = stepProgress >= 12.1 ? "visible" : "hidden"`).
+   * With the loop disabled nothing ever runs that line, so those layers would
+   * stay hidden forever and their content becomes unreachable. Reveal them all.
+   *
+   * structural-layer is the shared marker on those pinned layers;
+   * .s9-title and friends carry the hidden state directly.
+   */
+  .gp-pin-track .structural-layer,
+  .gp-pin-track .s9-title,
+  .gp-pin-track .s9-left-side,
+  .gp-pin-track .s9-right-side,
+  .gp-pin-track .reveal-text,
+  .gp-pin-track .gs-line-inner,
+  .gp-pin-track .custom-line-inner {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* Split lines were parked below their clipping wrapper; bring them home. */
+  .gp-pin-track .gs-line-inner,
+  .gp-pin-track .custom-line-inner {
+    transform: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto !important;

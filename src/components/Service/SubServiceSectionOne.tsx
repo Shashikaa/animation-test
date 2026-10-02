@@ -34,9 +34,8 @@ export default function SubServiceSectionOne({ data }: SubServiceSectionOneProps
 <div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full mix-blend-normal">
   <img 
     src="/toorak-top-view.webp" 
-    alt="Background" 
-    className="w-full h-full object-cover"
-  />
+    alt="" aria-hidden="true" 
+    className="w-full h-full object-cover" loading="lazy" />
   {/* Dark Overlay */}
   <div className="absolute inset-0 bg-black/50" />
 </div>
@@ -76,8 +75,7 @@ export default function SubServiceSectionOne({ data }: SubServiceSectionOneProps
           <img
             src={data.sideImageUrl} 
             alt={data.title}
-            className="s10-img-element w-full h-full object-cover origin-center relative z-10"
-          />
+            className="s10-img-element w-full h-full object-cover origin-center relative z-10" loading="lazy" />
           {/* Image Specific Dark Overlay */}
           <div className="absolute inset-0 bg-black/20 z-20 pointer-events-none mix-blend-multiply" />
         </div>

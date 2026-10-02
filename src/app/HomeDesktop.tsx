@@ -33,6 +33,7 @@ const Appsection = dynamic(() => import("../components/Appsection"), {
 });
 
 import { useTextReveal, restoreTextReveal } from "./utils/useTextReveal";
+import { prefersReducedMotion, settleReducedMotion } from "../lib/reducedMotion";
 
 // Pinned scene ends when Section 9's fly-in finishes (1 step = 100vh of scroll).
 // CTA + Footer now live in normal document flow after the pinned track.
@@ -296,6 +297,14 @@ export default function HomeDesktop() {
     let lastTime = performance.now();
 
     const EASE_FACTOR = 0.15;
+
+    // Reduced motion: skip the pinned scroll-scrub and leave content settled
+    // and visible. The CSS media query alone cannot stop this rAF loop.
+    if (prefersReducedMotion()) {
+      isRunning = false;
+      settleReducedMotion(scope);
+      return;
+    }
 
     const s8TextElements =
       scope.querySelectorAll<HTMLElement>(".section-8 .reveal-text");
@@ -1008,7 +1017,7 @@ export default function HomeDesktop() {
 
       <div
         ref={trackRef}
-        className="home-track-container relative w-full"
+        className="home-track-container gp-pin-track relative w-full"
         style={{
           height: `${TRACK_HEIGHT_VH}vh`,
         }}

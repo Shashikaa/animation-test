@@ -6,6 +6,7 @@ import ProjectScrollHero from "@/src/components/Projects/ProjectScrollHero";
 import { useSite } from "@/src/app/context/SiteContext";
 import { useHeroIntro } from "@/src/app/utils/useHeroIntro";
 import { FullServiceData } from "./data";
+import { prefersReducedMotion, settleReducedMotion } from "../../../lib/reducedMotion";
 
 const ProjectInfoSlide = dynamic(() => import("@/src/components/Projects/ProjectInfoSlide"));
 const Appsection = dynamic(() => import("@/src/components/Projects/Appsection"));
@@ -154,6 +155,14 @@ export default function SingleProjectPageMobile({ pageData }: SubServicesMobileP
     if (!shouldLoadRest) return;
 
     let isRunning = true;
+    // Reduced motion: skip the pinned scroll-scrub entirely and leave content
+    // settled and visible. The CSS media query alone cannot stop this rAF loop.
+    if (prefersReducedMotion()) {
+      isRunning = false;
+      settleReducedMotion(scopeRef.current);
+      return;
+    }
+
 
     const isAndroid =
       typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);

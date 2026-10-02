@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import HomeClient from "./HomeClient";
+import ResponsiveTree from "../components/ResponsiveTree";
+import HomeDesktop from "./HomeDesktop";
+import HomeMobile from "./HomeMobile";
 
 export const metadata: Metadata = {
   title: {
@@ -40,6 +42,16 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * The desktop tree is what the server renders, so crawlers and no-JS visitors
+ * receive real headings, copy and images. ResponsiveTree swaps in the mobile
+ * tree after mount on viewports at or below 1024px.
+ */
 export default function HomePage() {
-  return <HomeClient />;
+  return (
+    <ResponsiveTree
+      desktop={<HomeDesktop />}
+      mobile={<HomeMobile />}
+    />
+  );
 }
