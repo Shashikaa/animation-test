@@ -1,10 +1,10 @@
 "use client";
 
-// 1. Make sure these are UNCOMMENTED:
+// Partners logo array
 const PARTNERS = [
-  { name: "Socure",     logo: "/partners/logo1.svg" },
-  { name: "Cedar",      logo: "/partners/logo2.svg" },
-  { name: "Airtable",   logo: "/partners/logo3.svg" },
+  { name: "Socure", logo: "/partners/logo1.svg" },
+  { name: "Cedar", logo: "/partners/logo2.svg" },
+  { name: "Airtable", logo: "/partners/logo3.svg" },
   { name: "Culture Amp", logo: "/partners/logo4.svg" },
 ];
 
@@ -55,9 +55,9 @@ export default function SectionSeven() {
         </h2>
 
         <div className="flex flex-col gap-0.5 !px-[32px] !py-[30px] max-w-[340px] !mt-2">
-          <p className="s7-para font-body text-[#F4EEDF] text-[14px] font-normal reveal-text">
+          <h3 className="s7-para font-body text-[#F4EEDF] text-[14px] font-normal reveal-text">
             Lachlan Deleeuw
-          </p>
+          </h3>
           <p className="s7-para text-[#F4EEDF] text-[14px] mt-2 reveal-text">
             Founder – Grand Pools
           </p>
@@ -69,7 +69,7 @@ export default function SectionSeven() {
 
       {/* ── Desktop: Partners Slider ── */}
       <div className="hidden lg:flex absolute bottom-22 right-12 flex-col items-end gap-5 z-10">
-        <p className="font-body text-[#F4EBE4] text-sm">Our Partners</p>
+        <h3 className="font-body text-[#F4EBE4] text-sm font-normal">Our Partners</h3>
         <div
           className="overflow-hidden w-[520px]"
           style={{
@@ -100,15 +100,15 @@ export default function SectionSeven() {
 
         {/* Title + card — left-aligned */}
         <div className="!flex !flex-col !items-left !gap-4 !pl-6">
-          <div
+          <h2
             className="h2 !text-[#F4EEDF] !font-[100] !text-left !m-0 !mt-12"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Meet the Expert
-          </div>
+          </h2>
 
           <div className="!w-[340px] !max-w-[340px] !flex !flex-col !mt-2">
-            <p className="!text-[#F4EEDF] !text-[14px] !font-normal !m-0">Lachlan Deleeuw</p>
+            <h3 className="!text-[#F4EEDF] !text-[14px] !font-normal !m-0">Lachlan Deleeuw</h3>
             <p className="!text-[#F4EEDF] !text-[14px] !mt-2.5 !mb-0">Founder – Grand Pools</p>
             <p className="!text-[#F4EBE4] !text-[14px] !font-normal !leading-snug !mt-4 !mb-0">
               Lachlan Deleeuw brings expert craftsmanship and tailored creativity to
@@ -120,7 +120,7 @@ export default function SectionSeven() {
 
         {/* Mobile: Partners Slider */}
         <div className="!flex !flex-col !items-end !gap-3 !px-6">
-          <p className="!text-[#F4EBE4] !text-[16px] !m-0">Our Partners</p>
+          <h3 className="!text-[#F4EBE4] !text-[16px] !font-normal !m-0">Our Partners</h3>
           <div
             className="!overflow-hidden !w-[350px]"
             style={{

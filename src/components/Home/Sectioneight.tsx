@@ -90,11 +90,16 @@ export default function SectionEight({ preloaderDone }: SectionEightProps) {
             }} loading="lazy" />
         </div>
 
-        <div className="!absolute !top-0 !left-0 !z-20 !flex !flex-col !items-start !gap-7 !pt-[12vh] !px-5 pointer-events-none">
-          <div className="h2 s8-heading select-text pointer-events-auto !text-[#F4EEDF] !text-left font-display">
-      Designed for Stillness
-          </div>
-          <p className="s8-para select-text pointer-events-auto !text-[#F4EEDF] !text-left font-body max-w-[300px]">
+        <div className="!absolute !top-0 !left-0 !z-20 !flex !flex-col !items-start !gap-4 !pt-[12vh] !px-5 pointer-events-none">
+          <h3 className="s8-subheading font-body text-[#F4EEDF] text-lg  m-0 select-text pointer-events-auto">
+            Natural Harmony
+          </h3>
+
+          <h2 className="s8-heading select-text pointer-events-auto !text-[#F4EEDF] !text-left font-display m-0">
+            Designed for Stillness
+          </h2>
+
+          <p className="s8-para select-text pointer-events-auto !text-[#F4EEDF] !text-left font-body max-w-[300px] mt-2">
             Designed to disappear into the landscape, not announce itself.
             The result isn't a pool. It's a quiet room you walk outside to find.
           </p>
@@ -143,11 +148,19 @@ export default function SectionEight({ preloaderDone }: SectionEightProps) {
               }} loading="lazy" />
           </div>
 
-          <div className="absolute left-1/2 top-1/2 -translate-y-1/2 flex flex-col gap-5 text-left pointer-events-none">
-            <h2 className="s8-heading select-text pointer-events-auto text-[#F4EEDF] font-display whitespace-nowrap reveal-text">
-            Designed for Stillness
+          <div className="absolute left-1/2 top-1/2 -translate-y-1/2 flex flex-col gap-3 text-left pointer-events-none">
+            {/* H3 Subtitle Eyebrow */}
+            <h3 className="s8-subheading select-text pointer-events-auto text-[#F4EEDF] font-body text-xs lg:text-lg   m-0 reveal-text ">
+              Natural Harmony
+            </h3>
+
+            {/* Main H2 Heading */}
+            <h2 className="s8-heading select-text pointer-events-auto text-[#F4EEDF] font-display whitespace-nowrap reveal-text m-0">
+              Designed for Stillness
             </h2>
-            <p className="s8-para select-text pointer-events-auto text-[#F4EEDF] font-body leading-relaxed max-w-[330px] reveal-text">
+
+            {/* Paragraph Description */}
+            <p className="s8-para select-text pointer-events-auto text-[#F4EEDF]/90 font-body leading-relaxed max-w-[330px] reveal-text mt-1 [text-shadow:0_1px_8px_rgba(0,0,0,0.6)]">
               Designed to disappear into the landscape, not announce itself.
               The result isn't a pool. It's a quiet room you walk outside to find.
             </p>
