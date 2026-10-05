@@ -17,15 +17,12 @@ type SubServicesDesktopProps = {
   pageData: FullServiceData;
 };
 
-// Original timeline: 10 steps (9 scrollable, 1 step = 100vh of scroll).
+// Original timeline steps setup
 const ORIGINAL_STEPS = 9;
-
-// Pinned scene ends when the App + FAQ sheet has fully arrived (old step 7.5).
-// CTA + Footer now live in normal document flow after the pinned track.
 const PIN_END_STEP = 7.5;
 const TRACK_HEIGHT_VH = (PIN_END_STEP + 1) * 100;
 
-// Keep the smoothing speed identical in steps per frame.
+// Lerp smoothing speed limit
 const MAX_PROGRESS_DELTA_PER_FRAME = (0.008 * ORIGINAL_STEPS) / PIN_END_STEP;
 
 const easeOutQuad = (t: number) => t * (2 - t);
@@ -179,8 +176,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
 
     const scope = scopeRef.current;
     let isRunning = true;
-    // Reduced motion: skip the pinned scroll-scrub entirely and leave content
-    // settled and visible. The CSS media query alone cannot stop this rAF loop.
+
     if (prefersReducedMotion()) {
       isRunning = false;
       settleReducedMotion(scope);
@@ -188,7 +184,6 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
     }
 
     let lastTime = performance.now();
-
     const EASE_FACTOR = 0.15;
 
     const heroTextWrap = scope.querySelector<HTMLElement>(".hero-text-wrap");
@@ -219,7 +214,6 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
       smoothProgress.current = Math.min(Math.max(smoothProgress.current + delta, 0), 1);
 
       const currentProgress = smoothProgress.current;
-      // 1 step = 100vh of scroll (same as before)
       const stepProgress = currentProgress * PIN_END_STEP;
       const { vh } = dimensionsRef.current;
 
@@ -256,7 +250,6 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
         heroBg.style.transform = `translate3d(${xPerc}%, 0, 0) scale3d(${scaleVal}, ${scaleVal}, 1)`;
       }
 
-      // Trigger Section One Reveal at Step 1.15 (when clipPath is ~35% open)
       triggerProgressTextReveal(".section-one-wrap", stepProgress, 1.15);
 
       // STEP 3: DESKTOP IMAGE EXPAND (STEPS 1.8 -> 3.2)
@@ -287,12 +280,7 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
         }
       }
 
-      if (s10ImgElem) {
-        const imgScale = (1.15 - expandProg * 0.15).toFixed(4);
-        s10ImgElem.style.transform = `scale3d(${imgScale}, ${imgScale}, 1)`;
-      }
-
-      // STEP 4: SEQUENTIAL PARAGRAPHS ROLL UP (STEPS 3.2 -> 5.5)
+      // STEP 4: SEQUENTIAL PARAGRAPHS ROLL UP & PARALLAX (STEPS 3.2 -> 5.5)
       const seqProg = easeOutQuad(Math.min(Math.max((stepProgress - 3.2) / 2.3, 0), 1));
 
       if (s10SeqContainer) {
@@ -300,7 +288,20 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
         s10SeqContainer.style.transform = `translate3d(0, ${translateY}px, 0)`;
       }
 
-      // Trigger paragraph reveals early at Step 2.6 (as image expansion starts)
+      // SEPARATE EXPANSION SCALE FROM PARALLAX TRANSLATION
+      if (s10ImgElem) {
+        if (expandProg < 1) {
+          // Phase 1: Scale up smoothly from 1.0 to 1.15 while expanding, keeping Y offset at 0
+          const currentScale = 1.0 + expandProg * 0.15;
+          s10ImgElem.style.transform = `translate3d(0, 0%, 0) scale3d(${currentScale.toFixed(4)}, ${currentScale.toFixed(4)}, 1)`;
+        } else {
+          // Phase 2: Parallax shift triggers ONLY after full container expansion
+          // Capped at -12% vertical shift, which is safely covered by the h-[125%] image height
+          const parallaxY = (-seqProg * 12).toFixed(2);
+          s10ImgElem.style.transform = `translate3d(0, ${parallaxY}%, 0) scale3d(1.15, 1.15, 1)`;
+        }
+      }
+
       triggerProgressTextReveal(".s10-seq-container", stepProgress, 2.6);
 
       // STEP 5: APP + FAQ MOVE AS ONE CONTINUOUS SHEET (STEPS 5.5 -> 7.5)
@@ -317,13 +318,8 @@ export default function SubServicesDesktop({ pageData }: SubServicesDesktopProps
         appFaqLayer.style.opacity = "1";
       }
 
-      // Trigger Appsection reveal at Step 5.7 (as the layer starts sliding up)
       triggerProgressTextReveal(".services-app-faq-layer", stepProgress, 5.7);
-
-      // Trigger FAQ section reveal at Step 6.5 (as FAQ rises into the lower viewport)
       triggerProgressTextReveal(".services-faq-wrap", stepProgress, 6.5);
-
-      // CTA & Footer now live in normal document flow below the pinned track.
 
       rafId.current = requestAnimationFrame(renderTransforms);
     };

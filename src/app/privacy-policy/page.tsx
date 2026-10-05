@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Footer from "@/src/components/Footer";
@@ -155,42 +156,54 @@ export default function PrivacyPolicyPage() {
                 </p>
               </div>
 
-              {/* Desktop Contact Details */}
-              <div className="hidden lg:flex flex-col gap-4 font-body text-[#F4EEDF] text-sm sm:text-base">
-                <div>
-                  <h2 className="!text-base font-bold tracking-wide text-[#F4EEDF]">
-                    Legal & Privacy Inquiries
-                  </h2>
-                </div>
+{/* Desktop Contact Details & Back Button */}
+<div className="hidden lg:flex flex-col gap-12 font-body text-[#F4EEDF] text-sm sm:text-base">
+  <div className="flex flex-col gap-4">
+    <div>
+      <h2 className="!text-base font-bold tracking-wide text-[#F4EEDF]">
+        Legal & Privacy Inquiries
+      </h2>
+    </div>
 
-                {/* Icons Row */}
-                <div className="flex items-center gap-4">
-                  <a
-                    href="mailto:admin@grandpools.com.au"
-                    aria-label="Email"
-                    className="hover:opacity-75 transition-opacity duration-200"
-                  >
-                    <img
-                      src="/email.svg"
-                      alt="Email"
-                      className="w-5 h-5 object-contain"
-                    />
-                  </a>
-                  <a
-                    href="https://www.instagram.com/grandpools_aus/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Instagram"
-                    className="hover:opacity-75 transition-opacity duration-200"
-                  >
-                    <img
-                      src="/ig.svg"
-                      alt="Instagram"
-                      className="w-6 h-6 object-contain"
-                    />
-                  </a>
-                </div>
-              </div>
+    {/* Icons Row */}
+    <div className="flex items-center gap-4">
+      <a
+        href="mailto:admin@grandpools.com.au"
+        aria-label="Email"
+        className="hover:opacity-75 transition-opacity duration-200"
+      >
+        <img
+          src="/email.svg"
+          alt="Email"
+          className="w-5 h-5 object-contain"
+        />
+      </a>
+      <a
+        href="https://www.instagram.com/grandpools_aus/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Instagram"
+        className="hover:opacity-75 transition-opacity duration-200"
+      >
+        <img
+          src="/ig.svg"
+          alt="Instagram"
+          className="w-6 h-6 object-contain"
+        />
+      </a>
+    </div>
+  </div>
+
+  {/* Desktop-only Back to Home Link */}
+  <div>
+    <Link
+      href="/"
+      className="group btn-underline font-body"
+    >
+      BACK TO HOME
+    </Link>
+  </div>
+</div>
             </div>
 
             {/* Right Column with Scrollable Content */}

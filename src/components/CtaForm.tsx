@@ -190,7 +190,7 @@ export default function CtaForm({
           <CtaSelect
             key={`br_${resetKey}`}
             placeholder="Budget Range *"
-            options={["$150k – $250k", "$250k – $400k", "$400k+"]}
+            options={["$80k–$150k","$150k – $250k", "$250k – $400k", "$400k+"]}
             name={getName("budgetRange")}
             isMobile={isMobile}
             error={fieldErrors[getName("budgetRange")]}

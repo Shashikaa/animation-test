@@ -12,20 +12,13 @@ import Footer from "@/src/components/Footer";
 import { useSite } from "@/src/app/context/SiteContext";
 import { prefersReducedMotion, settleReducedMotion } from "../../lib/reducedMotion";
 
-// Original timeline: 12 steps (11 scrollable, 1 step = 100vh of scroll).
 const ORIGINAL_STEPS = 11;
-
-// Pinned scene ends when the App section has fully arrived (old step 8.2).
-// CTA + Footer now live in normal document flow after the pinned track.
 const PIN_END_STEP = 8.2;
 const TRACK_HEIGHT_VH = (PIN_END_STEP + 1) * 100;
-
-// Keep the smoothing speed identical in steps per frame.
 const MAX_PROGRESS_DELTA_PER_FRAME = (0.008 * ORIGINAL_STEPS) / PIN_END_STEP;
 
 const easeOutQuad = (t: number) => t * (2 - t);
 
-// Utility for DOM text line splitting matching parent implementations
 function executeDesktopSplitting(selector: string) {
   const elements = document.querySelectorAll<HTMLElement>(selector);
   elements.forEach((element) => {
@@ -76,10 +69,10 @@ export default function ServicesDesktop() {
   const targetProgress = useRef(0);
   const smoothProgress = useRef(0);
   const rafId = useRef<number | null>(null);
-  const lastSec2Idx = useRef<number>(-1);
   const revealedSections = useRef<Set<string>>(new Set());
 
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
+  const [sec2SlideIdx, setSec2SlideIdx] = useState(0);
 
   const { smootherRef } = useSite();
   const { introDone, preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
@@ -111,7 +104,7 @@ export default function ServicesDesktop() {
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // ── 2. CACHE METRICS TO PREVENT LAYOUT THRASHING ──
+  // ── 2. MEASURE METRICS ──
   const measure = useCallback(() => {
     if (!trackRef.current) return;
     const rect = trackRef.current.getBoundingClientRect();
@@ -150,36 +143,34 @@ export default function ServicesDesktop() {
     };
   }, [shouldLoadRest, measure, handleResize]);
 
-  // ── 3. TEXT REVEAL LOGIC & PREPARATION ──
-  const triggerPlayOnceTextReveal = useCallback((
-    containerSelector: string,
-    currentStepProg: number,
-    triggerThreshold: number
-  ) => {
-    if (!scopeRef.current) return;
+  // ── 3. TEXT REVEALS ──
+  const triggerPlayOnceTextReveal = useCallback(
+    (containerSelector: string, currentStepProg: number, triggerThreshold: number) => {
+      if (!scopeRef.current) return;
 
-    const key = containerSelector;
-    if (revealedSections.current.has(key)) return;
+      const key = containerSelector;
+      if (revealedSections.current.has(key)) return;
 
-    if (currentStepProg >= triggerThreshold) {
-      revealedSections.current.add(key);
+      if (currentStepProg >= triggerThreshold) {
+        revealedSections.current.add(key);
 
-      const lineInners = scopeRef.current.querySelectorAll<HTMLElement>(
-        `${containerSelector} .gs-line-inner, ${containerSelector} .custom-line-inner`
-      );
+        const lineInners = scopeRef.current.querySelectorAll<HTMLElement>(
+          `${containerSelector} .gs-line-inner, ${containerSelector} .custom-line-inner`
+        );
 
-      lineInners.forEach((el, idx) => {
-        el.style.transition = `transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s, opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s`;
-        el.style.transform = "translate3d(0, 0%, 0)";
-        el.style.opacity = "1";
-      });
-    }
-  }, []);
+        lineInners.forEach((el, idx) => {
+          el.style.transition = `transform 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s, opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1) ${idx * 0.05}s`;
+          el.style.transform = "translate3d(0, 0%, 0)";
+          el.style.opacity = "1";
+        });
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
-    // Split paragraphs across all animated sections
     executeDesktopSplitting(".scroll-para-1");
     executeDesktopSplitting(".section-one-wrap .reveal-text");
     executeDesktopSplitting(".services-section-two-wrap .reveal-text");
@@ -204,24 +195,35 @@ export default function ServicesDesktop() {
     };
   }, [shouldLoadRest]);
 
-  // SectionTwo Slide Trigger Hook
-  const triggerSec2Hook = useCallback((targetIdx: number) => {
-    if (targetIdx !== lastSec2Idx.current) {
-      lastSec2Idx.current = targetIdx;
-      if (typeof (window as any)._sec2GoTo === "function") {
-        (window as any)._sec2GoTo(targetIdx);
-      }
-    }
-  }, []);
+  // ── 4. MANUAL CLICK HANDLER FOR SLIDE INDICATORS ──
+  const handleSelectSlide = useCallback(
+    (targetIdx: number) => {
+      // Map slide indices to target scroll step progress values:
+      // Slide 0 -> Step 3.5
+      // Slide 1 -> Step 5.2
+      // Slide 2 -> Step 6.2
+      const targetStep = targetIdx === 0 ? 3.5 : targetIdx === 1 ? 5.2 : 6.2;
+      const targetProg = targetStep / PIN_END_STEP;
+      const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
+      const targetScrollY = trackTopOffset + targetProg * totalScrollable;
 
-  // ── 4. CONTINUOUS LERP RENDER ENGINE ──
+      const lenis = smootherRef?.current;
+      if (lenis && typeof lenis.scrollTo === "function") {
+        lenis.scrollTo(targetScrollY, { duration: 1.2 });
+      } else {
+        window.scrollTo({ top: targetScrollY, behavior: "smooth" });
+      }
+    },
+    [smootherRef]
+  );
+
+  // ── 5. CONTINUOUS LERP RENDER ENGINE ──
   useEffect(() => {
     if (!shouldLoadRest || !scopeRef.current) return;
 
     const scope = scopeRef.current;
     let isRunning = true;
-    // Reduced motion: skip the pinned scroll-scrub entirely and leave content
-    // settled and visible. The CSS media query alone cannot stop this rAF loop.
+
     if (prefersReducedMotion()) {
       isRunning = false;
       settleReducedMotion(scope);
@@ -229,7 +231,6 @@ export default function ServicesDesktop() {
     }
 
     let lastTime = performance.now();
-
     const EASE_FACTOR = 0.15;
 
     const heroTextWrap = scope.querySelector<HTMLElement>(".hero-text-wrap");
@@ -242,7 +243,6 @@ export default function ServicesDesktop() {
     const s2DesktopSec = scope.querySelector<HTMLElement>(".s2-desktop-section");
     const appSecWrap = scope.querySelector<HTMLElement>(".services-appsec-wrap");
 
-    // Hardware-promote key nodes
     [
       heroTextWrap,
       heroTopLayer,
@@ -267,52 +267,39 @@ export default function ServicesDesktop() {
       lastTime = time;
 
       const dynamicEase = 1 - Math.exp(-EASE_FACTOR * 60 * dt);
-      let delta =
-        (targetProgress.current - smoothProgress.current) * dynamicEase;
+      let delta = (targetProgress.current - smoothProgress.current) * dynamicEase;
 
       if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
         delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
       }
 
-      smoothProgress.current = Math.min(
-        Math.max(smoothProgress.current + delta, 0),
-        1
-      );
-
+      smoothProgress.current = Math.min(Math.max(smoothProgress.current + delta, 0), 1);
       const currentProgress = smoothProgress.current;
-
-      // 1 step = 100vh of scroll (same as before)
       const stepProgress = currentProgress * PIN_END_STEP;
-      const { vh } = scrollMetricsRef.current;
 
-      // STEP 1: HERO HOLD & TOP LAYER NARROW (STEPS 0.0 -> 0.8)
+      // STEP 1: HERO
       const heroProg = easeOutQuad(Math.min(Math.max(stepProgress / 0.8, 0), 1));
-
       if (heroTextWrap) {
         heroTextWrap.style.transformOrigin = "left bottom";
         heroTextWrap.style.transform = `translate3d(0, ${(heroProg * 60).toFixed(2)}px, 0) scale3d(${(1 - heroProg * 0.25).toFixed(4)}, ${(1 - heroProg * 0.25).toFixed(4)}, 1)`;
       }
-
       if (heroTopLayer) {
         heroTopLayer.style.width = `${(100 - heroProg * 40).toFixed(2)}%`;
       }
-
       if (heroBtn) {
         const btnProg = easeOutQuad(Math.min(Math.max(stepProgress / 0.05, 0), 1));
         heroBtn.style.opacity = `${(1 - btnProg).toFixed(2)}`;
         heroBtn.style.pointerEvents = btnProg >= 1 ? "none" : "auto";
       }
 
-      // STEP 2: SECTION ONE CLIP REVEAL & TEXT REVEAL (STEPS 0.8 -> 2.2)
+      // STEP 2: SECTION ONE
       const s1Prog = easeOutQuad(Math.min(Math.max((stepProgress - 0.8) / 1.4, 0), 1));
-
       if (secOneWrap) {
         const clipVal = ((1 - s1Prog) * 100).toFixed(2);
         const clipValue = `inset(${clipVal}% 0% 0% 0%)`;
         secOneWrap.style.clipPath = clipValue;
         secOneWrap.style.setProperty("-webkit-clip-path", clipValue);
       }
-
       triggerPlayOnceTextReveal(".section-one-wrap", stepProgress, 1.1);
 
       if (heroBg) {
@@ -320,14 +307,13 @@ export default function ServicesDesktop() {
         const scaleVal = (1.0 + s1Prog * 0.6).toFixed(4);
         heroBg.style.transform = `translate3d(${xPerc}%, 0, 0) scale3d(${scaleVal}, ${scaleVal}, 1)`;
       }
-
       if (glassCard) {
         const cardProg = easeOutQuad(Math.min(Math.max((stepProgress - 1.2) / 0.8, 0), 1));
         glassCard.style.opacity = `${cardProg.toFixed(2)}`;
         glassCard.style.transform = `translate3d(${((1 - cardProg) * 40).toFixed(2)}px, 0, 0)`;
       }
 
-      // STEP 3: VERTICAL SLIDE UP FOR SECTION TWO (STEPS 2.5 -> 3.8)
+      // STEP 3: SECTION TWO VERTICAL REVEAL
       const rawS2Prog = Math.min(Math.max((stepProgress - 2.5) / 1.3, 0), 1);
       const s2SlideProg = easeOutQuad(rawS2Prog);
 
@@ -337,13 +323,8 @@ export default function ServicesDesktop() {
           secTwoWrap.style.transform = `translate3d(0, ${((1 - s2SlideProg) * 100).toFixed(2)}%, 0)`;
         }
       }
-
       if (s2DesktopSec) {
         s2DesktopSec.style.visibility = stepProgress >= 2.3 ? "visible" : "hidden";
-      }
-
-      if (secOneWrap && stepProgress < 2.5) {
-        secOneWrap.style.transform = `translate3d(0, 0%, 0) scale3d(1, 1, 1)`;
       }
 
       triggerPlayOnceTextReveal(".services-section-two-wrap", stepProgress, 2.9);
@@ -354,42 +335,32 @@ export default function ServicesDesktop() {
         glassCard.style.transform = `translate3d(0, ${(-cardOutProg * 50).toFixed(2)}px, 0)`;
       }
 
-      if (stepProgress >= 2.8 && stepProgress < 6.8) {
-        setIsSectionTwoActive(true);
-      } else {
-        setIsSectionTwoActive(false);
-      }
+      setIsSectionTwoActive(stepProgress >= 2.8 && stepProgress < 6.8);
 
-      // STEP 4: BALANCED & SYNCHRONIZED SECTION TWO SLIDE INDEXING
+      // STEP 4: SYNCHRONIZED SLIDE INDEX CALCULATION
       if (stepProgress < 4.8) {
-        triggerSec2Hook(0);
+        setSec2SlideIdx(0);
       } else if (stepProgress >= 4.8 && stepProgress < 5.8) {
-        triggerSec2Hook(1);
+        setSec2SlideIdx(1);
       } else {
-        triggerSec2Hook(2);
+        setSec2SlideIdx(2);
       }
 
-      // STEP 5: APP SECTION REVEAL OVER SECTION TWO (STEPS 6.8 -> 8.2)
+      // STEP 5: APP SECTION REVEAL
       const appProg = easeOutQuad(Math.min(Math.max((stepProgress - 6.8) / 1.4, 0), 1));
-
       if (appSecWrap) {
         appSecWrap.style.visibility = stepProgress >= 6.6 ? "visible" : "hidden";
         appSecWrap.style.transform = `translate3d(0, ${((1 - appProg) * 100).toFixed(2)}%, 0)`;
       }
-
       if (secTwoWrap && appProg > 0 && stepProgress < 6.8) {
         secTwoWrap.style.transform = `translate3d(0, 0%, 0) scale3d(1, 1, 1)`;
       }
 
       triggerPlayOnceTextReveal(".services-appsec-wrap", stepProgress, 7.2);
 
-      // Appsection stays visible as the pinned scene ends
       if (appSecWrap && stepProgress >= 6.8) {
         appSecWrap.style.opacity = "1";
       }
-
-      // CTA & Footer now live in normal document flow below the pinned track.
-      void vh;
 
       rafId.current = requestAnimationFrame(renderTransforms);
     };
@@ -441,7 +412,7 @@ export default function ServicesDesktop() {
         window.removeEventListener("scroll", handleScroll);
       }
     };
-  }, [shouldLoadRest, smootherRef, triggerSec2Hook, triggerPlayOnceTextReveal]);
+  }, [shouldLoadRest, smootherRef, triggerPlayOnceTextReveal]);
 
   const isReady = preloaderDone && introDone;
 
@@ -456,7 +427,7 @@ export default function ServicesDesktop() {
           ref={fixedFrameRef}
           className="services-pin fixed top-0 left-0 h-[100vh] w-full overflow-hidden bg-black z-10 transform-gpu"
         >
-          {/* Layer 1: Hero Container */}
+          {/* Layer 1: Hero */}
           <div className="services-hero-wrap absolute inset-0 z-10 pointer-events-auto w-full h-full structural-layer transform-gpu will-change-transform">
             <Hero />
           </div>
@@ -464,7 +435,7 @@ export default function ServicesDesktop() {
           {/* DOWNSTREAM SECTIONS */}
           {shouldLoadRest && (
             <>
-              {/* Layer 2: Section One Container */}
+              {/* Layer 2: Section One */}
               <div
                 className="section-one-wrap absolute inset-0 w-full h-full z-20 overflow-hidden structural-layer transform-gpu will-change-[clip-path]"
                 style={{
@@ -475,7 +446,7 @@ export default function ServicesDesktop() {
                 <SectionOne />
               </div>
 
-              {/* Layer 3: Section Two Container */}
+              {/* Layer 3: Section Two */}
               <div
                 className="services-section-two-wrap absolute inset-0 w-full h-full z-30 overflow-hidden structural-layer transform-gpu will-change-transform"
                 style={{
@@ -483,10 +454,14 @@ export default function ServicesDesktop() {
                   transform: "translate3d(0, 100%, 0)",
                 }}
               >
-                <SectionTwo isActive={isSectionTwoActive} />
+                <SectionTwo
+                  isActive={isSectionTwoActive}
+                  activeSlideIndex={sec2SlideIdx}
+                  onSelectSlide={handleSelectSlide}
+                />
               </div>
 
-              {/* Layer 4: App Section Container */}
+              {/* Layer 4: App Section */}
               <div
                 className="services-appsec-wrap absolute inset-0 w-full h-full z-35 overflow-hidden structural-layer transform-gpu will-change-transform"
                 style={{
@@ -501,7 +476,7 @@ export default function ServicesDesktop() {
         </div>
       </div>
 
-      {/* STANDARD DOCUMENT FLOW FOR CTA AND FOOTER */}
+      {/* STANDARD FLOW FOR CTA & FOOTER */}
       {shouldLoadRest && (
         <div
           className="relative z-20 w-full bg-black"

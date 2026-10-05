@@ -271,7 +271,7 @@ export default function WaveCanvas({ imageSrc, onReady, preloaderDone = true }: 
       {!isMobileOrTablet && (
         <video
           ref={videoRef}
-          src="/videos/Pool-Water-Reflect-opt.webm"
+          src="/videos/Pool-Water-Reflect-LOOP-crossfade.webm"
           loop
           muted
           playsInline

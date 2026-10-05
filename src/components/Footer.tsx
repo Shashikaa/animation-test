@@ -46,6 +46,9 @@ export default function Footer() {
     >
       <style jsx global>{`
         @media (max-width: 1023px) {
+          .responsive-row-1 {
+            justify-content: center !important;
+          }
           .responsive-row-2 {
             flex-direction: column !important;
             align-items: center !important;
@@ -120,6 +123,7 @@ export default function Footer() {
       >
         {/* ROW 1: Logo */}
         <div
+          className="responsive-row-1"
           style={{
             width: "100%",
             display: "flex",

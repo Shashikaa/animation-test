@@ -15,20 +15,10 @@ const Footer = dynamic(() => import("@/src/components/Footer"));
 
 const clamp = (val: number, min = 0, max = 1) => Math.min(Math.max(val, min), max);
 
-// Original timeline: 6 steps, Hero(1) + Sec1(1) + Sec2(2) + App(1) + Footer(1)
 const ORIGINAL_TOTAL_STEPS = 6.0;
-
-// Pinned scene ends when the App section is fully in place (old footer start, step 5.0).
-// CTA + Footer now live in normal document flow after the pinned track.
 const PIN_END_STEP = 5.0;
 const PIN_END_P = PIN_END_STEP / ORIGINAL_TOTAL_STEPS;
-
-// Short hold at the end of the pin so the smoothed animation finishes
-// BEFORE the pin releases and the CTA scrolls in. Set to 0 to disable.
 const HOLD_VH = 40;
-
-// Initial track height (before measuring), assuming App = Footer = 1 viewport.
-// Same formula as updateMetrics: PIN_END_P * (3vh + app + footer) + hold + 1vh
 const INITIAL_TRACK_HEIGHT_VH = PIN_END_P * 5 * 100 + HOLD_VH + 100;
 
 export default function ServicesMobile() {
@@ -43,6 +33,7 @@ export default function ServicesMobile() {
   const footerRef = useRef<HTMLDivElement>(null);
 
   const [isSectionTwoActive, setIsSectionTwoActive] = useState(false);
+  const [sec2SlideIdx, setSec2SlideIdx] = useState(0);
 
   const scrollMetricsRef = useRef({
     totalScrollable: 0,
@@ -55,7 +46,6 @@ export default function ServicesMobile() {
   const currentProgress = useRef(0);
   const targetProgress = useRef(0);
   const rafId = useRef<number | null>(null);
-  const lastSec2Idx = useRef<number>(-1);
 
   const { smootherRef } = useSite();
   const { introDone, preloaderDone, shouldLoadRest } = useHeroIntro(scopeRef, {
@@ -63,15 +53,6 @@ export default function ServicesMobile() {
     introDurationMs: 2800,
     unlockScrollEarlyMs: 1800,
   });
-
-  const triggerSec2Hook = useCallback((nextIdx: number) => {
-    if (nextIdx !== lastSec2Idx.current) {
-      lastSec2Idx.current = nextIdx;
-      if (typeof window !== "undefined" && typeof (window as any)._sec2GoTo === "function") {
-        (window as any)._sec2GoTo(nextIdx);
-      }
-    }
-  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined" && "scrollRestoration" in window.history) {
@@ -101,7 +82,7 @@ export default function ServicesMobile() {
     }
   }, [preloaderDone, shouldLoadRest, smootherRef]);
 
-  // Dynamic track height calculation
+  // ── 1. MEASURE METRICS ──
   const updateMetrics = useCallback(() => {
     if (!trackRef.current) return;
 
@@ -111,8 +92,6 @@ export default function ServicesMobile() {
     const appHeight = appSecRef.current?.offsetHeight || vh;
     const footerHeight = footerRef.current?.offsetHeight || vh;
 
-    // Same scroll distance per progress unit as before (3vh + App + Footer),
-    // but the track now only covers the pinned part (p = 0 -> PIN_END_P).
     const fullScrollable = vh * 3.0 + appHeight + footerHeight;
     const animScrollable = PIN_END_P * fullScrollable;
     const holdPx = (HOLD_VH / 100) * vh;
@@ -148,7 +127,6 @@ export default function ServicesMobile() {
 
     updateMetrics();
 
-    // App + Footer heights drive scroll speed (as before), so re-measure when they load/change
     const resizeObserver = new ResizeObserver(() => updateMetrics());
     if (appSecRef.current) resizeObserver.observe(appSecRef.current);
     if (footerRef.current) resizeObserver.observe(footerRef.current);
@@ -163,18 +141,39 @@ export default function ServicesMobile() {
     };
   }, [shouldLoadRest, updateMetrics, handleResize]);
 
+  // ── 2. MANUAL CLICK HANDLER FOR SLIDE INDICATORS ──
+  const handleSelectSlide = useCallback(
+    (targetIdx: number) => {
+      // Map Section Two slide indices to step progress targets:
+      // Slide 0 -> Step 2.5
+      // Slide 1 -> Step 3.45
+      // Slide 2 -> Step 3.8
+      const targetStep = targetIdx === 0 ? 2.5 : targetIdx === 1 ? 3.45 : 3.8;
+      const targetP = targetStep / ORIGINAL_TOTAL_STEPS;
+      const { animScrollable, trackTopOffset } = scrollMetricsRef.current;
+      const targetScrollY = trackTopOffset + (targetP / PIN_END_P) * animScrollable;
+
+      const lenis = smootherRef?.current;
+      if (lenis && typeof lenis.scrollTo === "function") {
+        lenis.scrollTo(targetScrollY, { duration: 1.0 });
+      } else {
+        window.scrollTo({ top: targetScrollY, behavior: "smooth" });
+      }
+    },
+    [smootherRef]
+  );
+
+  // ── 3. RENDER LOOP ──
   useEffect(() => {
     if (!shouldLoadRest) return;
 
     let isRunning = true;
-    // Reduced motion: skip the pinned scroll-scrub entirely and leave content
-    // settled and visible. The CSS media query alone cannot stop this rAF loop.
+
     if (prefersReducedMotion()) {
       isRunning = false;
       settleReducedMotion(scopeRef.current);
       return;
     }
-
 
     const EASE_FACTOR = 0.06;
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
@@ -199,13 +198,10 @@ export default function ServicesMobile() {
       currentProgress.current += delta;
 
       const p = currentProgress.current;
-
-      // Same step mapping as before (p is scaled to 0 -> PIN_END_P)
       const stepProgress = p * ORIGINAL_TOTAL_STEPS;
-
       const { vh } = scrollMetricsRef.current;
 
-      // --- STEP 1: COMPRESS HERO TOP LAYER (0.0 -> 1.0) ---
+      // STEP 1: HERO
       const heroTextWrap = scopeRef.current?.querySelector<HTMLElement>(".hero-text-wrap");
       const heroBtn = scopeRef.current?.querySelector<HTMLElement>(".hero-btn");
       const heroTopLayer = scopeRef.current?.querySelector<HTMLElement>(".services-hero-top-layer");
@@ -229,7 +225,7 @@ export default function ServicesMobile() {
         serviceHeroBg.style.transform = `translate3d(0, ${-120 * step1Prog}px, 0)`;
       }
 
-      // --- STEP 2: SECTION ONE SLIDES UP OVER HERO (1.0 -> 2.0) ---
+      // STEP 2: SECTION ONE
       const step2Prog = clamp(stepProgress - 1.0);
       if (sectionOneRef.current) {
         sectionOneRef.current.style.transform = `translate3d(0, ${(1 - step2Prog) * 100}%, 0)`;
@@ -238,7 +234,7 @@ export default function ServicesMobile() {
         heroPanelRef.current.style.transform = `translate3d(0, ${-step2Prog * 15}%, 0)`;
       }
 
-      // --- STEP 3: SECTION TWO SLIDES UP & CYCLES SLIDES (2.0 -> 4.0) ---
+      // STEP 3: SECTION TWO
       const entryProg = clamp(stepProgress - 2.0);
 
       if (sectionTwoRef.current) {
@@ -251,22 +247,19 @@ export default function ServicesMobile() {
       if (stepProgress >= 2.0 && stepProgress < 4.0) {
         setIsSectionTwoActive(true);
 
-        // Slide 0 remains active while sliding up (2.0 -> 3.0) and during buffer (3.0 -> 3.25)
         if (stepProgress < 3.25) {
-          triggerSec2Hook(0);
+          setSec2SlideIdx(0);
         } else if (stepProgress < 3.65) {
-          // Slide 1 stays active across equal scroll distance (3.25 -> 3.65)
-          triggerSec2Hook(1);
+          setSec2SlideIdx(1);
         } else {
-          // Slide 2 stays active until Section Two begins exiting (3.65 -> 4.0)
-          triggerSec2Hook(2);
+          setSec2SlideIdx(2);
         }
       } else if (stepProgress < 2.0) {
         setIsSectionTwoActive(false);
-        triggerSec2Hook(0);
+        setSec2SlideIdx(0);
       }
 
-      // --- STEP 4: APP SECTION SLIDES UP (4.0 -> 5.0) ---
+      // STEP 4: APP SECTION
       const appProg = clamp(stepProgress - 4.0);
       if (appSecRef.current) {
         const appHeight = appSecRef.current.offsetHeight || vh;
@@ -278,8 +271,6 @@ export default function ServicesMobile() {
       if (sectionTwoRef.current && appProg > 0) {
         sectionTwoRef.current.style.transform = `translate3d(0, ${-appProg * 15}%, 0)`;
       }
-
-      // CTA & Footer now live in normal document flow below the pinned track.
 
       rafId.current = requestAnimationFrame(render);
     };
@@ -310,8 +301,6 @@ export default function ServicesMobile() {
         }
       }
 
-      // Animation completes after `animScrollable` (p = PIN_END_P); the remaining
-      // HOLD_VH is a hold so smoothing catches up before the pin releases.
       targetProgress.current = clamp(relativeScroll / animScrollable) * PIN_END_P;
     };
 
@@ -333,9 +322,8 @@ export default function ServicesMobile() {
       } else {
         window.removeEventListener("scroll", handleScroll);
       }
-      if (typeof window !== "undefined") delete (window as any)._sec2GoTo;
     };
-  }, [shouldLoadRest, smootherRef, triggerSec2Hook]);
+  }, [shouldLoadRest, smootherRef]);
 
   const isReady = preloaderDone && introDone;
 
@@ -375,7 +363,11 @@ export default function ServicesMobile() {
                 className="about-stack-layer absolute inset-0 w-full h-svh z-30 transform-gpu will-change-transform backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
-                <SectionTwo isActive={isSectionTwoActive} />
+                <SectionTwo
+                  isActive={isSectionTwoActive}
+                  activeSlideIndex={sec2SlideIdx}
+                  onSelectSlide={handleSelectSlide}
+                />
               </div>
 
               {/* Layer 4: App Section Wrapper */}

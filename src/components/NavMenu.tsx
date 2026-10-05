@@ -16,17 +16,17 @@ const NAV_LINKS = [
   {
     label: "Home",
     href: "/",
-    image: "/menu.webp"
+    image: "/p10.webp"
   },
   {
     label: "About Us",
     href: "/about",
-    image: "/menu-about.webp"
+    image: "/terrace2-bg.webp"
   },
   {
     label: "Services",
     href: "/services",
-    image: "/menu-service.webp"
+    image: "/pool-courtyard-bg.webp"
   },
   {
     label: "Projects",
@@ -36,7 +36,7 @@ const NAV_LINKS = [
   {
     label: "Contact Us",
     href: "/contact",
-    image: "/menu-contact.webp"
+    image: "/menu.webp"
   },
 ];
 
@@ -250,16 +250,16 @@ function ImagePanel({ activeIndex }: { activeIndex: number }) {
             }
             className="!absolute !inset-0 !z-10"
           >
-<img
-  src={MENU_IMAGE_ITEMS[layer.index].image}
-  alt={MENU_IMAGE_ITEMS[layer.index].label}
-  loading="eager"
-  decoding="async"
-  draggable={false}
-  width={600}
-  height={800}
-  className="!w-full !h-full !object-cover !object-center !block"
-/>
+            <img
+              src={MENU_IMAGE_ITEMS[layer.index].image}
+              alt={MENU_IMAGE_ITEMS[layer.index].label}
+              loading="eager"
+              decoding="async"
+              draggable={false}
+              width={600}
+              height={800}
+              className="!w-full !h-full !object-cover !object-center !block"
+            />
           </motion.div>
         ) : (
           <div
@@ -480,19 +480,22 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
             <CloseButton onClick={onClose} />
           </div>
 
-          <div className="!flex-1 !flex !flex-col !px-6 md:!px-10 !pt-[40px] !pb-[80px]">
+          {/* No horizontal padding here: the links carry the same padding
+              themselves, so text stays in the same place but the whole row
+              is clickable. */}
+          <div className="!flex-1 !flex !flex-col !pt-[40px] !pb-[80px]">
             <motion.nav
               variants={linkContainerVariants}
               initial="hidden"
               animate="visible"
               exit="hidden"
               onMouseLeave={() => setHoveredIndex(null)}
-              className="!flex !flex-col !items-start"
+              className="!flex !flex-col !items-stretch !w-full"
             >
               {NAV_LINKS.map(({ label, href }, i) => (
                 <div
                   key={label}
-                  className="!overflow-hidden"
+                  className="!overflow-hidden !w-full"
                 >
                   <motion.div variants={linkVariants}>
                     <NavLink
@@ -508,7 +511,7 @@ function MobileMenu({ open, onClose }: NavMenuProps) {
                   {label === "Services" && (
                     <motion.div
                       variants={linkVariants}
-                      className="!flex !flex-col !gap-2 !pl-4 !pb-3 md:!pl-6"
+                      className="!flex !flex-col !-mt-1 !pb-2"
                     >
                       {SERVICE_SUB_LINKS.map(service => (
                         <ServiceSubLink
@@ -780,19 +783,22 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
               <SharedLogoMarkup onClose={onClose} />
             </div>
 
-            <div className="!my-auto !py-8 !px-5 md:!px-[30px] lg:!px-[55px]">
+            {/* No horizontal padding here: the links carry the same padding
+                themselves, so text stays in the same place but the whole row
+                is clickable. */}
+            <div className="!my-auto !py-8 !w-full">
               <motion.nav
                 variants={linkContainerVariants}
                 initial="hidden"
                 animate="visible"
                 exit="hidden"
                 onMouseLeave={handleMouseLeaveNav}
-                className="!flex !flex-col !gap-4 !items-start"
+                className="!flex !flex-col !gap-4 !items-stretch !w-full"
               >
                 {NAV_LINKS.map(({ label, href }, i) => (
                   <div
                     key={label}
-                    className="!overflow-hidden"
+                    className="!overflow-hidden !w-full"
                   >
                     <motion.div variants={linkVariants}>
                       <NavLink
@@ -807,7 +813,7 @@ function DesktopMenu({ open, onClose }: NavMenuProps) {
                     {label === "Services" && (
                       <motion.div
                         variants={linkVariants}
-                        className="!flex !flex-col !gap-2 !pl-4 !pt-2 !pb-1"
+                        className="!flex !flex-col !pt-1 !pb-0"
                       >
                         {SERVICE_SUB_LINKS.map(
                           (service, serviceIndex) => (
@@ -900,7 +906,7 @@ export default function NavMenu({
   );
 }
 
-// ── NAV LINK: NEXT.JS LINK WITH ROUTE PREFETCHING & SCROLL UNLOCK ──
+// ── NAV LINK: FULL-ROW CLICKABLE, WITH ROUTE PREFETCHING & SCROLL UNLOCK ──
 function NavLink({
   label,
   href,
@@ -947,12 +953,25 @@ function NavLink({
       onTouchCancel={() => setIsTouched(false)}
       className={
         isMobile
-          ? "!inline-block !no-underline !leading-[2.0] md:!leading-[2.5] !cursor-pointer active:!scale-[0.98] active:!opacity-90 !transition-transform !duration-150"
-          : "!inline-block !no-underline !leading-[1.2] !cursor-pointer"
+          ? [
+              "!block !w-full !no-underline !cursor-pointer",
+              // same horizontal padding the container used to have,
+              // same vertical padding as the original
+              "!px-6 md:!px-10 !py-1",
+              "active:!bg-white/[0.06] active:!opacity-90",
+              "!transition-colors !duration-150",
+            ].join(" ")
+          : [
+              "!block !w-full !no-underline !cursor-pointer",
+              "!px-5 md:!px-[30px] lg:!px-[55px] !py-1.5",
+              "hover:!bg-white/[0.06] active:!bg-white/[0.10]",
+              "!transition-colors !duration-150",
+            ].join(" ")
       }
+      style={{ display: "block" }}
     >
       <span
-        className="font-display !inline-block !select-none !font-[300] !normal-case !not-italic !transition-[color,letter-spacing] !duration-[250ms,350ms] !ease-in-out"
+        className="font-display !inline-block !select-none !font-[300] !normal-case !not-italic !leading-[1.4] lg:!leading-[1.0] !transition-[color,letter-spacing] !duration-[250ms,350ms] !ease-in-out"
         style={{
           fontSize: isMobile
             ? "24px"
@@ -1007,7 +1026,24 @@ function ServiceSubLink({
         onMouseEnter?.();
       }}
       onBlur={() => setIsHovered(false)}
-      className="!w-fit !no-underline !transition-opacity !duration-200 hover:!opacity-100 active:!opacity-70"
+      className={
+        isMobile
+          ? [
+              "!block !w-full !no-underline !cursor-pointer",
+              // left padding = container padding + original indent
+              // (24+16 = 40px, md: 40+24 = 64px), so text sits where it did before
+              "!pl-10 md:!pl-16 !pr-6 md:!pr-10 !py-1",
+              "active:!bg-white/[0.06] active:!opacity-90",
+              "!transition-colors !duration-150",
+            ].join(" ")
+          : [
+              "!block !w-full !no-underline !cursor-pointer",
+              // left padding = container padding + original indent (16px)
+              "!pl-9 md:!pl-[46px] lg:!pl-[71px] !pr-5 md:!pr-[30px] lg:!pr-[55px] !py-1",
+              "hover:!bg-white/[0.06] active:!bg-white/[0.10]",
+              "!transition-colors !duration-150",
+            ].join(" ")
+      }
     >
       <span
         className="font-display !block !font-[300] !leading-snug"

@@ -16,7 +16,7 @@ export default function SubServiceSectionOne({ data }: SubServiceSectionOneProps
     if (!el) return;
     const { IntersectionObserver } = window;
     if (!IntersectionObserver) return;
-    
+
     const observer = new IntersectionObserver(
       ([entry]) => setOffscreen(!entry.isIntersecting),
       { threshold: 0 }
@@ -31,14 +31,14 @@ export default function SubServiceSectionOne({ data }: SubServiceSectionOneProps
       className="s10-section relative w-full h-full overflow-hidden"
     >
       {/* ── Background Static Image Layer ── */}
-<div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full mix-blend-normal">
-  <img 
-    src="/toorak-top-view.webp" 
-    alt="" aria-hidden="true" 
-    className="w-full h-full object-cover" loading="lazy" />
-  {/* Dark Overlay */}
-  <div className="absolute inset-0 bg-black/50" />
-</div>
+      <div className="absolute inset-0 z-[1] pointer-events-auto w-full h-full mix-blend-normal">
+        <img 
+          src="/toorak-top-view.webp" 
+          alt="" aria-hidden="true" 
+          className="w-full h-full object-cover" loading="lazy" />
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/50" />
+      </div>
 
       {/* ── Foreground Layout Grid ── */}
       <div className="s10-content-initial section-container relative z-10 w-full h-full flex flex-col justify-between max-lg:justify-start max-lg:gap-4 !pt-[100px] md:!pt-[18vh] lg:!pt-[18vh] pb-[10vh]">
@@ -69,13 +69,15 @@ export default function SubServiceSectionOne({ data }: SubServiceSectionOneProps
       </div>
 
       {/* ── THE REAL IMAGE LAYER (Constrained wrapper with desktop max-width 500px) ── */}
-      <div className="s10-img-absolute-container absolute inset-0 z-[11] overflow-hidden w-full h-full">
+      <div className="s10-img-absolute-container absolute inset-0 z-[11] overflow-hidden w-full h-full pointer-events-none">
         <div className="s10-img-inner-wrap absolute right-[4vw] lg:right-[8vw] bottom-[10vh] w-[calc(100vw-8vw)] lg:w-[min(500px,38vw)] h-[220px] sm:h-[320px] lg:h-[clamp(300px,28vh,420px)] origin-bottom-right transition-none overflow-hidden">
-          {/* The Image */}
+          {/* The Image: Configured with h-[125%] to provide overflow bleed room during parallax translate */}
           <img
             src={data.sideImageUrl} 
             alt={data.title}
-            className="s10-img-element w-full h-full object-cover origin-center relative z-10" loading="lazy" />
+            className="s10-img-element absolute top-0 left-0 w-full h-[125%] object-cover origin-center z-10 will-change-transform" 
+            loading="lazy" 
+          />
           {/* Image Specific Dark Overlay */}
           <div className="absolute inset-0 bg-black/20 z-20 pointer-events-none mix-blend-multiply" />
         </div>

@@ -15,12 +15,7 @@ const SectionFive = dynamic(() => import("@/src/components/About/SectionFive"));
 const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
-// Pinned scene ends at p = 0.82 (end of Section 5, old footer start).
-// CTA + Footer now live in normal document flow after the pinned track.
 const PIN_END_P = 0.82;
-
-// Initial track height (before measuring), assuming footer height = 1 viewport.
-// Same formula as updateMetrics: PIN_END_P * (4vh + footer) + 1vh
 const INITIAL_TRACK_HEIGHT_VH = (PIN_END_P * 5 + 1) * 100;
 
 const clamp = (val: number, min = 0, max = 1) =>
@@ -33,6 +28,9 @@ const mapRange = (val: number, inMin: number, inMax: number) => {
 
 export default function AboutMobile() {
   const [isSectionFiveActive, setIsSectionFiveActive] = useState(false);
+
+  // Use refs to track state internally and avoid redundant React re-renders in rAF
+  const isSectionFiveActiveRef = useRef(false);
 
   const scopeRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -88,8 +86,6 @@ export default function AboutMobile() {
     const vh = window.innerHeight;
     const vw = window.innerWidth;
 
-    // Same scroll distance per progress unit as before (4vh + footer height),
-    // but the track now only covers the pinned part (p = 0 -> PIN_END_P).
     const footerHeight = footerRef.current?.offsetHeight || vh;
     const fullScrollable = vh * 4 + footerHeight;
     const totalScrollable = PIN_END_P * fullScrollable;
@@ -125,7 +121,7 @@ export default function AboutMobile() {
 
     updateMetrics();
 
-    // Footer height drives scroll speed (as before), so re-measure when it loads/changes
+    // Use ResizeObserver entry parameters to prevent DOM layout thrashing
     const resizeObserver = new ResizeObserver(() => updateMetrics());
     if (footerRef.current) resizeObserver.observe(footerRef.current);
 
@@ -159,25 +155,19 @@ export default function AboutMobile() {
 
     const panels =
       trackRef.current?.querySelectorAll<HTMLElement>(".about-stack-layer");
-
     const s5Bg = scopeRef.current?.querySelector<HTMLElement>(".s5-bg");
 
     let isRunning = true;
-    // Reduced motion: skip the pinned scroll-scrub entirely and leave content
-    // settled and visible. The CSS media query alone cannot stop this rAF loop.
+
     if (prefersReducedMotion()) {
       isRunning = false;
       settleReducedMotion(scopeRef.current);
       return;
     }
 
-
-    // Easing & speed cap controls:
-    const EASE_FACTOR = 0.06;
-
-    // STRICT MAX SPEED CAP PER FRAME:
-    // Lower values (e.g., 0.003 - 0.005) make fast flicks smooth and controlled.
-    const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
+    // Smooth physics factors for mobile touch inputs
+    const EASE_FACTOR = 0.04; // Reduced from 0.06 to smooth out rapid touch flicks
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.015; // Raised limit to allow fluid momentum without jumpiness
 
     let lastTime = performance.now();
 
@@ -193,16 +183,13 @@ export default function AboutMobile() {
       let delta =
         (targetProgress.current - currentProgress.current) * dynamicEase;
 
-      // Cap maximum speed per frame during aggressive swiping
       if (Math.abs(delta) > MAX_PROGRESS_DELTA_PER_FRAME) {
         delta = Math.sign(delta) * MAX_PROGRESS_DELTA_PER_FRAME;
       }
 
       currentProgress.current += delta;
-
       const p = currentProgress.current;
 
-      // Original progress map keyframes
       const s1Prog = mapRange(p, 0.0, 0.12);
       const s2Prog = mapRange(p, 0.12, 0.24);
       const s3EntranceProg = mapRange(p, 0.24, 0.36);
@@ -228,8 +215,8 @@ export default function AboutMobile() {
 
         if (panels[4]) {
           const visible = p >= 0.36;
+          // Use CSS opacity only — avoids pointer-events DOM layout re-evaluations
           panels[4].style.opacity = visible ? "1" : "0";
-          panels[4].style.pointerEvents = visible ? "auto" : "none";
         }
 
         if (panels[5]) {
@@ -238,15 +225,17 @@ export default function AboutMobile() {
         }
       }
 
-      // CTA & Footer now live in normal document flow below the pinned track.
-
       if (s5Bg) {
         const parallaxProg = mapRange(p, 0.48, PIN_END_P);
         s5Bg.style.transform = `translate3d(0, ${-parallaxProg * 50}%, 0)`;
       }
 
+      // Single-fire State Toggle: Prevents calling setState on every animation frame
       if (p >= 0.6 && p <= PIN_END_P) {
-        setIsSectionFiveActive(true);
+        if (!isSectionFiveActiveRef.current) {
+          isSectionFiveActiveRef.current = true;
+          setIsSectionFiveActive(true);
+        }
 
         if (s5ActiveProg < 0.33) {
           triggerSec5Hook(0);
@@ -256,7 +245,10 @@ export default function AboutMobile() {
           triggerSec5Hook(2);
         }
       } else if (p < 0.6) {
-        setIsSectionFiveActive(false);
+        if (isSectionFiveActiveRef.current) {
+          isSectionFiveActiveRef.current = false;
+          setIsSectionFiveActive(false);
+        }
         triggerSec5Hook(0);
       }
 
@@ -266,7 +258,6 @@ export default function AboutMobile() {
     const handleScroll = (e?: any) => {
       const lenis = smootherRef?.current;
       const scrollY = e?.scroll ?? lenis?.scroll ?? window.scrollY;
-
       const { totalScrollable, trackTopOffset } = scrollMetricsRef.current;
 
       if (totalScrollable <= 0) return;
@@ -290,7 +281,6 @@ export default function AboutMobile() {
         }
       }
 
-      // Map the pinned track onto p = 0 -> PIN_END_P so keyframes stay identical
       targetProgress.current = clamp(relativeScroll / totalScrollable) * PIN_END_P;
     };
 
@@ -337,39 +327,39 @@ export default function AboutMobile() {
           ref={fixedFrameRef}
           className="fixed top-0 left-0 w-full overflow-hidden z-10 h-svh"
         >
-          <div className="about-stack-layer absolute inset-0 w-full h-svh z-10 transform-gpu will-change-transform backface-hidden">
+          <div className="about-stack-layer absolute inset-0 w-full h-svh z-10 transform-gpu backface-hidden">
             <Hero isMobile={true} />
           </div>
 
           {shouldLoadRest && (
             <>
               <div
-                className="about-stack-layer absolute inset-0 w-full h-svh z-20 transform-gpu will-change-transform backface-hidden"
+                className="about-stack-layer absolute inset-0 w-full h-svh z-20 transform-gpu backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionOne />
               </div>
 
               <div
-                className="about-stack-layer absolute inset-0 w-full h-svh z-30 transform-gpu will-change-transform backface-hidden"
+                className="about-stack-layer absolute inset-0 w-full h-svh z-30 transform-gpu backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionTwo />
               </div>
 
               <div
-                className="about-stack-layer absolute inset-0 w-full h-svh z-50 transform-gpu will-change-transform backface-hidden"
+                className="about-stack-layer absolute inset-0 w-full h-svh z-50 transform-gpu backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionThree />
               </div>
 
-              <div className="about-stack-layer absolute inset-0 w-full h-svh z-40 transform-gpu opacity-0 pointer-events-none backface-hidden">
+              <div className="about-stack-layer absolute inset-0 w-full h-svh z-40 transform-gpu opacity-0 backface-hidden">
                 <SectionFour />
               </div>
 
               <div
-                className="about-stack-layer absolute inset-0 w-full h-svh z-[60] transform-gpu will-change-transform backface-hidden"
+                className="about-stack-layer absolute inset-0 w-full h-svh z-[60] transform-gpu backface-hidden"
                 style={{ transform: "translate3d(0, 100%, 0)" }}
               >
                 <SectionFive isActive={isSectionFiveActive} />
@@ -379,7 +369,6 @@ export default function AboutMobile() {
         </div>
       </div>
 
-      {/* STANDARD DOCUMENT FLOW FOR CTA AND FOOTER */}
       {shouldLoadRest && (
         <div
           className="relative z-20 w-full"

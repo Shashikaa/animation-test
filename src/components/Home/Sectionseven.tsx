@@ -68,22 +68,24 @@ export default function SectionSeven() {
       </div>
 
       {/* ── Desktop: Partners Slider ── */}
-      <div className="hidden lg:flex absolute bottom-22 right-12 flex-col items-end gap-5 z-10">
-        <h3 className="font-body text-[#F4EBE4] text-sm font-normal">Our Partners</h3>
+      <div className="hidden lg:flex absolute bottom-20 right-12 flex-col items-end gap-6 z-10">
+        <h3 className="font-body text-[#F4EBE4] text-xl font-bold tracking-wide">
+          Our Partners
+        </h3>
         <div
-          className="overflow-hidden w-[520px]"
+          className="overflow-hidden w-[600px]"
           style={{
             maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
             WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
           }}
         >
-          <div className="flex items-center gap-7 w-max animate-marquee">
+          <div className="flex items-center gap-10 w-max animate-marquee">
             {PARTNERS_LOOP.map((p, i) => (
               <div key={i} className="flex flex-shrink-0 items-center justify-center">
                 <img 
                   src={p.logo} 
                   alt={p.name}
-                  className="block w-auto h-auto object-contain"
+                  className="block w-auto h-8 object-contain"
                   style={{ filter: "brightness(0) invert(1)" }} 
                   loading="lazy" 
                 />
@@ -119,22 +121,22 @@ export default function SectionSeven() {
         </div>
 
         {/* Mobile: Partners Slider */}
-        <div className="!flex !flex-col !items-end !gap-3 !px-6">
-          <h3 className="!text-[#F4EBE4] !text-[16px] !font-normal !m-0">Our Partners</h3>
+        <div className="!flex !flex-col !items-end !gap-4 !px-6">
+          <h3 className="!text-[#F4EBE4] !text-[18px] !font-normal !m-0">Our Partners</h3>
           <div
-            className="!overflow-hidden !w-[350px]"
+            className="!overflow-hidden !w-[380px]"
             style={{
               maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
               WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
             }}
           >
-            <div className="flex gap-5 w-max animate-marquee">
+            <div className="flex gap-7 w-max animate-marquee">
               {PARTNERS_LOOP.map((p, i) => (
                 <div key={i} className="!flex-shrink-0">
                   <img 
                     src={p.logo} 
                     alt={p.name}
-                    className="!block !w-[84px] !h-[26px] !object-contain"
+                    className="!block !w-[100px] !h-[32px] !object-contain"
                     style={{ filter: "brightness(0) invert(1)" }} 
                     loading="lazy" 
                   />

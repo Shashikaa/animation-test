@@ -16,11 +16,11 @@ const SectionFive = dynamic(() => import("@/src/components/About/SectionFive"));
 const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
 const Footer = dynamic(() => import("@/src/components/Footer"));
 
-const EFFECTIVE_STEPS = 11.0; // defines scroll speed per step (unchanged)
-const PIN_END_STEP = 8.2; // pinned scene ends here (end of section 5)
-// Same math as measure(), in vh so the track is correct before JS measures
+const EFFECTIVE_STEPS = 13.0; // Increased to expand global scroll track
+const PIN_END_STEP = 10.5;    // Extended pin end step so Section 5 gets more scroll distance
 const TRACK_HEIGHT_VH =
   PIN_END_STEP * ((EFFECTIVE_STEPS - 1) / EFFECTIVE_STEPS) * 100 + 100;
+
 const easeOutQuad = (t: number) => t * (2 - t);
 const clamp = (v: number, min = 0, max = 1) => Math.min(Math.max(v, min), max);
 
@@ -82,7 +82,6 @@ export default function AboutDesktop() {
     const vh = window.innerHeight;
     const vw = window.innerWidth;
 
-    // same scroll distance per step as before
     const pxPerStep = (vh * (EFFECTIVE_STEPS - 1)) / EFFECTIVE_STEPS;
     const totalScrollable = PIN_END_STEP * pxPerStep;
 
@@ -264,8 +263,7 @@ export default function AboutDesktop() {
 
     const scope = scopeRef.current;
     let isRunning = true;
-    // Reduced motion: skip the pinned scroll-scrub entirely and leave content
-    // settled and visible. The CSS media query alone cannot stop this rAF loop.
+
     if (prefersReducedMotion()) {
       isRunning = false;
       settleReducedMotion(scope);
@@ -274,8 +272,8 @@ export default function AboutDesktop() {
 
     let lastTime = performance.now();
 
-    const EASE_FACTOR = 0.15;
-    const MAX_PROGRESS_DELTA_PER_FRAME = 0.008;
+    const EASE_FACTOR = 0.12; // Lower ease factor for extra smooth scroll response
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
 
     const heroLeft = scope.querySelector<HTMLElement>(".about-hero-panel-left");
     const heroRight = scope.querySelector<HTMLElement>(".about-hero-panel-right");
@@ -350,28 +348,29 @@ export default function AboutDesktop() {
       }
       triggerClippedTextReveal(".about-section-four", s4Prog);
 
-      // 5. SECTION FIVE
+      // 5. SECTION FIVE (Extended step window from 4.8 to 10.5)
       const s5Prog = easeOutQuad(clamp((stepProgress - 4.8) / 1.0, 0, 1));
       if (secFive) {
         secFive.style.visibility = stepProgress >= 4.6 ? "visible" : "hidden";
         secFive.style.transform = `translate3d(0,${((1 - s5Prog) * 100).toFixed(3)}%,0)`;
       }
-      if (stepProgress >= 5.5 && stepProgress <= PIN_END_STEP) {
+
+      // Distribute Section 5 stat steps across a longer scroll interval (5.2 to 10.5)
+      if (stepProgress >= 5.2 && stepProgress <= PIN_END_STEP) {
         setIsSectionFiveActive(true);
-        const sec5SubProgress = (stepProgress - 5.5) / 2.7;
-        if (sec5SubProgress < 0.33) triggerSec5Hook(0);
-        else if (sec5SubProgress < 0.66) triggerSec5Hook(1);
+        const sec5SubProgress = (stepProgress - 5.2) / (PIN_END_STEP - 5.2);
+        if (sec5SubProgress < 0.35) triggerSec5Hook(0);
+        else if (sec5SubProgress < 0.70) triggerSec5Hook(1);
         else triggerSec5Hook(2);
-      } else if (stepProgress < 5.5) {
+      } else if (stepProgress < 5.2) {
         setIsSectionFiveActive(false);
         triggerSec5Hook(0);
       }
-      if (s5Bg) {
-        const parallaxProg = clamp((stepProgress - 4.8) / 3.4, 0, 1);
-        s5Bg.style.transform = `translate3d(0,${(-parallaxProg * 50).toFixed(2)}%,0)`;
-      }
 
-      // CTA & Footer now live in normal document flow below the pinned track.
+      if (s5Bg) {
+        const parallaxProg = clamp((stepProgress - 4.8) / (PIN_END_STEP - 4.8), 0, 1);
+        s5Bg.style.transform = `translate3d(0,${(-parallaxProg * 40).toFixed(2)}%,0)`;
+      }
 
       rafId.current = requestAnimationFrame(renderTransforms);
     };
@@ -422,7 +421,7 @@ export default function AboutDesktop() {
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
       } else {
-        window.removeEventListener("scroll", handleScroll);
+        window.removeEventListener("removeEventListener", handleScroll);
       }
       if (typeof window !== "undefined") {
         delete (window as any)._sec5GoTo;
@@ -514,7 +513,6 @@ export default function AboutDesktop() {
         </div>
       </div>
 
-      {/* STANDARD DOCUMENT FLOW FOR CTA AND FOOTER */}
       {shouldLoadRest && (
         <div
           className="relative z-20 w-full bg-[#162D24]"

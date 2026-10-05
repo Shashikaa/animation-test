@@ -124,22 +124,22 @@ export default function SectionTwo() {
       </div>
 
       {/* CORE WORKSPACE GRID */}
-      <div className="absolute inset-0 z-20 grid grid-cols-1 lg:grid-cols-2 w-full h-full pointer-events-none transform-gpu">
-        {/* LEFT COLUMN: INITIAL TITLE */}
-        <div className="relative h-full overflow-hidden !pt-30 md:!pt-66 lg:!pt-36">
-          <div className="!mb-33 md:!mb-80 lg:!mb-0 h-[100px] !ml-[20px] md:!ml-[30px] lg:!ml-[65px]">
+      <div className="absolute inset-0 z-20 grid grid-cols-1 lg:grid-cols-3 w-full h-full pointer-events-none transform-gpu">
+        {/* LEFT COLUMN: INITIAL TITLE (Takes 1 column out of 3 on desktop) */}
+        <div className="relative h-full overflow-hidden lg:col-span-1 !pt-30 md:!pt-66 lg:!pt-36">
+          <div className="!mb-33 md:!mb-80 lg:!mb-0 h-[100px] !ml-[20px] md:!ml-[30px] lg:!ml-[65px] ">
             <h2 className="s2-title-main select-text pointer-events-auto font-display text-[#F4EEDF] font-normal text-3xl md:text-5xl !mb-2 tracking-tight">
               One Pool at a Time
             </h2>
 
-            <p className="s2-title-sub select-text pointer-events-auto font-body text-[#F4EEDF]/80 text-sm md:text-base tracking-wide">
+            <p className="s2-title-sub select-text pointer-events-auto font-body text-[#F4EEDF] text-sm md:text-base tracking-wide">
               Bayside & Mornington Peninsula
             </p>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: DOUBLE LAYER STACK */}
-        <div className="absolute top-0 right-0 bottom-0 left-1/2 hidden lg:block z-20 pointer-events-auto transform-gpu">
+        {/* RIGHT COLUMN: DOUBLE LAYER STACK (Occupies right 2/3, starting from left-1/3 on desktop) */}
+        <div className="absolute top-0 right-0 bottom-0 left-4/9 hidden lg:block z-20 pointer-events-auto transform-gpu">
           {/* UNDERNEATH LAYER */}
           <div
             className="s2-right-img-frame-under absolute inset-0 w-full h-full z-10"
@@ -190,7 +190,7 @@ export default function SectionTwo() {
 
       {/* DESKTOP SCROLLING WORKSPACE GRID CONTAINER */}
       <div
-        className="s2-scroll-content hidden lg:flex absolute left-4 md:left-8 lg:left-16 top-0 flex-col w-full max-w-[40%] z-30 pointer-events-none pt-[12vh] pb-16 opacity-0 transform-gpu"
+        className="s2-scroll-content hidden lg:flex absolute left-4 md:left-8 lg:left-16 top-0 flex-col w-full max-w-[30%] z-30 pointer-events-none pt-[12vh] pb-16 opacity-0 transform-gpu"
         style={{
           willChange: "transform, opacity",
           transform: "translate3d(0, 100%, 0)",
@@ -201,14 +201,14 @@ export default function SectionTwo() {
           Founder Lachlan Deleeuw brings over 25 years of structural construction experience to custom Bayside builds, managing every project from site appraisal to handover.
         </p>
 
-        <div className="select-text pointer-events-auto text-[#F4EEDF] font-body text-base leading-relaxed !text-left max-w-[260px] !self-end !mt-[80px]">
+        <div className="select-text pointer-events-auto text-[#F4EEDF] font-body text-base leading-relaxed !text-left max-w-[260px] !self-end !mt-[100px]">
           <h3 className="font-semibold text-lg mb-1 text-[#F4EEDF]">Tailor-Made Designs</h3>
           <p className="text-sm text-[#F4EEDF]/90">
             Shaped around your site's contours, natural light, and architecture.
           </p>
         </div>
 
-        <div className="w-full aspect-[4/3] max-w-[340px] overflow-hidden !mt-[40px] transform-gpu pointer-events-none rounded-sm">
+        <div className="w-full aspect-[4/3] max-w-[340px] overflow-hidden !mt-[70px] transform-gpu pointer-events-none rounded-sm">
           <img
             src="/p6.avif"
             alt="Architectural concrete pool detail in Toorak residence"
@@ -220,14 +220,14 @@ export default function SectionTwo() {
           />
         </div>
 
-        <div className="select-text pointer-events-auto text-[#F4EEDF] font-body text-sm leading-relaxed !text-left max-w-[290px] !mt-[60px]">
+        <div className="select-text pointer-events-auto text-[#F4EEDF] font-body text-sm leading-relaxed !text-left max-w-[290px] !mt-[80px]">
           <h3 className="font-semibold text-base mb-1 text-[#F4EEDF]">Structural Precision</h3>
           <p className="text-xs md:text-sm text-[#F4EEDF]/90">
             In-house concrete pouring, custom coping, and premium tile finishes.
           </p>
         </div>
 
-        <div className="select-text pointer-events-auto text-[#F4EEDF] font-body text-sm leading-relaxed !text-left max-w-[260px] !self-end !mt-[40px]">
+        <div className="select-text pointer-events-auto text-[#F4EEDF] font-body text-sm leading-relaxed !text-left max-w-[260px] !self-end !mt-[70px]">
           <h3 className="font-semibold text-base mb-1 text-[#F4EEDF]">Seamless Handover</h3>
           <p className="text-xs md:text-sm text-[#F4EEDF]/90">
             Including Pool Care+ setup, equipment guides, and warranty registration.

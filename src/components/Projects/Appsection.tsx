@@ -26,10 +26,15 @@ export default function Appsection() {
             </h2>
           </div>
 
-          <div className="hidden lg:flex flex-col items-center w-full gap-6">
+          <div className="hidden lg:flex flex-col items-start w-full gap-6">
             <p className="font-body text-[#F4EEDF] text-sm md:text-base self-start !max-w-[520px] reveal-text">
               {`Once your pool is completed, Grand Pools' Pool Care+ will show\nyou how to use and look after your pools, as well as contain\nyour equipment and warranty register. All in one place`}
             </p>
+
+            {/* Desktop Download Button */}
+            <a href="#" className="group btn-underline font-body mt-2 reveal-text">
+              DOWNLOAD
+            </a>
           </div>
         </div>
 
@@ -39,7 +44,9 @@ export default function Appsection() {
             <img 
               src="/app.png" 
               alt="Pool Care Mobile App Mockup" 
-              className="w-full h-auto max-h-[55vh] md:max-h-[50vh] lg:!max-h-[60vh] block object-contain !mb-12 !mt-12" loading="lazy" />
+              className="w-full h-auto max-h-[55vh] md:max-h-[50vh] lg:!max-h-[60vh] block object-contain !mb-12 !mt-12" 
+              loading="lazy" 
+            />
           </div>
         </div>
 

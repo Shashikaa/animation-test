@@ -148,8 +148,6 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     const faqHeight = faqSectionRef.current?.offsetHeight || vh;
     const footerHeight = footerRef.current?.offsetHeight || vh;
 
-    // Same scroll distance per progress unit as before (4vh + App + FAQ + Footer),
-    // but the track now only covers the pinned part (p = 0 -> PIN_END_P).
     const fullScrollable = vh * 4 + appHeight + faqHeight + footerHeight;
     const animScrollable = PIN_END_P * fullScrollable;
     const holdPx = (HOLD_VH / 100) * vh;
@@ -186,7 +184,6 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
 
     updateMetrics();
 
-    // App / FAQ / Footer heights drive scroll speed (as before), so re-measure when they load/change
     const resizeObserver = new ResizeObserver(() => updateMetrics());
     if (appSectionRef.current) resizeObserver.observe(appSectionRef.current);
     if (faqSectionRef.current) resizeObserver.observe(faqSectionRef.current);
@@ -207,14 +204,11 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
     if (!shouldLoadRest) return;
 
     let isRunning = true;
-    // Reduced motion: skip the pinned scroll-scrub entirely and leave content
-    // settled and visible. The CSS media query alone cannot stop this rAF loop.
     if (prefersReducedMotion()) {
       isRunning = false;
       settleReducedMotion(scopeRef.current);
       return;
     }
-
 
     const EASE_FACTOR = 0.06;
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
@@ -239,7 +233,6 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
       currentProgress.current += delta;
 
       const currentProg = currentProgress.current;
-      // Same step mapping as before (p is scaled to 0 -> PIN_END_P)
       const stepProgress = currentProg * ORIGINAL_TOTAL_STEPS;
 
       const { vh } = scrollMetricsRef.current;
@@ -275,7 +268,7 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         heroPanelRef.current.style.transform = `translate3d(0, ${-s1Prog * 15}%, 0)`;
       }
 
-      // STEP 3: Section One Content Expansion (2.0 -> 5.0)
+      // STEP 3: Section One Content Expansion & Parallax Translate (2.0 -> 5.0)
       if (stepProgress < 2.0) {
         if (s10ParaTopRef.current) {
           s10ParaTopRef.current.style.opacity = "1";
@@ -292,13 +285,14 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
           s10ImgInnerWrapRef.current.style.height = "220px";
         }
         if (s10ImgElementRef.current) {
-          s10ImgElementRef.current.style.transform = "scale(1.15)";
+          s10ImgElementRef.current.style.transform = "translate3d(0, 0%, 0) scale3d(1, 1, 1)";
         }
         if (seqContainerRef.current) {
           seqContainerRef.current.style.transform = "translate3d(0, 0px, 0)";
         }
       } else {
         const expandProg = clamp((stepProgress - 2.0) / 1.0);
+        const textProg = clamp((stepProgress - 3.0) / 2.0);
 
         if (s10ParaTopRef.current) {
           s10ParaTopRef.current.style.opacity = `${1 - expandProg}`;
@@ -318,13 +312,21 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
           s10ImgInnerWrapRef.current.style.height = `calc(220px + (100vh - 220px) * ${expandProg})`;
         }
 
+        // IMAGE TRANSLATION & SCALE FIX FOR MOBILE
         if (s10ImgElementRef.current) {
-          const innerScale = 1.15 - expandProg * 0.15;
-          s10ImgElementRef.current.style.transform = `scale(${innerScale})`;
+          if (expandProg < 1) {
+            // Expansion Phase: Scale smoothly from 1.0 to 1.15 as the card expands to full width
+            const currentScale = 1.0 + expandProg * 0.15;
+            s10ImgElementRef.current.style.transform = `translate3d(0, 0%, 0) scale3d(${currentScale.toFixed(4)}, ${currentScale.toFixed(4)}, 1)`;
+          } else {
+            // Parallax Shift Phase: Shift image upward smoothly during sequential paragraph scroll
+            // Capped at -12% to stay safely within the h-[125%] overflow bounds
+            const parallaxY = (-textProg * 12).toFixed(2);
+            s10ImgElementRef.current.style.transform = `translate3d(0, ${parallaxY}%, 0) scale3d(1.15, 1.15, 1)`;
+          }
         }
 
         if (seqContainerRef.current) {
-          const textProg = clamp((stepProgress - 3.0) / 2.0);
           const seqY = -textProg * 1440;
           seqContainerRef.current.style.transform = `translate3d(0, ${seqY}px, 0)`;
         }
@@ -343,8 +345,6 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
       if (sectionOneRef.current && appFaqProg > 0) {
         sectionOneRef.current.style.transform = `translate3d(0, ${-appFaqProg * 15}%, 0)`;
       }
-
-      // CTA & Footer now live in normal document flow below the pinned track.
 
       rafId.current = requestAnimationFrame(render);
     };
@@ -375,8 +375,6 @@ export default function SubServicesMobile({ pageData }: SubServicesMobileProps) 
         }
       }
 
-      // Animation completes after `animScrollable` (p = PIN_END_P); the remaining
-      // HOLD_VH is a hold so smoothing catches up before the pin releases.
       targetProgress.current = clamp(relativeScroll / animScrollable) * PIN_END_P;
     };
 
