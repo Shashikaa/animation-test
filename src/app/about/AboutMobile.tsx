@@ -166,8 +166,8 @@ export default function AboutMobile() {
     }
 
     // Smooth physics factors for mobile touch inputs
-    const EASE_FACTOR = 0.04; // Reduced from 0.06 to smooth out rapid touch flicks
-    const MAX_PROGRESS_DELTA_PER_FRAME = 0.015; // Raised limit to allow fluid momentum without jumpiness
+    const EASE_FACTOR = 0.04;
+    const MAX_PROGRESS_DELTA_PER_FRAME = 0.015;
 
     let lastTime = performance.now();
 
@@ -215,7 +215,6 @@ export default function AboutMobile() {
 
         if (panels[4]) {
           const visible = p >= 0.36;
-          // Use CSS opacity only — avoids pointer-events DOM layout re-evaluations
           panels[4].style.opacity = visible ? "1" : "0";
         }
 
@@ -223,6 +222,16 @@ export default function AboutMobile() {
           const y = (1 - s5EntranceProg) * 100;
           panels[5].style.transform = `translate3d(0, ${y}%, 0)`;
         }
+      }
+
+      // Query dynamically to support Next.js dynamic imports on mobile
+      const s4BgImages = scopeRef.current?.querySelectorAll<HTMLElement>(".s4-img-bg");
+      if (s4BgImages && s4BgImages.length > 0) {
+        const s4ParallaxProg = mapRange(p, 0.36, 0.48);
+        const s4TranslateY = -s4ParallaxProg * 15;
+        s4BgImages.forEach((bg) => {
+          bg.style.transform = `translate3d(0, ${s4TranslateY.toFixed(2)}%, 0) scale(1.15)`;
+        });
       }
 
       if (s5Bg) {

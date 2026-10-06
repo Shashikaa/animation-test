@@ -275,16 +275,6 @@ export default function AboutDesktop() {
     const EASE_FACTOR = 0.12; // Lower ease factor for extra smooth scroll response
     const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
 
-    const heroLeft = scope.querySelector<HTMLElement>(".about-hero-panel-left");
-    const heroRight = scope.querySelector<HTMLElement>(".about-hero-panel-right");
-    const heroBgs = scope.querySelectorAll<HTMLElement>(".about-hero-bg");
-    const secTwo = scope.querySelector<HTMLElement>(".about-section-two");
-    const secThree = scope.querySelector<HTMLElement>(".about-section-three");
-    const secFour = scope.querySelector<HTMLElement>(".about-section-four");
-    const s4GlassCard = scope.querySelector<HTMLElement>(".s4-glass-card");
-    const secFive = scope.querySelector<HTMLElement>(".about-section-five");
-    const s5Bg = scope.querySelector<HTMLElement>(".s5-bg");
-
     const renderTransforms = (time: number) => {
       if (!isRunning) return;
 
@@ -303,6 +293,18 @@ export default function AboutDesktop() {
 
       const currentProgress = smoothProgress.current;
       const stepProgress = currentProgress * PIN_END_STEP;
+
+      // Query elements inside frame loop to support Next.js dynamic imports
+      const heroLeft = scope.querySelector<HTMLElement>(".about-hero-panel-left");
+      const heroRight = scope.querySelector<HTMLElement>(".about-hero-panel-right");
+      const heroBgs = scope.querySelectorAll<HTMLElement>(".about-hero-bg");
+      const secTwo = scope.querySelector<HTMLElement>(".about-section-two");
+      const secThree = scope.querySelector<HTMLElement>(".about-section-three");
+      const secFour = scope.querySelector<HTMLElement>(".about-section-four");
+      const s4GlassCard = scope.querySelector<HTMLElement>(".s4-glass-card");
+      const s4BgImages = scope.querySelectorAll<HTMLElement>(".s4-img-bg");
+      const secFive = scope.querySelector<HTMLElement>(".about-section-five");
+      const s5Bg = scope.querySelector<HTMLElement>(".s5-bg");
 
       // 1. HERO
       const s1Prog = easeOutQuad(clamp(stepProgress, 0, 1));
@@ -341,6 +343,16 @@ export default function AboutDesktop() {
         secFour.style.visibility = stepProgress >= 3.4 ? "visible" : "hidden";
         secFour.style.clipPath = `inset(${((1 - s4Prog) * 100).toFixed(2)}% 0% 0% 0%)`;
       }
+
+      // Parallax scroll translation for Section 4 background images
+      if (s4BgImages.length > 0) {
+        const s4ParallaxProg = clamp((stepProgress - 3.6) / 1.2, 0, 1);
+        const s4TranslateY = -s4ParallaxProg * 15;
+        s4BgImages.forEach((bg) => {
+          bg.style.transform = `translate3d(0, ${s4TranslateY.toFixed(2)}%, 0) scale(1.15)`;
+        });
+      }
+
       if (s4GlassCard) {
         const glassProg = easeOutQuad(clamp((stepProgress - 4.0) / 0.6, 0, 1));
         s4GlassCard.style.opacity = glassProg.toFixed(3);
@@ -348,7 +360,7 @@ export default function AboutDesktop() {
       }
       triggerClippedTextReveal(".about-section-four", s4Prog);
 
-      // 5. SECTION FIVE (Extended step window from 4.8 to 10.5)
+      // 5. SECTION FIVE
       const s5Prog = easeOutQuad(clamp((stepProgress - 4.8) / 1.0, 0, 1));
       if (secFive) {
         secFive.style.visibility = stepProgress >= 4.6 ? "visible" : "hidden";
@@ -421,7 +433,7 @@ export default function AboutDesktop() {
       if (lenis && typeof lenis.off === "function") {
         lenis.off("scroll", handleScroll);
       } else {
-        window.removeEventListener("removeEventListener", handleScroll);
+        window.removeEventListener("scroll", handleScroll);
       }
       if (typeof window !== "undefined") {
         delete (window as any)._sec5GoTo;
