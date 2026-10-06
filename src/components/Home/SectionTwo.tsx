@@ -139,7 +139,7 @@ export default function SectionTwo() {
         </div>
 
         {/* RIGHT COLUMN: DOUBLE LAYER STACK (Occupies right 2/3, starting from left-1/3 on desktop) */}
-        <div className="absolute top-0 right-0 bottom-0 left-4/9 hidden lg:block z-20 pointer-events-auto transform-gpu">
+        <div className="absolute top-0 right-0 bottom-0 left-6/14 hidden lg:block z-20 pointer-events-auto transform-gpu">
           {/* UNDERNEATH LAYER */}
           <div
             className="s2-right-img-frame-under absolute inset-0 w-full h-full z-10"

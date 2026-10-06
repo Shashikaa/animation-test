@@ -1,494 +1,374 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { flushSync } from "react-dom";
 import gsap from "gsap";
+// Adjust this path if your "@" alias doesn't point at /src
+import { GRAND_POOLS_DATA } from "../../app/projects/[slug]/data";
 
-const PROJECTS = [
-  {
-    id: "mernda",
-    label: "Mernda Ave Bonbeach",
-    tag: "Exceptional Pools,",
-    tagline: "Built to Impress",
-    description:
-      "This custom residential oasis seamlessly blends sun-drenched outdoor living with sleek, modern concrete pool design.",
-    image: "/mernda-ave-bonbeach.webp",
-  },
-  {
-    id: "dennett",
-    label: "Dennett st Carrum",
-    tag: "A flawless blend",
-    tagline: "of luxury",
-    description:
-      "This custom concrete pool transforms a classic Carrum backyard into a private, light-filled family sanctuary.",
-    image: "/pool-renovation.webp",
-  },
-  {
-    id: "kooyong",
-    label: "Kooyong Rd Toorak",
-    tag: "High-End",
-    tagline: "Architectural Vibe",
-    description:
-      "This stunning Toorak build creates a sophisticated, resort-style escape tailored for elite inner-city living.",
-    image: "/kooyong-rd-toorak.webp",
-  },
-  {
-    id: "corner",
-    label: "'The Como' Toorak",
-    tag: "Showcase luxury",
-    tagline: "at its finest",
-    description:
-      "'The Como' project in Toorak showcases our commitment to custom engineering, sophisticated integration, and master craftsmanship.",
-    image: "/the-corner-toorak.webp",
-  },
-  {
-    id: "murray",
-    label: "Murray st Prahran",
-    tag: "When master",
-    tagline: "craftsmanship meets smart",
-    description:
-      "Our Murray St, Prahran project masterfully conquers a compact, inner-city space with a striking, custom-engineered concrete pool.",
-    image: "/murray-st-prahran.webp",
-  },
-  {
-    id: "rosy",
-    label: "Rosy Rd Mooroolbark",
-    tag: "Masterfully blends premium",
-    tagline: "concrete craftsmanship",
-    description:
-      "Blending rugged outer-suburban terrain with premium concrete craftsmanship, it creates the ultimate resort-style backyard retreat.",
-    image: "/rosy-rd-mooroolbark.webp",
-  },
-];
+// Everything on screen comes from data.ts — add a project there and it appears here.
+const PROJECTS = Object.entries(GRAND_POOLS_DATA).map(([slug, p]) => ({
+  slug,
+  title: p.title,
+  category: p.category,
+  description: p.description,
+  hero: p.images[0],
+  slides: p.slides,
+}));
 
-// ─── Mobile prev/next layout ──────────────────────────────────────────────────
-function SectionSixMobile() {
-  const [active, setActive] = useState(0);
-  const bgRefs   = useRef<(HTMLDivElement | null)[]>([]);
-  const h2Refs   = useRef<(HTMLHeadingElement | null)[]>([]);
-  const numRefs  = useRef<(HTMLSpanElement | null)[]>([]);
-  const descRefs = useRef<(HTMLParagraphElement | null)[]>([]);
-  const prevRef  = useRef(0);
+// Some paths in data.ts are missing the leading slash (e.g. "p15.webp")
+const src = (path: string) => (path.startsWith("/") ? path : `/${path}`);
 
-  useEffect(() => {
-    PROJECTS.forEach((_, i) => {
-      // All images start hidden except the active one.
-      // Index 0 starts visible; the permanent base layer (index 0 div)
-      // is always behind everything so there is never a transparent gap.
-      gsap.set(bgRefs.current[i], { opacity: i === 0 ? 1 : 0 });
-      if (i !== 0) {
-        gsap.set(
-          [h2Refs.current[i], numRefs.current[i], descRefs.current[i]],
-          { opacity: 0, y: 10 }
-        );
-      }
-    });
-  }, []);
+// Run a callback when the browser is idle (falls back to a timeout)
+const idle = (cb: () => void) => {
+  if (typeof (window as any).requestIdleCallback === "function") {
+    (window as any).requestIdleCallback(cb, { timeout: 2500 });
+  } else {
+    setTimeout(cb, 400);
+  }
+};
 
-  function go(idx: number) {
-    if (idx === active) return;
-    const prev = prevRef.current;
+export default function SectionSix() {
+  const [active, setActive] = useState(0); // nav highlight (instant)
+  const [shown, setShown] = useState(0);   // text content (swaps mid-fade)
+  // Layers that currently have a real <img> mounted. We keep this to 1-2 entries
+  // (the visible photo, plus the previous one while the wipe is running) so the
+  // browser never holds every full-size hero image in memory at once.
+  const [ready, setReady] = useState<Set<number>>(() => new Set());
 
-    // Bring the next image in first, THEN fade the old one out.
-    // This means there is always at least one fully-opaque bg visible —
-    // no gap where S5 can bleed through.
-    gsap.to(bgRefs.current[idx],  { opacity: 1, duration: 0.5, ease: "power2.inOut" });
-    gsap.to(bgRefs.current[prev], { opacity: 0, duration: 0.6, ease: "power2.inOut", delay: 0.1 });
+  const sectionRef = useRef<HTMLElement>(null);
+  const layerRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const navRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const textRef = useRef<HTMLDivElement>(null);
+  const zTop = useRef(1);
+  const goTicket = useRef(0);
+  const loadCache = useRef<Map<number, Promise<void>>>(new Map());
 
-    gsap.to(
-      [h2Refs.current[prev], numRefs.current[prev], descRefs.current[prev]],
-      { opacity: 0, y: -8, duration: 0.25, ease: "power2.in", stagger: 0.04 }
-    );
-    gsap.fromTo(
-      [h2Refs.current[idx], numRefs.current[idx], descRefs.current[idx]],
-      { opacity: 0, y: 10 },
-      { opacity: 1, y: 0, duration: 0.45, ease: "power2.out", delay: 0.2, stagger: 0.07 }
-    );
+  const navWrapRef = useRef<HTMLElement>(null);
 
-    prevRef.current = idx;
-    setActive(idx);
+  // Download + decode ONE hero image off the main path. Cached per index.
+  function load(i: number): Promise<void> {
+    const cached = loadCache.current.get(i);
+    if (cached) return cached;
+
+    const im = new Image();
+    im.decoding = "async";
+    try {
+      (im as any).fetchPriority = i === 0 ? "high" : "low";
+    } catch {}
+    im.src = src(PROJECTS[i].hero);
+
+    const p: Promise<void> = (
+      im.decode
+        ? im.decode()
+        : new Promise<void>((res) => {
+            im.onload = () => res();
+            im.onerror = () => res();
+          })
+    )
+      .catch(() => {})
+      .then(() => {});
+
+    loadCache.current.set(i, p);
+    return p;
   }
 
-  function handlePrev() { go((active - 1 + PROJECTS.length) % PROJECTS.length); }
-  function handleNext() { go((active + 1) % PROJECTS.length); }
+  // Prefetch ONLY the neighbours of the current project (next / previous),
+  // one at a time, when the browser is idle. Everything else loads on demand.
+  function warmNeighbours(i: number) {
+    const n = PROJECTS.length;
+    if (n < 2) return;
+    const targets = [(i + 1) % n, (i - 1 + n) % n];
+    targets.forEach((t, k) => {
+      idle(() => {
+        setTimeout(() => load(t), k * 300);
+      });
+    });
+  }
 
-  return (
-    <section
-      className="section-six-wrapper !overflow-hidden !pointer-events-auto"
-      style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
-    >
-
-      {/* ── Permanent base backdrop — always opaque, blocks S5 completely ── */}
-      <div
-        className="!absolute !inset-0 !bg-cover !bg-center"
-        style={{
-          backgroundImage: `url('${PROJECTS[0].image}')`,
-          transform: "translateZ(0)",
-          backfaceVisibility: "hidden",
-          zIndex: 0,
-        }}
-      />
-
-      {/* Crossfade layers — sit above the base */}
-      {PROJECTS.map((p, i) => (
-        <div
-          key={p.id}
-          ref={(el) => { bgRefs.current[i] = el; }}
-          className="!absolute !inset-0 !bg-cover !bg-center !will-change-[opacity]"
-          style={{
-            backgroundImage: `url('${p.image}')`,
-            transform: "translateZ(0)",
-            backfaceVisibility: "hidden",
-            zIndex: 1,
-          }}
-        />
-      ))}
-
-      {/* Gradient overlay */}
-      <div
-        className="!absolute !inset-0 !z-[2]"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.60) 45%, rgba(0,0,0,0.72) 100%)",
-          transform: "translateZ(0)",
-        }}
-      />
-
-      {/* Content */}
-      <div className="!relative !z-[3] !h-full !flex !flex-col !justify-end section-container">
-
-        {/* Number + Title */}
-        <div className="!mb-[30px]">
-          <div className="!relative !h-7">
-            {PROJECTS.map((p, i) => (
-              <span
-                key={p.id}
-                ref={(el) => { numRefs.current[i] = el; }}
-                className="font-body !absolute !top-0 !left-0 !text-[#F4EEDF] !text-[14px] !font-light !tracking-[0.04em] !pointer-events-none"
-                style={{ opacity: i === 0 ? 1 : 0 }}
-              >
-                ({i + 1})
-              </span>
-            ))}
-          </div>
-
-          <div className="!relative !h-[72px]">
-            {PROJECTS.map((p, i) => (
-              <h2
-                key={p.id}
-                ref={(el) => { h2Refs.current[i] = el; }}
-                className="!absolute !top-0 !left-0 !m-0 !text-[#F4EEDF] !font-thin !max-w-[66%] !pointer-events-none"
-                style={{
-                  fontFamily: "var(--font-display, inherit)",
-                  opacity: i === 0 ? 1 : 0,
-                }}
-              >
-                {p.label}
-              </h2>
-            ))}
-          </div>
-        </div>
-
-        {/* Glass card */}
-        <div
-          className="!self-end !w-[72%] md:!w-[52%] !will-change-transform !mt-5 !px-[25px] !pb-[25px] !pt-[40px]"
-          style={{
-            backdropFilter: "blur(42px)",
-            WebkitBackdropFilter: "blur(42px)",
-            background:
-              "radial-gradient(100% 100% at 0% 0%, rgba(25,33,28,0.72) 0%, rgba(25,33,28,0.32) 100%)",
-            boxShadow: "-5px -5px 25px rgba(255,255,255,0.02) inset",
-            transform: "translateZ(0)",
-          }}
-        >
-          {/* Description */}
-          <div className="!relative !min-h-[100px]">
-            {PROJECTS.map((p, i) => (
-              <p
-                key={p.id}
-                ref={(el) => { descRefs.current[i] = el; }}
-                className="font-body !absolute !top-0 !left-0 !text-[#F4EEDF] !text-[14px] !font-normal !leading-[1.6] !m-0"
-                style={{
-                  opacity: i === 0 ? 1 : 0,
-                  pointerEvents: i === active ? "auto" : "none",
-                }}
-              >
-                {p.description}
-              </p>
-            ))}
-          </div>
-
-          {/* Prev / Next */}
-          <div className="!flex !items-center !justify-between !mt-[54px]">
-            <button
-              type="button"
-              onClick={handlePrev}
-              className="group font-body !cursor-pointer !text-[14px] !text-[#F4EEDF] !flex !items-center !gap-2 !transition-opacity !duration-200 hover:!opacity-70 !bg-transparent !border-none !p-0"
-            >
-              <img src="/arrow-right.svg" alt="Previous" className="!w-4 !h-4 !rotate-180" />
-              <span>Previous</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleNext}
-              className="group font-body !cursor-pointer !text-[14px] !text-[#F4EEDF] !flex !items-center !gap-2 !transition-opacity !duration-200 hover:!opacity-70 !bg-transparent !border-none !p-0"
-            >
-              <span>Next</span>
-              <img src="/arrow-right.svg" alt="Next" className="!w-4 !h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── Desktop tab-bar layout (original) ───────────────────────────────────────
-function SectionSixDesktop() {
-  const [active, setActive]  = useState(0);
-  const bgRefs       = useRef<(HTMLDivElement | null)[]>([]);
-  const btnRefs      = useRef<(HTMLButtonElement | null)[]>([]);
-  const h2Refs       = useRef<(HTMLHeadingElement | null)[]>([]);
-  const descRefs     = useRef<(HTMLParagraphElement | null)[]>([]);
-  const prevRef      = useRef(0);
-  const tabRowRef    = useRef<HTMLDivElement>(null);
-  const activeBarRef = useRef<HTMLDivElement>(null);
-  const barMetricsCache = useRef<{ left: number; width: number }[]>([]);
-
-  const measureAllBars = useCallback(() => {
-    const row = tabRowRef.current;
-    if (!row) return;
-    const rowRect = row.getBoundingClientRect();
-    barMetricsCache.current = btnRefs.current.map((btn) => {
-      if (!btn) return { left: 0, width: 0 };
-      const r = btn.getBoundingClientRect();
-      return { left: r.left - rowRect.left, width: r.width };
+  // Park every layer except the first below the fold, using transforms (GPU-friendly)
+  useEffect(() => {
+    layerRefs.current.forEach((wrap, i) => {
+      if (!wrap || i === 0) return;
+      const inner = wrap.firstElementChild;
+      gsap.set(wrap, { yPercent: 100 });
+      if (inner) gsap.set(inner, { yPercent: -100 });
     });
   }, []);
 
+  // Don't touch ANY image until the section is close to the viewport.
+  // Before, the images started loading ~2s after page mount, which often
+  // landed exactly while the user was scrolling toward this section.
   useEffect(() => {
-    let raf1: number, raf2: number;
-    raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => {
-        measureAllBars();
-        const m = barMetricsCache.current[0];
-        if (m && activeBarRef.current) {
-          activeBarRef.current.style.setProperty("left",  `${m.left}px`,  "important");
-          activeBarRef.current.style.setProperty("width", `${m.width}px`, "important");
-        }
+    const el = sectionRef.current;
+    let started = false;
+    let cancelled = false;
+
+    const start = () => {
+      if (started || cancelled) return;
+      started = true;
+      load(0).then(() => {
+        if (cancelled) return;
+        setReady((prev) => {
+          if (prev.has(0)) return prev;
+          const next = new Set(prev);
+          next.add(0);
+          return next;
+        });
+        warmNeighbours(0);
+      });
+    };
+
+    let io: IntersectionObserver | null = null;
+    if (el && typeof IntersectionObserver !== "undefined") {
+      io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            start();
+            io?.disconnect();
+          }
+        },
+        { rootMargin: "100% 100% 100% 100%" }
+      );
+      io.observe(el);
+    } else {
+      start();
+    }
+
+    // Safety net in case the observer never fires for this layout.
+    // This only loads the first photo + 2 neighbours, so it is cheap.
+    const fallback = setTimeout(start, 8000);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(fallback);
+      io?.disconnect();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Scroll only the nav strip (not the page) to keep the active item in view.
+  // On mobile the nav is a grid with no overflow, so this is a no-op there.
+  useEffect(() => {
+    const wrap = navWrapRef.current;
+    const btn = navRefs.current[active];
+    if (!wrap || !btn) return;
+    if (wrap.scrollWidth <= wrap.clientWidth) return;
+    wrap.scrollTo({
+      left: btn.offsetLeft - (wrap.clientWidth - btn.clientWidth) / 2,
+      behavior: "smooth",
+    });
+  }, [active]);
+
+  async function go(idx: number) {
+    if (idx === active) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const d = (n: number) => (reduced ? 0 : n);
+
+    const ticket = ++goTicket.current;
+    setActive(idx); // nav highlight responds instantly
+
+    // Make sure the photo is downloaded + decoded BEFORE the wipe starts, so the
+    // animation never stutters while an image loads. Cap the wait at 600ms.
+    await Promise.race([load(idx), new Promise<void>((r) => setTimeout(r, 600))]);
+    if (ticket !== goTicket.current) return; // user clicked another project meanwhile
+
+    // Mount the new photo (the old one stays mounted underneath for the wipe)
+    flushSync(() => {
+      setReady((prev) => {
+        if (prev.has(idx)) return prev;
+        const next = new Set(prev);
+        next.add(idx);
+        return next;
       });
     });
 
-    const onResize = () => {
-      measureAllBars();
-      const m = barMetricsCache.current[active];
-      if (m && activeBarRef.current) {
-        activeBarRef.current.style.setProperty("left",  `${m.left}px`,  "important");
-        activeBarRef.current.style.setProperty("width", `${m.width}px`, "important");
-      }
-    };
-    window.addEventListener("resize", onResize);
-    return () => {
-      cancelAnimationFrame(raf1);
-      cancelAnimationFrame(raf2);
-      window.removeEventListener("resize", onResize);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // New photo rises from the bottom edge like a water line
+    // (Transforms only: wrapper slides up while its inner slides down, which
+    // looks like a wipe but stays on the GPU. clip-path forced a repaint per frame.)
+    zTop.current += 1;
+    const wrap = layerRefs.current[idx];
+    const inner = wrap?.firstElementChild as HTMLElement | null;
+    const img = inner?.firstElementChild as HTMLElement | null;
+    if (wrap && inner && img) {
+      wrap.style.zIndex = String(zTop.current);
+      wrap.style.visibility = "visible";
+      // Promote to a GPU layer only while it is actually animating
+      wrap.style.willChange = "transform";
+      inner.style.willChange = "transform";
+      img.style.willChange = "transform";
 
-  useEffect(() => {
-    PROJECTS.forEach((_, i) => {
-      gsap.set(bgRefs.current[i], { opacity: i === 0 ? 1 : 0 });
-      if (i !== 0) {
-        gsap.set([h2Refs.current[i], descRefs.current[i]], { opacity: 0, y: 10 });
-      }
-    });
-  }, []);
-
-  function handleSelect(idx: number) {
-    if (idx === active) return;
-    const prev = prevRef.current;
-
-    // Bring next image in first, then fade old one out — keeps bg always opaque.
-    gsap.to(bgRefs.current[idx],  { opacity: 1, duration: 0.5, ease: "power2.inOut" });
-    gsap.to(bgRefs.current[prev], { opacity: 0, duration: 0.6, ease: "power2.inOut", delay: 0.1 });
-
-    const m = barMetricsCache.current[idx];
-    if (m && activeBarRef.current) {
-      gsap.to(activeBarRef.current, {
-        left: m.left,
-        width: m.width,
-        duration: 0.4,
-        ease: "power2.inOut",
-        onUpdate() {
-          const el = activeBarRef.current;
-          if (!el) return;
-          el.style.setProperty("left",  el.style.left,  "important");
-          el.style.setProperty("width", el.style.width, "important");
+      gsap.killTweensOf([wrap, inner, img]);
+      gsap.set(wrap, { yPercent: 100 });
+      gsap.set(inner, { yPercent: -100 });
+      gsap.set(img, { scale: 1.1 });
+      gsap.to([wrap, inner], {
+        yPercent: 0,
+        duration: d(0.9),
+        ease: "power3.inOut",
+        overwrite: "auto",
+        onComplete: () => {
+          wrap.style.willChange = "auto";
+          inner.style.willChange = "auto";
+          if (ticket !== goTicket.current) return;
+          // Hide the layers underneath and free their full-size images
+          layerRefs.current.forEach((el, i) => {
+            if (el && i !== idx) el.style.visibility = "hidden";
+          });
+          setReady(new Set([idx]));
+          // Quietly prepare the next/previous projects for the next click
+          warmNeighbours(idx);
+        },
+      });
+      gsap.to(img, {
+        scale: 1,
+        duration: d(1.3),
+        ease: "power3.out",
+        onComplete: () => {
+          img.style.willChange = "auto";
         },
       });
     }
 
-    gsap.to(
-      [h2Refs.current[prev], descRefs.current[prev]],
-      { opacity: 0, y: -8, duration: 0.25, ease: "power2.in", stagger: 0.04 }
-    );
-    gsap.fromTo(
-      [h2Refs.current[idx], descRefs.current[idx]],
-      { opacity: 0, y: 10 },
-      { opacity: 1, y: 0, duration: 0.45, ease: "power2.out", delay: 0.2, stagger: 0.07 }
-    );
-
-    prevRef.current = idx;
-    setActive(idx);
+    // Text fades out, swaps, fades back in
+    const targets = [textRef.current].filter(Boolean);
+    gsap.killTweensOf(targets);
+    gsap.to(targets, {
+      opacity: 0,
+      y: -10,
+      duration: d(0.22),
+      ease: "power2.in",
+      onComplete: () => {
+        setShown(idx);
+        gsap.fromTo(
+          targets,
+          { opacity: 0, y: 16 },
+          { opacity: 1, y: 0, duration: d(0.6), ease: "power3.out", stagger: 0.08 }
+        );
+      },
+    });
   }
+
+  const p = PROJECTS[shown];
 
   return (
     <section
+      ref={sectionRef}
       className="section-six-wrapper !overflow-hidden !pointer-events-auto"
       style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
     >
-
-      {/* ── Permanent base backdrop — always opaque, blocks S5 completely ── */}
-      <div
-        className="!absolute !inset-0 !bg-cover !bg-center"
-        style={{
-          backgroundImage: `url('${PROJECTS[0].image}')`,
-          transform: "translateZ(0)",
-          backfaceVisibility: "hidden",
-          zIndex: 0,
-        }}
-      />
-
-      {/* Crossfade layers — sit above the base */}
-      {PROJECTS.map((p, i) => (
+      {/* Photo layers — each wipes up over the last */}
+      {PROJECTS.map((proj, i) => (
         <div
-          key={p.id}
-          ref={(el) => { bgRefs.current[i] = el; }}
-          className="!absolute !inset-0 !bg-cover !bg-center !will-change-[opacity]"
+          key={proj.slug}
+          ref={(el) => { layerRefs.current[i] = el; }}
+          className="!absolute !inset-0 !overflow-hidden"
           style={{
-            backgroundImage: `url('${p.image}')`,
-            transform: "translateZ(0)",
-            backfaceVisibility: "hidden",
-            zIndex: 1,
-          }}
-        />
-      ))}
-
-      {/* Gradient overlay */}
-      <div
-        className="!absolute !inset-0 !z-[2]"
-        style={{
-          background: "linear-gradient(180deg, rgba(0,0,0,0.16) 0%, rgba(0,0,0,0.64) 100%)",
-          transform: "translateZ(0)",
-        }}
-      />
-
-      {/* Content */}
-      <div className="section-container !relative !z-[3] !h-full !flex !flex-col !justify-center !pb-40 !gap-6">
-        <div className="!relative !h-20">
-          {PROJECTS.map((p, i) => (
-            <h2
-              key={p.id}
-              ref={(el) => { h2Refs.current[i] = el; }}
-              className="!absolute !top-0 !left-0 !m-0 !text-[#F4EEDF] !font-thin !pointer-events-none"
-              style={{
-                fontFamily: "var(--font-display, inherit)",
-                opacity: i === 0 ? 1 : 0,
-              }}
-            >
-              {p.label}
-            </h2>
-          ))}
-        </div>
-
-        {/* Glass card */}
-        <div
-          className="!w-full !max-w-[345px] !will-change-transform !p-[30px] !grid !grid-rows-[1fr_auto] !min-h-[160px]"
-          style={{
-            backdropFilter: "blur(42px)",
-            WebkitBackdropFilter: "blur(42px)",
-            background:
-              "radial-gradient(100% 100% at 0% 0%, rgba(25, 33, 28, 0.64) 0%, rgba(25, 33, 28, 0.24) 100%)",
-            boxShadow: "-5px -5px 25px rgba(255,255,255,0.02) inset",
-            transform: "translateZ(0)",
+            zIndex: i === 0 ? 1 : 0,
+            visibility: i === 0 ? "visible" : "hidden",
           }}
         >
-          <div className="!relative">
-            {PROJECTS.map((p, i) => (
-              <p
-                key={p.id}
-                ref={(el) => { descRefs.current[i] = el; }}
-                className="font-body !top-0 !left-0 !text-[#F4EEDF] !text-[14px] !font-normal !m-0 !mb-[17px]"
-                style={{
-                  position: i === 0 ? "relative" : "absolute",
-                  opacity: i === 0 ? 1 : 0,
-                  pointerEvents: i === active ? "auto" : "none",
-                }}
-              >
-                {p.description}
-              </p>
-            ))}
+          <div className="!absolute !inset-0 !overflow-hidden !bg-[#0a100d]">
+            {/* Real <img> (not CSS background) so the browser decodes it off the main thread.
+                Only mounted for the visible photo (and the previous one during a wipe). */}
+            {ready.has(i) && (
+              <img
+                src={src(proj.hero)}
+                alt=""
+                aria-hidden="true"
+                decoding="async"
+                draggable={false}
+                {...(i === 0 ? { fetchPriority: "high" as const } : {})}
+                className="!absolute !inset-0 !h-full !w-full !object-cover !object-center"
+              />
+            )}
+          </div>
+        </div>
+      ))}
+
+      {/* Shade */}
+      <div
+        className="!absolute !inset-0 !z-[1000] !pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(0deg, rgba(10,16,13,0.88) 0%, rgba(10,16,13,0.35) 55%, rgba(10,16,13,0.25) 100%), linear-gradient(90deg, rgba(10,16,13,0.55) 0%, rgba(10,16,13,0) 60%)",
+        }}
+      />
+
+      <div className="section-container !relative !z-[1001] !h-full !flex !flex-col !justify-end !gap-5 lg:!gap-8 !pb-[calc(2.5rem_+_env(safe-area-inset-bottom))] lg:!pb-24">
+        <h2 className="!m-0 !pt-16 lg:!pt-20 !text-[#F4EEDF] font-display">Projects</h2>
+
+        <div className="!flex !flex-col lg:!flex-row lg:!items-end lg:!justify-between !gap-5 lg:!gap-10">
+          {/* Title + description */}
+          <div ref={textRef} className="!max-w-[640px]">
+            <p className="font-body !m-0 !mb-2 !text-[14px] !text-[#A3B18A]">{p.category}</p>
+            <h3
+              className="!m-0 !text-[#F4EEDF] !font-light !text-[1.75rem] !leading-[1.15] lg:!text-[clamp(1.2rem,3vw,3.5rem)]"
+              style={{
+                fontFamily: "var(--font-display, inherit)",
+              }}
+            >
+              {p.title}
+            </h3>
+            <p className="font-body !mt-4 !mb-0 !max-w-[52ch] !text-[14px] lg:!text-[16px] !leading-[1.6] !text-[#F4EEDF]/85 !line-clamp-3 lg:!line-clamp-4">
+              {p.description}
+            </p>
           </div>
 
-          <a
-            href="/projects"
-            className="group !inline-block !w-fit !pb-2 !mt-6 !text-[14px] !font-medium !uppercase !text-[#F4EEDF] !no-underline !relative !transition-opacity !duration-200 hover:!opacity-70"
-          >
-            VIEW OUR PROJECTS
-            <span className="!absolute !left-0 !right-0 !bottom-0 !h-px !bg-[#F4EEDF] !transition-transform !duration-200 !ease-in-out group-hover:!-translate-y-[2px]" />
-          </a>
+          {/* Button only, on the right, no box */}
+          <div className="!shrink-0 lg:!ml-auto">
+            <Link
+              href={`/projects/${p.slug}`}
+              prefetch={true}
+              className="hero-contact-btn group btn-underline font-body ml-0 lg:ml-10"
+            >
+              See this Project
+            </Link>
+          </div>
         </div>
-      </div>
 
-      {/* Bottom tab bar */}
-      <div className="!absolute !bottom-20 !left-0 !right-0 !z-[3] !flex !justify-center">
-        <div className="!relative">
-          <div ref={tabRowRef} className="!flex !gap-8">
-            {PROJECTS.map((p, i) => (
+        {/* Project index: 2-column grid on mobile (all visible, no horizontal scroll),
+            single scrolling row on desktop */}
+        <nav
+          ref={navWrapRef}
+          aria-label="Projects"
+          className="!relative !grid !grid-cols-2 !gap-x-4 !gap-y-1 !pb-1 lg:!flex lg:!gap-6 lg:!overflow-x-auto lg:!overscroll-x-contain [scrollbar-width:none]"
+        >
+          {PROJECTS.map((proj, i) => {
+            const on = i === active;
+            return (
               <button
-                key={p.id}
-                ref={(el) => { btnRefs.current[i] = el; }}
-                onClick={() => handleSelect(i)}
-                className="!bg-transparent !border-none !cursor-pointer !px-0 !pt-0 !pb-5"
+                key={proj.slug}
+                ref={(el) => { navRefs.current[i] = el; }}
+                type="button"
+                onClick={() => go(i)}
+                aria-current={on ? "true" : undefined}
+                aria-label={`View ${proj.title}`}
+                className="!relative !min-w-0 !text-left !bg-transparent !border-none !cursor-pointer !px-0 !pt-3 !pb-1 !min-h-[48px] lg:!shrink-0 lg:!min-w-[150px] focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-[#F4EEDF]"
               >
+                <span className="!absolute !top-0 !left-0 !right-0 !h-px !bg-[#F4EEDF]/25" />
                 <span
-                  className="!transition-[opacity,font-weight] !duration-300 font-body !text-[#F4EEDF] !text-[14px] !tracking-[0.04em] !whitespace-nowrap !block"
-                  style={{
-                    fontWeight: active === i ? 500 : 300,
-                    opacity: active === i ? 1 : 0.55,
-                  }}
+                  className="!absolute !top-0 !left-0 !right-0 !h-[2px] !bg-[#8FD0C8] !origin-left !transition-transform !duration-500"
+                  style={{ transform: on ? "scaleX(1)" : "scaleX(0)" }}
+                />
+                <span
+                  className="font-body !block !text-[13px] !text-[#F4EEDF] !transition-opacity !duration-300"
+                  style={{ opacity: on ? 1 : 0.55 }}
                 >
-                  {p.label}
+                  {proj.title}
+                </span>
+                <span
+                  className="font-body !block !text-[12px] !text-[#A3B18A] !transition-opacity !duration-300"
+                  style={{ opacity: on ? 1 : 0.55 }}
+                >
+                  {proj.category}
                 </span>
               </button>
-            ))}
-          </div>
-
-          {/* Track */}
-          <div className="!absolute !bottom-0 !left-0 !right-0 !h-[3px] !bg-[rgba(244,238,223,0.24)]" />
-
-          {/* Active indicator */}
-          <div
-            ref={activeBarRef}
-            className="!absolute !bottom-0 !h-[3px] !bg-[#F4EEDF] !will-change-transform"
-            style={{ width: 0, left: 0, transform: "translateZ(0)" }}
-          />
-        </div>
+            );
+          })}
+        </nav>
       </div>
     </section>
-  );
-}
-
-// ─── Root — CSS breakpoint swap, no DOM bleed ─────────────────────────────────
-export default function SectionSix() {
-  return (
-    <>
-      <div className="!block lg:!hidden">
-        <SectionSixMobile />
-      </div>
-      <div className="!hidden lg:!block">
-        <SectionSixDesktop />
-      </div>
-    </>
   );
 }

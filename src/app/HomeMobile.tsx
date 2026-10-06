@@ -13,13 +13,27 @@ const SectionSeven = dynamic(() => import("../components/Home/Sectionseven"), { 
 const SectionEight = dynamic(() => import("../components/Home/Sectioneight"), { ssr: false });
 const SectionNine = dynamic(() => import("../components/Home/SectionNine"), { ssr: false });
 const SectionTen = dynamic(() => import("../components/Home/SectionTen"), { ssr: false });
+const SectionSix = dynamic(() => import("../components/Home/SectionSix"), { ssr: false });
 const Appsection = dynamic(() => import("../components/Appsection"), { ssr: false });
+const WhatAPoolCosts = dynamic(() => import("../components/Home/WhatAPoolCosts"), { ssr: false });
 const SectionCTA = dynamic(() => import("@/src/components/SectionCTA"));
 
 const clamp = (val: number, min = 0, max = 1) => Math.min(Math.max(val, min), max);
 
+// Timeline (1 step ~ 1 viewport of scroll):
+//  0-1  Hero            1-2  Section 2 slides up      2-4  Section 2 inner
+//  4-5  Section 8       5-6  Section 10               6-7  Section 6 (Projects)
+//  7-8  Section 7       8-9  App section (tall)       9-10 Pricing
+//  10-11 Section 9
 // Animation ends when Section Nine is fully in place (footer is no longer pinned)
-const TOTAL_STEPS = 9.0;
+const TOTAL_STEPS = 11.0;
+
+// Step numbers for each layer's arrival
+const S6_START = 6.0;
+const S7_START = 7.0;
+const APP_START = 8.0;
+const PRICING_START = 9.0;
+const S9_START = 10.0;
 
 // Extra pinned scroll at the end so the smoothed animation can finish
 // BEFORE the pin releases and the CTA scrolls into view.
@@ -63,11 +77,19 @@ export default function HomeMobile() {
   const sec2Ref = useRef<HTMLDivElement>(null);
   const sec8Ref = useRef<HTMLDivElement>(null);
   const sec10Ref = useRef<HTMLDivElement>(null);
+  const sec6Ref = useRef<HTMLDivElement>(null);
   const sec7Ref = useRef<HTMLDivElement>(null);
   const appSecRef = useRef<HTMLDivElement>(null);
+  const pricingRef = useRef<HTMLDivElement>(null);
   const sec9Ref = useRef<HTMLDivElement>(null);
 
-  const scrollMetricsRef = useRef({ totalScrollable: 0, animScrollable: 0, vh: 0, trackTopOffset: 0 });
+  const scrollMetricsRef = useRef({
+    totalScrollable: 0,
+    animScrollable: 0,
+    vh: 0,
+    trackTopOffset: 0,
+    pricingHeight: 0,
+  });
   const lastSizeRef = useRef({ width: 0, height: 0 });
 
   const currentProgress = useRef(0);
@@ -146,16 +168,16 @@ export default function HomeMobile() {
     const vw = window.innerWidth;
 
     const appHeight = appSecRef.current?.offsetHeight || vh;
+    // Pricing is at least one viewport; if its content is taller it scrolls through
+    const pricingHeight = Math.max(vh, pricingRef.current?.offsetHeight || vh);
 
-    // No footer in the pinned track anymore; add a hold at the end.
-    // Under reduced motion the scrub loop is disabled, so reserving ~7.8
-    // viewports of scroll distance would be empty scrolling. Collapse it to
-    // natural flow instead.
+    // 8.8 viewports for the fixed-height steps (hero, S2, S8, S10, S6, S7, S9),
+    // plus the tall App section and Pricing, plus the end hold.
     // Track height is left as authored under reduced motion: the pinned frame
     // positions its children absolutely, so collapsing the track to natural
     // height collapses the frame too and takes the content with it. Only the
     // animation is removed, not the layout.
-    const totalTrackHeight = vh * 7.8 + appHeight + (HOLD_VH / 100) * vh;
+    const totalTrackHeight = vh * 8.8 + appHeight + pricingHeight + (HOLD_VH / 100) * vh;
 
     trackRef.current.style.height = `${totalTrackHeight}px`;
     // Placeholder min-height is only needed before the real height is known
@@ -170,6 +192,7 @@ export default function HomeMobile() {
       animScrollable: Math.max(1, totalScrollable - (HOLD_VH / 100) * vh),
       vh,
       trackTopOffset: window.scrollY + rect.top,
+      pricingHeight,
     };
 
     lastSizeRef.current = { width: vw, height: vh };
@@ -186,7 +209,6 @@ export default function HomeMobile() {
         heroRightInners: scopeRef.current.querySelectorAll<HTMLElement>(".hero-right-text .custom-line-inner"),
         heroSecWrap: scopeRef.current.querySelector(".hero-secondary-text-wrap") as HTMLElement,
         heroSecInners: scopeRef.current.querySelectorAll<HTMLElement>(".hero-secondary-para .custom-line-inner"),
-        heroControls: scopeRef.current.querySelectorAll<HTMLElement>(".hero-contact-btn, .hero-scroll-indicator, .hero-progress-wrapper"),
         s2Titles: scopeRef.current.querySelectorAll<HTMLElement>(".s2-title-main, .s2-title-sub, .s2-body"),
         s2ScrollWrap: scopeRef.current.querySelector(".s2-mob-scroll-wrapper") as HTMLElement,
         s2Clip1: scopeRef.current.querySelector(".s2-mob-clip-bg-1") as HTMLElement,
@@ -224,9 +246,25 @@ export default function HomeMobile() {
     window.addEventListener("resize", handleResize, { passive: true });
     window.addEventListener("orientationchange", updateMetrics, { passive: true });
 
+    // The App section and Pricing are dynamically imported (ssr: false), so
+    // their real heights arrive after mount. Re-measure when they change so the
+    // track is always long enough to scroll through them.
+    let ro: ResizeObserver | null = null;
+    let roRaf: number | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => {
+        if (roRaf) cancelAnimationFrame(roRaf);
+        roRaf = requestAnimationFrame(updateMetrics);
+      });
+      if (appSecRef.current) ro.observe(appSecRef.current);
+      if (pricingRef.current) ro.observe(pricingRef.current);
+    }
+
     return () => {
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", updateMetrics);
+      if (roRaf) cancelAnimationFrame(roRaf);
+      if (ro) ro.disconnect();
     };
   }, [shouldLoadRest, updateMetrics, handleResize]);
 
@@ -237,7 +275,8 @@ export default function HomeMobile() {
     let isRunning = true;
     const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
     const EASE_FACTOR = isAndroid ? 0.06 : 0.06;
-    const MAX_PROGRESS_DELTA_PER_FRAME = 0.006;
+    // Scaled so smoothing speed in steps/frame matches the old 9-step timeline
+    const MAX_PROGRESS_DELTA_PER_FRAME = (0.006 * 9) / TOTAL_STEPS;
 
     // Reduced motion: skip the pinned scroll-scrub entirely and leave content
     // in its settled, visible state. Without this the rAF loop below would keep
@@ -269,7 +308,7 @@ export default function HomeMobile() {
 
       const p = currentProgress.current;
       const stepProgress = p * TOTAL_STEPS;
-      const { vh } = scrollMetricsRef.current;
+      const { vh, pricingHeight } = scrollMetricsRef.current;
       const cache = domCache.current;
 
       // ── Step 0 -> 1: HERO ANIMATIONS ──
@@ -438,8 +477,21 @@ export default function HomeMobile() {
         s10ScrollContainer.style.transform = `translate3d(0, ${containerY}%, 0)`;
       }
 
-      // ── Step 6.0 -> 7.0: SECTION SEVEN ──
-      const s7Prog = clamp(stepProgress - 6.0);
+      // ── Step 6.0 -> 7.0: SECTION SIX (PROJECTS) ──
+      const s6Prog = clamp(stepProgress - S6_START);
+
+      if (sec6Ref.current) {
+        sec6Ref.current.style.transform = `translate3d(0, ${(1 - s6Prog) * 100}%, 0)`;
+        sec6Ref.current.style.opacity = `${s6Prog > 0 ? 1 : 0}`;
+        sec6Ref.current.style.visibility = s6Prog > 0 ? "visible" : "hidden";
+      }
+
+      if (sec10Ref.current && s6Prog > 0) {
+        sec10Ref.current.style.transform = `translate3d(0, ${-s6Prog * 15}%, 0)`;
+      }
+
+      // ── Step 7.0 -> 8.0: SECTION SEVEN ──
+      const s7Prog = clamp(stepProgress - S7_START);
 
       if (sec7Ref.current) {
         sec7Ref.current.style.transform = `translate3d(0, ${(1 - s7Prog) * 100}%, 0)`;
@@ -447,8 +499,8 @@ export default function HomeMobile() {
         sec7Ref.current.style.visibility = s7Prog > 0 ? "visible" : "hidden";
       }
 
-      if (sec10Ref.current && s7Prog > 0) {
-        sec10Ref.current.style.transform = `translate3d(0, ${-s7Prog * 15}%, 0)`;
+      if (sec6Ref.current && s7Prog > 0) {
+        sec6Ref.current.style.transform = `translate3d(0, ${-s7Prog * 15}%, 0)`;
       }
 
       let s7BgImg = cache.s7BgImg as HTMLElement;
@@ -459,8 +511,8 @@ export default function HomeMobile() {
       if (s7BgImg) s7BgImg.style.transform = `translate3d(0, ${(1 - s7Prog) * 20}%, 0)`;
       if (s7MobBg) s7MobBg.style.transform = `scale(${1.35 - s7Prog * 0.35})`;
 
-      // ── Step 7.0 -> 8.0: APP SECTION ──
-      const appProg = clamp(stepProgress - 7.0);
+      // ── Step 8.0 -> 9.0: APP SECTION ──
+      const appProg = clamp(stepProgress - APP_START);
 
       if (appSecRef.current) {
         const appHeight = appSecRef.current.offsetHeight || vh;
@@ -476,8 +528,21 @@ export default function HomeMobile() {
         sec7Ref.current.style.transform = `translate3d(0, ${-appProg * 15}%, 0)`;
       }
 
-      // ── Step 8.0 -> 9.0: SECTION NINE ──
-      const s9Prog = clamp(stepProgress - 8.0);
+      // ── Step 9.0 -> 10.0: PRICING (slides up over App, scrolls if taller than screen) ──
+      const pricingProg = clamp(stepProgress - PRICING_START);
+
+      if (pricingRef.current) {
+        const h = pricingHeight || vh;
+        const startY = vh;
+        const endY = -Math.max(0, h - vh);
+        const currentY = startY + (endY - startY) * pricingProg;
+        pricingRef.current.style.transform = `translate3d(0, ${currentY}px, 0)`;
+        pricingRef.current.style.opacity = `${pricingProg > 0 ? 1 : 0}`;
+        pricingRef.current.style.visibility = pricingProg > 0 ? "visible" : "hidden";
+      }
+
+      // ── Step 10.0 -> 11.0: SECTION NINE ──
+      const s9Prog = clamp(stepProgress - S9_START);
 
       if (sec9Ref.current) {
         sec9Ref.current.style.transform = `translate3d(0, ${(1 - s9Prog) * 100}%, 0)`;
@@ -581,7 +646,7 @@ export default function HomeMobile() {
       <div
         ref={trackRef}
         className="home-track-container relative w-full"
-        style={{ minHeight: "1000svh" }}
+        style={{ minHeight: "1200svh" }}
       >
         <div
           ref={fixedFrameRef}
@@ -624,7 +689,16 @@ export default function HomeMobile() {
                 <SectionTen />
               </div>
 
-              {/* Layer 5: Section Seven */}
+              {/* Layer 5: Section Six (Projects) */}
+              <div
+                ref={sec6Ref}
+                className="section-six about-stack-layer absolute inset-0 w-full h-svh z-[45] overflow-hidden transform-gpu will-change-transform backface-hidden"
+                style={{ transform: "translate3d(0, 100%, 0)", opacity: 0, visibility: "hidden" }}
+              >
+                <SectionSix />
+              </div>
+
+              {/* Layer 6: Section Seven */}
               <div
                 ref={sec7Ref}
                 className="section-7 about-stack-layer absolute inset-0 w-full h-svh z-50 transform-gpu will-change-transform backface-hidden"
@@ -633,7 +707,7 @@ export default function HomeMobile() {
                 <SectionSeven />
               </div>
 
-              {/* Layer 6: App Section */}
+              {/* Layer 7: App Section */}
               <div
                 ref={appSecRef}
                 className="section-appsec layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[60] will-change-transform backface-hidden"
@@ -642,7 +716,21 @@ export default function HomeMobile() {
                 <Appsection />
               </div>
 
-              {/* Layer 7: Section Nine */}
+              {/* Layer 8: Pricing (What a pool costs) */}
+              <div
+                ref={pricingRef}
+                className="section-pricing layer-auto-height transform-gpu absolute left-0 top-0 w-full z-[65] bg-black will-change-transform backface-hidden"
+                style={{
+                  minHeight: "100svh",
+                  transform: "translate3d(0, 100svh, 0)",
+                  opacity: 0,
+                  visibility: "hidden",
+                }}
+              >
+                <WhatAPoolCosts />
+              </div>
+
+              {/* Layer 9: Section Nine */}
               <div
                 ref={sec9Ref}
                 className="section-9 about-stack-layer absolute inset-0 w-full h-svh z-[70] transform-gpu will-change-transform backface-hidden"
